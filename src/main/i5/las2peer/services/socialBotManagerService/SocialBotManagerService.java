@@ -11,11 +11,17 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,7 +43,6 @@ import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.logging.bot.BotMessage;
-import i5.las2peer.p2p.Node;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
@@ -96,7 +101,6 @@ public class SocialBotManagerService extends RESTService {
 
 	private static BotAgent botAgent;
 	private static final String botPass = "actingAgent";
-	private static Node runningAt;
 
 	private static final String classifierName = "i5.las2peer.services.tensorFlowClassifier.TensorFlowClassifier";
 	private static final String textToTextName = "i5.las2peer.services.tensorFlowTextToText.TensorFlowTextToText";
@@ -104,6 +108,29 @@ public class SocialBotManagerService extends RESTService {
 	public SocialBotManagerService() {
 		super();
 		setFieldValues(); // This sets the values of the configuration file
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+			public X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+
+			public void checkClientTrusted(X509Certificate[] certs, String authType) {
+			}
+
+			public void checkServerTrusted(X509Certificate[] certs, String authType) {
+			}
+		} };
+
+		// Install the all-trusting trust manager
+		try {
+			SSLContext sc = SSLContext.getInstance("TLS");
+			sc.init(null, trustAllCerts, new SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (Exception e) {
+			;
+		}
+		if (config == null) {
+			config = new BotConfiguration();
+		}
 	}
 
 	/**
@@ -128,23 +155,38 @@ public class SocialBotManagerService extends RESTService {
 		// if (initialized) {
 		// return Response.status(Response.Status.CONFLICT).build();
 		// } else {
-		config = new BotConfiguration();
 		String returnString = "";
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		try {
 			JSONObject nodes = (JSONObject) ((JSONObject) p.parse(body)).get("nodes");
 			JSONObject edges = (JSONObject) ((JSONObject) p.parse(body)).get("edges");
-			HashMap<String, ServiceFunction> bsfList = new HashMap<String, ServiceFunction>();
-			HashMap<String, ServiceFunction> usfList = new HashMap<String, ServiceFunction>();
-			HashMap<String, ServiceFunctionAttribute> sfaList = config.getServiceFunctionsAttributes();
+			HashMap<String, ServiceFunction> bsfList = new HashMap<String, ServiceFunction>(); // CHECK
+			HashMap<String, ServiceFunction> usfList = new HashMap<String, ServiceFunction>(); // CHECK
+			HashMap<String, ServiceFunctionAttribute> sfaList = new HashMap<String, ServiceFunctionAttribute>();// CHECK
+																												// config.getServiceFunctionsAttributes();
+			HashMap<String, IfBlock> ibList = new HashMap<String, IfBlock>();// config.getAttributeIfs(); CHECK
+			HashMap<String, ThenBlock> tbList = new HashMap<String, ThenBlock>();// config.getAttributeThens(); CHECK
+			HashMap<String, IfThenBlock> itbList = new HashMap<String, IfThenBlock>();// config.getAttributeIfThens();
+																						// CHECK
+			HashSet<IfThenBlock> tempitbList = new HashSet<IfThenBlock>();
+			HashMap<String, ContentGenerator> gList = new HashMap<String, ContentGenerator>(); // CHECK
+			HashMap<String, VLE> vles = new HashMap<String, VLE>();
+			HashMap<String, Bot> bots = new HashMap<String, Bot>(); // CHECK
+			HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 
 			for (HashMap.Entry<String, Object> entry : nodes.entrySet()) {
 				JSONObject elem = (JSONObject) entry.getValue();
 				String nodeType = (String) elem.get("type");
 				if (nodeType.equals("VLE Instance")) {
-					setVLEInstance(elem);
+					VLE vle = setVLEInstance(elem);
+					vles.put(entry.getKey(), vle);
 				} else if (nodeType.equals("Bot")) {
-					addBot(elem);
+					Bot bot = addBot(elem);
+					bots.put(entry.getKey(), bot);
+				} else if (nodeType.equals("VLE User")) {
+					VLEUser u = addUser(elem);
+					u.setId(entry.getKey());
+					users.put(entry.getKey(), u);
 				} else if (nodeType.equals("Bot Action")) {
 					ServiceFunction sf = addAction(entry.getKey(), elem);
 					bsfList.put(entry.getKey(), sf);
@@ -173,10 +215,10 @@ public class SocialBotManagerService extends RESTService {
 					returnString += sfa.getType() + ":" + sfa.getName() + "\n";
 				} else if (nodeType.equals("If")) {
 					IfBlock ib = addIfBlock(entry.getKey(), elem);
-					config.addAttributeIf(entry.getKey(), ib);
+					ibList.put(entry.getKey(), ib);
 				} else if (nodeType.equals("Then")) {
 					ThenBlock tb = addThenBlock(entry.getKey(), elem);
-					config.addAttributeThen(entry.getKey(), tb);
+					tbList.put(entry.getKey(), tb);
 				} else if (nodeType.equals("TextToText") || nodeType.equals("Classifier")) {
 					ContentGenerator g = new ContentGenerator();
 					g.setId(entry.getKey());
@@ -186,9 +228,39 @@ public class SocialBotManagerService extends RESTService {
 					} else if (nodeType.equals("Classifier")) {
 						g.setServiceName(classifierName);
 					}
-					config.addGenerator(entry.getKey(), g);
+					gList.put(entry.getKey(), g);
 				}
 			}
+
+			if (vles.size() == 0) {
+				return Response.status(Status.BAD_REQUEST).entity("Missing VLE Instance!").build();
+			} else if (users.size() == 0) {
+				return Response.status(Status.BAD_REQUEST).entity("Missing VLE User!").build();
+			} else if (bots.size() == 0) {
+				return Response.status(Status.BAD_REQUEST).entity("Missing Bot!").build();
+			} else if (bsfList.size() == 0) {
+				return Response.status(Status.BAD_REQUEST).entity("Missing Bot Action!").build();
+			} else if (usfList.size() == 0) {
+				return Response.status(Status.BAD_REQUEST).entity("Missing User Action!").build();
+			}
+
+			// pass botfunctions
+			for (HashMap.Entry<String, ServiceFunction> entry : bsfList.entrySet()) {
+				String service = entry.getValue().getServiceName();
+				BotServiceConfiguration sconfig = config.getServiceConfiguration(service);
+				sconfig.addBotServiceFunction(entry.getKey(), entry.getValue());
+			}
+
+			// pass userfunctions
+			for (HashMap.Entry<String, ServiceFunction> entry : usfList.entrySet()) {
+				String service = entry.getValue().getServiceName();
+				BotServiceConfiguration sconfig = config.getServiceConfiguration(service);
+				sconfig.addBotServiceFunction(entry.getKey(), entry.getValue());
+			}
+
+			int checkGeneratorIns = 0;
+			int checkGeneratorOuts = 0;
+
 			for (HashMap.Entry<String, Object> entry : edges.entrySet()) {
 				JSONObject elem = (JSONObject) entry.getValue();
 				String type = (String) elem.get("type");
@@ -208,68 +280,232 @@ public class SocialBotManagerService extends RESTService {
 
 					if (bsfListItem != null) {
 						bsfListItem.addAttribute(to);
-						config.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
+						BotServiceConfiguration sconfig = config.getServiceConfiguration(bsfListItem.getServiceName());
+						sconfig.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
 					} else if (usfListItem != null) {
 						usfListItem.addAttribute(to);
-						config.addUserServiceFunction(usfListItem.getId(), usfListItem);
+						BotServiceConfiguration sconfig = config.getServiceConfiguration(usfListItem.getServiceName());
+						sconfig.addUserServiceFunction(usfListItem.getId(), usfListItem);
 					} else if (sfaListItem != null) {
 						sfaListItem.addChildAttribute(to);
 					}
+					to.setFunctionId(source);
 				} else if (type.equals("User Action triggers Bot Action")) {
-					config.addTrigger(usfList.get(source).getFunctionName(), target);
-				} else if (type.equals("Same Action Paramater as")) {
+					BotServiceConfiguration sconfig = config
+							.getServiceConfiguration(usfList.get(source).getServiceName());
+					sconfig.addTrigger(usfList.get(source).getFunctionName(), target);
+				} else if (type.equals("Bot performs Action")) {
+					BotServiceConfiguration sconfig = config
+							.getServiceConfiguration(bsfList.get(target).getServiceName());
+					sconfig.addBot(source, bots.get(source));
+				} else if (type.equals("Same Action Parameter as")) {
 					sfaList.get(source).setSameAsTrigger(true);
 					sfaList.get(source).setMappedTo(target);
 					sfaList.get(target).setSameAsTrigger(true);
 					sfaList.get(target).setMappedTo(source);
-				} else if (type.equals("Generator has Input Parameter")) {
-					sfaList.get(target).setGeneratorId(source);
-					ContentGenerator g = (ContentGenerator) (config.getGeneratorList().get(source));
-					g.setInput(target);
+				} else if (type.equals("Action Parameter is Generator Input")) {
+					checkGeneratorIns++;
+					sfaList.get(source).setGeneratorId(target);
+					ContentGenerator g = (ContentGenerator) (gList.get(target));
+					g.setInput(source);
 				} else if (type.equals("Generator has Ouput Parameter")) {
+					checkGeneratorOuts++;
 					sfaList.get(target).setGeneratorId(source);
-					ContentGenerator g = (ContentGenerator) (config.getGeneratorList().get(source));
+					ContentGenerator g = (ContentGenerator) (gList.get(source));
 					g.setOutput(target);
-				} else if (type.equals("if Input")) {
+				} else if (type.equals("VLE consists of User")) {
+					VLE v = vles.get(source);
+					v.addUserId(target);
+				} else if (type.equals("User performs Action")) {
+					VLEUser u = users.get(source);
+					u.setFunctionId(target);
+				} else if (type.equals("is If Input")) {
+					if (ibList.containsKey(target)) {
+						// if chain
+						if (ibList.containsKey(source)) {
+							//
+							ibList.get(target).setPrev(ibList.get(source));
+							ibList.get(source).setNext(ibList.get(target));
+						} else {
+							// start of chain
+							ibList.get(target).setSource(source);
+						}
+					} else {
+						// error
+						System.out.println("Endpoint is not an if...");
+					}
+				} else if (type.equals("Then has Output")) {
+					if (tbList.containsKey(source)) {
+						// if chain
+						if (tbList.containsKey(target)) {
+							//
+							tbList.get(source).setNext(tbList.get(target));
+							tbList.get(target).setPrev(tbList.get(source));
+						} else {
+							// start of chain
+							tbList.get(source).setOutput(target);
+						}
+					} else {
+						// error
+						System.out.println("Error: Does not start with a then...");
 
-				} else if (type.equals("then Output")) {
-
-				} else if (type.equals("ifThen")) {
-
+					}
+				} else if (type.equals("If Then")) {
+					IfThenBlock itb = new IfThenBlock();
+					itb.setIb(source);
+					itb.setTb(target);
+					tempitbList.add(itb);
 				}
 			}
+
+			if (checkGeneratorIns != checkGeneratorOuts) {
+				return Response.status(Status.BAD_REQUEST).entity("Check the Content Generator connections!").build();
+			}
+
+			// create if then structure
+
+			for (IfThenBlock itbIterator : tempitbList) {
+				IfBlock ib = ibList.get(itbIterator.getIb());
+				while (ib.getPrev() != null) {
+					ib = ib.getPrev();
+				}
+
+				ThenBlock tb = tbList.get(itbIterator.getTb());
+				ThenBlock tbIterator = tb;
+				while (tbIterator.getNext() != null) {
+					tbIterator = tbIterator.getNext();
+				}
+				IfThenBlock itb = new IfThenBlock();
+				itb.setIb(ib.getSource());
+				itb.setIb(ib.getId());
+				itb.setTb(tb.getId());
+				itbList.put(tbIterator.getOutput(), itb);
+
+				itb.setSource(ib.getSource());
+			}
+
+			// pass if then
+			for (HashMap.Entry<String, IfThenBlock> entry : itbList.entrySet()) {
+				// If Block id
+				String ibs = entry.getValue().getIb();
+				IfBlock ib = ibList.get(ibs);
+				BotServiceConfiguration sconfig = null;
+
+				String sfaParent = getParent(ib.getSource(), sfaList);
+				System.out.println(sfaParent);
+				if (bsfList.get(sfaList.get(sfaParent)) != null) {
+					String sname = bsfList.get(sfaParent).getServiceName();
+					sconfig = config.getServiceConfiguration(sname);
+				} else if (usfList.get(sfaParent) != null) {
+					String sname = usfList.get(sfaParent).getServiceName();
+					sconfig = config.getServiceConfiguration(sname);
+				} else {
+					return Response.status(Status.BAD_REQUEST).entity("Check your If input and Then Output!").build();
+				}
+
+				sconfig.addAttributeIfThen(entry.getKey(), entry.getValue());
+
+				do {
+					sconfig.addAttributeIf(ib.getId(), ib);
+					ib = ib.getNext();
+				} while (ib != null);
+
+				String tbs = entry.getValue().getTb();
+				ThenBlock tb = tbList.get(tbs);
+				do {
+					sconfig.addAttributeThen(tb.getId(), tb);
+					tb = tb.getPrev();
+				} while (tb != null);
+
+			}
+
+			// pass attributes
+			for (HashMap.Entry<String, ServiceFunctionAttribute> entry : sfaList.entrySet()) {
+				String parent = getParent(entry.getKey(), sfaList);
+				if (bsfList.get(parent) != null) {
+					String service = bsfList.get(parent).getServiceName();
+					config.getServiceConfiguration(service).addServiceFunctionsAttributes(entry.getKey(),
+							entry.getValue());
+				} else if (usfList.get(parent) != null) {
+					String service = usfList.get(parent).getServiceName();
+					config.getServiceConfiguration(service).addServiceFunctionsAttributes(entry.getKey(),
+							entry.getValue());
+				} else {
+					return Response.status(Status.BAD_REQUEST)
+							.entity("Check the ServiceFunctionAttribute to ServiceFunction connection!").build();
+				}
+			}
+
+			// pass content generators
+			for (HashMap.Entry<String, ContentGenerator> entry : gList.entrySet()) {
+				String attributeString = entry.getValue().getInput();
+				String parent = getParent(attributeString, sfaList);
+				if (bsfList.get(parent) != null) {
+					String service = bsfList.get(parent).getServiceName();
+					config.getServiceConfiguration(service).addGenerator(entry.getKey(), entry.getValue());
+				} else if (usfList.get(parent) != null) {
+					String service = usfList.get(parent).getServiceName();
+					config.getServiceConfiguration(service).addGenerator(entry.getKey(), entry.getValue());
+				} else {
+					return Response.status(Status.BAD_REQUEST).entity("Check the content generator connections!")
+							.build();
+				}
+			}
+
+			// pass vle content
+
+			for (HashMap.Entry<String, VLE> entry : vles.entrySet()) {
+				VLE vle = entry.getValue();
+				VLEUser u = null;
+				ServiceFunction sf = null;
+				for (String us : vle.getUserId()) {
+					u = users.get(us);
+					if (u.getFunctionId() != null) {
+						if (usfList.get(u.getFunctionId()) != null) {
+							sf = usfList.get(u.getFunctionId());
+							break;
+						}
+					}
+
+				}
+				if (sf != null) {
+					BotServiceConfiguration sconfig = config.getServiceConfiguration(sf.getServiceName());
+					sconfig.setBotServiceAddr(vle.getAddr());
+					sconfig.setEnvironmentSeparator(vle.getSeparator());
+				} else {
+					return Response.status(Status.BAD_REQUEST)
+							.entity("Check the ServiceFunctionAttribute to ServiceFunction connection!").build();
+				}
+			}
+
 			JSONArray jaf = new JSONArray();
-			for (String s : config.getTriggerList().keySet()) {
-				jaf.add(s);
-			}
+			HashMap<String, ServiceFunction> allFunctions = new HashMap<String, ServiceFunction>();
+			for (BotServiceConfiguration sconfig : config.getServices().values()) {
+				for (String s : sconfig.getTriggerList().keySet()) {
+					jaf.add(s);
+				}
+				allFunctions.putAll(sconfig.getUserServiceFunctions());
+				allFunctions.putAll(sconfig.getBotServiceFunctions());
+				for (ServiceFunction s : allFunctions.values()) {
 
-			HashMap<String, ServiceFunction> allFunctions = config.getUserServiceFunctions();
-			allFunctions.putAll(config.getBotServiceFunctions());
-			for (ServiceFunction s : allFunctions.values()) {
+					// try to get swagger information
 
-				// try to get swagger information
-
-				if (config.getServiceInformation().get(s.getServiceName()) == null
-						&& s.getFunctionType().equals("service")) {
-					try {
-						JSONObject j = readJsonFromUrl(
-								config.getBotServiceAddr() + "/" + s.getServiceName() + "/swagger.json");
-						config.addServiceInformation(s.getServiceName(), j);
-					} catch (Exception e) {
-						e.printStackTrace();
+					if (sconfig.getServiceInformation().get(s.getServiceName()) == null
+							&& s.getFunctionType().equals("service")) {
+						try {
+							JSONObject j = readJsonFromUrl(
+									sconfig.getBotServiceAddr() + "/" + s.getServiceName() + "/swagger.json");
+							sconfig.addServiceInformation(s.getServiceName(), j);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					if (sconfig.getServiceInformation().get(s.getServiceName()) != null
+							&& s.getFunctionName() != null) {
+						addServiceInformation(s, sconfig.getServiceInformation().get(s.getServiceName()));
 					}
 				}
-				if (config.getServiceInformation().get(s.getServiceName()) != null)
-					addServiceInformation(s, config.getServiceInformation().get(s.getServiceName()));
-				/*
-				System.out.println(s.getType() + ":" + s.getPath());
-				for (ServiceFunctionAttribute sa : s.getAttributes()) {
-					System.out.println(" " + sa.getName());
-					for (ServiceFunctionAttribute subsa : sa.getChildAttributes()) {
-						System.out.println(" " + subsa.getName());
-					}
-				}
-				*/
+
 			}
 
 			JSONObject j = new JSONObject();
@@ -282,6 +518,9 @@ public class SocialBotManagerService extends RESTService {
 			return Response.status(Response.Status.NOT_ACCEPTABLE).build();
 		}
 		initialized = true;
+		JSONObject logData = new JSONObject();
+		logData.put("status", "initialized");
+		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 		return Response.ok().entity(returnString).build();
 		// }
 	}
@@ -301,38 +540,45 @@ public class SocialBotManagerService extends RESTService {
 		String returnString = "";
 		try {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+
 			JSONObject j = (JSONObject) p.parse(body);
-			if (config == null || config.getEnvironmentSeparator() == null
-					|| ((JSONObject) j.get("attributes")).get(config.getEnvironmentSeparator()) == null || botIsActive
-							.get(((JSONObject) j.get("attributes")).get(config.getEnvironmentSeparator())) != true) {
-				return Response.status(Status.FORBIDDEN).entity("Bot is not active").build();
+			String service = (String) j.get("serviceAlias");
+			System.out.println(service);
+			BotServiceConfiguration sconfig = config.getServiceConfiguration(service);
+			if (!sconfig.getEnvironmentSeparator().equals("singleEnvironment")) {
+				if (sconfig == null || sconfig.getEnvironmentSeparator() == null
+						|| ((JSONObject) j.get("attributes")).get(sconfig.getEnvironmentSeparator()) == null
+						|| botIsActive.get(
+								((JSONObject) j.get("attributes")).get(sconfig.getEnvironmentSeparator())) != true) {
+					return Response.status(Status.FORBIDDEN).entity("Bot is not active").build();
+				}
 			}
 
 			String f = (String) j.get("functionName");
 			String triggerUID = (String) j.get("uid");
-			if (config.getTriggerList().containsKey(f)
+			if (sconfig.getTriggerList().containsKey(f)
 					&& !(triggerUID.toLowerCase().equals(botAgent.getIdentifier().toLowerCase()))) {
 
 				System.out.println("Bot triggered:");
 
-				String[] triggerFunctionKeys = ((HashSet<String>) config.getTriggerList().get(f))
-						.toArray((new String[config.getTriggerList().get(f).size()]));
+				String[] triggerFunctionKeys = ((HashSet<String>) sconfig.getTriggerList().get(f))
+						.toArray((new String[sconfig.getTriggerList().get(f).size()]));
+
 				String randomTriggerFunctionKey = triggerFunctionKeys[(int) (Math.random()
 						* triggerFunctionKeys.length)];
 
-				ServiceFunction sf = config.getBotServiceFunctions().get(randomTriggerFunctionKey);
+				ServiceFunction sf = sconfig.getBotServiceFunctions().get(randomTriggerFunctionKey);
 
 				MiniClient client = new MiniClient();
-				client.setConnectorEndpoint(config.getBotServiceAddr());
+				client.setConnectorEndpoint(sconfig.getBotServiceAddr());
 				client.setLogin(botAgent.getLoginName(), botPass);
 				HashMap<String, String> headers = new HashMap<String, String>();
 				String adjustedPath = "";
 				if (sf.getFunctionType().equals("service"))
 					adjustedPath = sf.getPath();
 				JSONObject b = new JSONObject();
-				HashMap<String, ServiceFunctionAttribute> attlist = config.getServiceFunctionsAttributes();
+				HashMap<String, ServiceFunctionAttribute> attlist = sconfig.getServiceFunctionsAttributes();
 				for (ServiceFunctionAttribute sfa : sf.getAttributes()) {
-					System.out.println(sfa.getName());
 					if (sfa.isSameAsTrigger()) {
 						String mappedTo = sfa.getMappedTo();
 						ServiceFunctionAttribute sfam = attlist.get(mappedTo);
@@ -343,18 +589,27 @@ public class SocialBotManagerService extends RESTService {
 						JSONObject triggerAttributes = (JSONObject) j.get("attributes");
 						JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
 						for (ServiceFunctionAttribute subsfa : sfa.getChildAttributes()) {
-							System.out.println("\t" + subsfa.getName());
-
 							if (subsfa.isSameAsTrigger()) {
-								String mappedTo = sfa.getMappedTo();
+								String mappedTo = subsfa.getMappedTo();
 								ServiceFunctionAttribute sfam = attlist.get(mappedTo);
-								b.put(subsfa.getName(), triggerBody.get(sfam.getName()));
+								if (triggerBody.get(sfam.getName()) != null)
+									b.put(subsfa.getName(), triggerBody.get(sfam.getName()));
+								else
+									b.put(subsfa.getName(), triggerAttributes.get(sfam.getName()));
 							} else {
 								// Use AI to generate body
-								ContentGenerator g = config.getGeneratorList().get(subsfa.getGeneratorId());
+								ContentGenerator g = sconfig.getGeneratorList().get(subsfa.getGeneratorId());
 								if (g != null) {
 									String inputId = g.getInput();
-									String inferInput = (String) triggerBody.get(attlist.get(inputId).getName());
+									String inferInput = "";
+									ServiceFunctionAttribute tsfa = attlist.get(inputId);
+									if (attlist.get(tsfa.getFunctionId()) != null) {
+										inferInput = (String) triggerBody.get(attlist.get(inputId).getName());
+									} else if (sconfig.getUserServiceFunctions().containsKey(tsfa.getFunctionId())) {
+										inferInput = (String) triggerAttributes.get(attlist.get(inputId).getName());
+									} else {
+										// TODO ERROR
+									}
 									Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference",
 											inferInput);
 									if (rmiResult instanceof String) {
@@ -364,7 +619,36 @@ public class SocialBotManagerService extends RESTService {
 												+ rmiResult.getClass().getCanonicalName() + ") of RMI call");
 									}
 								} else {
-									// condition block
+									if (sconfig.getAttributeIfThens().containsKey(subsfa.getId())) {
+										// if then
+										IfThenBlock itb = sconfig.getAttributeIfThens().get(subsfa.getId());
+										String sourceAttributeName = attlist.get(itb.getSource()).getName();
+										System.out.println(j.toJSONString());
+										String source = triggerAttributes.getAsString(sourceAttributeName);
+										System.out.println(source);
+										IfBlock ib = sconfig.getAttributeIfs().get(itb.getIb());
+										do {
+											// TODO Helper function for check
+											if (checkIfCondition(source, ib.getConditionType(), ib.getValue())) {
+												if (ib.getNext() != null)
+													ib = ib.getNext();
+											} else {
+												return Response.status(Status.BAD_REQUEST)
+														.entity(ib.getConditionType() + " not fullfiled").build();
+												// TODO Discard function
+											}
+										} while (ib.getNext() != null);
+										ThenBlock tb = sconfig.getAttributeThens().get(itb.getTb());
+										do {
+											// TODO Manipulation
+											source = manipulateString(source, tb.getManipulationType(), tb.getValue());
+											if (tb.getNext() != null)
+												tb = tb.getNext();
+										} while (tb.getNext() != null);
+										b.put(subsfa.getName(), source);
+									} else {
+										// Ja well... weder if noch tensorflow
+									}
 								}
 
 							}
@@ -372,21 +656,79 @@ public class SocialBotManagerService extends RESTService {
 						}
 					} else {
 						// TODO Pathparam -> ai or if then
+						JSONObject triggerAttributes = (JSONObject) j.get("attributes");
+						ContentGenerator g = sconfig.getGeneratorList().get(sfa.getGeneratorId());
+						if (g != null) {
+							String inputId = g.getInput();
+							String inferInput = (String) triggerAttributes.get(attlist.get(inputId).getName());
+							Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference", inferInput);
+							if (rmiResult instanceof String) {
+								b.put(sfa.getName(), (String) rmiResult);
+							} else {
+								throw new InternalServiceException("Unexpected result ("
+										+ rmiResult.getClass().getCanonicalName() + ") of RMI call");
+							}
+						} else {
+							if (sconfig.getAttributeIfThens().containsKey(sfa.getId())) {
+								// if then
+								IfThenBlock itb = sconfig.getAttributeIfThens().get(sfa.getId());
+								String sourceAttributeName = attlist.get(itb.getSource()).getName();
+								System.out.println(j.toJSONString());
+								String source = triggerAttributes.getAsString(sourceAttributeName);
+								System.out.println(source);
+								IfBlock ib = sconfig.getAttributeIfs().get(itb.getIb());
+								do {
+									// TODO Helper function for check
+									if (checkIfCondition(source, ib.getConditionType(), ib.getValue())) {
+										if (ib.getNext() != null)
+											ib = ib.getNext();
+									} else {
+										// TODO Discard function
+										return Response.status(Status.BAD_REQUEST)
+												.entity(ib.getConditionType() + " not fullfiled").build();
+									}
+								} while (ib.getNext() != null);
+								ThenBlock tb = sconfig.getAttributeThens().get(itb.getTb());
+								do {
+									// TODO Manipulation
+									source = manipulateString(source, tb.getManipulationType(), tb.getValue());
+									if (tb.getNext() != null)
+										tb = tb.getNext();
+								} while (tb.getNext() != null);
+								b.put(sfa.getName(), source);
+							} else {
+								// Ja well... weder if noch tensorflow
+							}
+						}
 					}
 				}
 				if (sf.getFunctionType().equals("service")) {
 					ClientResponse result = client.sendRequest(sf.getType().toUpperCase(),
 							sf.getServiceName() + adjustedPath, b.toJSONString(), sf.getConsumes(), sf.getProduces(),
 							headers);
+					System.out.println(result.getHttpCode());
+					System.out.println(result.getResponse());
 					returnString = result.getResponse();
 
+					JSONObject logData = new JSONObject();
+					logData.put("service", sf.getServiceName());
+					logData.put("body", b);
+					logData.put("trigger", j);
+					Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, logData.toString());
 				} else if (sf.getFunctionType().equals("conversation")) {
 					if (sf.getConversationType().equals("Slack")) {
-						String mail = ((UserAgentImpl) Context.get().fetchAgent(triggerUID)).getEmail();
-						b.put("email", mail);
+						if (b.get("channel") == null) {
+							// TODO Anonymous agent error
+							String mail = ((UserAgentImpl) Context.get().fetchAgent(triggerUID)).getEmail();
+							b.put("email", mail);
+						}
 						b.put("token", sf.getToken());
-						System.out.println(b.toJSONString());
 						triggerSlack(b.toJSONString());
+						JSONObject logData = new JSONObject();
+						logData.put("slack", sf.getServiceName());
+						logData.put("body", b);
+						logData.put("trigger", j);
+						Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, logData.toString());
 					}
 				}
 			} else {
@@ -426,7 +768,6 @@ public class SocialBotManagerService extends RESTService {
 					code = HttpURLConnection.HTTP_OK,
 					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
 	public void triggerSlack(String body) {
-
 		HashMap<String, String> params = new HashMap<String, String>();
 		Map<String, String> header = new HashMap<String, String>();
 		MiniClient client = new MiniClient();
@@ -439,81 +780,83 @@ public class SocialBotManagerService extends RESTService {
 		boolean found = false;
 		try {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			try {
-				userEnv = Context.get().requestEnvelope(ENVELOPE_USER + "_" + "agendId");
-				Serializable s = userEnv.getContent();
-				if (s instanceof String && s != null) {
-					channel = (String) s;
-				} else {
-					System.out.println("Wrong content");
-					if (s == null)
-						found = true;
-					throw new EnvelopeOperationFailedException("");
-				}
-			} catch (EnvelopeNotFoundException | EnvelopeOperationFailedException e) {
-
-				JSONObject b = (JSONObject) p.parse(body);
-				String token = b.getAsString("token");
-				params.put("token", token);
-				r = client.sendRequest("POST", "users.list", getDataString(params), "application/x-www-form-urlencoded",
-						"application/x-www-form-urlencoded", header);
-				JSONObject j = (JSONObject) p.parse(r.getResponse());
-				JSONArray memberList = (JSONArray) j.get("members");
-				JSONObject foundUser = new JSONObject();
-
-				String triggerMail = b.getAsString("email");
-				for (Object o : memberList) {
-					if (o instanceof JSONObject) {
-						JSONObject jo = (JSONObject) o;
-						JSONObject profile = (JSONObject) jo.get("profile");
-						if (profile.get("email") != null) {
-							String pmail = (String) profile.get("email");
-							if (pmail.equals(triggerMail)) {
-								foundUser = jo;
-								break;
-							}
-						}
-					}
-				}
-				String uId = (String) foundUser.get("id");
-				r = client.sendRequest("POST", "im.list", getDataString(params), "application/x-www-form-urlencoded",
-						"application/x-www-form-urlencoded", header);
-
-				j = (JSONObject) p.parse(r.getResponse());
-				JSONArray imList = (JSONArray) j.get("ims");
-				JSONObject foundChannel = new JSONObject();
-				for (Object o : imList) {
-					if (o instanceof JSONObject) {
-						JSONObject channels = (JSONObject) o;
-						if (channels.get("user") != null) {
-							String u = (String) channels.get("user");
-							if (u.equals(uId)) {
-								foundChannel = channels;
-								break;
-							}
-						}
-					}
-				}
-				channel = foundChannel.getAsString("id");
-				if (found) {
-					try {
-						userEnv = Context.get().requestEnvelope(ENVELOPE_USER + "_" + "agendId");
-					} catch (EnvelopeNotFoundException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-				} else {
-					userEnv = Context.get().createEnvelope(ENVELOPE_USER + "_" + "agendId",
-							Context.get().getServiceAgent());
-					// update envelope content
-					userEnv.setPublic();
-				}
-				userEnv.setContent(channel);
-				// store envelope with file content
-				Context.get().storeEnvelope(userEnv, Context.get().getServiceAgent());
-			}
 			JSONObject b = (JSONObject) p.parse(body);
-			triggerMessage = b.getAsString("message");
+			if (!b.containsKey("channel")) {
+				try {
+					userEnv = Context.get().requestEnvelope(ENVELOPE_USER + "_" + "agendId");
+					Serializable s = userEnv.getContent();
+					if (s instanceof String && s != null) {
+						channel = (String) s;
+					} else {
+						System.out.println("Wrong content");
+						if (s == null)
+							found = true;
+						throw new EnvelopeOperationFailedException("");
+					}
+				} catch (EnvelopeNotFoundException | EnvelopeOperationFailedException e) {
+					String token = b.getAsString("token");
+					params.put("token", token);
+					r = client.sendRequest("POST", "users.list", getDataString(params),
+							"application/x-www-form-urlencoded", "application/x-www-form-urlencoded", header);
+					JSONObject j = (JSONObject) p.parse(r.getResponse());
+					JSONArray memberList = (JSONArray) j.get("members");
+					JSONObject foundUser = new JSONObject();
+
+					String triggerMail = b.getAsString("email");
+					for (Object o : memberList) {
+						if (o instanceof JSONObject) {
+							JSONObject jo = (JSONObject) o;
+							JSONObject profile = (JSONObject) jo.get("profile");
+							if (profile.get("email") != null) {
+								String pmail = (String) profile.get("email");
+								if (pmail.equals(triggerMail)) {
+									foundUser = jo;
+									break;
+								}
+							}
+						}
+					}
+					String uId = (String) foundUser.get("id");
+					r = client.sendRequest("POST", "im.list", getDataString(params),
+							"application/x-www-form-urlencoded", "application/x-www-form-urlencoded", header);
+
+					j = (JSONObject) p.parse(r.getResponse());
+					JSONArray imList = (JSONArray) j.get("ims");
+					JSONObject foundChannel = new JSONObject();
+					for (Object o : imList) {
+						if (o instanceof JSONObject) {
+							JSONObject channels = (JSONObject) o;
+							if (channels.get("user") != null) {
+								String u = (String) channels.get("user");
+								if (u.equals(uId)) {
+									foundChannel = channels;
+									break;
+								}
+							}
+						}
+					}
+					channel = foundChannel.getAsString("id");
+					if (found) {
+						try {
+							userEnv = Context.get().requestEnvelope(ENVELOPE_USER + "_" + "agendId");
+						} catch (EnvelopeNotFoundException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					} else {
+						userEnv = Context.get().createEnvelope(ENVELOPE_USER + "_" + "agendId",
+								Context.get().getServiceAgent());
+						// update envelope content
+						userEnv.setPublic();
+					}
+					userEnv.setContent(channel);
+					// store envelope with file content
+					Context.get().storeEnvelope(userEnv, Context.get().getServiceAgent());
+				}
+			} else {
+				channel = b.getAsString("channel");
+			}
+			triggerMessage = b.getAsString("text");
 			String token = b.getAsString("token");
 			params.put("channel", channel);
 			params.put("token", token);
@@ -551,25 +894,26 @@ public class SocialBotManagerService extends RESTService {
 			body = body.replace("$botId", botAgent.getIdentifier());
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			JSONObject j = (JSONObject) p.parse(body);
-			System.out.println(j.getAsString(config.getEnvironmentSeparator()));
-			botIsActive.put(j.getAsString(config.getEnvironmentSeparator()), true);
-
-			String joinPath = (String) j.get("joinPath");
 			String basePath = (String) j.get("basePath");
+			String[] s = basePath.split("/");
+			String service = s[s.length - 1];
+			System.out.println(service);
+			System.out.println(config.getServiceConfiguration(service).getEnvironmentSeparator());
+			botIsActive.put(j.getAsString(config.getServiceConfiguration(service).getEnvironmentSeparator()), true);
+			if (j.get("directJoin") == null) {
+				String joinPath = (String) j.get("joinPath");
 
-			joinPath.replace("$botId", botAgent.getIdentifier());
+				joinPath.replace("$botId", botAgent.getIdentifier());
 
-			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(basePath);
-			client.setLogin(botAgent.getLoginName(), botPass);
+				MiniClient client = new MiniClient();
+				client.setConnectorEndpoint(basePath);
+				client.setLogin(botAgent.getLoginName(), botPass);
 
-			j.remove("joinPath");
-			j.remove("basePath");
-
-			System.out.println(botAgent.getIdentifier());
-
-			ClientResponse result = client.sendRequest("POST", joinPath, j.toJSONString(), "application/json",
-					"text/html", new HashMap<String, String>());
+				j.remove("joinPath");
+				j.remove("basePath");
+				ClientResponse result = client.sendRequest("POST", joinPath, j.toJSONString(), "application/json",
+						"text/html", new HashMap<String, String>());
+			}
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -597,38 +941,34 @@ public class SocialBotManagerService extends RESTService {
 			notes = "Example method that returns a phrase containing the received input.")
 	public Response putModel(@PathParam("name") String name, String body) {
 		// fetch or create envelope by file identifier
-
-		boolean created = false;
 		Envelope fileEnv = null;
 		JSONObject models = new JSONObject();
 		try {
 			try {
+				// load existing models
 				fileEnv = Context.get().requestEnvelope(ENVELOPE_MODEL);
 				Serializable s = fileEnv.getContent();
 				if (s instanceof JSONObject) {
 					models = (JSONObject) s;
 				} else {
+					// return wrong content exception error
 					System.out.println("Wrong content");
 				}
 			} catch (EnvelopeNotFoundException e) {
-				// logger.info("File (" + ENVELOPE_MODEL + ") not found. Creating new one. " + e.toString());
+				// Create new model list
 				fileEnv = Context.get().createEnvelope(ENVELOPE_MODEL, Context.get().getServiceAgent());
-				created = true;
 			}
-			// update envelope content
+			// Update envelope content
 			fileEnv.setPublic();
 			models.put(name, body);
 			fileEnv.setContent(models);
 			// store envelope with file content
 			Context.get().storeEnvelope(fileEnv, Context.get().getServiceAgent());
-		} catch (EnvelopeAccessDeniedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (EnvelopeOperationFailedException e) {
-			// TODO Auto-generated catch block
+		} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e) {
+			// return Envelope exception error
 			e.printStackTrace();
 		}
-		return Response.ok().entity("Model added.").build();
+		return Response.ok().entity("Model stored.").build();
 	}
 
 	@GET
@@ -719,7 +1059,7 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	@GET
-	@Path("/contentGenerators")
+	@Path("/contentGenerators/{service}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
@@ -728,24 +1068,36 @@ public class SocialBotManagerService extends RESTService {
 	@ApiOperation(
 			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
 			notes = "Example method that returns a phrase containing the received input.")
-	public Response getContentGenerators() {
-		return Response.ok().entity(config.getGeneratorList()).build();
+	public Response getContentGenerators(@PathParam("service") String service) {
+		BotServiceConfiguration sconfig = config.getServiceConfiguration(service);
+		return Response.ok().entity(sconfig.getGeneratorList()).build();
 	}
 
 	// TODO your own service methods, e. g. for RMI
-	private void setVLEInstance(JSONObject elem) {
+	private VLE setVLEInstance(JSONObject elem) {
+		VLE vle = new VLE();
+		// BotServiceConfiguration sconfig = config.getServiceConfiguration(service);
 		for (HashMap.Entry<String, Object> subEntry : ((JSONObject) elem.get("attributes")).entrySet()) {
 			if (subEntry.getValue() instanceof JSONObject) {
 				JSONObject subElem = (JSONObject) subEntry.getValue();
 				JSONObject subVal = (JSONObject) subElem.get("value");
 				if (subVal.get("name").equals("Addr")) {
-					config.setBotServiceAddr((String) subVal.get("value"));
+					vle.setAddr((String) subVal.get("value"));
 				} else if (subVal.get("name").equals("Environment Separator")) {
-					config.setEnvironmentSeparator((String) subVal.get("value"));
-					System.out.println(config.getEnvironmentSeparator());
+					String sep = (String) subVal.get("value");
+					if (sep.equals("")) {
+						// Single Environment
+						vle.setSeparator("singleEnvironment");
+						// sconfig.setEnvironmentSeparator("singleEnvironment");
+					} else {
+						// normal setup
+						vle.setSeparator(sep);
+						// sconfig.setEnvironmentSeparator(sep);
+					}
 				}
 			}
 		}
+		return vle;
 	}
 
 	private ServiceFunction addAction(String key, JSONObject elem) {
@@ -765,6 +1117,7 @@ public class SocialBotManagerService extends RESTService {
 					sfName = (String) subVal.get("value");
 				} else if (subVal.get("name").equals("Service")) {
 					service = (String) subVal.get("value");
+					config.addServiceConfiguration(service, new BotServiceConfiguration());
 				} else if (subVal.get("name").equals("Action Type")) {
 					actionType = (String) subVal.get("value");
 				} else if (subVal.get("name").equals("Conversation Type")) {
@@ -778,6 +1131,7 @@ public class SocialBotManagerService extends RESTService {
 		if (actionType.equals("conversation")) {
 			sf.setFunctionType(actionType);
 			sf.setConversationType(conversationType);
+			sf.setServiceName(service);
 			sf.setToken(token);
 		} else {
 			// default case
@@ -833,7 +1187,9 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-	private void addBot(JSONObject elem) {
+	private Bot addBot(JSONObject elem) {
+		Bot b = new Bot();
+		b.setActive(false);
 		for (HashMap.Entry<String, Object> subEntry : ((JSONObject) elem.get("attributes")).entrySet()) {
 			if (subEntry.getValue() instanceof JSONObject) {
 				JSONObject subElem = (JSONObject) subEntry.getValue();
@@ -849,19 +1205,40 @@ public class SocialBotManagerService extends RESTService {
 								.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName(botName));
 						botAgent.unlock(botPass);
 						Context.getCurrent().registerReceiver(botAgent);
-						runningAt = botAgent.getRunningAtNode();
-						System.out.println("Bot registered at: " + botAgent.getRunningAtNode().getNodeId());
+						// runningAt = botAgent.getRunningAtNode();
+						System.out.println(
+								"Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
-					config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
+					// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
+					b.setId(botAgent.getIdentifier());
+					b.setName(botAgent.getLoginName());
 				}
 			}
 		}
+		return b;
+	}
+
+	private VLEUser addUser(JSONObject elem) {
+		VLEUser u = new VLEUser();
+		for (HashMap.Entry<String, Object> subEntry : ((JSONObject) elem.get("attributes")).entrySet()) {
+			if (subEntry.getValue() instanceof JSONObject) {
+				JSONObject subElem = (JSONObject) subEntry.getValue();
+				JSONObject subVal = (JSONObject) subElem.get("value");
+				if (subVal.get("name").equals("type")) {
+
+					String userType = (String) subVal.get("value");
+					u.setName(userType);
+				}
+			}
+		}
+		return u;
 	}
 
 	private IfBlock addIfBlock(String key, JSONObject elem) {
 		IfBlock ib = new IfBlock();
+		ib.setId(key);
 		for (HashMap.Entry<String, Object> subEntry : ((JSONObject) elem.get("attributes")).entrySet()) {
 			if (subEntry.getValue() instanceof JSONObject) {
 				JSONObject subElem = (JSONObject) subEntry.getValue();
@@ -878,6 +1255,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private ThenBlock addThenBlock(String key, JSONObject elem) {
 		ThenBlock ib = new ThenBlock();
+		ib.setId(key);
 		for (HashMap.Entry<String, Object> subEntry : ((JSONObject) elem.get("attributes")).entrySet()) {
 			if (subEntry.getValue() instanceof JSONObject) {
 				JSONObject subElem = (JSONObject) subEntry.getValue();
@@ -898,6 +1276,34 @@ public class SocialBotManagerService extends RESTService {
 			trigger(m.getRemarks());
 		}
 		return true;
+	}
+
+	private boolean checkIfCondition(String text, String conditionType, String value) {
+		if (conditionType.equals("contains")) {
+			return text.contains(value);
+		} else if (conditionType.equals("equals")) {
+			return text.equals(value);
+		}
+		// TODO implement more
+		return false;
+	}
+
+	private String getParent(String sfa, HashMap<String, ServiceFunctionAttribute> sfaList) {
+		String parent = sfa;
+		do {
+			parent = sfaList.get(parent).getFunctionId();
+		} while (sfaList.get(parent) != null);
+
+		return parent;
+	}
+
+	private String manipulateString(String text, String manipulationType, String value) {
+		if (manipulationType.equals("static")) {
+			text = value;
+		} else if (manipulationType.equals("replace")) {
+			// TODO
+		}
+		return text;
 	}
 
 	private static String readAll(Reader rd) throws IOException {

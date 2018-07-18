@@ -10,6 +10,7 @@ public class ServiceFunctionAttribute {
 	private String mappedTo;
 	private ArrayList<ServiceFunctionAttribute> childAttributes;
 	private String generatorId;
+	private String functionId;
 
 	public ServiceFunctionAttribute() {
 		childAttributes = new ArrayList<ServiceFunctionAttribute>();
@@ -73,5 +74,13 @@ public class ServiceFunctionAttribute {
 
 	public void setMappedTo(String mappedTo) {
 		this.mappedTo = mappedTo;
+	}
+
+	public String getFunctionId() {
+		return functionId;
+	}
+
+	public void setFunctionId(String functionId) {
+		this.functionId = functionId;
 	}
 }

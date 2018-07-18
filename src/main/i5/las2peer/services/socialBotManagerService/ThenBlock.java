@@ -1,9 +1,12 @@
 package i5.las2peer.services.socialBotManagerService;
 
 public class ThenBlock {
+	private String id;
 	private String manipulationType;
 	private String value;
 	private ThenBlock next;
+	private ThenBlock prev;
+	private String output;
 
 	public String getManipulationType() {
 		return manipulationType;
@@ -31,5 +34,29 @@ public class ThenBlock {
 
 	public boolean hasNext() {
 		return next != null;
+	}
+
+	public ThenBlock getPrev() {
+		return prev;
+	}
+
+	public void setPrev(ThenBlock prev) {
+		this.prev = prev;
+	}
+
+	public String getOutput() {
+		return output;
+	}
+
+	public void setOutput(String output) {
+		this.output = output;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 }
