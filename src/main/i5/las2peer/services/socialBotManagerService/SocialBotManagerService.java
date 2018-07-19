@@ -487,7 +487,6 @@ public class SocialBotManagerService extends RESTService {
 				allFunctions.putAll(sconfig.getUserServiceFunctions());
 				allFunctions.putAll(sconfig.getBotServiceFunctions());
 				for (ServiceFunction s : allFunctions.values()) {
-
 					// try to get swagger information
 
 					if (sconfig.getServiceInformation().get(s.getServiceName()) == null
@@ -579,12 +578,27 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject b = new JSONObject();
 				HashMap<String, ServiceFunctionAttribute> attlist = sconfig.getServiceFunctionsAttributes();
 				for (ServiceFunctionAttribute sfa : sf.getAttributes()) {
+					// Attributes of the triggered function
 					if (sfa.isSameAsTrigger()) {
+						// get id of the trigger function
 						String mappedTo = sfa.getMappedTo();
+						// service function attribtue
 						ServiceFunctionAttribute sfam = attlist.get(mappedTo);
+						// attributes of the function that triggered the bot
 						JSONObject triggerAttributes = (JSONObject) j.get("attributes");
-						adjustedPath = adjustedPath.replace("{" + sfa.getName() + "}",
-								triggerAttributes.getAsString(sfam.getName()));
+						JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
+						if (triggerAttributes.containsKey(sfam.getName())) {
+							String replaceWith = triggerAttributes.getAsString(sfam.getName());
+							adjustedPath = adjustedPath.replace("{" + sfa.getName() + "}", replaceWith);
+							b.put(sfa.getName(), replaceWith);
+						} else if (triggerBody != null && triggerBody.containsKey(sfam.getName())) {
+							String replaceWith = triggerBody.getAsString(sfam.getName());
+							adjustedPath = adjustedPath.replace("{" + sfa.getName() + "}", replaceWith);
+							b.put(sfa.getName(), replaceWith);
+						} else {
+							// TODO Error could not map attributes
+						}
+
 					} else if (sfa.getName() == "body") {
 						JSONObject triggerAttributes = (JSONObject) j.get("attributes");
 						JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
@@ -623,24 +637,26 @@ public class SocialBotManagerService extends RESTService {
 										// if then
 										IfThenBlock itb = sconfig.getAttributeIfThens().get(subsfa.getId());
 										String sourceAttributeName = attlist.get(itb.getSource()).getName();
-										System.out.println(j.toJSONString());
-										String source = triggerAttributes.getAsString(sourceAttributeName);
-										System.out.println(source);
+										String source = "";
+										if (triggerBody.containsKey(sourceAttributeName)) {
+											source = triggerBody.getAsString(sourceAttributeName);
+										} else if (triggerAttributes.containsKey(sourceAttributeName)) {
+											source = triggerAttributes.getAsString(sourceAttributeName);
+										} else {
+											// TODO could not map attribtue
+										}
 										IfBlock ib = sconfig.getAttributeIfs().get(itb.getIb());
 										do {
-											// TODO Helper function for check
 											if (checkIfCondition(source, ib.getConditionType(), ib.getValue())) {
 												if (ib.getNext() != null)
 													ib = ib.getNext();
 											} else {
 												return Response.status(Status.BAD_REQUEST)
 														.entity(ib.getConditionType() + " not fullfiled").build();
-												// TODO Discard function
 											}
 										} while (ib.getNext() != null);
 										ThenBlock tb = sconfig.getAttributeThens().get(itb.getTb());
 										do {
-											// TODO Manipulation
 											source = manipulateString(source, tb.getManipulationType(), tb.getValue());
 											if (tb.getNext() != null)
 												tb = tb.getNext();
@@ -673,9 +689,16 @@ public class SocialBotManagerService extends RESTService {
 								// if then
 								IfThenBlock itb = sconfig.getAttributeIfThens().get(sfa.getId());
 								String sourceAttributeName = attlist.get(itb.getSource()).getName();
-								System.out.println(j.toJSONString());
-								String source = triggerAttributes.getAsString(sourceAttributeName);
-								System.out.println(source);
+								String source = "";
+								JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
+								if (triggerAttributes.containsKey(sourceAttributeName)) {
+									source = triggerAttributes.getAsString(sourceAttributeName);
+								} else if (triggerBody != null && triggerBody.containsKey(sourceAttributeName)) {
+									source = triggerBody.getAsString(sourceAttributeName);
+								} else {
+									// TODO could not map attribtue
+								}
+
 								IfBlock ib = sconfig.getAttributeIfs().get(itb.getIb());
 								do {
 									// TODO Helper function for check
