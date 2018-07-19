@@ -624,7 +624,7 @@ public class SocialBotManagerService extends RESTService {
 									} else {
 										// TODO ERROR
 									}
-									Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference",
+									Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference", "",
 											inferInput);
 									if (rmiResult instanceof String) {
 										b.put(subsfa.getName(), (String) rmiResult);
@@ -677,7 +677,8 @@ public class SocialBotManagerService extends RESTService {
 						if (g != null) {
 							String inputId = g.getInput();
 							String inferInput = (String) triggerAttributes.get(attlist.get(inputId).getName());
-							Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference", inferInput);
+							Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference", "",
+									inferInput);
 							if (rmiResult instanceof String) {
 								b.put(sfa.getName(), (String) rmiResult);
 							} else {
