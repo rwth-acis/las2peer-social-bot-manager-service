@@ -676,7 +676,16 @@ public class SocialBotManagerService extends RESTService {
 						ContentGenerator g = sconfig.getGeneratorList().get(sfa.getGeneratorId());
 						if (g != null) {
 							String inputId = g.getInput();
-							String inferInput = (String) triggerAttributes.get(attlist.get(inputId).getName());
+							String sourceAttributeName = attlist.get(inputId).getName();
+							JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
+							String inferInput = "";
+							if (triggerAttributes.containsKey(sourceAttributeName)) {
+								inferInput = triggerAttributes.getAsString(sourceAttributeName);
+							} else if (triggerBody != null && triggerBody.containsKey(sourceAttributeName)) {
+								inferInput = triggerBody.getAsString(sourceAttributeName);
+							} else {
+								// TODO could not map attribtue
+							}
 							Serializable rmiResult = Context.get().invoke(g.getServiceName(), "inference", "",
 									inferInput);
 							if (rmiResult instanceof String) {
