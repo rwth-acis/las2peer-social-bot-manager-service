@@ -1,12 +1,14 @@
-package i5.las2peer.services.socialBotManagerService;
+package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class ServiceFunction {
 	private String id;
 	private String functionName;
 	private String serviceName;
 	private ArrayList<ServiceFunctionAttribute> attributes;
+	private HashSet<String> bots;
 	private String path;
 	private String type;
 	private String consumes;
@@ -14,9 +16,11 @@ public class ServiceFunction {
 	private String functionType = "service";
 	private String conversationType;
 	private String token;
+	private ServiceFunction tf;
 
 	public ServiceFunction() {
 		attributes = new ArrayList<ServiceFunctionAttribute>();
+		bots = new HashSet<String>();
 	}
 
 	public String getFunctionName() {
@@ -109,5 +113,25 @@ public class ServiceFunction {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public HashSet<String> getBots() {
+		return bots;
+	}
+
+	public void setBots(HashSet<String> bots) {
+		this.bots = bots;
+	}
+
+	public void addBot(String name) {
+		this.bots.add(name);
+	}
+
+	public ServiceFunction getTf() {
+		return tf;
+	}
+
+	public void setTf(ServiceFunction tf) {
+		this.tf = tf;
 	}
 }

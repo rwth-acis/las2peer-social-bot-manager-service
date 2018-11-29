@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService;
+package i5.las2peer.services.socialBotManagerService.model;
 
 public class IfThenBlock {
 	private String ib;

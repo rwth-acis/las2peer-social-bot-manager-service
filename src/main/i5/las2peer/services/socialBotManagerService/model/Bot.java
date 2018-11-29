@@ -1,19 +1,17 @@
-package i5.las2peer.services.socialBotManagerService;
+package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashMap;
 import java.util.HashSet;
 
-import net.minidev.json.JSONObject;
+public class Bot {
+	private String name;
+	private String id;
+	private boolean active;
+	private String service;
+	private String vle;
 
-public class BotServiceConfiguration {
-
-	private String botServiceAddr = "";
-	private String environmentSeparator = "";
-
-	private HashMap<String, Bot> bots;
 	private HashMap<String, ServiceFunction> botServiceFunctions;
 	private HashMap<String, ServiceFunction> userServiceFunctions;
-	private HashMap<String, JSONObject> serviceInformation;
 	private HashMap<String, HashSet<String>> triggerList;
 	private HashMap<String, ContentGenerator> generatorList;
 	private HashMap<String, ServiceFunctionAttribute> serviceFunctionsAttributes;
@@ -21,11 +19,9 @@ public class BotServiceConfiguration {
 	private HashMap<String, ThenBlock> attributeThens;
 	private HashMap<String, IfThenBlock> attributeIfThens;
 
-	public BotServiceConfiguration() {
-		setBots(new HashMap<String, Bot>());
+	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
 		userServiceFunctions = new HashMap<String, ServiceFunction>();
-		serviceInformation = new HashMap<String, JSONObject>();
 		triggerList = new HashMap<String, HashSet<String>>();
 		serviceFunctionsAttributes = new HashMap<String, ServiceFunctionAttribute>();
 		generatorList = new HashMap<String, ContentGenerator>();
@@ -34,20 +30,36 @@ public class BotServiceConfiguration {
 		attributeIfThens = new HashMap<String, IfThenBlock>();
 	}
 
-	public String getBotServiceAddr() {
-		return botServiceAddr;
+	public String getName() {
+		return name;
 	}
 
-	public void setBotServiceAddr(String botServiceAddr) {
-		this.botServiceAddr = botServiceAddr;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String getEnvironmentSeparator() {
-		return environmentSeparator;
+	public boolean isActive() {
+		return active;
 	}
 
-	public void setEnvironmentSeparator(String environmentSeparator) {
-		this.environmentSeparator = environmentSeparator;
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getService() {
+		return service;
+	}
+
+	public void setService(String service) {
+		this.service = service;
 	}
 
 	public HashMap<String, ServiceFunction> getBotServiceFunctions() {
@@ -86,18 +98,6 @@ public class BotServiceConfiguration {
 		this.userServiceFunctions.put(name, serviceFunction);
 	}
 
-	public HashMap<String, JSONObject> getServiceInformation() {
-		return serviceInformation;
-	}
-
-	public void setServiceInformation(HashMap<String, JSONObject> serviceInformation) {
-		this.serviceInformation = serviceInformation;
-	}
-
-	public void addServiceInformation(String name, JSONObject info) {
-		this.serviceInformation.put(name, info);
-	}
-
 	public HashMap<String, HashSet<String>> getTriggerList() {
 		return triggerList;
 	}
@@ -127,18 +127,6 @@ public class BotServiceConfiguration {
 
 	public void addGenerator(String s, ContentGenerator g) {
 		this.generatorList.put(s, g);
-	}
-
-	public HashMap<String, Bot> getBots() {
-		return bots;
-	}
-
-	public void setBots(HashMap<String, Bot> bots) {
-		this.bots = bots;
-	}
-
-	public void addBot(String id, Bot bot) {
-		this.bots.put(id, bot);
 	}
 
 	public HashMap<String, IfBlock> getAttributeIfs() {
@@ -175,5 +163,13 @@ public class BotServiceConfiguration {
 
 	public void addAttributeIfThen(String s, IfThenBlock itb) {
 		this.attributeIfThens.put(s, itb);
+	}
+
+	public String getVle() {
+		return vle;
+	}
+
+	public void setVle(String vle) {
+		this.vle = vle;
 	}
 }

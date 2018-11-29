@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService;
+package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
 
@@ -11,6 +11,9 @@ public class ServiceFunctionAttribute {
 	private ArrayList<ServiceFunctionAttribute> childAttributes;
 	private String generatorId;
 	private String functionId;
+	private boolean staticContent;
+	private String content;
+	private String contentURL;
 
 	public ServiceFunctionAttribute() {
 		childAttributes = new ArrayList<ServiceFunctionAttribute>();
@@ -82,5 +85,29 @@ public class ServiceFunctionAttribute {
 
 	public void setFunctionId(String functionId) {
 		this.functionId = functionId;
+	}
+
+	public boolean hasStaticContent() {
+		return staticContent;
+	}
+
+	public void setStaticContent(boolean staticContent) {
+		this.staticContent = staticContent;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public String getContentURL() {
+		return contentURL;
+	}
+
+	public void setContentURL(String contentURL) {
+		this.contentURL = contentURL;
 	}
 }
