@@ -181,14 +181,14 @@ public class SocialBotManagerService extends RESTService {
 		
 		try {
 			rasaNlu = new RasaNlu(new URL(System.getenv("RASA_NLU_URL")));
-		} catch (MalformedURLException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		try {
 			slackMediator = new SlackChatMediator(System.getenv("SLACK_BOT_USER_TOKEN"));
-		} catch (IOException | DeploymentException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
