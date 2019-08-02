@@ -27,6 +27,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.websocket.DeploymentException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -63,6 +64,9 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.security.UserAgentImpl;
+import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
+import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackChatMessageCollector;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
@@ -73,6 +77,8 @@ import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribu
 import i5.las2peer.services.socialBotManagerService.model.ThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
+import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import io.swagger.annotations.Api;
@@ -132,6 +138,10 @@ public class SocialBotManagerService extends RESTService {
 	private static final String textToTextName = "i5.las2peer.services.tensorFlowTextToText.TensorFlowTextToText";
 
 	private static ScheduledExecutorService rt = null;
+	
+	// TODO: Put these into bots properly
+	private static RasaNlu rasaNlu = null;
+	private static SlackChatMediator slackMediator = null;
 
 	public SocialBotManagerService() {
 		super();
@@ -166,10 +176,22 @@ public class SocialBotManagerService extends RESTService {
 		if (rt == null) {
 			System.out.println(1);
 			rt = Executors.newSingleThreadScheduledExecutor();
-			rt.scheduleAtFixedRate(new RoutineThread(), 0, 5, TimeUnit.SECONDS);
-
+			rt.scheduleAtFixedRate(new RoutineThread(), 0, 1, TimeUnit.SECONDS);
 		}
-
+		
+		try {
+			rasaNlu = new RasaNlu(new URL(System.getenv("RASA_NLU_URL")));
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			slackMediator = new SlackChatMediator(System.getenv("SLACK_BOT_USER_TOKEN"));
+		} catch (IOException | DeploymentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -1041,10 +1063,42 @@ public class SocialBotManagerService extends RESTService {
 		}
 		return text;
 	}
+	
+	// TODO: Move into bots
+	private void replyWithIntent(ChatMessage msg) {
+		String channel = "";
+		if (msg.getChannel() != null) {
+			channel = msg.getChannel();
+		}
+		
+		String text = msg.getText();
+		Intent intent;
+		try {
+			intent = rasaNlu.getIntent(text);
+			String message = "Intent: " + intent.getKeyword() + ", Confidence: " + intent.getConfidence();
+			slackMediator.sendMessageToChannel(channel, message, 0);
+		} catch (IOException | ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	// TODO: Move into bots
+	private void handleMessages() {
+		ArrayList<ChatMessage> messages = slackMediator.getMessages();
+		for (ChatMessage msg: messages) {
+			replyWithIntent(msg);
+		}
+	}
 
 	private class RoutineThread implements Runnable {
 
 		public void run() {
+			// TODO: Move into bots
+			if (slackMediator != null) {
+				handleMessages();
+			}
+
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			for (VLE vle : config.getVLEs().values()) {
@@ -1130,11 +1184,8 @@ public class SocialBotManagerService extends RESTService {
 							}
 						}
 					}
-
 				}
-
 			}
-
 		}
 	}
 
