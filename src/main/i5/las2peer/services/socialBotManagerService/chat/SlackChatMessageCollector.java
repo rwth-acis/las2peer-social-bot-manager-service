@@ -17,14 +17,15 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 			String type = messageJson.getAsString("type");
 			
 			if (type != null && type.equals("message")) {
-				ChatMessage message = SlackChatMediator.parseSlackMessage(messageJson);
+				ChatMessage message;
+				message = SlackChatMediator.parseSlackMessage(messageJson);
 				this.addMessage(message);
 			} else {
 				System.out.println("Skipped");
 			}
-		} catch (ParseException e) {
+		} catch (ParseException | InvalidMessageException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Invalid message skipped");
 		}
 	}
 }

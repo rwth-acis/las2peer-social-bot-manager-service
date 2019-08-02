@@ -11,5 +11,5 @@ public abstract class ChatMediator {
 
 	public abstract void sendMessageToChannel(String channel, String text, long id);
 
-	public abstract ChatMessage parseMessage(JSONObject o);
+	public abstract ChatMessage parseMessage(JSONObject o) throws InvalidMessageException;
 }

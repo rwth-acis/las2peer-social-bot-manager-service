@@ -37,16 +37,20 @@ public class SlackChatMediator extends ChatMediator {
 	}
 	
 	// static for calling from `SlackChatMessageCollector`
-	public static ChatMessage parseSlackMessage(JSONObject o) {
+	public static ChatMessage parseSlackMessage(JSONObject o) throws InvalidMessageException {
 		assert(o.getAsString("type") == "message");
 		String channel = o.getAsString("channel");
 		String user = o.getAsString("user");
 		String text = o.getAsString("text");
 		
+		if (channel == null || user == null || text == null) {
+			throw new InvalidMessageException();
+		}
+		
 		return new ChatMessage(channel, user, text);
 	}
 	
-	public ChatMessage parseMessage(JSONObject o) {
+	public ChatMessage parseMessage(JSONObject o) throws InvalidMessageException {
 		return parseSlackMessage(o);
 	}
 	
