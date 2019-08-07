@@ -30,6 +30,6 @@ public class RasaNlu {
 	
 	public Intent getIntent(String input) throws IOException, ParseException {
 		JSONObject intentJSON = getIntentJSON(input);
-		return new Intent(intentJSON);		
+		return new Intent(intentJSON);
 	}
 }

@@ -1075,7 +1075,7 @@ public class SocialBotManagerService extends RESTService {
 		Intent intent;
 		try {
 			intent = rasaNlu.getIntent(text);
-			String message = "Intent: " + intent.getKeyword() + ", Confidence: " + intent.getConfidence();
+			String message = "Intent: " + intent.getIntentName() + ", Confidence: " + intent.getConfidence();
 			slackMediator.sendMessageToChannel(channel, message, 0);
 		} catch (IOException | ParseException e) {
 			// TODO Auto-generated catch block

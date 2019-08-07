@@ -1,30 +1,43 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
+import java.util.HashMap;
+
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 
 public class Intent {
-	private String keyword;
-	// TODO: Entities
+	private String intentName;
 	private float confidence;
 
-	
+	private HashMap<String, Entity> entities;
+
 	public Intent(JSONObject json) {
 		JSONObject intentInner = (JSONObject) json.get("intent");
-		String confidenceString = intentInner.getAsString("confidence");
-		float confidence = Float.parseFloat(confidenceString);
-		
-		this.keyword = intentInner.getAsString("name");
+		float confidence = intentInner.getAsNumber("confidence").floatValue();
+		this.intentName = intentInner.getAsString("name");
 		this.confidence = confidence;
+
+		JSONArray entities = (JSONArray) json.get("entities");
+		HashMap<String, Entity> entitiesMap = new HashMap<String, Entity>();
+		entities.forEach(
+			o ->
+			{
+				Entity entity = new Entity((JSONObject)o);
+				entitiesMap.put(entity.getEntityName(), entity);
+			}
+		);
+		this.entities = entitiesMap;
 	}
-	
-	public String getKeyword() {
-		return this.keyword;
+
+	public String getIntentName() {
+		return this.intentName;
 	}
 
 	public float getConfidence() {
 		return this.confidence;
+	}
+
+	public Entity getEntity(String entity) {
+		return this.entities.get(entity);
 	}
 }

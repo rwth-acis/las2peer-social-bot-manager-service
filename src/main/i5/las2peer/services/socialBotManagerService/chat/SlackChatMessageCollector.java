@@ -23,8 +23,8 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 			} else {
 				System.out.println("Skipped");
 			}
-		} catch (ParseException | InvalidMessageException e) {
-			// TODO Auto-generated catch block
+		} catch (ParseException | InvalidChatMessageException e) {
+			// TODO We may want to handle other types of messages as well.
 			System.out.println("Invalid message skipped");
 		}
 	}
