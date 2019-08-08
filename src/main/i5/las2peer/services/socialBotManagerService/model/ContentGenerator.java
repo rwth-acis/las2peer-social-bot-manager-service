@@ -4,8 +4,8 @@ public class ContentGenerator {
 	private String id;
 	private String name;
 	private String serviceName;
-	private String input;
-	private String output;
+	private ServiceFunctionAttribute input;
+	private ServiceFunctionAttribute output;
 
 	public String getName() {
 		return name;
@@ -23,19 +23,19 @@ public class ContentGenerator {
 		this.serviceName = serviceName;
 	}
 
-	public String getInput() {
+	public ServiceFunctionAttribute getInput() {
 		return input;
 	}
 
-	public void setInput(String input) {
+	public void setInput(ServiceFunctionAttribute input) {
 		this.input = input;
 	}
 
-	public String getOutput() {
+	public ServiceFunctionAttribute getOutput() {
 		return output;
 	}
 
-	public void setOutput(String output) {
+	public void setOutput(ServiceFunctionAttribute output) {
 		this.output = output;
 	}
 
