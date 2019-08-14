@@ -6,28 +6,20 @@ import java.util.HashSet;
 public class Bot {
 	private String name;
 	private String id;
-	private boolean active;
+	private String version = "1.0.0";
 	private String service;
-	private String vle;
+	private VLE vle;
+	private HashMap<String,Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
-	private HashMap<String, ServiceFunction> userServiceFunctions;
-	private HashMap<String, HashSet<String>> triggerList;
+	private HashSet<Trigger> triggerList;
 	private HashMap<String, ContentGenerator> generatorList;
-	private HashMap<String, ServiceFunctionAttribute> serviceFunctionsAttributes;
-	private HashMap<String, IfBlock> attributeIfs;
-	private HashMap<String, ThenBlock> attributeThens;
-	private HashMap<String, IfThenBlock> attributeIfThens;
 
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
-		userServiceFunctions = new HashMap<String, ServiceFunction>();
-		triggerList = new HashMap<String, HashSet<String>>();
-		serviceFunctionsAttributes = new HashMap<String, ServiceFunctionAttribute>();
+		triggerList = new HashSet<Trigger>();
 		generatorList = new HashMap<String, ContentGenerator>();
-		attributeIfs = new HashMap<String, IfBlock>();
-		attributeThens = new HashMap<String, ThenBlock>();
-		attributeIfThens = new HashMap<String, IfThenBlock>();
+		active = new HashMap<String, Boolean>();
 	}
 
 	public String getName() {
@@ -36,14 +28,6 @@ public class Bot {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
 	}
 
 	public String getId() {
@@ -74,47 +58,17 @@ public class Bot {
 		this.botServiceFunctions.put(name, serviceFunction);
 	}
 
-	public HashMap<String, ServiceFunctionAttribute> getServiceFunctionsAttributes() {
-		return serviceFunctionsAttributes;
-	}
-
-	public void setServiceFunctionsAttributes(HashMap<String, ServiceFunctionAttribute> serviceFunctionsAttributes) {
-		this.serviceFunctionsAttributes = serviceFunctionsAttributes;
-	}
-
-	public void addServiceFunctionsAttributes(String key, ServiceFunctionAttribute serviceFunctionsAttribute) {
-		this.serviceFunctionsAttributes.put(key, serviceFunctionsAttribute);
-	}
-
-	public HashMap<String, ServiceFunction> getUserServiceFunctions() {
-		return userServiceFunctions;
-	}
-
-	public void setUserServiceFunctions(HashMap<String, ServiceFunction> userServiceFunctions) {
-		this.userServiceFunctions = userServiceFunctions;
-	}
-
-	public void addUserServiceFunction(String name, ServiceFunction serviceFunction) {
-		this.userServiceFunctions.put(name, serviceFunction);
-	}
-
-	public HashMap<String, HashSet<String>> getTriggerList() {
+	public HashSet<Trigger> getTriggerList() {
 		return triggerList;
 	}
 
-	public void setTriggerList(HashMap<String, HashSet<String>> triggerList) {
+	public void setTriggerList(HashSet<Trigger> triggerList) {
 		this.triggerList = triggerList;
 	}
 
-	public void addTrigger(String t, String f) {
-		HashSet<String> l = this.triggerList.get(t);
-		if (l == null) {
-			l = new HashSet<String>();
-			l.add(f);
-			this.triggerList.put(t, l);
-		} else {
-			l.add(f);
-		}
+	public void addTrigger(Trigger t) {
+		this.triggerList.add(t);
+
 	}
 
 	public HashMap<String, ContentGenerator> getGeneratorList() {
@@ -129,47 +83,46 @@ public class Bot {
 		this.generatorList.put(s, g);
 	}
 
-	public HashMap<String, IfBlock> getAttributeIfs() {
-		return attributeIfs;
-	}
-
-	public void setAttributeIfs(HashMap<String, IfBlock> attributeIfs) {
-		this.attributeIfs = attributeIfs;
-	}
-
-	public void addAttributeIf(String key, IfBlock ib) {
-		this.attributeIfs.put(key, ib);
-	}
-
-	public HashMap<String, ThenBlock> getAttributeThens() {
-		return attributeThens;
-	}
-
-	public void setAttributeThens(HashMap<String, ThenBlock> attributeThens) {
-		this.attributeThens = attributeThens;
-	}
-
-	public void addAttributeThen(String key, ThenBlock tb) {
-		this.attributeThens.put(key, tb);
-	}
-
-	public HashMap<String, IfThenBlock> getAttributeIfThens() {
-		return attributeIfThens;
-	}
-
-	public void setAttributeIfThens(HashMap<String, IfThenBlock> attributeIfThens) {
-		this.attributeIfThens = attributeIfThens;
-	}
-
-	public void addAttributeIfThen(String s, IfThenBlock itb) {
-		this.attributeIfThens.put(s, itb);
-	}
-
-	public String getVle() {
+	public VLE getVle() {
 		return vle;
 	}
 
-	public void setVle(String vle) {
+	public void setVle(VLE vle) {
 		this.vle = vle;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public HashMap<String,Boolean> getActive() {
+		return active;
+	}
+
+	public void setActive(HashMap<String,Boolean> active) {
+		this.active = active;
+	}
+	
+	public void setIdActive(String id, boolean active) {
+		this.active.put(id, active);
+	}
+	
+	public void deactivateAll() {
+		for (String k : this.active.keySet()) {
+			this.active.put(k, false);
+		}
+	}
+	
+	public int countActive() {
+		int trueCount = 0;
+		for(boolean b:active.values()) {
+			if(b)
+				trueCount++;
+		}
+		return trueCount;
 	}
 }

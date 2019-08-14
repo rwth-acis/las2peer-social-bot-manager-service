@@ -2,15 +2,16 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashSet;
 
-public class VLERoutine {
+public class VLERoutine extends TriggerFunction{
 	private String name;
 	private String interval;
 	private String time;
 	private long lastUpdate;
-	private HashSet<ServiceFunction> triggerFunctions;
+	private HashSet<Trigger> trigger;
+	private VLE vle;
 
 	public VLERoutine() {
-		this.setTriggerFunctions(new HashSet<ServiceFunction>());
+		this.setTrigger(new HashSet<Trigger>());
 	}
 
 	public String getName() {
@@ -45,15 +46,23 @@ public class VLERoutine {
 		this.lastUpdate = lastUpdate;
 	}
 
-	public HashSet<ServiceFunction> getTriggerFunctions() {
-		return triggerFunctions;
+	public HashSet<Trigger> getTrigger() {
+		return trigger;
 	}
 
-	public void setTriggerFunctions(HashSet<ServiceFunction> triggerFunctions) {
-		this.triggerFunctions = triggerFunctions;
+	public void setTrigger(HashSet<Trigger> triggerFunctions) {
+		this.trigger = triggerFunctions;
 	}
 
-	public void addTriggerFunction(ServiceFunction tf) {
-		this.triggerFunctions.add(tf);
+	public void addTrigger(Trigger tf) {
+		this.trigger.add(tf);
+	}
+
+	public VLE getVle() {
+		return vle;
+	}
+
+	public void setVle(VLE vle) {
+		this.vle = vle;
 	}
 }

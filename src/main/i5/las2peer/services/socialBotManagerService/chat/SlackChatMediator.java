@@ -8,6 +8,8 @@ import javax.websocket.DeploymentException;
 import net.minidev.json.JSONObject;
 
 import com.github.seratch.jslack.*;
+// TODO: Currently needed because of class with the same name in this package
+import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.rtm.*;
 import com.github.seratch.jslack.api.rtm.message.Message;
 

@@ -1,46 +1,29 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
-public class ServiceFunction {
+import i5.las2peer.services.socialBotManagerService.chat.Chat;
+
+public class ServiceFunction extends TriggerFunction{
 	private String id;
-	private String functionName;
 	private String serviceName;
-	private ArrayList<ServiceFunctionAttribute> attributes;
-	private HashSet<String> bots;
-	private String path;
-	private String type;
+	private HashSet<Bot> bots;
+	private HashSet<VLEUser> users;
+	private String functionName;
+	private String functionPath;
+	private String httpMethod;
 	private String consumes;
 	private String produces;
-	private String functionType = "service";
-	private String conversationType;
-	private String token;
-	private ServiceFunction tf;
+	private ActionType actionType = ActionType.SERVICE;
+	private Chat messenger;
+	private HashSet<ServiceFunctionAttribute> attributes;
+	private HashSet<Trigger> trigger;
 
 	public ServiceFunction() {
-		attributes = new ArrayList<ServiceFunctionAttribute>();
-		bots = new HashSet<String>();
-	}
-
-	public String getFunctionName() {
-		return functionName;
-	}
-
-	public void setFunctionName(String name) {
-		this.functionName = name;
-	}
-
-	public ArrayList<ServiceFunctionAttribute> getAttributes() {
-		return attributes;
-	}
-
-	public void setAttributes(ArrayList<ServiceFunctionAttribute> attributes) {
-		this.attributes = attributes;
-	}
-
-	public void addAttribute(ServiceFunctionAttribute attribute) {
-		this.attributes.add(attribute);
+		setAttributes(new HashSet<ServiceFunctionAttribute>());
+		setBots(new HashSet<Bot>());
+		setUsers(new HashSet<VLEUser>());
+		setTrigger(new HashSet<Trigger>());
 	}
 
 	public String getId() {
@@ -59,20 +42,44 @@ public class ServiceFunction {
 		this.serviceName = serviceName;
 	}
 
-	public String getPath() {
-		return path;
+	public HashSet<Bot> getBots() {
+		return bots;
 	}
 
-	public void setPath(String path) {
-		this.path = path;
+	public void setBots(HashSet<Bot> bots) {
+		this.bots = bots;
+	}
+	
+	public void addBot(Bot b) {
+		this.bots.add(b);
 	}
 
-	public String getType() {
-		return type;
+	public HashSet<VLEUser> getUsers() {
+		return users;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setUsers(HashSet<VLEUser> users) {
+		this.users = users;
+	}
+	
+	public void addUser(VLEUser u) {
+		this.users.add(u);
+	}
+
+	public String getFunctionName() {
+		return functionName;
+	}
+
+	public void setFunctionName(String functionName) {
+		this.functionName = functionName;
+	}
+
+	public String getFunctionPath() {
+		return functionPath;
+	}
+
+	public void setFunctionPath(String functionPath) {
+		this.functionPath = functionPath;
 	}
 
 	public String getConsumes() {
@@ -91,47 +98,52 @@ public class ServiceFunction {
 		this.produces = produces;
 	}
 
-	public String getFunctionType() {
-		return functionType;
+	public ActionType getActionType() {
+		return actionType;
 	}
 
-	public void setFunctionType(String functionType) {
-		this.functionType = functionType;
+	public void setActionType(ActionType actionType) {
+		this.actionType = actionType;
 	}
 
-	public String getConversationType() {
-		return conversationType;
+	public Chat getMessenger() {
+		return messenger;
 	}
 
-	public void setConversationType(String conversationType) {
-		this.conversationType = conversationType;
+	public void setMessenger(Chat messenger) {
+		this.messenger = messenger;
 	}
 
-	public String getToken() {
-		return token;
+	public HashSet<ServiceFunctionAttribute> getAttributes() {
+		return attributes;
 	}
 
-	public void setToken(String token) {
-		this.token = token;
+	public void setAttributes(HashSet<ServiceFunctionAttribute> attributes) {
+		this.attributes = attributes;
+	}
+	
+	public void addAttribute(ServiceFunctionAttribute attribute) {
+		this.attributes.add(attribute);
 	}
 
-	public HashSet<String> getBots() {
-		return bots;
+	public String getHttpMethod() {
+		return httpMethod;
 	}
 
-	public void setBots(HashSet<String> bots) {
-		this.bots = bots;
+	public void setHttpMethod(String httpMethod) {
+		this.httpMethod = httpMethod;
 	}
 
-	public void addBot(String name) {
-		this.bots.add(name);
+	public HashSet<Trigger> getTrigger() {
+		return trigger;
 	}
 
-	public ServiceFunction getTf() {
-		return tf;
+	public void setTrigger(HashSet<Trigger> trigger) {
+		this.trigger = trigger;
+	}
+	
+	public void addTrigger(Trigger t) {
+		this.trigger.add(t);
 	}
 
-	public void setTf(ServiceFunction tf) {
-		this.tf = tf;
-	}
 }

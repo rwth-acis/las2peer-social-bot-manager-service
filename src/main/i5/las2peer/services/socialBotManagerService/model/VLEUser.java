@@ -1,10 +1,18 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.HashSet;
+
 public class VLEUser {
 	private String id;
 	private String name;
-	private String vleId;
-	private String functionId;
+	private String role;
+	private VLE vle;
+	private HashSet<ServiceFunction> functions;
+	
+	public VLEUser() {
+		functions = new HashSet<ServiceFunction>();
+	}
+	
 	public String getId() {
 		return id;
 	}
@@ -17,16 +25,26 @@ public class VLEUser {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public String getVleId() {
-		return vleId;
+	public String getRole() {
+		return role;
 	}
-	public void setVleId(String vleId) {
-		this.vleId = vleId;
+	public void setRole(String role) {
+		this.role = role;
 	}
-	public String getFunctionId() {
-		return functionId;
+	public VLE getVle() {
+		return vle;
 	}
-	public void setFunctionId(String functionId) {
-		this.functionId = functionId;
+	public void setVle(VLE vle) {
+		this.vle = vle;
+	}
+	public HashSet<ServiceFunction> getFunctions() {
+		return functions;
+	}
+	public void setFunctions(HashSet<ServiceFunction> functions) {
+		this.functions = functions;
+	}
+	
+	public void addFunction(ServiceFunction sf) {
+		this.functions.add(sf);
 	}
 }
