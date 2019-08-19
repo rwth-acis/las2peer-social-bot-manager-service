@@ -2,7 +2,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashSet;
 
-import i5.las2peer.services.socialBotManagerService.chat.Chat;
+import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 
 public class ServiceFunction extends TriggerFunction{
 	private String id;
@@ -15,7 +15,7 @@ public class ServiceFunction extends TriggerFunction{
 	private String consumes;
 	private String produces;
 	private ActionType actionType = ActionType.SERVICE;
-	private Chat messenger;
+	private ChatMediator messenger;
 	private HashSet<ServiceFunctionAttribute> attributes;
 	private HashSet<Trigger> trigger;
 
@@ -49,7 +49,7 @@ public class ServiceFunction extends TriggerFunction{
 	public void setBots(HashSet<Bot> bots) {
 		this.bots = bots;
 	}
-	
+
 	public void addBot(Bot b) {
 		this.bots.add(b);
 	}
@@ -61,7 +61,7 @@ public class ServiceFunction extends TriggerFunction{
 	public void setUsers(HashSet<VLEUser> users) {
 		this.users = users;
 	}
-	
+
 	public void addUser(VLEUser u) {
 		this.users.add(u);
 	}
@@ -106,11 +106,11 @@ public class ServiceFunction extends TriggerFunction{
 		this.actionType = actionType;
 	}
 
-	public Chat getMessenger() {
+	public ChatMediator getMessenger() {
 		return messenger;
 	}
 
-	public void setMessenger(Chat messenger) {
+	public void setMessenger(ChatMediator messenger) {
 		this.messenger = messenger;
 	}
 
@@ -121,7 +121,7 @@ public class ServiceFunction extends TriggerFunction{
 	public void setAttributes(HashSet<ServiceFunctionAttribute> attributes) {
 		this.attributes = attributes;
 	}
-	
+
 	public void addAttribute(ServiceFunctionAttribute attribute) {
 		this.attributes.add(attribute);
 	}
@@ -141,7 +141,7 @@ public class ServiceFunction extends TriggerFunction{
 	public void setTrigger(HashSet<Trigger> trigger) {
 		this.trigger = trigger;
 	}
-	
+
 	public void addTrigger(Trigger t) {
 		this.trigger.add(t);
 	}

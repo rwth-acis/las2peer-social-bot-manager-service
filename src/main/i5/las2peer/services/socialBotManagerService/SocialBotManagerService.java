@@ -66,9 +66,7 @@ import i5.las2peer.security.BotAgent;
 import i5.las2peer.security.UserAgentImpl;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMessageCollector;
-import i5.las2peer.services.socialBotManagerService.chat.Chat;
-import i5.las2peer.services.socialBotManagerService.chat.Slack;
+import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -101,9 +99,9 @@ import net.minidev.json.parser.ParseException;
 
 /**
  * las2peer-SocialBotManager-Service
- * 
+ *
  * A REST service that manages social bots in a las2peer network.
- * 
+ *
  */
 @ServicePath("/SBFManager")
 @ManualDeployment
@@ -119,7 +117,7 @@ public class SocialBotManagerService extends RESTService {
 	private static final String botPass = "actingAgent";
 
 	private static ScheduledExecutorService rt = null;
-	
+
 	// TODO: Put these into bots properly
 	private static RasaNlu rasaNlu = null;
 	private static SlackChatMediator slackMediator = null;
@@ -161,14 +159,14 @@ public class SocialBotManagerService extends RESTService {
 			rt = Executors.newSingleThreadScheduledExecutor();
 			rt.scheduleAtFixedRate(new RoutineThread(), 0, BOT_ROUTINE_PERIOD, TimeUnit.SECONDS);
 		}
-		
+
 		try {
 			rasaNlu = new RasaNlu(new URL(System.getenv("RASA_NLU_URL")));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		try {
 			slackMediator = new SlackChatMediator(System.getenv("SLACK_BOT_USER_TOKEN"));
 		} catch (Exception e) {
@@ -201,8 +199,8 @@ public class SocialBotManagerService extends RESTService {
 	@Path("/bots")
 	public static class BotResource {
 		SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
-		
-		
+
+
 		@GET
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(
@@ -234,7 +232,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			return Response.ok().entity(vleList).build();
 		}
-		
+
 		@GET
 		@Path("/{botName}")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -266,12 +264,12 @@ public class SocialBotManagerService extends RESTService {
 			}
 			return Response.ok().entity(j).build();
 		}
-		
+
 		/**
 		 * Initialize a bot.
-		 * 
+		 *
 		 * @param botModel Model of a bot
-		 * 
+		 *
 		 * @return Returns an HTTP response with plain text string content.
 		 */
 		@POST
@@ -292,21 +290,21 @@ public class SocialBotManagerService extends RESTService {
 			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(), nodes, edges);
-			} catch (ParseBotException e) {
+			} catch (ParseBotException | IOException | DeploymentException e) {
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
 			// initialized = true;
 			JSONObject logData = new JSONObject();
 			logData.put("status", "initialized");
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
-			
+
 			return Response.ok().entity(returnString).build();
 			// }
 		}
-		
+
 		/**
 		 * Join function
-		 * 
+		 *
 		 * @param body TODO
 		 * @param botName TODO
 		 * @return Returns an HTTP response with plain text string content derived from the path input param.
@@ -335,7 +333,7 @@ public class SocialBotManagerService extends RESTService {
 				String[] s = basePath.split("/");
 				String service = s[s.length - 1];
 				VLE vle = getConfig().getServiceConfiguration(service);
-				
+
 				Bot bot = null;
 				for (Bot b: vle.getBots().values()) {
 					if(b.getName().equals(botName)) {
@@ -354,10 +352,10 @@ public class SocialBotManagerService extends RESTService {
 				}else {
 					sepValue = j.getAsString(sepName);
 				}
-				
+
 				botIsActive.put(sepValue, true);
 				bot.setIdActive(sepValue,true);
-				
+
 				if (j.get("directJoin") == null) {
 					String joinPath = (String) j.get("joinPath");
 
@@ -380,7 +378,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			return Response.ok().entity(returnString).build();
 		}
-		
+
 		@POST
 		@Path("/{botName}/trigger/service")
 		@Consumes(MediaType.APPLICATION_JSON)
@@ -399,7 +397,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject parsedBody = (JSONObject) p.parse(body);
 				String service = (String) parsedBody.get("serviceAlias");
 				VLE vle = getConfig().getServiceConfiguration(service);
-				
+
 				if (!vle.getEnvironmentSeparator().equals("singleEnvironment")) {
 					if (vle == null || vle.getEnvironmentSeparator() == null
 							|| ((JSONObject) parsedBody.get("attributes")).get(vle.getEnvironmentSeparator()) == null || botIsActive
@@ -407,10 +405,10 @@ public class SocialBotManagerService extends RESTService {
 						return Response.status(Status.FORBIDDEN).entity("Bot is not active").build();
 					}
 				}
-		
+
 				String triggerFunctionName = parsedBody.getAsString("functionName");
 				String triggerUID = parsedBody.getAsString("uid");
-		
+
 				for (BotAgent botAgent : getBotAgents().values()) {
 					try {
 						this.sbfservice.checkTriggerBot(vle, parsedBody, botAgent, triggerUID, triggerFunctionName);
@@ -443,7 +441,7 @@ public class SocialBotManagerService extends RESTService {
 			     public void run() {
 					try {
 						JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			
+
 						JSONObject j = (JSONObject) p.parse(body);
 						String service = (String) j.get("serviceAlias");
 						VLE vle = getConfig().getServiceConfiguration(service);
@@ -459,10 +457,10 @@ public class SocialBotManagerService extends RESTService {
 								context.put("env", atts.getAsString(vle.getEnvironmentSeparator()));
 							}
 						}
-			
+
 						String botFunctionId = j.getAsString("function");
 						BotAgent botAgent = getBotAgents().get(j.getAsString("bot"));
-						
+
 						try {
 							sbf.checkRoutineTrigger(vle, j, botAgent, botFunctionId, context);
 							// checkTriggerBot(vle, j, botAgent, "", f);
@@ -482,7 +480,7 @@ public class SocialBotManagerService extends RESTService {
 			}).start();
 			return Response.ok().entity(returnString).build();
 		}
-		
+
 		@DELETE
 		@Path("/{botName}/{unit}")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -502,7 +500,7 @@ public class SocialBotManagerService extends RESTService {
 					return Response.ok().entity(bot + " deactivated.").build();
 				}
 			}
-			
+
 			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
 		}
 
@@ -533,10 +531,10 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-	
-	
 
-	
+
+
+
 
 	public void checkRoutineTrigger(VLE vle, JSONObject j, BotAgent botAgent, String botFunctionId, JSONObject context)
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
@@ -570,11 +568,11 @@ public class SocialBotManagerService extends RESTService {
 			ServiceInvocationFailedException, ServiceAccessDeniedException, ServiceNotAuthorizedException,
 			ParseBotException {
 		String botId = botAgent.getIdentifier();
-		
+
 		Bot bot = vle.getBots().get(botId);
-		if (bot != null 
+		if (bot != null
 				&& !(triggerUID.toLowerCase().equals(botAgent.getIdentifier().toLowerCase()))) {
-			
+
 			// get all triggers of the bot
 			Set<Trigger> tlist = bot.getTriggerList();
 			for(Trigger trigger:tlist) {
@@ -585,7 +583,7 @@ public class SocialBotManagerService extends RESTService {
 					// check if the function name we got equals the service function name
 					if(sf.getFunctionName().equals(triggerFunctionName)) {
 						ServiceFunction triggeredFunction = trigger.getTriggeredFunction();
-						
+
 						String functionPath = "";
 						// add path if the triggered function is a service function
 						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
@@ -608,7 +606,7 @@ public class SocialBotManagerService extends RESTService {
 					}
 				}
 			}
-			
+
 		}else {
 			//TODO
 		}
@@ -690,8 +688,8 @@ public class SocialBotManagerService extends RESTService {
 			source = triggerBody.getAsString(triggerAttribute.getName());
 		} else if (triggerAttributes.containsKey(triggerAttribute.getName())) {
 			source = triggerAttributes.getAsString(triggerAttribute.getName());
-		} 
-		
+		}
+
 		do {
 			if(checkIfCondition(ifThenIterator,source)) {
 				source = manipulateString(ifThenIterator,source);
@@ -704,7 +702,7 @@ public class SocialBotManagerService extends RESTService {
 	private void mapWithStaticContent(ServiceFunctionAttribute triggeredFunctionAttribute, JSONObject triggeredBody) {
 		if (triggeredFunctionAttribute.getContent().length() > 0) {
 			triggeredBody.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
-		} 
+		}
 		if (triggeredFunctionAttribute.getContentURL().length() > 0) {
 			URL url;
 			String body = "";
@@ -713,16 +711,16 @@ public class SocialBotManagerService extends RESTService {
 				HttpURLConnection  con = (HttpURLConnection) url.openConnection();
 				con.setDoOutput(true);
 				con.setDoInput(true);
-				
-				StringBuilder sb = new StringBuilder();  
+
+				StringBuilder sb = new StringBuilder();
 				BufferedReader br = new BufferedReader(
 			            new InputStreamReader(con.getInputStream(), "utf-8"));
-			    String line = null;  
-			    while ((line = br.readLine()) != null) {  
-			        sb.append(line + "\n");  
+			    String line = null;
+			    while ((line = br.readLine()) != null) {
+			        sb.append(line + "\n");
 			    }
 			    br.close();
-				
+
 				body = sb.toString();
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
@@ -730,13 +728,13 @@ public class SocialBotManagerService extends RESTService {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} 
+			}
 
 			triggeredBody.put(triggeredFunctionAttribute.getName(), body);
 		}
 	}
 
-	
+
 
 	private void mapWithContentGenerator(JSONObject b, ContentGenerator g, String sfaName, String sfaType,
 			String functionPath, HashMap<String, ServiceFunctionAttribute> attlist, JSONObject triggerAttributes,
@@ -830,30 +828,29 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 
-
-	public void triggerChat(Chat chat, BotAgent bot, String body) {
-			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			JSONObject b;
-			try {
-				b = (JSONObject) p.parse(body);
-				if(chat instanceof Slack) {
-					Slack slack = (Slack)chat;
-					String message = b.getAsString("text");
-					if (b.containsKey("email")) {
-						String email = b.getAsString("email");
-						slack.sendMessage(bot.getLoginName(), botPass, message, null, email);
-					} else {
-						String channel = b.getAsString("channel");
-						slack.sendMessage(bot.getLoginName(), botPass, message, channel);
-					}
+	public void triggerChat(ChatMediator chat, BotAgent bot, String body) {
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject b;
+		try {
+			b = (JSONObject) p.parse(body);
+			String text = b.getAsString("text");
+			if(chat instanceof SlackChatMediator) {
+				SlackChatMediator slack = (SlackChatMediator)chat;
+				String channel;
+				if (b.containsKey("email")) {
+					String email = b.getAsString("email");
+					channel = slack.getChannelByEmail(email);
+				} else {
+					channel = b.getAsString("channel");
 				}
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				slack.sendMessageToChannel(channel, text);
 			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	
 
 	@Api(
 			value = "Model Resource")
@@ -873,10 +870,10 @@ public class SocialBotManagerService extends RESTService {
 	@Path("/models")
 	public static class BotModelResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
-		
+
 		/**
 		 * Put Model function.
-		 * 
+		 *
 		 * @param name name of the model
 		 * @param body content of the model
 		 * @return Returns an HTTP response with plain text string content derived from the path input param.
@@ -923,7 +920,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			return Response.ok().entity("Model stored.").build();
 		}
-		
+
 		@GET
 		@Path("/")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -965,7 +962,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			return Response.ok().entity(models.keySet()).build();
 		}
-	
+
 		@GET
 		@Path("/{name}")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -1031,7 +1028,7 @@ public class SocialBotManagerService extends RESTService {
 			return text.length() < Integer.parseInt(itb.getConditionValueA());
 		} else if (conditionType.equals("Greater Than")) {
 			return text.length() > Integer.parseInt(itb.getConditionValueA());
-		} 
+		}
 		// TODO implement more
 		return false;
 	}
@@ -1049,26 +1046,26 @@ public class SocialBotManagerService extends RESTService {
 		}
 		return text;
 	}
-	
+
 	// TODO: Move into bots
 	private void replyWithIntent(ChatMessage msg) {
 		String channel = "";
 		if (msg.getChannel() != null) {
 			channel = msg.getChannel();
 		}
-		
+
 		String text = msg.getText();
 		Intent intent;
 		try {
 			intent = rasaNlu.getIntent(text);
 			String message = "Intent: " + intent.getIntentName() + ", Confidence: " + intent.getConfidence();
-			slackMediator.sendMessageToChannel(channel, message, 0);
+			slackMediator.sendMessageToChannel(channel, message);
 		} catch (IOException | ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	// TODO: Move into bots
 	private void handleMessages() {
 		ArrayList<ChatMessage> messages = slackMediator.getMessages();
@@ -1104,6 +1101,8 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			for (VLE vle : getConfig().getVLEs().values()) {
+				// TODO: Handle chat messages
+
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time
 					Calendar c = Calendar.getInstance();
@@ -1177,17 +1176,17 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println(df.format(d1) + ": " + b.getName());
 										MiniClient client = new MiniClient();
 										client.setConnectorEndpoint(vle.getAddress());
-		
+
 										JSONObject body = new JSONObject();
 										body.put("serviceAlias", vle.getName());
-										
+
 										JSONObject atts = new JSONObject();
 
 										body.put("function", t.getTriggeredFunction().getId());
 										body.put("bot", b.getName());
 										atts.put(vle.getEnvironmentSeparator(), entry.getKey());
 										body.put("attributes", atts);
-										
+
 										HashMap<String, String> headers = new HashMap<String, String>();
 										ClientResponse result = client.sendRequest("POST", "SBFManager/"+b.getName()+"/trigger/routine",
 												body.toJSONString(), MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
@@ -1196,7 +1195,7 @@ public class SocialBotManagerService extends RESTService {
 								}
 								//jar.add(t.getTriggeredFunction().getId());
 							}
-							
+
 						}
 					}
 				}

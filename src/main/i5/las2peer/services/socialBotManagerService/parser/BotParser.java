@@ -12,12 +12,14 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+import javax.websocket.DeploymentException;
+
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.chat.Slack;
+import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -56,8 +58,8 @@ public class BotParser {
 	}
 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents, LinkedHashMap<String, BotModelNode> nodes,
-			LinkedHashMap<String, BotModelEdge> edges) throws ParseBotException {
-		
+			LinkedHashMap<String, BotModelEdge> edges) throws ParseBotException, IOException, DeploymentException {
+
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
@@ -74,12 +76,12 @@ public class BotParser {
 
 		int vleCount = 0;
 		VLE vle = null;
-		
+
 		// NODES
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 			BotModelNode elem = entry.getValue();
 			String nodeType = elem.getType();
-			// VLE 
+			// VLE
 			if (nodeType.equals("Instance")) {
 				vle = setVLEInstance(elem);
 				config.addServiceConfiguration(vle.getName(), vle);
@@ -158,7 +160,7 @@ public class BotParser {
 					VLE v = vles.get(source);
 					// has real user
 					if(users.get(target)!=null) {
-						
+
 						VLEUser u = users.get(target);
 						v.addUser(u.getName(), u);
 						u.setVle(v);
@@ -166,7 +168,7 @@ public class BotParser {
 						Bot b = bots.get(target);
 						v.addBot(b.getId(), b);
 						b.setVle(v);
-					}	
+					}
 				} else if(usfList.get(source)!=null) {
 					// User Function has Parameter
 					ServiceFunction sf = usfList.get(source);
@@ -192,7 +194,7 @@ public class BotParser {
 						sfaChild.setParent(sfaParent);
 					}
 				}
-				
+
 			// PERFORMS
 			} else if (type.equals("performs")) {
 				// Bot performs Action
@@ -219,7 +221,7 @@ public class BotParser {
 						r.setVle(v);
 					}
 				}
-					
+
 			// same as
 			// TODO
 			} else if (type.equals("same as")) {
@@ -233,7 +235,7 @@ public class BotParser {
 					checkGeneratorIns++;
 					ContentGenerator g = (ContentGenerator) (gList.get(source));
 					ServiceFunctionAttribute sfa = sfaList.get(target);
-					
+
 					sfa.setGenerator(g);
 					g.setInput(sfa);
 				} else if(itbList.get(source)!=null) {
@@ -248,15 +250,15 @@ public class BotParser {
 						itb.setSourceAttribute(sAtt);
 					}
 				}
-				
+
 			// GENERATES
 			} else if (type.equals("generates")) {
 				if(gList.get(source)!=null) {
 					checkGeneratorOuts++;
-					
+
 					ContentGenerator g = (ContentGenerator) (gList.get(source));
 					ServiceFunctionAttribute sfa = sfaList.get(target);
-					
+
 					g.setOutput(sfa);
 					sfa.setGenerator(g);
 				} else if(itbList.get(source)!=null) {
@@ -268,9 +270,9 @@ public class BotParser {
 					}
 				}
 			// TRIGGERS
-			} 
+			}
 		}
-		
+
 		// EDGES
 		for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 			BotModelEdge elem = entry.getValue();
@@ -424,7 +426,7 @@ public class BotParser {
 		}
 		return r;
 	}
-	
+
 	private IfThenBlock addIfThenBlock(BotModelNode elem) {
 		IfThenBlock itb = new IfThenBlock();
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -448,7 +450,7 @@ public class BotParser {
 		return itb;
 	}
 
-	private ServiceFunction addAction(String key, BotModelNode elem, BotConfiguration config) {
+	private ServiceFunction addAction(String key, BotModelNode elem, BotConfiguration config) throws IOException, DeploymentException {
 
 		ServiceFunction sf = new ServiceFunction();
 		sf.setId(key);
@@ -477,7 +479,7 @@ public class BotParser {
 		if (actionType.equals("Messenger")) {
 			sf.setActionType(ActionType.MESSENGER);
 			if(conversationType.equals("Slack")) {
-				Slack slack = new Slack(token);
+				SlackChatMediator slack = new SlackChatMediator(token);
 				sf.setMessenger(slack);
 			}
 			sf.setServiceName(service);
@@ -515,7 +517,7 @@ public class BotParser {
 		}
 		return sfa;
 	}
-	
+
 
 	private void addServiceInformation(ServiceFunction f, JSONObject elem) {
 		// pfade
@@ -554,9 +556,9 @@ public class BotParser {
 						ServiceFunction sf = (ServiceFunction)t.getTriggerFunction();
 						jaf.add(sf.getFunctionName());
 					}
-					
+
 				}
-				
+
 				allFunctions.putAll(b.getBotServiceFunctions());
 			}
 			for (ServiceFunction s : allFunctions.values()) {
