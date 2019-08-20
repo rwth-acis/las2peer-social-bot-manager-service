@@ -1,6 +1,12 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
-public class BotModelValue {
+import java.io.Serializable;
+
+public class BotModelValue implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7779402101938183839L;
 	private String id;
 	private String name;
 	private String value;

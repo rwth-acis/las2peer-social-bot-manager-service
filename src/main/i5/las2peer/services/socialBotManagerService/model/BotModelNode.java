@@ -1,9 +1,14 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 
 
-public class BotModelNode {
+public class BotModelNode implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3218604381718722388L;
 	private BotModelLabel label;
 	private double left;
 	private double top;
