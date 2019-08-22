@@ -343,7 +343,7 @@ public class BotParser {
 				vle.setAddress(subVal.getValue());
 			} else if (name.equals("Name")) {
 				vle.setName(subVal.getValue());
-			} else if (name.equals("Environment Seperator")) {
+			} else if (name.equals("Environment Separator")) {
 				String sep = (String) subVal.getValue();
 				if (sep.equals("")) {
 					// Single Environment
