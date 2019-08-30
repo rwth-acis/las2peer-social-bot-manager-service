@@ -2,8 +2,6 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashSet;
 
-import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
-
 public class ServiceFunction extends TriggerFunction{
 	private String id;
 	private String serviceName;
@@ -15,7 +13,7 @@ public class ServiceFunction extends TriggerFunction{
 	private String consumes;
 	private String produces;
 	private ActionType actionType = ActionType.SERVICE;
-	private ChatMediator messenger;
+	private String messengerName;
 	private HashSet<ServiceFunctionAttribute> attributes;
 	private HashSet<Trigger> trigger;
 
@@ -106,12 +104,12 @@ public class ServiceFunction extends TriggerFunction{
 		this.actionType = actionType;
 	}
 
-	public ChatMediator getMessenger() {
-		return messenger;
+	public String getMessengerName() {
+		return messengerName;
 	}
 
-	public void setMessenger(ChatMediator messenger) {
-		this.messenger = messenger;
+	public void setMessengerName(String messengerName) {
+		this.messengerName = messengerName;
 	}
 
 	public HashSet<ServiceFunctionAttribute> getAttributes() {

@@ -63,8 +63,6 @@ import i5.las2peer.logging.bot.BotMessage;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.security.UserAgentImpl;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
@@ -81,8 +79,6 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
-import i5.las2peer.services.socialBotManagerService.nlu.Intent;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import io.swagger.annotations.Api;
@@ -103,6 +99,21 @@ import net.minidev.json.parser.ParseException;
  * A REST service that manages social bots in a las2peer network.
  *
  */
+@Api(
+		value = "test")
+@SwaggerDefinition(
+		info = @Info(
+				title = "las2peer Bot Manager Service",
+				version = "1.0.13",
+				description = "A las2peer service for managing social bots.",
+				termsOfService = "",
+				contact = @Contact(
+						name = "Alexander Tobias Neumann",
+						url = "",
+						email = "neumann@dbis.rwth-aachen.de"),
+				license = @License(
+						name = "",
+						url = "")))
 @ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
@@ -117,10 +128,6 @@ public class SocialBotManagerService extends RESTService {
 	private static final String botPass = "actingAgent";
 
 	private static ScheduledExecutorService rt = null;
-
-	// TODO: Put these into bots properly
-	private static RasaNlu rasaNlu = null;
-	private static SlackChatMediator slackMediator = null;
 
 	private int BOT_ROUTINE_PERIOD = 5; // 5 seconds
 
@@ -159,26 +166,13 @@ public class SocialBotManagerService extends RESTService {
 			rt = Executors.newSingleThreadScheduledExecutor();
 			rt.scheduleAtFixedRate(new RoutineThread(), 0, BOT_ROUTINE_PERIOD, TimeUnit.SECONDS);
 		}
-
-		try {
-			rasaNlu = new RasaNlu(new URL(System.getenv("RASA_NLU_URL")));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		try {
-			slackMediator = new SlackChatMediator(System.getenv("SLACK_BOT_USER_TOKEN"));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
-	
+
 	@Override
 	protected void initResources() {
 		getResourceConfig().register(BotResource.class);
 		getResourceConfig().register(BotModelResource.class);
+		getResourceConfig().register(this);
 	}
 
 	@Api(
@@ -311,6 +305,7 @@ public class SocialBotManagerService extends RESTService {
 		 */
 		@POST
 		@Path("/{botName}")
+		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(
 				value = { @ApiResponse(
@@ -530,11 +525,6 @@ public class SocialBotManagerService extends RESTService {
 			}
 		}
 	}
-
-
-
-
-
 
 	public void checkRoutineTrigger(VLE vle, JSONObject j, BotAgent botAgent, String botFunctionId, JSONObject context)
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
@@ -812,7 +802,7 @@ public class SocialBotManagerService extends RESTService {
 			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
 					triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
 			System.out.println(r.getResponse());
-		} else if (sf.getActionType().equals(ActionType.MESSENGER)) {
+		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email")==null) {
 				// TODO Anonymous agent error
 				MiniClient client = new MiniClient();
@@ -823,7 +813,9 @@ public class SocialBotManagerService extends RESTService {
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
 			}
-			triggerChat(sf.getMessenger(), botAgent, triggeredBody.toJSONString());
+			String messengerID = sf.getMessengerName();
+			ChatMediator chat = vle.getMessenger(messengerID).getChatMediator();
+			triggerChat(chat, botAgent, triggeredBody.toJSONString());
 		}
 	}
 
@@ -922,7 +914,6 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@GET
-		@Path("/")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(
 				value = { @ApiResponse(
@@ -1047,33 +1038,6 @@ public class SocialBotManagerService extends RESTService {
 		return text;
 	}
 
-	// TODO: Move into bots
-	private void replyWithIntent(ChatMessage msg) {
-		String channel = "";
-		if (msg.getChannel() != null) {
-			channel = msg.getChannel();
-		}
-
-		String text = msg.getText();
-		Intent intent;
-		try {
-			intent = rasaNlu.getIntent(text);
-			String message = "Intent: " + intent.getIntentName() + ", Confidence: " + intent.getConfidence();
-			slackMediator.sendMessageToChannel(channel, message);
-		} catch (IOException | ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	// TODO: Move into bots
-	private void handleMessages() {
-		ArrayList<ChatMessage> messages = slackMediator.getMessages();
-		for (ChatMessage msg: messages) {
-			replyWithIntent(msg);
-		}
-	}
-
 	public static BotConfiguration getConfig() {
 		return config;
 	}
@@ -1093,15 +1057,10 @@ public class SocialBotManagerService extends RESTService {
 	private class RoutineThread implements Runnable {
 
 		public void run() {
-			// TODO: Move into bots
-			if (slackMediator != null) {
-				handleMessages();
-			}
-
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			for (VLE vle : getConfig().getVLEs().values()) {
-				// TODO: Handle chat messages
+				vle.handleMessages();
 
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time

@@ -1,19 +1,17 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-import net.minidev.json.JSONObject;
 
 public class BotModel implements Serializable {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 2889244909583713463L;
 	/**
-	 * 
+	 *
 	 */
 	private BotModelAttribute attributes;
 	private LinkedHashMap<String, BotModelNode> nodes;
@@ -36,5 +34,4 @@ public class BotModel implements Serializable {
 	public void setEdges(LinkedHashMap<String, BotModelEdge> edges) {
 		this.edges = edges;
 	}
-
 }

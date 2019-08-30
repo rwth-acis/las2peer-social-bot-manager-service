@@ -1,7 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
@@ -27,6 +26,13 @@ public class RasaNlu {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public void train(String modelName, String modelMarkdown) {
+		// TODO: Use the /model/train POST method to train a Rasa NLU model
+		// - Build a config file with "language: en, pipeline: spacy_sklearn" or similar
+		// - Send the config file and the Markdown data to the endpoint, setting "output" to `modelName`
+		// - Response is the file name of the trained model, load it
 	}
 
 	private JSONObject getIntentJSON(String input) throws IOException, ParseException {

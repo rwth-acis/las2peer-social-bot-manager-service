@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalLong;
@@ -22,6 +23,8 @@ public abstract class ChatMediator {
 	}
 
 	public abstract ChatMessage parseMessage(JSONObject o) throws InvalidChatMessageException;
+
+	public abstract ArrayList<ChatMessage> getMessages();
 
 	protected String getDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
 		StringBuilder result = new StringBuilder();

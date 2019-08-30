@@ -8,7 +8,6 @@ import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
@@ -19,7 +18,6 @@ import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -29,6 +27,9 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+import i5.las2peer.services.socialBotManagerService.model.IntentEntity;
+import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
@@ -61,6 +62,9 @@ public class BotParser {
 			LinkedHashMap<String, BotModelEdge> edges) throws ParseBotException, IOException, DeploymentException {
 
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
+		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
+		HashMap<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
+		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
 
@@ -87,6 +91,15 @@ public class BotParser {
 				config.addServiceConfiguration(vle.getName(), vle);
 				vles.put(entry.getKey(), vle);
 				vleCount++;
+			} else if (nodeType.equals("Messenger")) {
+				Messenger m = addMessenger(entry.getKey(), elem, config);
+				messengers.put(entry.getKey(), m);
+			} else if (nodeType.equals("Incoming Message")) {
+				IncomingMessage m = addIncomingMessage(entry.getKey(), elem, config);
+				incomingMessages.put(entry.getKey(), m);
+			} else if (nodeType.equals("Intent Entity")) {
+				IntentEntity entity = addIntentEntity(entry.getKey(), elem, config);
+				intentEntities.put(entry.getKey(), entity);
 			// VLE User
 			} else if (nodeType.equals("User")) {
 				VLEUser u = addUser(elem);
@@ -155,46 +168,62 @@ public class BotParser {
 			String target = elem.getTarget();
 			// HAS
 			if (type.equals("has")) {
-				// has User
+				// VLE has...
 				if(vles.get(source)!=null) {
 					VLE v = vles.get(source);
-					// has real user
+					// ...real user
 					if(users.get(target)!=null) {
-
 						VLEUser u = users.get(target);
 						v.addUser(u.getName(), u);
 						u.setVle(v);
+					// ...bot
 					} else if(bots.get(target)!=null) {
 						Bot b = bots.get(target);
 						v.addBot(b.getId(), b);
 						b.setVle(v);
+					// ...messenger / ChatMediator
+					} else if (messengers.get(target) != null) {
+						Messenger m = messengers.get(target);
+						v.addMessenger(m);
+						// TODO: m.setVle(v) or similar wouldn't make sense, as m is "consumed" to construct
+						//       a ChatMediator here. Is the reverse mapping even necessary?
 					}
+				// User Function has...
 				} else if(usfList.get(source)!=null) {
-					// User Function has Parameter
 					ServiceFunction sf = usfList.get(source);
+					// ...Parameter
 					if(sfaList.get(target)!=null) {
 						ServiceFunctionAttribute sfa = sfaList.get(target);
 						sf.addAttribute(sfa);
 						sfa.setFunction(sf);
 					}
+				// Bot Function has...
 				} else if(bsfList.get(source)!=null) {
-					// Bot Function has Parameter
 					ServiceFunction sf = bsfList.get(source);
+					// ...Parameter
 					if(sfaList.get(target)!=null) {
 						ServiceFunctionAttribute sfa = sfaList.get(target);
 						sf.addAttribute(sfa);
 						sfa.setFunction(sf);
 					}
+				// Bot Function has...
 				} else if(sfaList.get(source)!=null) {
-					// Bot Function has Parameter
 					ServiceFunctionAttribute sfaParent = sfaList.get(source);
+					// ...Parameter
 					if(sfaList.get(target)!=null) {
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
 						sfaChild.setParent(sfaParent);
 					}
+				// Incoming Message has...
+				} else if(incomingMessages.get(source) != null) {
+					IncomingMessage message = incomingMessages.get(source);
+					// ...Intent Entity
+					if(intentEntities.get(target) != null) {
+						IntentEntity entity = intentEntities.get(target);
+						message.setEntityKeyword(entity.getEntityKeyword());
+					}
 				}
-
 			// PERFORMS
 			} else if (type.equals("performs")) {
 				// Bot performs Action
@@ -249,6 +278,14 @@ public class BotParser {
 						ServiceFunctionAttribute sAtt = sfaList.get(target);
 						itb.setSourceAttribute(sAtt);
 					}
+				// Bot Action uses Messenger
+				} else if (bsfList.containsKey(source)) {
+					ServiceFunction sf = bsfList.get(source);
+					Messenger m = messengers.get(target);
+					if (m == null) {
+						throw new ParseBotException("Bot Action uses Messenger, but is not connected to Messenger");
+					}
+					sf.setMessengerName(m.getName());
 				}
 
 			// GENERATES
@@ -268,8 +305,27 @@ public class BotParser {
 						sAtt.setItb(itb);
 						itb.setTargetAttribute(sAtt);
 					}
+				// Messenger generates...
+				} else if (messengers.containsKey(source)) {
+					Messenger messenger = messengers.get(source);
+					// ...IncomingMessage
+					if (incomingMessages.containsKey(target)) {
+						IncomingMessage incMsg = incomingMessages.get(target);
+						messenger.addMessage(incMsg);
+					}
 				}
 			// TRIGGERS
+			// PRECEDES
+			} else if (type.equals("precedes")) {
+				// IncomingMessage precedes...
+				if (incomingMessages.containsKey(source)) {
+					IncomingMessage sourceMessage = incomingMessages.get(source);
+					// ...another IncomingMessage
+					if (incomingMessages.containsKey(target)) {
+						IncomingMessage targetMessage = incomingMessages.get(target);
+						sourceMessage.addFollowupMessage(targetMessage.getIntentKeyword(), targetMessage);
+					}
+				}
 			}
 		}
 
@@ -331,6 +387,83 @@ public class BotParser {
 		}
 		j.put("botIds", jarr);
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
+	}
+
+	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException, IOException, DeploymentException {
+		String messengerName = null;
+		String messengerType = null;
+		String token = null;
+		String rasaUrl = null;
+
+		// TODO: Reduce code duplication
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			String name = subVal.getName();
+			if (name.contentEquals("Name")) {
+				messengerName = subVal.getValue();
+			} else if (name.contentEquals("Messenger Type")) {
+				messengerType = subVal.getValue();
+			} else if (name.contentEquals("Authentication Token")) {
+				token = subVal.getValue();
+			} else if (name.contentEquals("Rasa NLU URL")) {
+				rasaUrl = subVal.getValue();
+			}
+		}
+		if (messengerName == null) {
+			throw new ParseBotException("Messenger is missing a name");
+		}
+		if (messengerType == null) {
+			throw new ParseBotException("Messenger is missing \"Messenger Type\" attribute");
+		}
+		if (token == null) {
+			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
+		}
+		if (rasaUrl == null) {
+			throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
+		}
+
+		return new Messenger(messengerName, messengerType, token, rasaUrl);
+	}
+
+	private IncomingMessage addIncomingMessage(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
+		String intentKeyword = null;
+
+		// TODO: Reduce code duplication
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			String name = subVal.getName();
+			if (name.contentEquals("Intent Keyword")) {
+				intentKeyword = subVal.getValue();
+			}
+		}
+
+		if (intentKeyword == null) {
+			throw new ParseBotException("Incoming Message is missing Intent Keyword");
+		}
+
+		return new IncomingMessage(intentKeyword);
+	}
+
+	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
+		String intentEntity = null;
+
+		// TODO: Reduce code duplication
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			String name = subVal.getName();
+			if (name.contentEquals("Keyword")) {
+				intentEntity = subVal.getValue();
+			}
+		}
+
+		if (intentEntity == null) {
+			throw new ParseBotException("Intent Entity is missing Keyword");
+		}
+
+		return new IntentEntity(intentEntity);
 	}
 
 	private VLE setVLEInstance(BotModelNode elem) {
@@ -451,14 +584,12 @@ public class BotParser {
 	}
 
 	private ServiceFunction addAction(String key, BotModelNode elem, BotConfiguration config) throws IOException, DeploymentException {
-
 		ServiceFunction sf = new ServiceFunction();
 		sf.setId(key);
 		String actionType = "";
-		String conversationType = "";
+		String messengerID = "";
 		String service = "";
 		String sfName = "";
-		String token = "";
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
@@ -469,19 +600,14 @@ public class BotParser {
 				service = subVal.getValue();
 			} else if (name.equals("Action Type")) {
 				actionType = subVal.getValue();
-			} else if (name.equals("Messenger Type")) {
-				conversationType = subVal.getValue();
-			} else if (name.equals("Token")) {
-				token = subVal.getValue();
+			} else if (name.equals("Messenger Name")) {
+				messengerID = subVal.getValue();
 			}
 		}
 
-		if (actionType.equals("Messenger")) {
-			sf.setActionType(ActionType.MESSENGER);
-			if(conversationType.equals("Slack")) {
-				SlackChatMediator slack = new SlackChatMediator(token);
-				sf.setMessenger(slack);
-			}
+		if (actionType.equals("SendMessage")) {
+			sf.setActionType(ActionType.SENDMESSAGE);
+			sf.setMessengerName(messengerID);
 			sf.setServiceName(service);
 		} else {
 			// default case
