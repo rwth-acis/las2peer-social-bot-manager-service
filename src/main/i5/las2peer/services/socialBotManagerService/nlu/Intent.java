@@ -6,7 +6,7 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 public class Intent {
-	private String intentName;
+	private String intentKeyword;
 	private float confidence;
 
 	private HashMap<String, Entity> entities;
@@ -14,7 +14,7 @@ public class Intent {
 	public Intent(JSONObject json) {
 		JSONObject intentInner = (JSONObject) json.get("intent");
 		float confidence = intentInner.getAsNumber("confidence").floatValue();
-		this.intentName = intentInner.getAsString("name");
+		this.intentKeyword = intentInner.getAsString("name");
 		this.confidence = confidence;
 
 		JSONArray entities = (JSONArray) json.get("entities");
@@ -29,8 +29,8 @@ public class Intent {
 		this.entities = entitiesMap;
 	}
 
-	public String getIntentName() {
-		return this.intentName;
+	public String getKeyword() {
+		return this.intentKeyword;
 	}
 
 	public float getConfidence() {

@@ -64,7 +64,7 @@ public class IntentTest {
 		Intent testIntent = new Intent(testJSON);
 		
 		assertEquals(0.9999506306f, testIntent.getConfidence(), 0.0f);
-		assertEquals("inform", testIntent.getIntentName());
+		assertEquals("inform", testIntent.getKeyword());
 		
 		Entity cuisineEntity = testIntent.getEntity("cuisine");
 		assertNotNull(cuisineEntity);
