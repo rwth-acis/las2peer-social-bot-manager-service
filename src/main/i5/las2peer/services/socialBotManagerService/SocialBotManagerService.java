@@ -129,7 +129,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private static ScheduledExecutorService rt = null;
 
-	private int BOT_ROUTINE_PERIOD = 5; // 5 seconds
+	private int BOT_ROUTINE_PERIOD = 1; // 1 second
 
 	public SocialBotManagerService() {
 		super();
