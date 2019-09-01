@@ -63,7 +63,6 @@ import i5.las2peer.logging.bot.BotMessage;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -825,13 +824,8 @@ public class SocialBotManagerService extends RESTService {
 		String text = body.getAsString("text");
 		String channel = null;
 		if (body.containsKey("email")) {
-			if(chat instanceof SlackChatMediator) {
-				SlackChatMediator slack = (SlackChatMediator)chat;
-				String email = body.getAsString("email");
-				channel = slack.getChannelByEmail(email);
-			} else {
-
-			}
+			String email = body.getAsString("email");
+			channel = chat.getChannelByEmail(email);
 		} else if (body.containsKey("channel")) {
 			channel = body.getAsString("channel");
 		}

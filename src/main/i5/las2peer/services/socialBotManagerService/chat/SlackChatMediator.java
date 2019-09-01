@@ -59,10 +59,6 @@ public class SlackChatMediator extends ChatMediator {
 		return new ChatMessage(channel, user, text);
 	}
 
-	public ChatMessage parseMessage(JSONObject o) throws InvalidChatMessageException {
-		return parseSlackMessage(o);
-	}
-
 	public ArrayList<ChatMessage> getMessages() {
 		return this.messageCollector.getMessages();
 	}
