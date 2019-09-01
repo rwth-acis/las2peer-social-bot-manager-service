@@ -1,7 +1,12 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import javax.websocket.DeploymentException;
+
+import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 
 public class Bot {
 	private String name;
@@ -15,11 +20,14 @@ public class Bot {
 	private HashSet<Trigger> triggerList;
 	private HashMap<String, ContentGenerator> generatorList;
 
+	private HashMap<String, Messenger> messengers;
+
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
 		triggerList = new HashSet<Trigger>();
 		generatorList = new HashMap<String, ContentGenerator>();
 		active = new HashMap<String, Boolean>();
+		this.messengers = new HashMap<String, Messenger>();
 	}
 
 	public String getName() {
@@ -68,7 +76,6 @@ public class Bot {
 
 	public void addTrigger(Trigger t) {
 		this.triggerList.add(t);
-
 	}
 
 	public HashMap<String, ContentGenerator> getGeneratorList() {
@@ -106,17 +113,31 @@ public class Bot {
 	public void setActive(HashMap<String,Boolean> active) {
 		this.active = active;
 	}
-	
+
 	public void setIdActive(String id, boolean active) {
 		this.active.put(id, active);
 	}
-	
+
+	public Messenger getMessenger(String name) {
+		// TODO: I'm not too sure about thread safety when calling
+		//       something on this. Might need to make ChatMediator
+		//       methods synchronized?
+		return this.messengers.get(name);
+	}
+
+	public void addMessenger(Messenger messenger)
+			throws IOException, DeploymentException, ParseBotException
+	{
+		this.messengers.put(messenger.getName(), messenger);
+	}
+
+
 	public void deactivateAll() {
 		for (String k : this.active.keySet()) {
 			this.active.put(k, false);
 		}
 	}
-	
+
 	public int countActive() {
 		int trueCount = 0;
 		for(boolean b:active.values()) {
@@ -124,5 +145,11 @@ public class Bot {
 				trueCount++;
 		}
 		return trueCount;
+	}
+
+	public void handleMessages() {
+		for (Messenger m: this.messengers.values()) {
+			m.handleMessages();
+		}
 	}
 }

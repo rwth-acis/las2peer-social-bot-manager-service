@@ -143,12 +143,12 @@ public class BotParser {
 
 		if (vleCount != 1) {
 			throw new ParseBotException("There must only be one VLE instance!");
-		} else if (users.size() == 0 && bots.size() == 0 ) {
+		} else if (users.isEmpty() && bots.isEmpty()) {
 			throw new ParseBotException("Missing VLE User!");
-		} else if (bsfList.size() == 0) {
+		} else if (bsfList.isEmpty()) {
 			throw new ParseBotException("Missing Bot Action!");
-		} else if (usfList.size() == 0 && rlist.size() == 0) {
-			throw new ParseBotException("Missing User Action or VLE Routine!");
+		} else if (usfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty()) {
+			throw new ParseBotException("Missing User Action, VLE Routine or Incoming Message!");
 		}
 
 		vle.setRoutines(rlist);
@@ -181,12 +181,14 @@ public class BotParser {
 						Bot b = bots.get(target);
 						v.addBot(b.getId(), b);
 						b.setVle(v);
+					}
+				// Bot has...
+				} else if(bots.get(source) != null) {
+					Bot b = bots.get(source);
 					// ...messenger / ChatMediator
-					} else if (messengers.get(target) != null) {
+					if (messengers.get(target) != null) {
 						Messenger m = messengers.get(target);
-						v.addMessenger(m);
-						// TODO: m.setVle(v) or similar wouldn't make sense, as m is "consumed" to construct
-						//       a ChatMediator here. Is the reverse mapping even necessary?
+						b.addMessenger(m);
 					}
 				// User Function has...
 				} else if(usfList.get(source)!=null) {

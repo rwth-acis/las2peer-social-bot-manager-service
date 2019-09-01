@@ -813,34 +813,29 @@ public class SocialBotManagerService extends RESTService {
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
 			}
+			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
-			ChatMediator chat = vle.getMessenger(messengerID).getChatMediator();
-			triggerChat(chat, botAgent, triggeredBody.toJSONString());
+			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+			triggerChat(chat, triggeredBody);
 		}
 	}
 
 
-	public void triggerChat(ChatMediator chat, BotAgent bot, String body) {
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject b;
-		try {
-			b = (JSONObject) p.parse(body);
-			String text = b.getAsString("text");
+	public void triggerChat(ChatMediator chat, JSONObject body) {
+		String text = body.getAsString("text");
+		String channel = null;
+		if (body.containsKey("email")) {
 			if(chat instanceof SlackChatMediator) {
 				SlackChatMediator slack = (SlackChatMediator)chat;
-				String channel;
-				if (b.containsKey("email")) {
-					String email = b.getAsString("email");
-					channel = slack.getChannelByEmail(email);
-				} else {
-					channel = b.getAsString("channel");
-				}
-				slack.sendMessageToChannel(channel, text);
+				String email = body.getAsString("email");
+				channel = slack.getChannelByEmail(email);
+			} else {
+
 			}
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} else if (body.containsKey("channel")) {
+			channel = body.getAsString("channel");
 		}
+		chat.sendMessageToChannel(channel, text);
 	}
 
 
@@ -1060,7 +1055,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			for (VLE vle : getConfig().getVLEs().values()) {
-				vle.handleMessages();
+
 
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time

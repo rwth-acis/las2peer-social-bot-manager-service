@@ -1,18 +1,14 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import javax.websocket.DeploymentException;
-
-import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import net.minidev.json.JSONObject;
 
 public class VLE {
 	private String name;
 	private String address;
-	private HashMap<String, Messenger> messengers;
+
 	private HashMap<String, VLEUser> users;
 	private HashMap<String, Bot> bots;
 
@@ -29,7 +25,6 @@ public class VLE {
 		setServiceInformation(new HashMap<String, JSONObject>());
 		setTriggerList(new HashMap<Trigger, HashSet<String>>());
 		setRoutines(new HashMap<String, VLERoutine>());
-		this.messengers = new HashMap<String, Messenger>();
 	}
 
 	public String getAddress() {
@@ -38,19 +33,6 @@ public class VLE {
 
 	public void setAddress(String address) {
 		this.address = address;
-	}
-
-	public Messenger getMessenger(String name) {
-		// TODO: I'm not too sure about thread safety when calling
-		//       something on this. Might need to make ChatMediator
-		//       methods synchronized.
-		return this.messengers.get(name);
-	}
-
-	public void addMessenger(Messenger messenger)
-			throws IOException, DeploymentException, ParseBotException
-	{
-		this.messengers.put(messenger.getName(), messenger);
 	}
 
 	public HashMap<String, VLEUser> getUsers() {
@@ -134,11 +116,5 @@ public class VLE {
 
 	public void addRoutine(String name, VLERoutine routine) {
 		this.routines.put(name, routine);
-	}
-
-	public void handleMessages() {
-		for (Messenger m: this.messengers.values()) {
-			m.handleMessages();
-		}
 	}
 }
