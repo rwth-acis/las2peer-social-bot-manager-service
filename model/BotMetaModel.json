@@ -155,8 +155,8 @@
                     "value": "Bot"
                 }
             },
-            "left": 3958.5,
-            "top": 5011.5,
+            "left": 3884.5,
+            "top": 4980.5,
             "width": 150,
             "height": 100,
             "zIndex": 16003,
@@ -632,8 +632,8 @@
                     "value": "BotPerformsAction"
                 }
             },
-            "left": 4170.333333333333,
-            "top": 5127.999999999999,
+            "left": 4095.333333333333,
+            "top": 5057.999999999999,
             "width": 150,
             "height": 100,
             "zIndex": 16017,
@@ -921,8 +921,8 @@
             },
             "left": 3888.5,
             "top": 3416.5,
-            "width": 150,
-            "height": 100,
+            "width": 210,
+            "height": 95.66666666666669,
             "zIndex": 16032,
             "type": "Node Shape",
             "attributes": {
@@ -1657,8 +1657,8 @@
                     "value": "BotShape"
                 }
             },
-            "left": 3654.6666666666633,
-            "top": 5018.33333333333,
+            "left": 3664.6666666666633,
+            "top": 5036.33333333333,
             "width": 150,
             "height": 150,
             "zIndex": 16044,
@@ -2231,8 +2231,8 @@
                     "value": "triggersShape"
                 }
             },
-            "left": 4363.999999999999,
-            "top": 4984.999999999999,
+            "left": 4618.999999999999,
+            "top": 5056.999999999999,
             "width": 150,
             "height": 150,
             "zIndex": 16052,
@@ -2375,8 +2375,8 @@
                     "value": "hasMessenger"
                 }
             },
-            "left": 3103.3333333333326,
-            "top": 4155.333333333332,
+            "left": 3051.3333333333326,
+            "top": 4922.333333333332,
             "width": 150,
             "height": 100,
             "zIndex": 16054,
@@ -2467,8 +2467,8 @@
                     "value": "UsesMessenger"
                 }
             },
-            "left": 4060.00000000001,
-            "top": 5302.66666666668,
+            "left": 4030.00000000001,
+            "top": 5200.66666666668,
             "width": 150,
             "height": 100,
             "zIndex": 16057,
@@ -2662,8 +2662,8 @@
                     "value": "Intent Entity"
                 }
             },
-            "left": 3246.499999999999,
-            "top": 5914.999999999998,
+            "left": 2927.499999999999,
+            "top": 5916.999999999998,
             "width": 150,
             "height": 100,
             "zIndex": 16063,
@@ -2702,8 +2702,8 @@
                     "value": "IntentHasEntity"
                 }
             },
-            "left": 3242.999999999999,
-            "top": 5763.999999999999,
+            "left": 2926.999999999999,
+            "top": 5790.999999999999,
             "width": 150,
             "height": 100,
             "zIndex": 16064,
@@ -2720,8 +2720,8 @@
                     "value": "IntentEntityShape"
                 }
             },
-            "left": 2997.500000000004,
-            "top": 5897.500000000006,
+            "left": 2753.500000000004,
+            "top": 5917.500000000006,
             "width": 150,
             "height": 150,
             "zIndex": 16066,
@@ -2794,8 +2794,8 @@
                     "value": "IncomingMessageShape"
                 }
             },
-            "left": 3506.7500000000023,
-            "top": 5853.500000000004,
+            "left": 3444.7500000000023,
+            "top": 5723.500000000004,
             "width": 217.5,
             "height": 188.75,
             "zIndex": 16067,
@@ -2875,6 +2875,64 @@
             "zIndex": 16068,
             "type": "Relation",
             "attributes": {}
+        },
+        "b39059e9166bf1e994df4feb": {
+            "label": {
+                "id": "b39059e9166bf1e994df4feb[label]",
+                "name": "Label",
+                "value": {
+                    "id": "b39059e9166bf1e994df4feb[label]",
+                    "name": "Label",
+                    "value": "IncomingMessageTriggersResponse"
+                }
+            },
+            "left": 3240.857142857143,
+            "top": 5793.142857142857,
+            "width": 150,
+            "height": 100,
+            "zIndex": 16070,
+            "type": "Relation",
+            "attributes": {}
+        },
+        "dd34599cb11fbaa06554d5ea": {
+            "label": {
+                "id": "dd34599cb11fbaa06554d5ea[label]",
+                "name": "Label",
+                "value": {
+                    "id": "dd34599cb11fbaa06554d5ea[label]",
+                    "name": "Label",
+                    "value": "Chat Response"
+                }
+            },
+            "left": 3253.333333333333,
+            "top": 5943.333333333332,
+            "width": 150,
+            "height": 100,
+            "zIndex": 16071,
+            "type": "Object",
+            "attributes": {
+                "[attributes]": {
+                    "id": "[attributes]",
+                    "name": "Attributes",
+                    "type": "KeySelectionValueListAttribute",
+                    "list": {
+                        "a5844a8bde0637231a942b69": {
+                            "id": "a5844a8bde0637231a942b69",
+                            "name": "Attribute",
+                            "key": {
+                                "id": "a5844a8bde0637231a942b69[key]",
+                                "name": "",
+                                "value": "Message"
+                            },
+                            "value": {
+                                "id": "a5844a8bde0637231a942b69[value]",
+                                "name": "",
+                                "value": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "edges": {
@@ -3733,21 +3791,6 @@
             "attributes": {},
             "type": "Bi-Dir-Association"
         },
-        "705de33399681bb002184c80": {
-            "label": {
-                "id": "705de33399681bb002184c80[label]",
-                "name": "Label",
-                "value": {
-                    "id": "705de33399681bb002184c80[label]",
-                    "name": "Label",
-                    "value": ""
-                }
-            },
-            "source": "6b2a9dabf55b5ac6ac40439c",
-            "target": "ac585ffb40b64b39d1878728",
-            "attributes": {},
-            "type": "Uni-Dir-Association"
-        },
         "f6b17a81553e9302bfa513b3": {
             "label": {
                 "id": "f6b17a81553e9302bfa513b3[label]",
@@ -4077,6 +4120,66 @@
             "target": "64fc584ccce53ec8457a5fb4",
             "attributes": {},
             "type": "Bi-Dir-Association"
+        },
+        "e8f9013a53fa6547e99f5155": {
+            "label": {
+                "id": "e8f9013a53fa6547e99f5155[label]",
+                "name": "Label",
+                "value": {
+                    "id": "e8f9013a53fa6547e99f5155[label]",
+                    "name": "Label",
+                    "value": ""
+                }
+            },
+            "source": "d0be8bdbbd28e75ae4356cba",
+            "target": "ac585ffb40b64b39d1878728",
+            "attributes": {},
+            "type": "Uni-Dir-Association"
+        },
+        "a86a57b873dcd7c2b51e57f5": {
+            "label": {
+                "id": "a86a57b873dcd7c2b51e57f5[label]",
+                "name": "Label",
+                "value": {
+                    "id": "a86a57b873dcd7c2b51e57f5[label]",
+                    "name": "Label",
+                    "value": ""
+                }
+            },
+            "source": "b39059e9166bf1e994df4feb",
+            "target": "986a57bb01365cb57c7dfe35",
+            "attributes": {},
+            "type": "Generalisation"
+        },
+        "b86ac317ff3ff72571d5dc62": {
+            "label": {
+                "id": "b86ac317ff3ff72571d5dc62[label]",
+                "name": "Label",
+                "value": {
+                    "id": "b86ac317ff3ff72571d5dc62[label]",
+                    "name": "Label",
+                    "value": ""
+                }
+            },
+            "source": "64fc584ccce53ec8457a5fb4",
+            "target": "b39059e9166bf1e994df4feb",
+            "attributes": {},
+            "type": "Uni-Dir-Association"
+        },
+        "132812baa75b5f6b8d2e98df": {
+            "label": {
+                "id": "132812baa75b5f6b8d2e98df[label]",
+                "name": "Label",
+                "value": {
+                    "id": "132812baa75b5f6b8d2e98df[label]",
+                    "name": "Label",
+                    "value": ""
+                }
+            },
+            "source": "b39059e9166bf1e994df4feb",
+            "target": "dd34599cb11fbaa06554d5ea",
+            "attributes": {},
+            "type": "Uni-Dir-Association"
         }
     }
 }
