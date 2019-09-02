@@ -2,10 +2,10 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalLong;
+import java.util.Vector;
 
 public abstract class ChatMediator {
 	protected String authToken;
@@ -40,7 +40,7 @@ public abstract class ChatMediator {
 	 * @return A Vector containing the ChatMessages received
 	 *         since the last time the method was called.
 	 */
-	public abstract ArrayList<ChatMessage> getMessages();
+	public abstract Vector<ChatMessage> getMessages();
 
 	/**
 	 * Gets the IM channel ID for the user registered under the given E-Mail address.

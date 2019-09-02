@@ -40,6 +40,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.gson.Gson;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -72,6 +73,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
@@ -173,6 +175,25 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(BotModelResource.class);
 		getResourceConfig().register(this);
 	}
+
+	@POST
+	@Path("/triggerIntent")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(
+			value = "Takes a `MessageInfo` object in JSON format and triggers `ServiceFunction`s if needed.",
+			notes = "")
+	// TODO: Having something like this and the other trigger methods in the REST API isn't optimal,
+	//       as these interfaces could be abused with some internal knowledge of the bots. Should use some
+	//       other way of exchanging data between threads, for performance reasons as well.
+	public Response test(String body) {
+		Gson gson = new Gson();
+		MessageInfo m = gson.fromJson(body, MessageInfo.class);
+
+		System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
+		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42, body);
+		return Response.ok().build();
+	}
+
 
 	@Api(
 			value = "Bot Resource")
@@ -1044,12 +1065,28 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	private class RoutineThread implements Runnable {
-
 		public void run() {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
-			for (VLE vle : getConfig().getVLEs().values()) {
+			Gson gson = new Gson();
 
+			for (VLE vle : getConfig().getVLEs().values()) {
+				for (Bot bot: vle.getBots().values()) {
+					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+					bot.handleMessages(messageInfos);
+
+					// TODO: Handle multiple environments (maybe?)
+
+					MiniClient client = new MiniClient();
+					client.setConnectorEndpoint(vle.getAddress());
+
+					HashMap<String, String> headers = new HashMap<String, String>();
+					for (MessageInfo m: messageInfos) {
+						ClientResponse result = client.sendRequest("POST", "SBFManager/triggerIntent",
+								gson.toJson(m), MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+						System.out.println(result.getResponse());
+					}
+				}
 
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time

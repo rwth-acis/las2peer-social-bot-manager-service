@@ -1,9 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.OptionalLong;
+import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
@@ -59,7 +59,7 @@ public class SlackChatMediator extends ChatMediator {
 		return new ChatMessage(channel, user, text);
 	}
 
-	public ArrayList<ChatMessage> getMessages() {
+	public Vector<ChatMessage> getMessages() {
 		return this.messageCollector.getMessages();
 	}
 

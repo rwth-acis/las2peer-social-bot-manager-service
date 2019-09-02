@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -21,6 +22,8 @@ public class Bot {
 	private HashMap<String, ContentGenerator> generatorList;
 
 	private HashMap<String, Messenger> messengers;
+
+	private String botAgent;
 
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
@@ -147,9 +150,17 @@ public class Bot {
 		return trueCount;
 	}
 
-	public void handleMessages() {
+	public void handleMessages(ArrayList<MessageInfo> messageInfos) {
 		for (Messenger m: this.messengers.values()) {
-			m.handleMessages();
+			m.handleMessages(messageInfos, this.botAgent);
 		}
+	}
+
+	public String getBotAgent() {
+		return botAgent;
+	}
+
+	public void setBotAgent(String botAgent) {
+		this.botAgent = botAgent;
 	}
 }

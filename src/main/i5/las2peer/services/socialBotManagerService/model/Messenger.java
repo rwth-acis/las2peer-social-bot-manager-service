@@ -3,6 +3,8 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
+import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
@@ -18,10 +20,14 @@ public class Messenger {
 
 	private ChatMediator chatMediator;
 	private RasaNlu rasa;
+
+	// Key: intent keyword
 	private HashMap<String, IncomingMessage> knownIntents;
 
 	// Used for keeping conversation state per channel
 	private HashMap<String, IncomingMessage> stateMap;
+
+	private Random random;
 
 
 	public Messenger(String id, String chatService, String token, String rasaUrl)
@@ -38,6 +44,7 @@ public class Messenger {
 
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
+		this.random = new Random();
 	}
 
 	public String getName() {
@@ -52,8 +59,14 @@ public class Messenger {
 		return this.chatMediator;
 	}
 
-	public void handleMessages() {
-		ArrayList<ChatMessage> newMessages = this.chatMediator.getMessages();
+	// Handles simple responses ("Chat Response") directly, logs all messages and
+	// extracted intents into `messageInfos` for further processing later on.
+
+	// TODO: This would be much nicer, if we could get a las2peer context here, but this
+	//       is usually called from the routine thread. Maybe a context can be shared across
+	//       threads somehow?
+	public void handleMessages(ArrayList<MessageInfo> messageInfos, String botAgent) {
+		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 
 		for (ChatMessage message: newMessages) {
 			Intent intent = this.rasa.getIntent(message.getText());
@@ -61,7 +74,7 @@ public class Messenger {
 				continue;
 			}
 
-
+			String triggeredFunctionId = null;
 			IncomingMessage state = this.stateMap.get(message.getChannel());
 			// No conversation state present, starting from scratch
 			if (state == null) {
@@ -71,26 +84,26 @@ public class Messenger {
 				}
 			}
 
-			// TODO: Remove hard-coded intent, just for demonstration purposes
-			if (intent.getKeyword().contentEquals("greet")) {
-				this.chatMediator.sendMessageToChannel(message.getChannel(), "Hi!");
-			}
-
 			// No matching intent found, perform default action
 			if (state == null) {
 				state = this.knownIntents.get("default");
-				if (state != null) {
-					this.chatMediator.sendMessageToChannel(message.getChannel(), "This is the default intent handler. Intent was: " + intent.getKeyword());
-				}
 			}
 
 			if (state != null) {
-				// TODO: Get Response to give, optionally insert entity
-				// Conversation flow is terminated, reset state
+				String response = state.getResponse(this.random);
+				if (response != null) {
+					this.chatMediator.sendMessageToChannel(message.getChannel(), response);
+				}
+				triggeredFunctionId = state.getTriggeredFunctionId();
+
+				// If conversation flow is terminated, reset state
 				if (state.getFollowingMessages().isEmpty()) {
 					this.stateMap.remove(message.getChannel());
 				}
 			}
+
+			messageInfos.add(new MessageInfo(message, intent,
+					triggeredFunctionId, botAgent));
 		}
 	}
 }

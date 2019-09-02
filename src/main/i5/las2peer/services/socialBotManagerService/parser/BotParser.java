@@ -64,6 +64,7 @@ public class BotParser {
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
 		HashMap<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
+		HashMap<String, String> responses = new HashMap<String, String>();
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
@@ -97,6 +98,9 @@ public class BotParser {
 			} else if (nodeType.equals("Incoming Message")) {
 				IncomingMessage m = addIncomingMessage(entry.getKey(), elem, config);
 				incomingMessages.put(entry.getKey(), m);
+			} else if (nodeType.equals("Chat Response")) {
+				String r = addResponse(entry.getKey(), elem, config);
+				responses.put(entry.getKey(), r);
 			} else if (nodeType.equals("Intent Entity")) {
 				IntentEntity entity = addIntentEntity(entry.getKey(), elem, config);
 				intentEntities.put(entry.getKey(), entity);
@@ -145,10 +149,10 @@ public class BotParser {
 			throw new ParseBotException("There must only be one VLE instance!");
 		} else if (users.isEmpty() && bots.isEmpty()) {
 			throw new ParseBotException("Missing VLE User!");
-		} else if (bsfList.isEmpty()) {
-			throw new ParseBotException("Missing Bot Action!");
+		} else if (bsfList.isEmpty() && responses.isEmpty()) {
+			throw new ParseBotException("Missing Bot Action and Chat Response!");
 		} else if (usfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty()) {
-			throw new ParseBotException("Missing User Action, VLE Routine or Incoming Message!");
+			throw new ParseBotException("Missing User Action, VLE Routine and Incoming Message!");
 		}
 
 		vle.setRoutines(rlist);
@@ -349,6 +353,7 @@ public class BotParser {
 							b.addTrigger(t);
 						}
 					}
+				// Routine triggers action
 				}else if(rlist.get(source)!=null) {
 					VLERoutine r = rlist.get(source);
 					if(bsfList.get(target)!=null) {
@@ -356,8 +361,19 @@ public class BotParser {
 						Trigger t = new Trigger(r,botFunction);
 						r.addTrigger(t);
 					}
+				// Incoming Message triggers...
+				} else if (incomingMessages.get(source) != null) {
+					IncomingMessage m = incomingMessages.get(source);
+					// ...Chat Response
+					if (responses.get(target) != null) {
+						String response = responses.get(target);
+						m.addResponse(response);
+					// ...Bot Action
+					} else if (bsfList.get(target) != null) {
+						ServiceFunction botFunction = bsfList.get(target);
+						m.setTriggeredFunction(botFunction);
+					}
 				}
-				// Routine triggers action
 			}
 		}
 
@@ -427,6 +443,27 @@ public class BotParser {
 
 		return new Messenger(messengerName, messengerType, token, rasaUrl);
 	}
+
+	private String addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
+		String message = null;
+
+		// TODO: Reduce code duplication
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			String name = subVal.getName();
+			if (name.contentEquals("Message")) {
+				message = subVal.getValue();
+			}
+		}
+
+		if (message == null) {
+			throw new ParseBotException("Response is missing Message");
+		}
+
+		return message;
+	}
+
 
 	private IncomingMessage addIncomingMessage(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
 		String intentKeyword = null;
