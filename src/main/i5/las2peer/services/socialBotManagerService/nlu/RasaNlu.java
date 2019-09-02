@@ -7,6 +7,7 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class RasaNlu {
 	private String url;
@@ -39,7 +40,7 @@ public class RasaNlu {
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(this.url);
 		JSONObject inputJSON =
-				new JSONObject(Collections.singletonMap("text", input));
+				new JSONObject(Collections.singletonMap("text", StringEscapeUtils.escapeJson(input)));
 		ClientResponse response =
 				client.sendRequest("POST", "model/parse", inputJSON.toString());
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
