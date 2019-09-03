@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class RasaNlu {
 	private String url;
 
-	// TODO: Handle non-default model
 	public RasaNlu(String url) {
 		this.url = url;
 	}
@@ -29,13 +28,6 @@ public class RasaNlu {
 		return null;
 	}
 
-	public void train(String modelName, String modelMarkdown) {
-		// TODO: Use the /model/train POST method to train a Rasa NLU model
-		// - Build a config file with "language: en, pipeline: spacy_sklearn" or similar
-		// - Send the config file and the Markdown data to the endpoint, setting "output" to `modelName`
-		// - Response is the file name of the trained model, load it
-	}
-
 	private JSONObject getIntentJSON(String input) throws IOException, ParseException {
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(this.url);
@@ -45,5 +37,27 @@ public class RasaNlu {
 				client.sendRequest("POST", "model/parse", inputJSON.toString());
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		return (JSONObject)p.parse(response.getResponse());
+	}
+
+	public static boolean trainAndLoad(String url, String config, String markdownTrainingData) {
+		MiniClient client = new MiniClient();
+		client.setConnectorEndpoint(url);
+
+		JSONObject json = new JSONObject();
+		json.put("config", config);
+		json.put("nlu", markdownTrainingData);
+
+		ClientResponse response = client.sendRequest("POST", "model/train", json.toString());
+
+		String filename = response.getHeader("filename");
+		if (filename == null) {
+			return false;
+		}
+
+		json = new JSONObject();
+		json.put("model_file", "models/" + filename);
+
+		response = client.sendRequest("PUT", "model", json.toString());
+		return response.getHttpCode() == 204;
 	}
 }

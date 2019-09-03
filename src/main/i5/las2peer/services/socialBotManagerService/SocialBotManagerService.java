@@ -80,6 +80,7 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import io.swagger.annotations.Api;
@@ -192,6 +193,38 @@ public class SocialBotManagerService extends RESTService {
 		System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42, body);
 		return Response.ok().build();
+	}
+
+	@POST
+	@Path("/trainAndLoad")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(
+			value = "Trains and loads an NLU model on the given Rasa NLU server instance.",
+			notes = "")
+	// TODO: Just an adapter, since the Rasa server doesn't support "Access-Control-Expose-Headers"
+	//       and the model file name is returned as a response header... Remove and just use Rasa's
+	//       API directly once that's fixed. Method in  `RasaNlu` can be removed then as well.
+	public Response trainAndLoad(String body) {
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		try {
+			JSONObject bodyJson = (JSONObject)p.parse(body);
+			String url = bodyJson.getAsString("url");
+			String config = bodyJson.getAsString("config");
+			String markdownTrainingData = bodyJson.getAsString("markdownTrainingData");
+
+			boolean success = RasaNlu.trainAndLoad(url, config, markdownTrainingData);
+			if (success) {
+				return Response.ok().build();
+			} else {
+				return Response.serverError().build();
+			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// Bad Request
+		return Response.status(400).build();
 	}
 
 
