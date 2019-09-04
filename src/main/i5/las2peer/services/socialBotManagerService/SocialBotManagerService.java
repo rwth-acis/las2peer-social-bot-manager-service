@@ -180,6 +180,19 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(this);
 	}
 
+	@GET
+	@Path("/test")
+	@ApiOperation(
+			value = "Takes a `MessageInfo` object in JSON format and triggers `ServiceFunction`s if needed.",
+			notes = "")
+	// TODO: Having something like this and the other trigger methods in the REST API isn't optimal,
+	//       as these interfaces could be abused with some internal knowledge of the bots. Should use some
+	//       other way of exchanging data between threads, for performance reasons as well.
+	public Response test() {
+		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, "This is a test message.");
+		return Response.ok().build();
+	}
+
 	@POST
 	@Path("/triggerIntent")
 	@Consumes(MediaType.APPLICATION_JSON)
