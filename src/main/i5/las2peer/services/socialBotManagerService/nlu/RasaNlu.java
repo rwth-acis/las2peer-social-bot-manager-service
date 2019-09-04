@@ -38,26 +38,4 @@ public class RasaNlu {
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		return (JSONObject)p.parse(response.getResponse());
 	}
-
-	public static boolean trainAndLoad(String url, String config, String markdownTrainingData) {
-		MiniClient client = new MiniClient();
-		client.setConnectorEndpoint(url);
-
-		JSONObject json = new JSONObject();
-		json.put("config", config);
-		json.put("nlu", markdownTrainingData);
-
-		ClientResponse response = client.sendRequest("POST", "model/train", json.toString());
-
-		String filename = response.getHeader("filename");
-		if (filename == null) {
-			return false;
-		}
-
-		json = new JSONObject();
-		json.put("model_file", "models/" + filename);
-
-		response = client.sendRequest("PUT", "model", json.toString());
-		return response.getHttpCode() == 204;
-	}
 }
