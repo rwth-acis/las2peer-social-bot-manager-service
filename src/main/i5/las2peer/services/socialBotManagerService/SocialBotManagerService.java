@@ -194,7 +194,7 @@ public class SocialBotManagerService extends RESTService {
 		MessageInfo m = gson.fromJson(body, MessageInfo.class);
 
 		System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
-		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42, body);
+		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 		return Response.ok().build();
 	}
 
