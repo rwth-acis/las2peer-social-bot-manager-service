@@ -152,7 +152,7 @@ public class Bot {
 
 	public void handleMessages(ArrayList<MessageInfo> messageInfos) {
 		for (Messenger m: this.messengers.values()) {
-			m.handleMessages(messageInfos, this.botAgent);
+			m.handleMessages(messageInfos, this.botAgent, this.name);
 		}
 	}
 

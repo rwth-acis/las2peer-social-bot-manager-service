@@ -65,7 +65,7 @@ public class Messenger {
 	// TODO: This would be much nicer, if we could get a las2peer context here, but this
 	//       is usually called from the routine thread. Maybe a context can be shared across
 	//       threads somehow?
-	public void handleMessages(ArrayList<MessageInfo> messageInfos, String botAgent) {
+	public void handleMessages(ArrayList<MessageInfo> messageInfos, String botAgent, String botName) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 
 		for (ChatMessage message: newMessages) {
@@ -103,7 +103,7 @@ public class Messenger {
 			}
 
 			messageInfos.add(new MessageInfo(message, intent,
-					triggeredFunctionId, botAgent));
+					triggeredFunctionId, botAgent, botName));
 		}
 	}
 }
