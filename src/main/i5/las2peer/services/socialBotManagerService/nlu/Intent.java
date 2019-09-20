@@ -11,6 +11,7 @@ public class Intent {
 
 	private HashMap<String, Entity> entities;
 
+	// Constructor for intent extraction through Rasa NLU.
 	public Intent(JSONObject json) {
 		JSONObject intentInner = (JSONObject) json.get("intent");
 		float confidence = intentInner.getAsNumber("confidence").floatValue();
@@ -27,6 +28,14 @@ public class Intent {
 			}
 		);
 		this.entities = entitiesMap;
+	}
+
+	// Constructor for bypassing intent extraction. Used for '!'-commands, for example.
+	public Intent(String intentKeyword, String entityName, String entityValue) {
+		this.intentKeyword = intentKeyword;
+		this.confidence = 1.0f;
+		this.entities = new HashMap<String, Entity>();
+		this.entities.put(entityName, new Entity(entityName, entityValue));
 	}
 
 	public String getKeyword() {

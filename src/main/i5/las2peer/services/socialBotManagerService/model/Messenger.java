@@ -61,17 +61,38 @@ public class Messenger {
 
 	// Handles simple responses ("Chat Response") directly, logs all messages and
 	// extracted intents into `messageInfos` for further processing later on.
-
-	// TODO: This would be much nicer, if we could get a las2peer context here, but this
+	// TODO: This would be much nicer if we could get a las2peer context here, but this
 	//       is usually called from the routine thread. Maybe a context can be shared across
 	//       threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, String botAgent, String botName) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 
 		for (ChatMessage message: newMessages) {
-			Intent intent = this.rasa.getIntent(message.getText());
-			if (intent == null) {
-				continue;
+			Intent intent = null;
+
+			// Special case: `!`-commands
+			if (message.getText().startsWith("!")) {
+				// Split at first occurring whitespace
+				String splitMessage[] = message.getText().split("\\s+", 2);
+
+				// First word without '!' prefix
+				String intentKeyword = splitMessage[0].substring(1);
+				IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
+				// TODO: Log this?
+				if (incMsg == null) {
+					continue;
+				}
+
+				String entityKeyword = incMsg.getEntityKeyword();
+				String entityValue = null;
+				// Entity value is the rest of the message
+				if (splitMessage.length > 1) {
+					entityValue = splitMessage[1];
+				}
+
+				intent = new Intent(intentKeyword, entityKeyword, entityValue);
+			} else {
+				intent = this.rasa.getIntent(message.getText());
 			}
 
 			String triggeredFunctionId = null;
