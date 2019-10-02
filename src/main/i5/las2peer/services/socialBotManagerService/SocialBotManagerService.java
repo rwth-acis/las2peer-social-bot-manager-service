@@ -180,23 +180,6 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(this);
 	}
 
-	@POST
-	@Path("/triggerIntent")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value = "Takes a `MessageInfo` object in JSON format and triggers `ServiceFunction`s if needed.",
-			notes = "")
-	// TODO: Having something like this and the other trigger methods in the REST API isn't optimal,
-	//       as these interfaces could be abused with some internal knowledge of the bots. Should use some
-	//       other way of exchanging data between threads, for performance reasons as well.
-	public Response test(String body) {
-		Gson gson = new Gson();
-		MessageInfo m = gson.fromJson(body, MessageInfo.class);
-
-		System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
-		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
-		return Response.ok().build();
-	}
 
 	@POST
 	@Path("/trainAndLoad")
@@ -554,6 +537,56 @@ public class SocialBotManagerService extends RESTService {
 			return Response.ok().entity(returnString).build();
 		}
 
+		@POST
+		@Path("/{botName}/trigger/intent")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(
+				value = "Log message to MobSOS and trigger bot by intent if necessary")
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "") })
+		public Response triggerIntent(String body, @PathParam("botName") String name) {
+			Gson gson = new Gson();
+			MessageInfo m = gson.fromJson(body, MessageInfo.class);
+
+			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
+			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
+
+			// If no action should be triggered, just return
+			if (m.getTriggeredFunctionId() == null) {
+				return Response.ok().build();
+			}
+
+			SocialBotManagerService sbf = this.sbfservice;
+			new Thread(new Runnable() {
+			     @Override
+			     public void run() {
+					try {
+						BotAgent botAgent = getBotAgents().get(m.getBotAgent());
+						String service = m.getServiceAlias();
+						VLE vle = getConfig().getServiceConfiguration(service);
+
+						try {
+							sbf.performIntentTrigger(vle, botAgent, m);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						try{
+				            Thread.sleep(500);
+				        } catch(InterruptedException e){
+				            e.printStackTrace();
+				        }
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					System.out.println("Intent processing finished.");
+				}
+			}).start();
+			return Response.ok().build();
+		}
+
 		@DELETE
 		@Path("/{botName}/{unit}")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -626,7 +659,38 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
+		}
+	}
 
+	// TODO: Use entity value, handle environment separator, handle other things than static content
+	public void performIntentTrigger(VLE vle, BotAgent botAgent, MessageInfo messageInfo)
+			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
+			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
+			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
+		String botId = botAgent.getIdentifier();
+		Bot bot = vle.getBots().get(botId);
+		if (bot != null) {
+			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
+			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
+
+			String functionPath = "";
+			if (botFunction.getActionType().equals(ActionType.SERVICE))
+				functionPath = botFunction.getFunctionPath();
+			JSONObject body = new JSONObject();
+			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String,ServiceFunctionAttribute>();
+
+			JSONObject triggerAttributes = new JSONObject();
+			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
+				formAttributes(vle, sfa, bot, body, functionPath, attlist, triggerAttributes);
+			}
+
+			// Patch attributes so that if a chat message is sent, it is sent
+			// to the same channel the action was triggered from.
+			// TODO: Handle multiple messengers
+			body.remove("email");
+			body.put("channel", messageInfo.getMessage().getChannel());
+
+			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
 
@@ -1140,7 +1204,7 @@ public class SocialBotManagerService extends RESTService {
 
 					HashMap<String, String> headers = new HashMap<String, String>();
 					for (MessageInfo m: messageInfos) {
-						ClientResponse result = client.sendRequest("POST", "SBFManager/triggerIntent",
+						ClientResponse result = client.sendRequest("POST", "SBFManager/" + bot.getName() + "/trigger/intent",
 								gson.toJson(m), MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 						System.out.println(result.getResponse());
 					}

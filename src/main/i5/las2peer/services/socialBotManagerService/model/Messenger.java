@@ -64,13 +64,13 @@ public class Messenger {
 	// TODO: This would be much nicer if we could get a las2peer context here, but this
 	//       is usually called from the routine thread. Maybe a context can be shared across
 	//       threads somehow?
-	public void handleMessages(ArrayList<MessageInfo> messageInfos, String botAgent, String botName) {
+	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 
 		for (ChatMessage message: newMessages) {
 			Intent intent = null;
 
-			// Special case: `!`-commands
+			// Special case: `!` commands
 			if (message.getText().startsWith("!")) {
 				// Split at first occurring whitespace
 				String splitMessage[] = message.getText().split("\\s+", 2);
@@ -78,14 +78,15 @@ public class Messenger {
 				// First word without '!' prefix
 				String intentKeyword = splitMessage[0].substring(1);
 				IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
-				// TODO: Log this?
+				// TODO: Log this? (`!` command with unknown intent / keyword)
 				if (incMsg == null) {
 					continue;
 				}
 
 				String entityKeyword = incMsg.getEntityKeyword();
 				String entityValue = null;
-				// Entity value is the rest of the message
+				// Entity value is the rest of the message. The whole rest
+				// is in the second element, since we only split it into two parts.
 				if (splitMessage.length > 1) {
 					entityValue = splitMessage[1];
 				}
@@ -97,6 +98,7 @@ public class Messenger {
 
 			String triggeredFunctionId = null;
 			IncomingMessage state = this.stateMap.get(message.getChannel());
+
 			// No conversation state present, starting from scratch
 			if (state == null) {
 				// TODO: Tweak this
@@ -124,7 +126,8 @@ public class Messenger {
 			}
 
 			messageInfos.add(new MessageInfo(message, intent,
-					triggeredFunctionId, botAgent, botName));
+					triggeredFunctionId, bot.getBotAgent(), bot.getName(),
+					bot.getVle().getName()));
 		}
 	}
 }
