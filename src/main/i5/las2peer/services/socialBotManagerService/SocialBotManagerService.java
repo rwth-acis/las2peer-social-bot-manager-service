@@ -553,7 +553,6 @@ public class SocialBotManagerService extends RESTService {
 
 			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
-
 			// If no action should be triggered, just return
 			if (m.getTriggeredFunctionId() == null) {
 				return Response.ok().build();
@@ -564,7 +563,7 @@ public class SocialBotManagerService extends RESTService {
 			     @Override
 			     public void run() {
 					try {
-						BotAgent botAgent = getBotAgents().get(m.getBotAgent());
+						BotAgent botAgent = getBotAgents().get(m.getBotName());
 						String service = m.getServiceAlias();
 						VLE vle = getConfig().getServiceConfiguration(service);
 
@@ -957,6 +956,10 @@ public class SocialBotManagerService extends RESTService {
 			}
 			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
+			if (messengerID == null || bot.getMessenger(messengerID) == null) {
+				System.out.println("Bot Action is missing Messenger");
+				return;
+			}
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 			triggerChat(chat, triggeredBody);
 		}
@@ -1204,7 +1207,7 @@ public class SocialBotManagerService extends RESTService {
 
 					HashMap<String, String> headers = new HashMap<String, String>();
 					for (MessageInfo m: messageInfos) {
-						ClientResponse result = client.sendRequest("POST", "SBFManager/" + bot.getName() + "/trigger/intent",
+						ClientResponse result = client.sendRequest("POST", "SBFManager/bots/" + m.getBotName() + "/trigger/intent",
 								gson.toJson(m), MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 						System.out.println(result.getResponse());
 					}
@@ -1295,7 +1298,7 @@ public class SocialBotManagerService extends RESTService {
 										body.put("attributes", atts);
 
 										HashMap<String, String> headers = new HashMap<String, String>();
-										ClientResponse result = client.sendRequest("POST", "SBFManager/"+b.getName()+"/trigger/routine",
+										ClientResponse result = client.sendRequest("POST", "SBFManager/bots/"+b.getName()+"/trigger/routine",
 												body.toJSONString(), MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 										System.out.println(result.getResponse());
 									}

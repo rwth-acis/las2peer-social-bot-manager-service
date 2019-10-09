@@ -7,18 +7,17 @@ public class MessageInfo {
 	ChatMessage message;
 	Intent intent;
 	String triggeredFunctionId;
-	String botAgent;
 	String botName;
 	String serviceAlias;
 
 	public MessageInfo(ChatMessage message,	Intent intent,
-			String triggeredFunctionId, String botAgent,
-			String botName, String serviceAlias)
+			String triggeredFunctionId, String botName,
+			String serviceAlias)
 	{
 		this.message = message;
 		this.intent = intent;
 		this.triggeredFunctionId = triggeredFunctionId;
-		this.botAgent = botAgent;
+		this.botName = botName;
 		this.serviceAlias = serviceAlias;
 	}
 
@@ -32,10 +31,6 @@ public class MessageInfo {
 
 	public String getTriggeredFunctionId() {
 		return this.triggeredFunctionId;
-	}
-
-	public String getBotAgent() {
-		return this.botAgent;
 	}
 
 	public String getBotName() {

@@ -126,7 +126,7 @@ public class Messenger {
 			}
 
 			messageInfos.add(new MessageInfo(message, intent,
-					triggeredFunctionId, bot.getBotAgent(), bot.getName(),
+					triggeredFunctionId, bot.getName(),
 					bot.getVle().getName()));
 		}
 	}
