@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.OptionalLong;
 import java.util.Vector;
@@ -60,7 +61,17 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 	public Vector<ChatMessage> getMessages() {
-		return this.messageCollector.getMessages();
+		Vector<ChatMessage> messages = this.messageCollector.getMessages();
+		if(!this.messageCollector.isConnected()) {
+			try {
+				this.rtm.reconnect();
+				this.messageCollector.setConnected(true);
+			} catch (IOException | SlackApiException | URISyntaxException | DeploymentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return messages;
 	}
 
 	public String getBotUser() {
