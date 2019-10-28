@@ -280,6 +280,7 @@ public class SocialBotManagerService extends RESTService {
 					ac.putAll(b.getActive());
 					jb.put("active", ac);
 					jb.put("id", b.getId());
+					jb.put("name", b.getName());
 					jb.put("version", b.getVersion());
 					botList.put(botEntry.getValue().getName(), jb);
 			    }
@@ -289,7 +290,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@GET
-		@Path("/{botName}")
+		@Path("/{vleName}")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(
 				value = { @ApiResponse(
@@ -297,8 +298,8 @@ public class SocialBotManagerService extends RESTService {
 						message = "Returns bot information") })
 		@ApiOperation(
 				value = "Retrieve bot by name",
-				notes = "Returns bot information by the given name.")
-		public Response getBotsForVLE(@PathParam("botName") String name) {
+				notes = "Returns bot information by the given VLE name.")
+		public Response getBotsForVLE(@PathParam("vleName") String name) {
 			VLE vle = getConfig().getVLEs().get(name);
 			//Set<String> botList = new HashSet<String>();
 			JSONObject j = new JSONObject();
@@ -312,6 +313,7 @@ public class SocialBotManagerService extends RESTService {
 					ac.putAll(b.getActive());
 					jb.put("active", ac);
 					jb.put("id", b.getId());
+					jb.put("name", b.getId());
 					jb.put("version", b.getVersion());
 					j.put((String) pair.getKey(), jb);
 					// it.remove(); // avoids a ConcurrentModificationException
