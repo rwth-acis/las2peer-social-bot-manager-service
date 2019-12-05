@@ -22,6 +22,7 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 					message = SlackChatMediator.parseSlackMessage(messageJson);
 					this.addMessage(message);
 				} else if(type.equals("goodbye")) {
+					System.out.println("Slack client disconnected");
 					this.setConnected(false);
 				}
 			} else {

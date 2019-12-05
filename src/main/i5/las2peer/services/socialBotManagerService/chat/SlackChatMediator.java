@@ -8,8 +8,6 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
-import net.minidev.json.JSONObject;
-
 // TODO: Currently needed because of class with the same name in this package
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.methods.SlackApiException;
@@ -21,7 +19,10 @@ import com.github.seratch.jslack.api.rtm.RTMClient;
 import com.github.seratch.jslack.api.rtm.message.Message;
 import com.github.seratch.jslack.api.rtm.message.Message.MessageBuilder;
 
+import net.minidev.json.JSONObject;
+
 public class SlackChatMediator extends ChatMediator {
+	private Slack slack = null;
 	private RTMClient rtm = null;
 	private SlackChatMessageCollector messageCollector = new SlackChatMessageCollector();
 
@@ -29,22 +30,22 @@ public class SlackChatMediator extends ChatMediator {
 
 	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
 		super(authToken);
-		this.rtm = new Slack().rtm(authToken);
+		this.slack = new Slack();
+		this.rtm = this.slack.rtm(authToken);
 
 		this.rtm.addMessageHandler(messageCollector);
 		this.rtm.connect();
 		this.botUser = rtm.getConnectedBotUser().toString();
 	}
 
+	@Override
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
-		MessageBuilder msg = Message
-					         .builder()
-					         .channel(channel)
-					         .text(text);
+		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
 		if (id.isPresent()) {
 			msg.id(id.getAsLong());
 		}
-		rtm.sendMessage(msg.build().toJSONString());
+		String message = msg.build().toJSONString();
+		rtm.sendMessage(message);
 	}
 
 	// static for calling from `SlackChatMessageCollector`
@@ -60,12 +61,14 @@ public class SlackChatMediator extends ChatMediator {
 		return new ChatMessage(channel, user, text);
 	}
 
+	@Override
 	public Vector<ChatMessage> getMessages() {
 		Vector<ChatMessage> messages = this.messageCollector.getMessages();
-		if(!this.messageCollector.isConnected()) {
+		if (!this.messageCollector.isConnected()) {
 			try {
 				this.rtm.reconnect();
 				this.messageCollector.setConnected(true);
+				System.out.println("Slack client reconnected");
 			} catch (IOException | SlackApiException | URISyntaxException | DeploymentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -78,19 +81,17 @@ public class SlackChatMediator extends ChatMediator {
 		return this.botUser.toString();
 	}
 
+	@Override
 	public String getChannelByEmail(String email) {
 		Slack slack = Slack.getInstance();
 		try {
-			UsersLookupByEmailResponse lookupByEmailResponse =
-					slack.methods(this.authToken).usersLookupByEmail(req -> req.email(email));
+			UsersLookupByEmailResponse lookupByEmailResponse = slack.methods(this.authToken)
+					.usersLookupByEmail(req -> req.email(email));
 			String userId = lookupByEmailResponse.getUser().getId();
-			ConversationsListResponse listResponse =
-					slack.methods(this.authToken)
-						.conversationsList(req ->
-							req.excludeArchived(true).types(Arrays.asList(ConversationType.IM)));
-			Conversation im = listResponse.getChannels().stream()
-					.filter(c -> c.getUser().equals(userId))
-					.findFirst().get();
+			ConversationsListResponse listResponse = slack.methods(this.authToken)
+					.conversationsList(req -> req.excludeArchived(true).types(Arrays.asList(ConversationType.IM)));
+			Conversation im = listResponse.getChannels().stream().filter(c -> c.getUser().equals(userId)).findFirst()
+					.get();
 			return im.getId();
 		} catch (IOException | SlackApiException e) {
 			// TODO Auto-generated catch block

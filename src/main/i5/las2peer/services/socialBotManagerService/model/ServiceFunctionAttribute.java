@@ -13,7 +13,7 @@ public class ServiceFunctionAttribute {
 	private ContentGenerator generator;
 	private ServiceFunction function;
 	private IfThenBlock itb;
-	
+
 	private boolean staticContent;
 	private String content;
 	private String contentURL;
@@ -138,4 +138,14 @@ public class ServiceFunctionAttribute {
 	public void setItb(IfThenBlock itb) {
 		this.itb = itb;
 	}
+
+	@Override
+	public String toString() {
+		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
+				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
+				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
+				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
+				+ ", contentType=" + contentType + "]";
+	}
+
 }
