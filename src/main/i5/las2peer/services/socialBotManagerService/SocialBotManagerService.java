@@ -108,7 +108,7 @@ import net.minidev.json.parser.ParseException;
 @SwaggerDefinition(
 		info = @Info(
 				title = "las2peer Bot Manager Service",
-				version = "1.0.13",
+				version = "1.0.14",
 				description = "A las2peer service for managing social bots.",
 				termsOfService = "",
 				contact = @Contact(

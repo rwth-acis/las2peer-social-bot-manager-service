@@ -9,10 +9,14 @@
 	<classpathentry kind="lib" path="lib/javax.websocket-client-api-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/tyrus-standalone-client-1.13.jar"/>
 	<classpathentry kind="lib" path="lib/las2peer-bundle-0.8.2.jar"/>
-	<classpathentry kind="lib" path="lib/jslack-3.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/jslack-api-client-3.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/jslack-api-model-3.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/jslack-app-backend-3.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/gson-2.8.6.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.8.5.jar"/>
+	<classpathentry kind="lib" path="lib/jslack-1.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/jslack-api-client-1.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/jslack-api-model-1.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/jslack-app-backend-1.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/lombok-1.18.8.jar"/>
+	<classpathentry kind="lib" path="lib/okhttp-3.14.1.jar"/>
+	<classpathentry kind="lib" path="lib/okio-1.17.2.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.7.28.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>

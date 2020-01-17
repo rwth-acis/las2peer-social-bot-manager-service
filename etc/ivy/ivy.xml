@@ -17,7 +17,7 @@
         <!-- TODO: These are service dependencies, but websockets don't work if imported as such -->
         <dependency org="javax.websocket" name="javax.websocket-api" rev="1.1" conf="platform->*" />
         <dependency org="org.glassfish.tyrus.bundles" name="tyrus-standalone-client" rev="1.13" conf="platform->*" />
-        <dependency org="com.github.seratch" name="jslack" rev="3.2.2" conf="platform->*" />
+        <dependency org="com.github.seratch" name="jslack" rev="1.8.1" conf="platform->*" />
 
         <!-- service dependencies -->
         <!-- Add service dependencies here -->
