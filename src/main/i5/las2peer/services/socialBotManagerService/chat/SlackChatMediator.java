@@ -1,7 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.OptionalLong;
 import java.util.Vector;
@@ -12,6 +11,7 @@ import javax.websocket.DeploymentException;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.methods.SlackApiException;
 import com.github.seratch.jslack.api.methods.response.channels.UsersLookupByEmailResponse;
+import com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse;
 import com.github.seratch.jslack.api.methods.response.conversations.ConversationsListResponse;
 import com.github.seratch.jslack.api.model.Conversation;
 import com.github.seratch.jslack.api.model.ConversationType;
@@ -36,6 +36,7 @@ public class SlackChatMediator extends ChatMediator {
 		this.rtm.addMessageHandler(messageCollector);
 		this.rtm.connect();
 		this.botUser = rtm.getConnectedBotUser().toString();
+		System.out.println(this.botUser + " connected.");
 	}
 
 	@Override
@@ -45,7 +46,17 @@ public class SlackChatMediator extends ChatMediator {
 			msg.id(id.getAsLong());
 		}
 		String message = msg.build().toJSONString();
-		rtm.sendMessage(message);
+		try {
+			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
+																													// ID
+					.text(text));
+			System.out.println("Message sent: " + response.isOk());
+		} catch (Exception e) {
+			this.messageCollector.setConnected(false);
+			this.reconnect();
+			rtm.sendMessage(message);
+			System.out.println("Sent message with Exception: " + e.getMessage());
+		}
 	}
 
 	// static for calling from `SlackChatMessageCollector`
@@ -64,16 +75,7 @@ public class SlackChatMediator extends ChatMediator {
 	@Override
 	public Vector<ChatMessage> getMessages() {
 		Vector<ChatMessage> messages = this.messageCollector.getMessages();
-		if (!this.messageCollector.isConnected()) {
-			try {
-				this.rtm.reconnect();
-				this.messageCollector.setConnected(true);
-				System.out.println("Slack client reconnected");
-			} catch (IOException | SlackApiException | URISyntaxException | DeploymentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		this.reconnect();
 		return messages;
 	}
 
@@ -98,5 +100,24 @@ public class SlackChatMediator extends ChatMediator {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	private void reconnect() {
+		if (!this.messageCollector.isConnected()) {
+			try {
+				this.rtm.close();
+				this.slack = new Slack();
+				this.rtm = this.slack.rtm(authToken);
+
+				this.rtm.addMessageHandler(messageCollector);
+				this.rtm.connect();
+				this.botUser = rtm.getConnectedBotUser().toString();
+				this.messageCollector.setConnected(true);
+				System.out.println(this.botUser + " reconnected.");
+			} catch (IOException | DeploymentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }

@@ -108,7 +108,7 @@ import net.minidev.json.parser.ParseException;
 @SwaggerDefinition(
 		info = @Info(
 				title = "las2peer Bot Manager Service",
-				version = "1.0.14",
+				version = "1.0.19",
 				description = "A las2peer service for managing social bots.",
 				termsOfService = "",
 				contact = @Contact(
@@ -799,15 +799,14 @@ public class SocialBotManagerService extends RESTService {
 
 				System.out.println(triggeredFunctionAttribute.getName());
 				if (triggeredFunctionAttribute.getItb() != null) {
-					System.out.println("4");
 					mapWithIfThen(triggeredFunctionAttribute.getItb(), triggeredFunctionAttribute, triggeredBody,
 							attlist, triggerAttributes, functionPath);
 				} else {
-					System.out.println("5");
 					if (triggeredFunctionAttribute.hasStaticContent()) {
 						mapWithStaticContent(triggeredFunctionAttribute, triggeredBody);
 					} else {
-						System.out.println("6");
+						// TODO
+						System.out.println("Unknown mapping");
 					}
 				}
 			}
