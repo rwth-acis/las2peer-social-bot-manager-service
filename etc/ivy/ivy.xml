@@ -14,18 +14,13 @@
         <!-- JUnit -->
         <dependency org="junit" name="junit" rev="4.12" conf="platform->*" />
         
+        <dependency org="javax.websocket" name="javax.websocket-api" rev="1.1" conf="bundle->*" />
         <!-- TODO: These are service dependencies, but websockets don't work if imported as such -->
-        <dependency org="javax.websocket" name="javax.websocket-api" rev="1.1" conf="platform->*" />
         <dependency org="org.glassfish.tyrus.bundles" name="tyrus-standalone-client" rev="1.13" conf="platform->*" />
-        <dependency org="com.github.seratch" name="jslack" rev="1.8.1" conf="platform->*" />
+        <dependency org="com.github.seratch" name="jslack" rev="1.8.1" conf="bundle->*" />
+        <dependency org="com.rocketchat.common" name="rocketchat-common" rev="0.7.1" conf="bundle->*" />
+        <dependency org="com.rocketchat.core" name="rocketchat-core" rev="0.7.1" conf="bundle->*" />
+        <dependency org="com.rocketchat.livechat" name="rocketchat-livechat" rev="0.7.1" conf="bundle->*" />
 
-        <!-- service dependencies -->
-        <!-- Add service dependencies here -->
-        <!-- All dependencies with (default) conf="bundle->*" are packaged into the service jar -->
-        <!-- example:
-        <dependency org="net.minidev" name="json-smart" rev="1.3.1" conf="bundle->*" />
-        -->
-
-        
     </dependencies>
 </ivy-module>
