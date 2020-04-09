@@ -133,7 +133,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private static ScheduledExecutorService rt = null;
 
-	private int BOT_ROUTINE_PERIOD = 1; // 1 second
+	private int BOT_ROUTINE_PERIOD = 5; // 1 second
 
 	private TrainingHelper nluTrain = null;
 	private Thread nluTrainThread = null;
@@ -187,7 +187,7 @@ public class SocialBotManagerService extends RESTService {
 
 	@POST
 	@Path("/trainAndLoad")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
 	@ApiOperation(
 			value = "Trains and loads an NLU model on the given Rasa NLU server instance.",
 			notes = "")
@@ -1198,7 +1198,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
-
+			System.out.println("Running...");
 			for (VLE vle : getConfig().getVLEs().values()) {
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
@@ -1211,10 +1211,14 @@ public class SocialBotManagerService extends RESTService {
 
 					HashMap<String, String> headers = new HashMap<String, String>();
 					for (MessageInfo m : messageInfos) {
-						ClientResponse result = client.sendRequest("POST",
-								"SBFManager/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
-								MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
-						System.out.println(result.getResponse());
+						try {
+							ClientResponse result = client.sendRequest("POST",
+									"SBFManager/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
+									MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+							System.out.println(result.getResponse());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
 

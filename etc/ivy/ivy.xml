@@ -21,6 +21,7 @@
         <dependency org="com.rocketchat.common" name="rocketchat-common" rev="0.7.1" conf="bundle->*" />
         <dependency org="com.rocketchat.core" name="rocketchat-core" rev="0.7.1" conf="bundle->*" />
         <dependency org="com.rocketchat.livechat" name="rocketchat-livechat" rev="0.7.1" conf="bundle->*" />
-
+        <dependency org="com.neovisionaries" name="nv-websocket-client" rev="2.9" conf="bundle->*" />
+        <dependency org="org.json" name="json" rev="20190722" conf="bundle->*" />
     </dependencies>
 </ivy-module>

@@ -20,6 +20,6 @@
 	<classpathentry kind="lib" path="servicebundle/rocketchat-core-0.7.1.jar"/>
 	<classpathentry kind="lib" path="servicebundle/rocketchat-livechat-0.7.1.jar"/>
 	<classpathentry kind="lib" path="servicebundle/slf4j-api-1.7.28.jar"/>
-	<classpathentry kind="lib" path="servicebundle/tyrus-standalone-client-1.13.jar"/>
+	<classpathentry kind="lib" path="servicebundle/json-20190722.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>
