@@ -268,6 +268,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 																	public void onUploadError(ErrorObject arg0,
 																			IOException arg1) {
 																		room.sendMessage(arg0.getMessage());
+																		room.sendMessage(arg0.getReason());
+																		tempFile.delete();
 																	}
 
 																	@Override
