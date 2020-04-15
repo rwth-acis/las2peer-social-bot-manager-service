@@ -27,6 +27,7 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 				try {
 					System.out.println("Handling text.");
 					JSONArray emails = message.getSender().getEmails();
+					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());

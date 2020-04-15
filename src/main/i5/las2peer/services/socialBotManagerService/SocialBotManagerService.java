@@ -11,6 +11,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -67,6 +69,8 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -122,6 +126,16 @@ import net.minidev.json.parser.ParseException;
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
 
+	private String databaseName = "SBF";
+	private int databaseTypeInt = 1; // See SQLDatabaseType for more information
+	private SQLDatabaseType databaseType;
+	private String databaseHost = "mobsos-mysql.mobsos";
+	private int databasePort = 3306;
+	private String databaseUser = "root";
+	private String databasePassword = "";
+	private Connection con;
+	private SQLDatabase database; // The database instance to write to.
+
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
 	private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
@@ -170,6 +184,15 @@ public class SocialBotManagerService extends RESTService {
 		}
 		if (getBotAgents() == null) {
 			setBotAgents(new HashMap<String, BotAgent>());
+		}
+
+		this.databaseType = SQLDatabaseType.getSQLDatabaseType(databaseTypeInt);
+		this.database = new SQLDatabase(this.databaseType, this.databaseUser, this.databasePassword, this.databaseName,
+				this.databaseHost, this.databasePort);
+		try {
+			con = database.getDataSource().getConnection();
+		} catch (SQLException e) {
+			System.out.println("Failed to Connect: " + e.getMessage());
 		}
 
 		if (rt == null) {
@@ -349,7 +372,7 @@ public class SocialBotManagerService extends RESTService {
 			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-						nodes, edges);
+						nodes, edges, sbfservice.con);
 			} catch (ParseBotException | IOException | DeploymentException e) {
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}

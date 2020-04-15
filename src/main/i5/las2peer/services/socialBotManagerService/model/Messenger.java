@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -30,12 +31,12 @@ public class Messenger {
 
 	private Random random;
 
-	public Messenger(String id, String chatService, String token, String rasaUrl)
+	public Messenger(String id, String chatService, String token, String rasaUrl, Connection con)
 			throws IOException, DeploymentException, ParseBotException {
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token);
+			this.chatMediator = new RocketChatMediator(token, con);
 		} else { // TODO: Implement more backends
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}

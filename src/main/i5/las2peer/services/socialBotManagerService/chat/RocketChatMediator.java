@@ -3,10 +3,16 @@ package i5.las2peer.services.socialBotManagerService.chat;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.OptionalLong;
 import java.util.Vector;
@@ -14,10 +20,12 @@ import java.util.Vector;
 import javax.imageio.ImageIO;
 import javax.ws.rs.core.MediaType;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.rocketchat.common.data.lightdb.document.UserDocument;
 import com.rocketchat.common.data.model.ErrorObject;
+import com.rocketchat.common.data.model.UserObject;
 import com.rocketchat.common.listener.ConnectListener;
 import com.rocketchat.common.listener.SubscribeListener;
 import com.rocketchat.common.network.ReconnectionStrategy;
@@ -29,6 +37,7 @@ import com.rocketchat.core.callback.GetSubscriptionListener;
 import com.rocketchat.core.callback.LoginListener;
 import com.rocketchat.core.callback.MessageListener;
 import com.rocketchat.core.callback.RoomListener;
+import com.rocketchat.core.callback.RoomListener.GetMembersListener;
 import com.rocketchat.core.factory.ChatRoomFactory;
 import com.rocketchat.core.model.RocketChatMessage;
 import com.rocketchat.core.model.RocketChatMessage.Type;
@@ -48,10 +57,16 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private String password;
 	private String token;
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
+	private Connection con;
+	private HashSet<String> activeSubscriptions = null;
 
-	public RocketChatMediator(String authToken) {
+	public RocketChatMediator(String authToken, Connection con) {
 		super(authToken);
+		this.con = con;
 		password = authToken;
+		if (activeSubscriptions == null) {
+			activeSubscriptions = new HashSet<String>();
+		}
 		client = new RocketChatAPI(url);
 		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
 		client.setPingInterval(15000);
@@ -62,21 +77,72 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
-		room.subscribeRoomMessageEvent(new SubscribeListener() {
-			@Override
-			public void onSubscribe(Boolean isSubscribed, String subId) {
+		room.getMembers(new GetMembersListener() {
 
-			}
-		}, new MessageListener.SubscriptionListener() {
 			@Override
-			public void onMessage(String arg0, RocketChatMessage arg1) {
+			public void onGetRoomMembers(Integer arg0, List<UserObject> arg1, ErrorObject arg2) {
 				// TODO Auto-generated method stub
+				String userName = "";
+				String newText = text;
+				for (UserObject u : (ArrayList<UserObject>) arg1) {
+					if (!u.getUserId().equals(client.getMyUserId())) {
+						userName += u.getUserName() + ", ";
+					}
+				}
+				if (userName.length() > 0) {
+					userName = userName.substring(0, username.length() - 1);
+				}
+				newText = newText.replace("menteeName", userName);
+				newText = newText.replace("\\n", "\n");
+				if (newText.length() > 5000) {
+					try {
+						File tempFile = new File("message.txt");
+						FileWriter writer = new FileWriter(tempFile);
+						writer.write(newText);
+						writer.close();
+						room.uploadFile(tempFile, "message.txt", "", new FileListener() {
 
+							@Override
+							public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
+								// TODO Auto-generated method stub
+							}
+
+							@Override
+							public void onUploadError(ErrorObject arg0, IOException arg1) {
+								room.sendMessage(arg0.getMessage());
+								room.sendMessage(arg0.getReason());
+								tempFile.delete();
+							}
+
+							@Override
+							public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
+								// TODO Auto-generated method stub
+
+							}
+
+							@Override
+							public void onUploadStarted(String arg0, String arg1, String arg2) {
+								// TODO Auto-generated method stub
+
+							}
+
+							@Override
+							public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1,
+									String arg2, String arg3, String arg4) {
+								tempFile.delete();
+							}
+						});
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else {
+					room.sendMessage(newText);
+				}
 			}
-		});
-		// CHECK VARS
 
-		room.sendMessage(text);
+		});
+
 	}
 
 	@Override
@@ -100,9 +166,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		if (error == null) {
 			for (RoomObject room : rooms) {
 				System.out.println("Room name is " + room.getRoomName());
-				System.out.println("Room id is " + room.getRoomId());
-				System.out.println("Room topic is " + room.getTopic());
-				System.out.println("Room type is " + room.getRoomType());
+				// System.out.println("Room id is " + room.getRoomId());
+				// System.out.println("Room topic is " + room.getTopic());
+				// System.out.println("Room type is " + room.getRoomType());
 			}
 		} else {
 			System.out.println("Got error " + error.getMessage());
@@ -161,7 +227,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	@Override
 	public void onSubscribe(Boolean arg0, String arg1) {
-		System.out.println(arg1);
+		// System.out.println(arg1);
 	}
 
 	public static int countWords(String s) {
@@ -189,138 +255,192 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return wordCount;
 	}
 
+	protected String getTxtFile(String userId, String file) {
+		MiniClient textClient = new MiniClient();
+		textClient.setConnectorEndpoint(url);
+		HashMap<String, String> textClientHeader = new HashMap<String, String>();
+		textClientHeader.put("cookie", "rc_uid=" + userId + "; rc_token=" + token + "; ");
+		ClientResponse r = textClient.sendRequest("GET", file, "", MediaType.TEXT_PLAIN, MediaType.TEXT_PLAIN,
+				textClientHeader);
+		return r.getResponse();
+	}
+
+	protected int getStudentRole(String email) {
+		int role = 0;
+		PreparedStatement ps;
+		try {
+			ps = con.prepareStatement("SELECT role FROM users WHERE email=?");
+			ps.setString(1, email);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next())
+				role = rs.getInt(1);
+			ps.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return role;
+	}
+
+	protected String getStudentEmail(String userName) {
+		MiniClient textClient = new MiniClient();
+		textClient.setConnectorEndpoint(url);
+		HashMap<String, String> textClientHeader = new HashMap<String, String>();
+		textClientHeader.put("X-User-Id", client.getMyUserId());
+		textClientHeader.put("X-Auth-Token", token);
+		ClientResponse r = textClient.sendRequest("GET", "api/v1/users.info?username=" + userName, "",
+				MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, textClientHeader);
+		JSONObject userObject = new JSONObject(r.getResponse());
+		JSONArray emails = userObject.getJSONObject("user").getJSONArray("emails");
+		return emails.getJSONObject(0).getString("address");
+	}
+
 	@Override
 	public void onGetSubscriptions(List<SubscriptionObject> subscriptions, ErrorObject error) {
 		// Creating Logical ChatRooms using factory class
 		ChatRoomFactory factory = client.getChatRoomFactory();
-		synchronized (factory) {
-			for (ChatRoom c : factory.getChatRooms()) {
-				c.unSubscribeAllEvents();
-				factory.removeChatRoomById(c.getRoomData().getRoomId());
-			}
-			ArrayList<ChatRoom> roomList = factory.createChatRooms(subscriptions).getChatRooms();
+		ArrayList<ChatRoom> roomList = factory.createChatRooms(subscriptions).getChatRooms();
+		for (ChatRoom room : roomList) {
+			synchronized (room) {
+				if (!activeSubscriptions.contains(room.getRoomData().getRoomId())) {
+					room.subscribeRoomMessageEvent(new SubscribeListener() {
+						@Override
+						public void onSubscribe(Boolean isSubscribed, String subId) {
 
-			for (ChatRoom room : roomList) {
-				room.subscribeRoomMessageEvent(new SubscribeListener() {
-					@Override
-					public void onSubscribe(Boolean isSubscribed, String subId) {
-
-					}
-				}, new MessageListener.SubscriptionListener() {
-					@Override
-					public void onMessage(String arg0, RocketChatMessage message) {
-						if (!message.getSender().getUserId().equals(client.getMyUserId())) {
-							Type type = message.getMsgType();
-							if (type.equals(Type.ATTACHMENT)) {
-								try {
-									new Thread(new Runnable() {
-										@Override
-										public void run() {
-											try {
-												System.out.println("Handling attachement");
-												JSONObject j = message.getRawJsonObject();
-												String fileType = j.getJSONObject("file").getString("type");
-												String fileName = j.getJSONObject("file").getString("name");
-												if (fileType.equals("text/plain")) {
-													room.sendMessage(
-															"Ich analysiere gerade deinen Text. Das kann einen Moment dauern. 👨‍🏫");
-													MiniClient textClient = new MiniClient();
-													textClient.setConnectorEndpoint(url);
-													HashMap<String, String> textClientHeader = new HashMap<String, String>();
-													textClientHeader.put("cookie", "rc_uid=" + client.getMyUserId()
-															+ "; rc_token=" + token + "; ");
-													ClientResponse r = textClient.sendRequest("GET",
-															j.getJSONArray("attachments").getJSONObject(0)
-																	.getString("title_link").substring(1),
-															"", MediaType.TEXT_PLAIN, MediaType.TEXT_PLAIN,
-															textClientHeader);
-													String body = r.getResponse();
-													int numWords = countWords(body);
-													if (numWords < 350) {
-														room.sendMessage(
-																"Der Text muss mindestens 350 Woerter enthalten (aktuell: "
-																		+ numWords + ").");
-													} else {
-														MiniClient c = new MiniClient();
-														c.setConnectorEndpoint(
-																"https://las2peer.tech4comp.dbis.rwth-aachen.de");
-														HashMap<String, String> headers = new HashMap<String, String>();
-														// TODO
-														ClientResponse result = c.sendRequest("POST",
-																"tmitocar/" + message.getRoomId() + "/", body,
-																MediaType.TEXT_PLAIN, "image/png", headers);
-														System.out.println("Submitted text: " + result.getHttpCode());
-														InputStream in = new ByteArrayInputStream(
-																result.getRawResponse());
-														BufferedImage bImageFromConvert = ImageIO.read(in);
-														File tempFile = new File(message.getRoomId() + ".png");
-														ImageIO.write(bImageFromConvert, "png", tempFile);
-														room.uploadFile(tempFile, fileName + ".png", "",
-																new FileListener() {
-
-																	@Override
-																	public void onSendFile(RocketChatMessage arg0,
-																			ErrorObject arg1) {
-																		// TODO Auto-generated method stub
-																	}
-
-																	@Override
-																	public void onUploadError(ErrorObject arg0,
-																			IOException arg1) {
-																		room.sendMessage(arg0.getMessage());
-																		room.sendMessage(arg0.getReason());
-																		tempFile.delete();
-																	}
-
-																	@Override
-																	public void onUploadProgress(int arg0, String arg1,
-																			String arg2, String arg3) {
-																		// TODO Auto-generated method stub
-
-																	}
-
-																	@Override
-																	public void onUploadStarted(String arg0,
-																			String arg1, String arg2) {
-																		// TODO Auto-generated method stub
-
-																	}
-
-																	@Override
-																	public void onUploadComplete(int arg0,
-																			com.rocketchat.core.model.FileObject arg1,
-																			String arg2, String arg3, String arg4) {
-																		room.sendMessage(
-																				"Hier ist deine Wissenslandkarte:");
-																		tempFile.delete();
-
-																	}
-																});
-													}
-												} else {
-													room.sendMessage("Der Typ `" + fileType
-															+ "` wird momentan nicht unterstuetzt.");
-												}
+						}
+					}, new MessageListener.SubscriptionListener() {
+						@Override
+						public void onMessage(String arg0, RocketChatMessage message) {
+							if (!message.getSender().getUserId().equals(client.getMyUserId())) {
+								Type type = message.getMsgType();
+								if (type.equals(Type.ATTACHMENT)) {
+									try {
+										new Thread(new Runnable() {
+											@Override
+											public void run() {
 												try {
-													Thread.sleep(500);
-												} catch (InterruptedException e) {
+													System.out.println("Handling attachement");
+													JSONObject j = message.getRawJsonObject();
+													String fileType = j.getJSONObject("file").getString("type");
+													String fileName = j.getJSONObject("file").getString("name");
+
+													if (fileType.equals("text/plain")) {
+														room.sendMessage(
+																"Ich analysiere gerade deinen Text. Das kann einen Moment dauern. 👨‍🏫");
+
+														String email = getStudentEmail(
+																message.getSender().getUserName());
+														int role = getStudentRole(email);
+
+														String file = j.getJSONArray("attachments").getJSONObject(0)
+																.getString("title_link").substring(1);
+
+														String body = getTxtFile(client.getMyUserId(), file);
+														int numWords = countWords(body);
+														if (numWords < 350) {
+															room.sendMessage(
+																	"Der Text muss mindestens 350 Woerter enthalten (aktuell: "
+																			+ numWords + ").");
+														} else {
+
+															MiniClient c = new MiniClient();
+															c.setConnectorEndpoint(
+																	"https://las2peer.tech4comp.dbis.rwth-aachen.de");
+															HashMap<String, String> headers = new HashMap<String, String>();
+															// TODO
+															String ending = ".txt";
+															File tempFile = null;
+															if (role == 1) {
+																tempFile = new File(message.getRoomId() + ending);
+																FileWriter writer = new FileWriter(tempFile);
+																writer.write("Wip...");
+																writer.close();
+															} else if (role == 2) {
+																ending = ".png";
+																ClientResponse result = c.sendRequest("POST",
+																		"tmitocar/" + message.getRoomId() + "/", body,
+																		MediaType.TEXT_PLAIN, "image/png", headers);
+																System.out.println(
+																		"Submitted text: " + result.getHttpCode());
+																InputStream in = new ByteArrayInputStream(
+																		result.getRawResponse());
+																BufferedImage bImageFromConvert = ImageIO.read(in);
+																tempFile = new File(message.getRoomId() + ending);
+																ImageIO.write(bImageFromConvert, "png", tempFile);
+															} else {
+																room.sendMessage(
+																		"Ich kann dir leider kein Feedback geben. Du erfüllst nicht die notwendingen Bedingungen. Prüfe deine Email Adresse oder deine Kursberechtigungen.");
+															}
+															if (tempFile != null) {
+																room.uploadFile(tempFile, message.getRoomId() + ending,
+																		"", new FileListener() {
+
+																			@Override
+																			public void onSendFile(
+																					RocketChatMessage arg0,
+																					ErrorObject arg1) {
+																				// TODO Auto-generated method stub
+																			}
+
+																			@Override
+																			public void onUploadError(ErrorObject arg0,
+																					IOException arg1) {
+																				room.sendMessage(arg0.getMessage());
+																				room.sendMessage(arg0.getReason());
+																			}
+
+																			@Override
+																			public void onUploadProgress(int arg0,
+																					String arg1, String arg2,
+																					String arg3) {
+																				// TODO Auto-generated method stub
+
+																			}
+
+																			@Override
+																			public void onUploadStarted(String arg0,
+																					String arg1, String arg2) {
+																				// TODO Auto-generated method stub
+
+																			}
+
+																			@Override
+																			public void onUploadComplete(int arg0,
+																					com.rocketchat.core.model.FileObject arg1,
+																					String arg2, String arg3,
+																					String arg4) {
+																				room.sendMessage(
+																						"Hier ist deine Wissenslandkarte:");
+
+																			}
+																		});
+															}
+														}
+													} else {
+														room.sendMessage("Der Typ `" + fileType
+																+ "` wird momentan nicht unterstuetzt.");
+													}
+													try {
+														Thread.sleep(500);
+													} catch (InterruptedException e) {
+														e.printStackTrace();
+													}
+												} catch (Exception e) {
 													e.printStackTrace();
 												}
-											} catch (Exception e) {
-												e.printStackTrace();
+												System.out.println("Intent processing finished.");
 											}
-											System.out.println("Intent processing finished.");
-										}
-									}).start();
-								} catch (Exception e) {
-									e.printStackTrace();
+										}).start();
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								} else {
+									messageCollector.handle(message);
 								}
-							} else {
-								messageCollector.handle(message);
 							}
 						}
-					}
-				});
+					});
+					activeSubscriptions.add(room.getRoomData().getRoomId());
+				}
 			}
 		}
 	}
