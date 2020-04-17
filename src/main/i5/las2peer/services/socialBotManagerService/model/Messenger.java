@@ -33,17 +33,17 @@ public class Messenger {
 
 	public Messenger(String id, String chatService, String token, String rasaUrl, Connection con)
 			throws IOException, DeploymentException, ParseBotException {
+
+		this.rasa = new RasaNlu(rasaUrl);		
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token, con);
+			this.chatMediator = new RocketChatMediator(token, con, this.rasa);
 		} else { // TODO: Implement more backends
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
 		this.name = id;
-
-		this.rasa = new RasaNlu(rasaUrl);
-
+		
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();

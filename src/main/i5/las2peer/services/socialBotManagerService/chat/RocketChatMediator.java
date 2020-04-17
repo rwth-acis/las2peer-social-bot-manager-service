@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Vector;
 
@@ -45,8 +46,13 @@ import com.rocketchat.core.model.RoomObject;
 import com.rocketchat.core.model.SubscriptionObject;
 import com.rocketchat.core.model.TokenObject;
 
+import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
+import i5.las2peer.services.socialBotManagerService.chat.state.personaldata.DataAsking;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import java.util.logging.Level;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener {
@@ -59,8 +65,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
 	private Connection con;
 	private HashSet<String> activeSubscriptions = null;
+	private Map<String, StatefulResponse> states = new HashMap<>();
+	private RasaNlu rasa;
 
-	public RocketChatMediator(String authToken, Connection con) {
+	public RocketChatMediator(String authToken, Connection con, RasaNlu rasa) {
 		super(authToken);
 		this.con = con;
 		password = authToken;
@@ -71,6 +79,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
 		client.setPingInterval(15000);
 		client.connect(this);
+		client.LOGGER.setLevel(Level.OFF);
+		this.rasa = rasa;
 	}
 
 	@Override
@@ -81,7 +91,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 			@Override
 			public void onGetRoomMembers(Integer arg0, List<UserObject> arg1, ErrorObject arg2) {
-				// TODO Auto-generated method stub
+				// TODO Auto-generated
 				String userName = "";
 				String newText = text;
 				for (UserObject u : (ArrayList<UserObject>) arg1) {
@@ -281,6 +291,26 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return role;
 	}
 
+	protected Boolean checkUserProvidedData(String email) {
+		Boolean dataProvided = null;
+		PreparedStatement ps;
+		try {
+			ps = con.prepareStatement("SELECT data_provided FROM users WHERE email=?");
+			ps.setString(1, email);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				dataProvided = rs.getBoolean(1);
+				if (rs.wasNull()) {
+					dataProvided = null;
+				}
+			}
+			ps.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return dataProvided;		
+	}
+
 	protected String getStudentEmail(String userName) {
 		MiniClient textClient = new MiniClient();
 		textClient.setConnectorEndpoint(url);
@@ -311,6 +341,30 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						@Override
 						public void onMessage(String arg0, RocketChatMessage message) {
 							if (!message.getSender().getUserId().equals(client.getMyUserId())) {
+								String email = getStudentEmail(message.getSender().getUserName());
+								System.out.println("Email: " + email);
+								System.out.println("Message: " + message.getMessage());
+								Boolean dataProvided = checkUserProvidedData(email);
+								System.out.println(dataProvided);
+
+								StatefulResponse statefulResponse = states.get(email);
+
+								if (statefulResponse == null && dataProvided == null) {
+									DataAsking userDataQuestion = new DataAsking(rasa, con, email);
+									room.sendMessage(userDataQuestion.getResponse());
+									states.put(email, userDataQuestion);
+									return;
+								}
+
+								if (statefulResponse != null) {
+									statefulResponse = statefulResponse.getNext(message.getMessage());
+									states.put(email, statefulResponse);
+									if (statefulResponse != null) {
+										room.sendMessage(statefulResponse.getResponse());
+										return;
+									}
+								}
+
 								Type type = message.getMsgType();
 								if (type.equals(Type.ATTACHMENT)) {
 									try {

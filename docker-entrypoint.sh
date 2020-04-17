@@ -9,11 +9,21 @@ fi
 NODE_ID_SEED=${NODE_ID_SEED:-$RANDOM}
 
 # set some helpful variables
+export SERVICE_PROPERTY_FILE='etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties'
 export SERVICE_VERSION=$(awk -F "=" '/service.version/ {print $2}' etc/ant_configuration/service.properties)
 export SERVICE_NAME=$(awk -F "=" '/service.name/ {print $2}' etc/ant_configuration/service.properties)
 export SERVICE_CLASS=$(awk -F "=" '/service.class/ {print $2}' etc/ant_configuration/service.properties)
 export SERVICE=${SERVICE_NAME}.${SERVICE_CLASS}@${SERVICE_VERSION}
 
+function set_in_service_config {
+    sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
+}
+cp $SERVICE_PROPERTY_FILE.sample $SERVICE_PROPERTY_FILE
+set_in_service_config databaseName ${DATABASE_NAME}
+set_in_service_config databaseHost ${DATABASE_HOST}
+set_in_service_config databasePort ${DATABASE_PORT}
+set_in_service_config databaseUser ${DATABASE_USER}
+set_in_service_config databasePassword ${DATABASE_PASSWORD}
 
 # set defaults for optional service parameters
 [[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='sbf'

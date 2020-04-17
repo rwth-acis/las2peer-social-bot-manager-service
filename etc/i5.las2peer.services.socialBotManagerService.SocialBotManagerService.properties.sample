@@ -1,0 +1,5 @@
+databaseName=<databaseName>
+databaseHost=<databaseHost>
+databasePort=<databasePort>
+databaseUser=<databaseUser>
+databasePassword=<databasePassword>
