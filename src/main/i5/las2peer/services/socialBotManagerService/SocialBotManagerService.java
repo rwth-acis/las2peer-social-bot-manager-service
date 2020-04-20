@@ -100,6 +100,8 @@ import io.swagger.annotations.SwaggerDefinition;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 /**
  * las2peer-SocialBotManager-Service
@@ -126,13 +128,13 @@ import net.minidev.json.parser.ParseException;
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
 
-	private String databaseName = "SBF";
+	private String databaseName;
 	private int databaseTypeInt = 1; // See SQLDatabaseType for more information
 	private SQLDatabaseType databaseType;
-	private String databaseHost = "mobsos-mysql.mobsos";
-	private int databasePort = 3306;
-	private String databaseUser = "root";
-	private String databasePassword = "";
+	private String databaseHost;
+	private int databasePort;
+	private String databaseUser;
+	private String databasePassword;
 	private Connection con;
 	private SQLDatabase database; // The database instance to write to.
 

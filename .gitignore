@@ -16,5 +16,7 @@
 /junitvmwatcher*.properties
 /junit*.properties
 /etc/startup/
+/etc/launcher-configuration.ini
+/etc/pastry.properties
 *.secret
 archiva_credentials.xml
