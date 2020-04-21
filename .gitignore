@@ -18,5 +18,6 @@
 /etc/startup/
 /etc/launcher-configuration.ini
 /etc/pastry.properties
+/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
 *.secret
 archiva_credentials.xml

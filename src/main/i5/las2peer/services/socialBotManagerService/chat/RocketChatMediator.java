@@ -359,6 +359,34 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return dataProvided;
 	}
 
+	protected Boolean checkUserExist(String email) {
+		int count = 0;
+		PreparedStatement ps;
+		try {
+			ps = con.prepareStatement("SELECT Count(*) FROM users WHERE email=?");
+			ps.setString(1, email);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				count = rs.getInt(1);
+			}
+			ps.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return count > 0;
+	}
+
+	private void addNewUser(String email) {
+        PreparedStatement ps;
+        try {
+            ps = con.prepareStatement("INSERT into users (email, role) values (?, 2)");
+            ps.setString(1, email);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(message.getRoomId());
@@ -367,6 +395,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				String email = getStudentEmail(message.getSender().getUserName());
 				System.out.println("Email: " + email);
 				System.out.println("Message: " + message.getMessage());
+				if (!checkUserExist(email)) {
+					System.out.println("Add new user: " + email);
+					addNewUser(email);
+				}
+
 				Boolean dataProvided = checkUserProvidedData(email);
 				System.out.println(dataProvided);
 
