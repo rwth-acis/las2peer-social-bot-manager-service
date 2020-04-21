@@ -6,11 +6,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,9 +25,12 @@ import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.google.common.io.Files;
 import com.rocketchat.common.data.lightdb.document.UserDocument;
 import com.rocketchat.common.data.model.ErrorObject;
 import com.rocketchat.common.data.model.UserObject;
@@ -183,9 +189,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			try {
 				System.out.println("Available rooms: " + rooms.size());
 				ChatRoomFactory factory = client.getChatRoomFactory();
-				ArrayList<ChatRoom> roomList = factory.createChatRooms(rooms).getChatRooms();
-				for (ChatRoom room : roomList) {
-					synchronized (room) {
+				synchronized (factory) {
+					ArrayList<ChatRoom> roomList = factory.createChatRooms(rooms).getChatRooms();
+					for (ChatRoom room : roomList) {
 						if (!activeSubscriptions.contains(room.getRoomData().getRoomId())) {
 							room.subscribeRoomMessageEvent(new SubscribeListener() {
 								@Override
@@ -217,7 +223,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						while (client.getState().equals(State.CONNECTED)) {
 							client.getRooms(grl);
 							try {
-								Thread.sleep(1000);
+								Thread.sleep(5000);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -287,7 +293,16 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		textClientHeader.put("cookie", "rc_uid=" + userId + "; rc_token=" + token + "; ");
 		ClientResponse r = textClient.sendRequest("GET", file, "", MediaType.TEXT_PLAIN, MediaType.TEXT_PLAIN,
 				textClientHeader);
-		return r.getResponse();
+		InputStream in = new ByteArrayInputStream(r.getRawResponse());
+		StringWriter writer = new StringWriter();
+		String encoding = StandardCharsets.UTF_8.name();
+		try {
+			IOUtils.copy(in, writer, encoding);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return writer.toString();
 	}
 
 	protected int getStudentRole(String email) {
@@ -386,7 +401,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 									String fileName = j.getJSONObject("file").getString("name");
 									if (fileType.equals("text/plain")) {
 										room.sendMessage(
-												"Ich analysiere gerade deinen Text. Das kann einen Moment dauern. 👨‍🏫");
+												"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
 
 										String email = getStudentEmail(message.getSender().getUserName());
 										int role = getStudentRole(email);
@@ -407,17 +422,60 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 											// TODO
 											String ending = ".txt";
 											File tempFile = null;
+											JSONObject bodyJSON = new JSONObject(Collections.singletonMap("text",
+													StringEscapeUtils.escapeJson(body)));
 											if (role == 1) {
+												ending = ".pdf";
 												tempFile = new File(message.getRoomId() + ending);
 												FileWriter writer = new FileWriter(tempFile);
 												writer.write("Wip...");
 												writer.close();
+												String expertLabel = "1";
+												ClientResponse result = c.sendRequest("POST",
+														"tmitocar/" + message.getRoomId() + "/" + expertLabel,
+														bodyJSON.toString(), MediaType.APPLICATION_JSON,
+														MediaType.TEXT_HTML, headers);
+												System.out.println("Submitted text: " + result.getHttpCode());
+												boolean isActive = true;
+												while (isActive) {
+													result = c.sendRequest("GET",
+															"tmitocar/" + message.getRoomId() + "/status", "");
+													isActive = result.getResponse().toLowerCase().contains("true");
+													// isActive = Boolean.parseBoolean(result.getResponse());
+													System.out.println(isActive);
+													try {
+														Thread.sleep(1000);
+													} catch (Exception e) {
+														e.printStackTrace();
+													}
+												}
+												result = c.sendRequest("GET",
+														"tmitocar/" + message.getRoomId() + "/compare/" + expertLabel,
+														"", MediaType.TEXT_HTML, "application/pdf", headers);
+
+												tempFile = new File(message.getRoomId() + ending);
+												Files.write(result.getRawResponse(), tempFile);
 											} else if (role == 2) {
 												ending = ".png";
 												ClientResponse result = c.sendRequest("POST",
-														"tmitocar/" + message.getRoomId() + "/", body,
-														MediaType.TEXT_PLAIN, "image/png", headers);
+														"tmitocar/" + message.getRoomId(), bodyJSON.toString(),
+														MediaType.APPLICATION_JSON, "text/html", headers);
 												System.out.println("Submitted text: " + result.getHttpCode());
+												boolean isActive = true;
+												while (isActive) {
+													result = c.sendRequest("GET",
+															"tmitocar/" + message.getRoomId() + "/status", "");
+													isActive = result.getResponse().toLowerCase().contains("true");
+													// isActive = Boolean.parseBoolean(result.getResponse());
+													System.out.println(isActive);
+													try {
+														Thread.sleep(1000);
+													} catch (Exception e) {
+														e.printStackTrace();
+													}
+												}
+												result = c.sendRequest("GET", "tmitocar/" + message.getRoomId(), "",
+														MediaType.TEXT_HTML, "image/png", headers);
 												InputStream in = new ByteArrayInputStream(result.getRawResponse());
 												BufferedImage bImageFromConvert = ImageIO.read(in);
 												tempFile = new File(message.getRoomId() + ending);
