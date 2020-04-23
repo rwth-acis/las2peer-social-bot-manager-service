@@ -38,16 +38,29 @@ public class DataAsking extends StatefulResponse {
 	}
 
 	private void updateDataProvided(Boolean isProvided) {
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
 		try {
-			Connection con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("UPDATE users SET data_provided = ? WHERE email = ?");
-			ps.setBoolean(1, isProvided);
-			ps.setString(2, this.email);
-			ps.executeUpdate();
-			con.close();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("UPDATE users SET data_provided = ? WHERE email = ?");
+			stmt.setBoolean(1, isProvided);
+			stmt.setString(2, this.email);
+			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 	}
 }

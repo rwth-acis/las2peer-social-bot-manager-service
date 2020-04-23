@@ -308,19 +308,38 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	protected int getStudentRole(String email) {
 		int role = 0;
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
 		try {
 
-			Connection con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("SELECT role FROM users WHERE email=?");
-			ps.setString(1, email);
-			ResultSet rs = ps.executeQuery();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT role FROM users WHERE email=?");
+			stmt.setString(1, email);
+			rs = stmt.executeQuery();
 			while (rs.next())
 				role = rs.getInt(1);
-			ps.close();
-			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 		return role;
 	}
@@ -345,55 +364,106 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	protected Boolean checkUserProvidedData(String email) {
 		Boolean dataProvided = null;
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
 		try {
-			Connection con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("SELECT data_provided FROM users WHERE email=?");
-			ps.setString(1, email);
-			ResultSet rs = ps.executeQuery();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT data_provided FROM users WHERE email=?");
+			stmt.setString(1, email);
+			rs = stmt.executeQuery();
 			while (rs.next()) {
 				dataProvided = rs.getBoolean(1);
 				if (rs.wasNull()) {
 					dataProvided = null;
 				}
 			}
-			ps.close();
-			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 		return dataProvided;
 	}
 
 	protected Boolean checkUserExist(String email) {
 		int count = 0;
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
 		try {
-			Connection con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("SELECT Count(*) FROM users WHERE email=?");
-			ps.setString(1, email);
-			ResultSet rs = ps.executeQuery();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT Count(*) FROM users WHERE email=?");
+			stmt.setString(1, email);
+			rs = stmt.executeQuery();
 			if (rs.next()) {
 				count = rs.getInt(1);
 			}
-			ps.close();
-			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 		return count > 0;
 	}
 
 	private void addNewUser(String email) {
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
 		try {
-			Connection con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("INSERT into users (email, role) values (?, 2)");
-			ps.setString(1, email);
-			ps.executeUpdate();
-			con.close();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("INSERT into users (email, role) values (?, 2)");
+			stmt.setString(1, email);
+			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 	}
 

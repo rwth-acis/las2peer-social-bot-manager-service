@@ -30,16 +30,29 @@ public class DataAskingAcceptedResponse extends StatefulResponse {
 	}
 
 	private void savePersonalData(String data) {
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
 		try {
-			Connection con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("UPDATE users SET personal_data = ? WHERE email = ?");
-			ps.setString(1, data);
-			ps.setString(2, this.email);
-			ps.executeUpdate();
-			con.close();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("UPDATE users SET personal_data = ? WHERE email = ?");
+			stmt.setString(1, data);
+			stmt.setString(2, this.email);
+			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 	}
 }
