@@ -1,7 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -13,6 +12,7 @@ import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
@@ -31,19 +31,19 @@ public class Messenger {
 
 	private Random random;
 
-	public Messenger(String id, String chatService, String token, String rasaUrl, Connection con)
+	public Messenger(String id, String chatService, String token, String rasaUrl, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
-		this.rasa = new RasaNlu(rasaUrl);		
+		this.rasa = new RasaNlu(rasaUrl);
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token, con, this.rasa);
+			this.chatMediator = new RocketChatMediator(token, database, this.rasa);
 		} else { // TODO: Implement more backends
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
 		this.name = id;
-		
+
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();

@@ -58,6 +58,7 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.chat.state.personaldata.DataAsking;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
@@ -69,14 +70,14 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private String password;
 	private String token;
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
-	private Connection con;
 	private HashSet<String> activeSubscriptions = null;
 	private Map<String, StatefulResponse> states = new HashMap<>();
 	private RasaNlu rasa;
+	private SQLDatabase database;
 
-	public RocketChatMediator(String authToken, Connection con, RasaNlu rasa) {
+	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
 		super(authToken);
-		this.con = con;
+		this.database = database;
 		password = authToken;
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
@@ -309,12 +310,15 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		int role = 0;
 		PreparedStatement ps;
 		try {
+
+			Connection con = database.getDataSource().getConnection();
 			ps = con.prepareStatement("SELECT role FROM users WHERE email=?");
 			ps.setString(1, email);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next())
 				role = rs.getInt(1);
 			ps.close();
+			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -343,6 +347,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		Boolean dataProvided = null;
 		PreparedStatement ps;
 		try {
+			Connection con = database.getDataSource().getConnection();
 			ps = con.prepareStatement("SELECT data_provided FROM users WHERE email=?");
 			ps.setString(1, email);
 			ResultSet rs = ps.executeQuery();
@@ -353,6 +358,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				}
 			}
 			ps.close();
+			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -363,6 +369,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		int count = 0;
 		PreparedStatement ps;
 		try {
+			Connection con = database.getDataSource().getConnection();
 			ps = con.prepareStatement("SELECT Count(*) FROM users WHERE email=?");
 			ps.setString(1, email);
 			ResultSet rs = ps.executeQuery();
@@ -370,6 +377,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				count = rs.getInt(1);
 			}
 			ps.close();
+			con.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -377,15 +385,17 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	private void addNewUser(String email) {
-        PreparedStatement ps;
-        try {
-            ps = con.prepareStatement("INSERT into users (email, role) values (?, 2)");
-            ps.setString(1, email);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+		PreparedStatement ps;
+		try {
+			Connection con = database.getDataSource().getConnection();
+			ps = con.prepareStatement("INSERT into users (email, role) values (?, 2)");
+			ps.setString(1, email);
+			ps.executeUpdate();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {
@@ -406,7 +416,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				StatefulResponse statefulResponse = states.get(email);
 
 				if (statefulResponse == null && dataProvided == null) {
-					DataAsking userDataQuestion = new DataAsking(rasa, con, email);
+					DataAsking userDataQuestion = new DataAsking(rasa, database, email);
 					room.sendMessage(userDataQuestion.getResponse());
 					states.put(email, userDataQuestion);
 					return;

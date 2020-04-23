@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
@@ -19,6 +18,7 @@ import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.security.BotAgent;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -60,7 +60,7 @@ public class BotParser {
 	}
 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
-			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, Connection con)
+			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
 			throws ParseBotException, IOException, DeploymentException {
 
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
@@ -94,7 +94,7 @@ public class BotParser {
 				vles.put(entry.getKey(), vle);
 				vleCount++;
 			} else if (nodeType.equals("Messenger")) {
-				Messenger m = addMessenger(entry.getKey(), elem, config, con);
+				Messenger m = addMessenger(entry.getKey(), elem, config, database);
 				messengers.put(entry.getKey(), m);
 			} else if (nodeType.equals("Incoming Message")) {
 				IncomingMessage m = addIncomingMessage(entry.getKey(), elem, config);
@@ -408,7 +408,7 @@ public class BotParser {
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	}
 
-	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, Connection con)
+	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)
 			throws ParseBotException, IOException, DeploymentException {
 		String messengerName = null;
 		String messengerType = null;
@@ -443,7 +443,7 @@ public class BotParser {
 			throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
 		}
 
-		return new Messenger(messengerName, messengerType, token, rasaUrl, con);
+		return new Messenger(messengerName, messengerType, token, rasaUrl, database);
 	}
 
 	private String addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
