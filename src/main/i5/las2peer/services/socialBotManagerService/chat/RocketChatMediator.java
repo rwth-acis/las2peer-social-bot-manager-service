@@ -37,7 +37,6 @@ import com.rocketchat.common.data.model.UserObject;
 import com.rocketchat.common.listener.ConnectListener;
 import com.rocketchat.common.listener.SubscribeListener;
 import com.rocketchat.common.network.ReconnectionStrategy;
-import com.rocketchat.common.network.Socket.State;
 import com.rocketchat.core.RocketChatAPI;
 import com.rocketchat.core.RocketChatAPI.ChatRoom;
 import com.rocketchat.core.callback.FileListener;
@@ -58,6 +57,7 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.chat.state.personaldata.DataAsking;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
@@ -69,14 +69,16 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private String password;
 	private String token;
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
-	private Connection con;
 	private HashSet<String> activeSubscriptions = null;
 	private Map<String, StatefulResponse> states = new HashMap<>();
 	private RasaNlu rasa;
+	private SQLDatabase database;
+	private Thread checkRooms = null;
+	private boolean shouldCheckRooms = false;
 
-	public RocketChatMediator(String authToken, Connection con, RasaNlu rasa) {
+	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
 		super(authToken);
-		this.con = con;
+		this.database = database;
 		password = authToken;
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
@@ -187,7 +189,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public void onGetRooms(List<RoomObject> rooms, ErrorObject error) {
 		if (error == null) {
 			try {
-				System.out.println("Available rooms: " + rooms.size());
+				// System.out.println("Available rooms: " + rooms.size());
 				ChatRoomFactory factory = client.getChatRoomFactory();
 				synchronized (factory) {
 					ArrayList<ChatRoom> roomList = factory.createChatRooms(rooms).getChatRooms();
@@ -216,23 +218,30 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			client.getRooms(this);
 			this.token = token.getAuthToken();
 			GetRoomListener grl = this;
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						while (client.getState().equals(State.CONNECTED)) {
-							client.getRooms(grl);
-							try {
-								Thread.sleep(5000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+			if (checkRooms == null) {
+				if (shouldCheckRooms == false) {
+					shouldCheckRooms = true;
 				}
-			}).start();
+				checkRooms = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							while (shouldCheckRooms) {
+								client.getRooms(grl);
+								try {
+									Thread.sleep(5000);
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+				checkRooms.start();
+			}
+
 		} else {
 			System.out.println("Got error " + error.getMessage());
 		}
@@ -246,14 +255,22 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	@Override
 	public void onConnectError(Exception arg0) {
+		System.out.println("R.C connection error: " + arg0.getMessage());
 		// TODO Auto-generated method stub
-
+		if (checkRooms != null) {
+			shouldCheckRooms = false;
+			checkRooms = null;
+		}
 	}
 
 	@Override
 	public void onDisconnect(boolean arg0) {
+		System.out.println("R.C disconnect : " + arg0);
 		// TODO Auto-generated method stub
-
+		if (checkRooms != null) {
+			shouldCheckRooms = false;
+			checkRooms = null;
+		}
 	}
 
 	@Override
@@ -307,16 +324,38 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	protected int getStudentRole(String email) {
 		int role = 0;
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
 		try {
-			ps = con.prepareStatement("SELECT role FROM users WHERE email=?");
-			ps.setString(1, email);
-			ResultSet rs = ps.executeQuery();
+
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT role FROM users WHERE email=?");
+			stmt.setString(1, email);
+			rs = stmt.executeQuery();
 			while (rs.next())
 				role = rs.getInt(1);
-			ps.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 		return role;
 	}
@@ -341,22 +380,107 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	protected Boolean checkUserProvidedData(String email) {
 		Boolean dataProvided = null;
-		PreparedStatement ps;
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
 		try {
-			ps = con.prepareStatement("SELECT data_provided FROM users WHERE email=?");
-			ps.setString(1, email);
-			ResultSet rs = ps.executeQuery();
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT data_provided FROM users WHERE email=?");
+			stmt.setString(1, email);
+			rs = stmt.executeQuery();
 			while (rs.next()) {
 				dataProvided = rs.getBoolean(1);
 				if (rs.wasNull()) {
 					dataProvided = null;
 				}
 			}
-			ps.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
 		}
 		return dataProvided;
+	}
+
+	protected Boolean checkUserExist(String email) {
+		int count = 0;
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
+		try {
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT Count(*) FROM users WHERE email=?");
+			stmt.setString(1, email);
+			rs = stmt.executeQuery();
+			if (rs.next()) {
+				count = rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
+		}
+		return count > 0;
+	}
+
+	private void addNewUser(String email) {
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		try {
+			conn = database.getDataSource().getConnection();
+			stmt = conn.prepareStatement("INSERT into users (email, role) values (?, 2)");
+			stmt.setString(1, email);
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (conn != null)
+					conn.close();
+			} catch (Exception e) {
+			}
+			;
+		}
 	}
 
 	@Override
@@ -367,13 +491,18 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				String email = getStudentEmail(message.getSender().getUserName());
 				System.out.println("Email: " + email);
 				System.out.println("Message: " + message.getMessage());
+				if (!checkUserExist(email)) {
+					System.out.println("Add new user: " + email);
+					addNewUser(email);
+				}
+
 				Boolean dataProvided = checkUserProvidedData(email);
 				System.out.println(dataProvided);
 
 				StatefulResponse statefulResponse = states.get(email);
 
 				if (statefulResponse == null && dataProvided == null) {
-					DataAsking userDataQuestion = new DataAsking(rasa, con, email);
+					DataAsking userDataQuestion = new DataAsking(rasa, database, email);
 					room.sendMessage(userDataQuestion.getResponse());
 					states.put(email, userDataQuestion);
 					return;

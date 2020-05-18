@@ -100,8 +100,6 @@ import io.swagger.annotations.SwaggerDefinition;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
-import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 /**
  * las2peer-SocialBotManager-Service
@@ -135,7 +133,6 @@ public class SocialBotManagerService extends RESTService {
 	private int databasePort;
 	private String databaseUser;
 	private String databasePassword;
-	private Connection con;
 	private SQLDatabase database; // The database instance to write to.
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
@@ -192,7 +189,8 @@ public class SocialBotManagerService extends RESTService {
 		this.database = new SQLDatabase(this.databaseType, this.databaseUser, this.databasePassword, this.databaseName,
 				this.databaseHost, this.databasePort);
 		try {
-			con = database.getDataSource().getConnection();
+			Connection con = database.getDataSource().getConnection();
+			con.close();
 		} catch (SQLException e) {
 			System.out.println("Failed to Connect: " + e.getMessage());
 		}
@@ -374,7 +372,7 @@ public class SocialBotManagerService extends RESTService {
 			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-						nodes, edges, sbfservice.con);
+						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
@@ -1223,7 +1221,6 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
-			System.out.println("Running...");
 			for (VLE vle : getConfig().getVLEs().values()) {
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
