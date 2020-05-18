@@ -37,7 +37,6 @@ import com.rocketchat.common.data.model.UserObject;
 import com.rocketchat.common.listener.ConnectListener;
 import com.rocketchat.common.listener.SubscribeListener;
 import com.rocketchat.common.network.ReconnectionStrategy;
-import com.rocketchat.common.network.Socket.State;
 import com.rocketchat.core.RocketChatAPI;
 import com.rocketchat.core.RocketChatAPI.ChatRoom;
 import com.rocketchat.core.callback.FileListener;
@@ -74,6 +73,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private Map<String, StatefulResponse> states = new HashMap<>();
 	private RasaNlu rasa;
 	private SQLDatabase database;
+	private Thread checkRooms = null;
+	private boolean shouldCheckRooms = false;
 
 	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
 		super(authToken);
@@ -188,7 +189,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public void onGetRooms(List<RoomObject> rooms, ErrorObject error) {
 		if (error == null) {
 			try {
-				System.out.println("Available rooms: " + rooms.size());
+				// System.out.println("Available rooms: " + rooms.size());
 				ChatRoomFactory factory = client.getChatRoomFactory();
 				synchronized (factory) {
 					ArrayList<ChatRoom> roomList = factory.createChatRooms(rooms).getChatRooms();
@@ -217,23 +218,30 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			client.getRooms(this);
 			this.token = token.getAuthToken();
 			GetRoomListener grl = this;
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						while (client.getState().equals(State.CONNECTED)) {
-							client.getRooms(grl);
-							try {
-								Thread.sleep(5000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+			if (checkRooms == null) {
+				if (shouldCheckRooms == false) {
+					shouldCheckRooms = true;
 				}
-			}).start();
+				checkRooms = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							while (shouldCheckRooms) {
+								client.getRooms(grl);
+								try {
+									Thread.sleep(5000);
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+				checkRooms.start();
+			}
+
 		} else {
 			System.out.println("Got error " + error.getMessage());
 		}
@@ -247,14 +255,22 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	@Override
 	public void onConnectError(Exception arg0) {
+		System.out.println("R.C connection error: " + arg0.getMessage());
 		// TODO Auto-generated method stub
-
+		if (checkRooms != null) {
+			shouldCheckRooms = false;
+			checkRooms = null;
+		}
 	}
 
 	@Override
 	public void onDisconnect(boolean arg0) {
+		System.out.println("R.C disconnect : " + arg0);
 		// TODO Auto-generated method stub
-
+		if (checkRooms != null) {
+			shouldCheckRooms = false;
+			checkRooms = null;
+		}
 	}
 
 	@Override

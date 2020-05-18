@@ -1221,7 +1221,6 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
-			System.out.println("Running...");
 			for (VLE vle : getConfig().getVLEs().values()) {
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
