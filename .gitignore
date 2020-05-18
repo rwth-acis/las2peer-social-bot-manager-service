@@ -7,6 +7,7 @@
 /lib/
 /etc/ivy/ivy.jar
 /service/
+/servicebundle/
 /out/
 /.idea/
 *.iml
@@ -15,5 +16,8 @@
 /junitvmwatcher*.properties
 /junit*.properties
 /etc/startup/
+/etc/launcher-configuration.ini
+/etc/pastry.properties
+/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
 *.secret
 archiva_credentials.xml

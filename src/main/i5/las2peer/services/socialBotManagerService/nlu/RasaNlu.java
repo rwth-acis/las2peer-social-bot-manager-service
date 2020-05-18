@@ -2,12 +2,17 @@ package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+
+import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-import org.apache.commons.lang3.StringEscapeUtils;
 
 public class RasaNlu {
 	private String url;
@@ -29,13 +34,21 @@ public class RasaNlu {
 	}
 
 	private JSONObject getIntentJSON(String input) throws IOException, ParseException {
-		MiniClient client = new MiniClient();
-		client.setConnectorEndpoint(this.url);
-		JSONObject inputJSON =
-				new JSONObject(Collections.singletonMap("text", StringEscapeUtils.escapeJson(input)));
-		ClientResponse response =
-				client.sendRequest("POST", "model/parse", inputJSON.toString());
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		return (JSONObject)p.parse(response.getResponse());
+		try {
+			MiniClient client = new MiniClient();
+			client.setConnectorEndpoint(this.url);
+			System.out.println("Rasa url:" + this.url);
+			JSONObject inputJSON = new JSONObject(
+					Collections.singletonMap("text", StringEscapeUtils.escapeJson(input)));
+			HashMap<String, String> headers = new HashMap<String, String>();
+			ClientResponse response = client.sendRequest("POST", "model/parse", inputJSON.toString(),
+					MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			System.out.println("Result: " + response.getResponse());
+			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			return (JSONObject) p.parse(response.getResponse());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new JSONObject();
+		}
 	}
 }
