@@ -18,6 +18,8 @@ public class ServiceFunctionAttribute {
 	private String content;
 	private String contentURL;
 	private String contentType;
+    // this attribute will dissapear as everything will be done with a single content attribute
+    private String nluQuizContent;
 
 	public ServiceFunctionAttribute() {
 		childAttributes = new ArrayList<ServiceFunctionAttribute>();
@@ -138,6 +140,15 @@ public class ServiceFunctionAttribute {
 	public void setItb(IfThenBlock itb) {
 		this.itb = itb;
 	}
+    
+    public void setNluQuizContent(String nluQuizContent){
+        this.nluQuizContent = nluQuizContent;
+    }
+
+    public String getNluQuizContent(){
+        return this.nluQuizContent;
+    }
+    
 
 	@Override
 	public String toString() {
@@ -145,7 +156,7 @@ public class ServiceFunctionAttribute {
 				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
 				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
 				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
-				+ ", contentType=" + contentType + "]";
+				+ ", contentType=" + contentType + ", NluQuizContent=" + nluQuizContent +"]";
 	}
 
 }

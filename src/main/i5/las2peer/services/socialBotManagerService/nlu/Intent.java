@@ -23,8 +23,8 @@ public class Intent {
 		entities.forEach(
 			o ->
 			{
-				Entity entity = new Entity((JSONObject)o);
-				entitiesMap.put(entity.getEntityName(), entity);
+				Entity entity = new Entity((JSONObject)o);			
+                entitiesMap.put(entity.getEntityName(), entity);
 			}
 		);
 		this.entities = entitiesMap;

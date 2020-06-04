@@ -414,6 +414,7 @@ public class BotParser {
 		String messengerType = null;
 		String token = null;
 		String rasaUrl = null;
+        String rasaAssessmentUrl = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -428,6 +429,8 @@ public class BotParser {
 				token = subVal.getValue();
 			} else if (name.contentEquals("Rasa NLU URL")) {
 				rasaUrl = subVal.getValue();
+			} else if (name.contentEquals("Rasa Assessment NLU URL")) {
+				rasaAssessmentUrl = subVal.getValue();
 			}
 		}
 		if (messengerName == null) {
@@ -442,8 +445,14 @@ public class BotParser {
 		if (rasaUrl == null) {
 			throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
 		}
+		if (rasaAssessmentUrl == null) {
+            throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
+		}
+		if (rasaAssessmentUrl == "") {
+			System.out.println("WARNING: No Rasa Assessment NLU Server given, thus no NLU Assessments will be possible");
+		}                       
 
-		return new Messenger(messengerName, messengerType, token, rasaUrl, database);
+		return new Messenger(messengerName, messengerType, token, rasaUrl, rasaAssessmentUrl, database);
 	}
 
 	private String addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
@@ -645,7 +654,7 @@ public class BotParser {
 				actionType = subVal.getValue();
 			} else if (name.equals("Messenger Name")) {
 				messengerID = subVal.getValue();
-			}
+			}          
 		}
 
 		if (actionType.equals("SendMessage")) {
@@ -674,7 +683,6 @@ public class BotParser {
 				sfa.setName(subVal.getValue());
 			} else if (name.equals("Static")) {
 				sfa.setStaticContent(Boolean.parseBoolean(subVal.getValue()));
-				System.out.println(subVal.getValue());
 			} else if (name.equals("Content")) {
 				sfa.setContent(subVal.getValue());
 			} else if (name.equals("URL")) {
@@ -682,10 +690,13 @@ public class BotParser {
 			} else if (name.equals("Parameter Type")) {
 				String pType = subVal.getValue();
 				sfa.setParameterType(pType);
-			}
+			} else if (name.equals("NLU Assessment")) {
+				sfa.setNluQuizContent(subVal.getValue());
+			}              
 		}
 		return sfa;
 	}
+    
 
 	private void addServiceInformation(ServiceFunction f, JSONObject elem) {
 		// pfade

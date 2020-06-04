@@ -13,6 +13,7 @@ public class TrainingHelper implements Runnable {
 	String config;
 	String markdownTrainingData;
 
+
 	boolean success = false;
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
 			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
