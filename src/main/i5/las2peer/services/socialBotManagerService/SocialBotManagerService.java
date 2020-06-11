@@ -703,7 +703,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(botFunctionId);
 			String functionPath = "";
-			if (botFunction.getActionType().equals(ActionType.SERVICE))
+			if (botFunction.getActionType().equals(ActionType.SERVICE) || botFunction.getActionType().equals(ActionType.SENDMESSAGE))
 				functionPath = botFunction.getFunctionPath();
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -727,11 +727,12 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 			String functionPath = "";
-			if (botFunction.getActionType().equals(ActionType.SERVICE))
+			if (botFunction.getActionType().equals(ActionType.SERVICE) || botFunction.getActionType().equals(ActionType.SENDMESSAGE))
 				functionPath = botFunction.getFunctionPath();
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
+            System.out.println(botFunction.getAttributes());
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
 				formAttributes(vle, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
@@ -742,7 +743,15 @@ public class SocialBotManagerService extends RESTService {
 			body.remove("email");
 			body.put("channel", messageInfo.getMessage().getChannel());
             body.put("intent", messageInfo.getIntent().getKeyword());
-            body.put("topic", messageInfo.getIntent().getEntity("topic").getValue());
+            for(String entityName : messageInfo.getIntent().getEntities()){
+                body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
+            }
+/*            body.put("topic", messageInfo.getIntent().getEntity("topic").getValue());*/
+            ArrayList <String> assessments = new ArrayList<String>();
+            for(ServiceFunctionAttribute sfa : botFunction.getAttributes()){
+                    assessments.add(sfa.getNluQuizContent());  
+            }    
+            body.put("Assessments", assessments);
             System.out.println(messageInfo.getIntent());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
@@ -774,7 +783,7 @@ public class SocialBotManagerService extends RESTService {
 
 						String functionPath = "";
 						// add path if the triggered function is a service function
-						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
+						if (triggeredFunction.getActionType().equals(ActionType.SERVICE) || triggeredFunction.getActionType().equals(ActionType.SENDMESSAGE))
 							functionPath = triggeredFunction.getFunctionPath();
 						JSONObject triggeredBody = new JSONObject();
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -993,21 +1002,15 @@ public class SocialBotManagerService extends RESTService {
 		if (sf.getActionType().equals(ActionType.SERVICE)) {
             System.out.println(sf.getFunctionName());
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
-            if(sf.getFunctionName().equals("assessment")){
-            Bot bots = vle.getBots().get(botAgent.getIdentifier());
-			String messengerIDs = sf.getMessengerName();
-            ChatMediator chats = bots.getMessenger(messengerIDs).getChatMediator();
-            assessment(sf , chats, triggeredBody, bots.getMessenger(messengerIDs));    
-            } else {
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                    client.setLogin(botAgent.getLoginName(), botPass);         
+                    client.setLogin("alice", "pwalice");         
                     HashMap<String, String> headers = new HashMap<String, String>();
-                    System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces());
+                    System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
                     System.out.println(r.getResponse()); 
-                }
+                
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
 				// TODO Anonymous agent error
@@ -1019,6 +1022,16 @@ public class SocialBotManagerService extends RESTService {
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
 			}
+            if(triggeredBody.get("text")== ""){
+                    MiniClient client = new MiniClient();
+                    client.setConnectorEndpoint(vle.getAddress());
+                    client.setLogin("alice", "pwalice");         
+                    HashMap<String, String> headers = new HashMap<String, String>();
+                    ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
+                    System.out.println("Connect Success");
+                    System.out.println(r.getResponse());
+                    triggeredBody.put("text", r.getResponse());
+            }
 			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
 			if (messengerID == null || bot.getMessenger(messengerID) == null) {
@@ -1074,6 +1087,7 @@ public class SocialBotManagerService extends RESTService {
         System.out.println(channel);
 		chat.sendMessageToChannel(channel, text);
 	}
+  
 
 	@Api(
 			value = "Model Resource")

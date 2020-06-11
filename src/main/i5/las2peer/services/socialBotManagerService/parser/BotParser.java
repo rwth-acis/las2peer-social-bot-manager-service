@@ -661,6 +661,7 @@ public class BotParser {
 			sf.setActionType(ActionType.SENDMESSAGE);
 			sf.setMessengerName(messengerID);
 			sf.setServiceName(service);
+            sf.setFunctionName(sfName);
 		} else {
 			// default case
 			sf.setFunctionName(sfName);
@@ -744,7 +745,7 @@ public class BotParser {
 				// try to get swagger information
 
 				if (vle.getServiceInformation().get(s.getServiceName()) == null
-						&& s.getActionType().equals(ActionType.SERVICE)) {
+						/*&& s.getActionType().equals(ActionType.SERVICE)*/ ) {
 					try {
 						JSONObject j = readJsonFromUrl(vle.getAddress() + "/" + s.getServiceName() + "/swagger.json");
 						vle.addServiceInformation(s.getServiceName(), j);

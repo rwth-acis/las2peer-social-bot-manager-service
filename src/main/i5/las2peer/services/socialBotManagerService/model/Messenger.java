@@ -16,6 +16,9 @@ import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 
 public class Messenger {
 	private String name;
@@ -32,6 +35,9 @@ public class Messenger {
     // Used for keeping context between assessment and non-assessment states
     // Key is the channelId
     private HashMap<String, String> context;
+    // Used to know to which Function the received intents/messages are to be sent
+    private HashMap<String, String> triggeredFunction;
+    
     // Used to keep track at which question one currently is of the given assessment
     // Key is the channelId
     private HashMap<String, Integer> currQuestion;
@@ -64,6 +70,7 @@ public class Messenger {
 		this.random = new Random();
         // Initialize the assessment setup
         this.context = new HashMap<String, String>();
+        this.triggeredFunction = new HashMap<String, String>();
         this.currQuestion = new HashMap<String, Integer>();
         this.currAssessment = new HashMap<String, String[][]>();
 	}
@@ -176,20 +183,21 @@ public class Messenger {
                         intent = this.rasa.getIntent(message.getText());
                     } else if( this.context.get(message.getChannel()) == "Assessment" ){
                         intent = this.rasaAssessment.getIntent(message.getText());
-                        assess(message.getChannel(),intent.getKeyword());
+                        //assess(message.getChannel(),intent.getKeyword());
                     }                  
 					
 				}
                 System.out.println(intent.getKeyword());
-               /* if(intent.getKeyword().equals("assessment")){
+               if(intent.getKeyword().equals("assessment")){
                     if( this.context.get(message.getChannel()) == "Basic" ){
-                        context.put(message.getChannel(), "Ass");
+                        this.context.put(message.getChannel(), "Assessment");
+                        this.triggeredFunction.put(message.getChannel(), this.knownIntents.get(intent.getKeyword()).getTriggeredFunctionId());
                         System.out.println("I am in Assessment Mode now :)");
                     } 
                     
-                } else*/
+                } else
                 if(intent.getKeyword().equals("quit")){
-                    if( this.context.get(message.getChannel()) == "Ass" ){
+                    if( this.context.get(message.getChannel()) == "Assessment" ){
                         context.put(message.getChannel(), "Basic");
                         System.out.println("I just left Assessment Mode");
                     } else {
@@ -204,15 +212,21 @@ public class Messenger {
                     triggeredFunctionIds = states.getTriggeredFunctionId();
                     ServiceFunction botFunction = bot.getBotServiceFunctions().get(triggeredFunctionIds);
                     String answer = "The available topics are: ";
+                    JSONParser parser = new JSONParser();
+                    JSONObject content;
                     for(ServiceFunctionAttribute sfa : botFunction.getAttributes()){
-                        System.out.println(sfa.getNluQuizContent().split(";")[0]);
-                        answer += "\n" + sfa.getNluQuizContent().split(";")[0];
+                        // parse exception catcher here
+                        content = (JSONObject) parser.parse(sfa.getNluQuizContent());
+                        System.out.println(content.getAsString("topic"));
+                        answer += "\n" + content.getAsString("topic");
                     }
         
                     System.out.println(answer);
                     this.chatMediator.sendMessageToChannel(message.getChannel(), answer);
                    
                 }
+                // simple way, will need to take care of intents with same names but from different servers
+            
                 
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
@@ -226,23 +240,29 @@ public class Messenger {
 				}
 
 				// No matching intent found, perform default action
-				if (state == null) {
-					state = this.knownIntents.get("default");
-				}
+                if(this.context.get(message.getChannel()) == "Assessment"){
+                    triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+                    
+                } else {
+                    if (state == null) {
+                        state = this.knownIntents.get("default");
+                    }
 
-				if (state != null) {
-					String response = state.getResponse(this.random);
-					if (response != null) {
-						this.chatMediator.sendMessageToChannel(message.getChannel(), response);
-					}
-					triggeredFunctionId = state.getTriggeredFunctionId();
-                    System.out.println(triggeredFunctionId);
-					// If conversation flow is terminated, reset state
-					if (state.getFollowingMessages().isEmpty()) {
-						this.stateMap.remove(message.getChannel());
-					}
-				}
-
+                    if (state != null) {
+                        String response = state.getResponse(this.random);
+                        if (response != null) {
+                            this.chatMediator.sendMessageToChannel(message.getChannel(), response);
+                        }
+                        if(this.context.get(message.getChannel()) == "Assessment"){
+                            triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+                        } else triggeredFunctionId = state.getTriggeredFunctionId();
+                        System.out.println(triggeredFunctionId);
+                        // If conversation flow is terminated, reset state
+                        if (state.getFollowingMessages().isEmpty()) {
+                            this.stateMap.remove(message.getChannel());
+                        }
+                    }
+                }
 				messageInfos.add(
 						new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), bot.getVle().getName()));
 			} catch (Exception e) {
