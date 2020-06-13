@@ -1022,7 +1022,7 @@ public class SocialBotManagerService extends RESTService {
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
 			}
-            if(triggeredBody.get("text")== ""){
+            if(triggeredBody.get("text")== null ){
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
                     client.setLogin("alice", "pwalice");         

@@ -31,6 +31,9 @@ import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.IntentEntity;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+
+import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
+
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
@@ -70,6 +73,8 @@ public class BotParser {
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
+        
+        HashMap<String, NLUKnowledge> nluKnowledge = new HashMap<String, NLUKnowledge>();
 
 		HashMap<String, ServiceFunction> bsfList = new HashMap<String, ServiceFunction>();
 		HashMap<String, ServiceFunction> usfList = new HashMap<String, ServiceFunction>();
@@ -105,7 +110,11 @@ public class BotParser {
 			} else if (nodeType.equals("Intent Entity")) {
 				IntentEntity entity = addIntentEntity(entry.getKey(), elem, config);
 				intentEntities.put(entry.getKey(), entity);
-				// VLE User
+				// Nlu Url's
+			} else if (nodeType.equals("NLU Knowledge")) {
+				NLUKnowledge nlu = addNLUKnowledge(entry.getKey(), elem, config);
+				nluKnowledge.put(entry.getKey(), nlu);
+                // VLE User              
 			} else if (nodeType.equals("User")) {
 				VLEUser u = addUser(elem);
 				u.setId(entry.getKey());
@@ -194,7 +203,11 @@ public class BotParser {
 					if (messengers.get(target) != null) {
 						Messenger m = messengers.get(target);
 						b.addMessenger(m);
-					}
+                        // NLU Servers
+					} else if (nluKnowledge.get(target) != null){
+                        NLUKnowledge nlu = nluKnowledge.get(target);
+                        b.addRasaServer(nlu.getId(), nlu.getUrl());
+                    }
 					// User Function has...
 				} else if (usfList.get(source) != null) {
 					ServiceFunction sf = usfList.get(source);
@@ -413,8 +426,8 @@ public class BotParser {
 		String messengerName = null;
 		String messengerType = null;
 		String token = null;
-		String rasaUrl = null;
-        String rasaAssessmentUrl = null;
+	//	String rasaUrl = null;
+    //    String rasaAssessmentUrl = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -442,7 +455,7 @@ public class BotParser {
 		if (token == null) {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
-		if (rasaUrl == null) {
+	/*	if (rasaUrl == null) {
 			throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
 		}
 		if (rasaAssessmentUrl == null) {
@@ -450,9 +463,10 @@ public class BotParser {
 		}
 		if (rasaAssessmentUrl == "") {
 			System.out.println("WARNING: No Rasa Assessment NLU Server given, thus no NLU Assessments will be possible");
-		}                       
+		}    */                   
 
-		return new Messenger(messengerName, messengerType, token, rasaUrl, rasaAssessmentUrl, database);
+    //    return new Messenger(messengerName, messengerType, token, rasaUrl, rasaAssessmentUrl, database);
+        return new Messenger(messengerName, messengerType, token, database);
 	}
 
 	private String addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
@@ -473,6 +487,32 @@ public class BotParser {
 		}
 
 		return message;
+	}
+    
+	private NLUKnowledge addNLUKnowledge(String key, BotModelNode elem, BotConfiguration config)
+			throws ParseBotException {
+		String rasaName = null;
+        String id = null;
+        String url = null;
+		// TODO: Reduce code duplication
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			String name = subVal.getName();
+			if (name.contentEquals("Name")) {
+				rasaName = subVal.getValue();
+			} else if(name.contentEquals("ID")){
+                id = subVal.getValue();
+            } else if(name.contentEquals("URL")){
+                url = subVal.getValue();
+            }
+		}
+
+		if (url == null) {
+			throw new ParseBotException("NLU Knowledge without URL");
+		}
+
+		return new NLUKnowledge(rasaName, id, url);
 	}
 
 	private IncomingMessage addIncomingMessage(String key, BotModelNode elem, BotConfiguration config)

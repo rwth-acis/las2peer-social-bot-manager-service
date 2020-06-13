@@ -24,8 +24,8 @@ public class Messenger {
 	private String name;
 
 	private ChatMediator chatMediator;
-	private RasaNlu rasa;
-    private RasaNlu rasaAssessment;
+	//private RasaNlu rasa;
+    //private RasaNlu rasaAssessment;
 
 	// Key: intent keyword
 	private HashMap<String, IncomingMessage> knownIntents;
@@ -51,12 +51,12 @@ public class Messenger {
 	public Messenger(String id, String chatService, String token, String rasaUrl, String rasaAssessmentUrl, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
-		this.rasa = new RasaNlu(rasaUrl);
-        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
+//		this.rasa = new RasaNlu(rasaUrl);
+//        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token, database, this.rasa);
+			this.chatMediator = new RocketChatMediator(token, database, "this.rasa");
 		} else { // TODO: Implement more backends
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
@@ -180,9 +180,10 @@ public class Messenger {
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
                     if( this.context.get(message.getChannel()) == "Basic" ){
-                        intent = this.rasa.getIntent(message.getText());
+                        //intent = this.rasa.getIntent(message.getText());
+                        intent = bot.getRasaServer("0").getIntent(message.getText());
                     } else if( this.context.get(message.getChannel()) == "Assessment" ){
-                        intent = this.rasaAssessment.getIntent(message.getText());
+                     //   intent = this.rasaAssessment.getIntent(message.getText());
                         //assess(message.getChannel(),intent.getKeyword());
                     }                  
 					
