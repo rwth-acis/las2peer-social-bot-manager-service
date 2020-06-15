@@ -7,6 +7,7 @@ import java.util.Random;
 public class IncomingMessage {
 	String intentKeyword;
 	String entityKeyword;
+    String NluID;
 
 	ArrayList<String> responses;
 
@@ -15,10 +16,13 @@ public class IncomingMessage {
 
 	String triggeredFunctionId;
 
-	public IncomingMessage(String intent) {
+	public IncomingMessage(String intent, String NluID) {
 		this.intentKeyword = intent;
 		this.followupMessages = new HashMap<String, IncomingMessage>();
 		this.responses = new ArrayList<String>();
+        if(NluID == ""){
+            this.NluID = "0";
+        } else this.NluID = NluID;
 	}
 
 	public String getIntentKeyword() {
@@ -32,7 +36,11 @@ public class IncomingMessage {
 	public void setEntityKeyword(String entityKeyword) {
 		this.entityKeyword = entityKeyword;
 	}
-
+    
+	public String getNluID() {
+		return NluID;
+	}
+ 
 	public HashMap<String, IncomingMessage> getFollowingMessages() {
 		return followupMessages;
 	}

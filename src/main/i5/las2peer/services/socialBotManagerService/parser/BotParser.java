@@ -440,11 +440,11 @@ public class BotParser {
 				messengerType = subVal.getValue();
 			} else if (name.contentEquals("Authentication Token")) {
 				token = subVal.getValue();
-			} else if (name.contentEquals("Rasa NLU URL")) {
+			} /*else if (name.contentEquals("Rasa NLU URL")) {
 				rasaUrl = subVal.getValue();
 			} else if (name.contentEquals("Rasa Assessment NLU URL")) {
 				rasaAssessmentUrl = subVal.getValue();
-			}
+			}*/
 		}
 		if (messengerName == null) {
 			throw new ParseBotException("Messenger is missing a name");
@@ -518,6 +518,7 @@ public class BotParser {
 	private IncomingMessage addIncomingMessage(String key, BotModelNode elem, BotConfiguration config)
 			throws ParseBotException {
 		String intentKeyword = null;
+        String NluID = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -526,14 +527,19 @@ public class BotParser {
 			String name = subVal.getName();
 			if (name.contentEquals("Intent Keyword")) {
 				intentKeyword = subVal.getValue();
-			}
+			} else if (name.contentEquals("NLU ID")){
+                NluID = subVal.getValue();
+            }
 		}
 
 		if (intentKeyword == null) {
 			throw new ParseBotException("Incoming Message is missing Intent Keyword");
-		}
+		} else if (NluID== null) {
+			throw new ParseBotException("Incoming Message is missing NluID");
+		} 
 
-		return new IncomingMessage(intentKeyword);
+
+		return new IncomingMessage(intentKeyword, NluID);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)

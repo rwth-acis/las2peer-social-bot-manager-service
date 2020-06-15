@@ -747,11 +747,11 @@ public class SocialBotManagerService extends RESTService {
                 body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
             }
 /*            body.put("topic", messageInfo.getIntent().getEntity("topic").getValue());*/
-            ArrayList <String> assessments = new ArrayList<String>();
+            ArrayList <String> bodyContent = new ArrayList<String>();
             for(ServiceFunctionAttribute sfa : botFunction.getAttributes()){
-                    assessments.add(sfa.getNluQuizContent());  
+                    bodyContent.add(sfa.getContent());  
             }    
-            body.put("Assessments", assessments);
+            body.put("bodyContent", bodyContent);
             System.out.println(messageInfo.getIntent());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
@@ -1021,7 +1021,13 @@ public class SocialBotManagerService extends RESTService {
 						MediaType.TEXT_HTML, MediaType.TEXT_HTML, headers);
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
-			}
+			}      
+			Bot bot = vle.getBots().get(botAgent.getIdentifier());
+			String messengerID = sf.getMessengerName();
+			if (messengerID == null || bot.getMessenger(messengerID) == null) {
+				System.out.println("Bot Action is missing Messenger");
+				return;
+			}            
             if(triggeredBody.get("text")== null ){
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
@@ -1029,15 +1035,21 @@ public class SocialBotManagerService extends RESTService {
                     HashMap<String, String> headers = new HashMap<String, String>();
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
-                    System.out.println(r.getResponse());
-                    triggeredBody.put("text", r.getResponse());
+                    JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+                    try{
+                            JSONObject response = (JSONObject) p.parse(r.getResponse());                        
+                            System.out.println(response);
+                            triggeredBody.put("text", response.getAsString("text"));
+                        if(Boolean.valueOf(response.getAsString("closeContext"))){
+                            System.out.println("Closed Context");
+                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"));
+                        }
+                    } catch (ParseException e) {
+			         e.printStackTrace();
+		          }
+
             }
-			Bot bot = vle.getBots().get(botAgent.getIdentifier());
-			String messengerID = sf.getMessengerName();
-			if (messengerID == null || bot.getMessenger(messengerID) == null) {
-				System.out.println("Bot Action is missing Messenger");
-				return;
-			}
+  
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();          
 			triggerChat(chat, triggeredBody);
 		}
@@ -1046,33 +1058,6 @@ public class SocialBotManagerService extends RESTService {
   
     
     
-    private void assessment(ServiceFunction sf, ChatMediator chat, JSONObject triggeredBody, Messenger messenger){
-		String text = triggeredBody.getAsString("text");
-		String channel = null;  
-		if (triggeredBody.containsKey("email")) {
-			String email = triggeredBody.getAsString("email");
-			channel = chat.getChannelByEmail(email);
-		} else if (triggeredBody.containsKey("channel")) {
-			channel = triggeredBody.getAsString("channel");
-		}
-        if(messenger.getContext(channel).equals("Assesment")){
-            System.out.println("You cannot start another Assessment");
-        } else {
-            System.out.println("Oh you want to start assessment? Let me check if topic is available");
-            System.out.println(triggeredBody.getAsString("topic"));
-            String topic = triggeredBody.getAsString("topic");
-            for(ServiceFunctionAttribute sfa : sf.getAttributes()){
-                System.out.println(sfa.getNluQuizContent().split(";")[0]);
-                if(topic.equals(sfa.getNluQuizContent().split(";")[0])){
-                    System.out.println("Assessment starts now :): " + topic);
-                    messenger.setUpCurrentAssessment(sfa.getNluQuizContent(), channel);
-                    messenger.setContext(channel, "Assessment");
-                }
-            }
-        }
-        System.out.println(triggeredBody.get("text"));
-        
-    }
 
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");

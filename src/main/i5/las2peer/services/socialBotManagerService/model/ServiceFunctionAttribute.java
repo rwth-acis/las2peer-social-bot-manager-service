@@ -145,9 +145,7 @@ public class ServiceFunctionAttribute {
         this.nluQuizContent = nluQuizContent;
     }
 
-    public String getNluQuizContent(){
-        return this.nluQuizContent;
-    }
+
     
 
 	@Override
@@ -156,7 +154,7 @@ public class ServiceFunctionAttribute {
 				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
 				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
 				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
-				+ ", contentType=" + contentType + ", NluQuizContent=" + nluQuizContent +"]";
+				+ ", contentType=" + contentType + "]";
 	}
 
 }

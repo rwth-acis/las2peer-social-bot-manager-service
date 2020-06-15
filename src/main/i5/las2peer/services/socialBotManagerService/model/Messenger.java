@@ -48,7 +48,7 @@ public class Messenger {
 	private Random random;
     
 
-	public Messenger(String id, String chatService, String token, String rasaUrl, String rasaAssessmentUrl, SQLDatabase database)
+	public Messenger(String id, String chatService, String token,/* String rasaUrl, String rasaAssessmentUrl,*/ SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
@@ -56,7 +56,7 @@ public class Messenger {
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token, database, "this.rasa");
+			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
 		} else { // TODO: Implement more backends
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
@@ -65,7 +65,7 @@ public class Messenger {
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
         // Used to quit the Assessment, TODO: maybe think about a way to include this during the Modeling ? 
-        IncomingMessage quit = new IncomingMessage("quit");
+        IncomingMessage quit = new IncomingMessage("quit" , "");
         this.knownIntents.put("quit", quit);
 		this.random = new Random();
         // Initialize the assessment setup
@@ -91,54 +91,14 @@ public class Messenger {
         context.put(channel, contextName);
     }
     
+    public void setContextToBasic(String channel){
+        context.put(channel, "Basic");
+    }    
+    
     public String getContext(String channel){
         return this.context.get(channel);
     }
-    // will prepare an assessment for the specified channel -> prepare the numbers/questions/intent/hints and follow up by asking the first question
-    public void setUpCurrentAssessment(String content, String channel){
-        String[] contentList = content.split(";");
-        String topic = contentList[0];
-        int length = (contentList.length-1)/4; 
-        int noNum = 0;
-        String[][] assessmentContent = new String[length][4];
-        for(int i = 0; i < length ; i++){
-            if(contentList[i*4+1]==""){
-                noNum++;    
-            }
-            assessmentContent[i][0] = contentList[i*4+1];
-            assessmentContent[i][1] = contentList[i*4+2];
-            assessmentContent[i][2] = contentList[i*4+3];
-            assessmentContent[i][3] = contentList[i*4+4];     
-        }
-        int[] sequence = new int[length];
-        this.currAssessment.put(channel, assessmentContent);
-        this.currQuestion.put(channel, 0);
-        System.out.println("Curr number is :" + this.currQuestion.get(channel));
-        for(int i = 0; i < length ; i++){
-            System.out.println(assessmentContent[i][0] + " " + assessmentContent[i][1] + " " + assessmentContent[i][2] + " " + assessmentContent[i][3]);
-        } 
-        System.out.println(channel);
-        this.chatMediator.sendMessageToChannel(channel, assessmentContent[0][1]);
-    }
-    
-    private void assess(String channel, String intent){
-        System.out.println(this.currQuestion.get(channel));
-        System.out.println(this.currAssessment.get(channel)[this.currQuestion.get(channel)][2]);
-        if(intent.equals(this.currAssessment.get(channel)[this.currQuestion.get(channel)][2])){
-            this.chatMediator.sendMessageToChannel(channel, "Correct Answer!");
-        } else this.chatMediator.sendMessageToChannel(channel, "Wrong Answer:/");
-        this.currQuestion.put(channel,this.currQuestion.get(channel)+1);
-        if(this.currQuestion.get(channel)==this.currAssessment.get(channel).length){
-            this.chatMediator.sendMessageToChannel(channel, "Assessment is over, Good job");
-            setContext(channel, "Basic");
-        } else {
-            this.chatMediator.sendMessageToChannel(channel, this.currAssessment.get(channel)[this.currQuestion.get(channel)][1]);        
-        }
-        
-        
-        
-        
-    }
+
     
 	// Handles simple responses ("Chat Response") directly, logs all messages and
 	// extracted intents into `messageInfos` for further processing later on.
@@ -150,7 +110,7 @@ public class Messenger {
 		//System.out.println(newMessages.size());
 		for (ChatMessage message : newMessages) {
 			try {
-                if(this.context.get(message.getChannel())== null){
+                if(this.context.get(message.getChannel()) == null){
                     this.context.put(message.getChannel(), "Basic");
                 } 
 				Intent intent = null;
@@ -179,24 +139,16 @@ public class Messenger {
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
+                    System.out.println("Intent Extraction now with  : " + this.context.get(message.getChannel()));
                     if( this.context.get(message.getChannel()) == "Basic" ){
-                        //intent = this.rasa.getIntent(message.getText());
                         intent = bot.getRasaServer("0").getIntent(message.getText());
-                    } else if( this.context.get(message.getChannel()) == "Assessment" ){
-                     //   intent = this.rasaAssessment.getIntent(message.getText());
-                        //assess(message.getChannel(),intent.getKeyword());
+                        System.out.println("Extracted Basic");
+                    } else {
+                        intent = bot.getRasaServer(context.get(message.getChannel())).getIntent(message.getText());
                     }                  
 					
 				}
                 System.out.println(intent.getKeyword());
-               if(intent.getKeyword().equals("assessment")){
-                    if( this.context.get(message.getChannel()) == "Basic" ){
-                        this.context.put(message.getChannel(), "Assessment");
-                        this.triggeredFunction.put(message.getChannel(), this.knownIntents.get(intent.getKeyword()).getTriggeredFunctionId());
-                        System.out.println("I am in Assessment Mode now :)");
-                    } 
-                    
-                } else
                 if(intent.getKeyword().equals("quit")){
                     if( this.context.get(message.getChannel()) == "Assessment" ){
                         context.put(message.getChannel(), "Basic");
@@ -217,7 +169,7 @@ public class Messenger {
                     JSONObject content;
                     for(ServiceFunctionAttribute sfa : botFunction.getAttributes()){
                         // parse exception catcher here
-                        content = (JSONObject) parser.parse(sfa.getNluQuizContent());
+                        content = (JSONObject) parser.parse(sfa.getContent());
                         System.out.println(content.getAsString("topic"));
                         answer += "\n" + content.getAsString("topic");
                     }
@@ -228,7 +180,7 @@ public class Messenger {
                 }
                 // simple way, will need to take care of intents with same names but from different servers
             
-                
+                // Aaron: check if id is different than 0 , switch to respective nlu, context
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 
@@ -241,7 +193,7 @@ public class Messenger {
 				}
 
 				// No matching intent found, perform default action
-                if(this.context.get(message.getChannel()) == "Assessment"){
+                if(this.context.get(message.getChannel()) != "Basic"){
                     triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                     
                 } else {
@@ -254,7 +206,13 @@ public class Messenger {
                         if (response != null) {
                             this.chatMediator.sendMessageToChannel(message.getChannel(), response);
                         }
-                        if(this.context.get(message.getChannel()) == "Assessment"){
+                        System.out.println(state.getNluID());
+                        if(state.getNluID() != ""){
+                            this.context.put(message.getChannel(), state.getNluID());
+                            this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());                            
+                        }
+                        
+                        if(this.context.get(message.getChannel()) != "Basic"){
                             triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                         } else triggeredFunctionId = state.getTriggeredFunctionId();
                         System.out.println(triggeredFunctionId);
