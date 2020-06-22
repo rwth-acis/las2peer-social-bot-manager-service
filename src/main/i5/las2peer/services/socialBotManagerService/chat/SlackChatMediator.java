@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.OptionalLong;
@@ -119,5 +120,11 @@ public class SlackChatMediator extends ChatMediator {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
+		// TODO Auto-generated method stub
+
 	}
 }

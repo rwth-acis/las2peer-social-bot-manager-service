@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,11 +69,12 @@ public class Messenger {
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
-		System.out.println(newMessages.size());
+		// System.out.println(newMessages.size());
 		for (ChatMessage message : newMessages) {
 			try {
 				Intent intent = null;
 				// Special case: `!` commands
+				// System.out.println(this.knownIntents.toString());
 				if (message.getText().startsWith("!")) {
 					// Split at first occurring whitespace
 					String splitMessage[] = message.getText().split("\\s+", 2);
@@ -102,22 +104,79 @@ public class Messenger {
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 
 				// No conversation state present, starting from scratch
-				if (state == null) {
-					// TODO: Tweak this
-					if (intent.getConfidence() >= 0.1f) {
+				// TODO: Tweak this
+				if (intent.getConfidence() >= 0.1f) {
+
+					if (state == null) {
 						state = this.knownIntents.get(intent.getKeyword());
+						System.out.println(
+								intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
+						stateMap.put(message.getChannel(), state);
+					} else {
+						// any is a static forward
+						// TODO include entities of intents
+						if (state.getFollowingMessages() == null) {
+							System.out.println("no follow up messages");
+							state = this.knownIntents.get(intent.getKeyword());
+							System.out.println(
+									intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
+							stateMap.put(message.getChannel(), state);
+						} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
+							System.out.println("try follow up message");
+							state = state.getFollowingMessages().get(intent.getKeyword());
+							stateMap.put(message.getChannel(), state);
+						} else {
+							System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
+									+ intent.getConfidence() + " confidence.");
+							// try any
+							if (state.getFollowingMessages().get("any") != null) {
+								state = state.getFollowingMessages().get("any");
+								stateMap.put(message.getChannel(), state);
+							} else {
+								state = this.knownIntents.get("default");
+								System.out.println(state.getIntentKeyword() + " set");
+							}
+						}
 					}
+				} else {
+					System.out.println(
+							intent.getKeyword() + " not detected with " + intent.getConfidence() + " confidence.");
+					state = this.knownIntents.get("default");
+					System.out.println(state.getIntentKeyword() + " set");
 				}
 
-				// No matching intent found, perform default action
-				if (state == null) {
-					state = this.knownIntents.get("default");
+				if (intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
+						|| intent.getKeyword().equals("will")) {
+					if (intent.getEntity("muster") != null) {
+						state = this.knownIntents.get("mustertext");
+					} else if (intent.getEntity("video") != null) {
+						state = this.knownIntents.get("video");
+					} else if (intent.getEntity("help") != null) {
+						state = this.knownIntents.get("help");
+					} else if (intent.getEntity("pause") != null) {
+						state = this.knownIntents.get("pause");
+					} else if (intent.getEntity("upload") != null) {
+						state = this.knownIntents.get("upload");
+					} else if (intent.getEntity("schreibaufgabe") != null) {
+						state = this.knownIntents.get("beschreibung");
+					} else {
+						state = this.knownIntents.get("default");
+					}
 				}
 
 				if (state != null) {
 					String response = state.getResponse(this.random);
 					if (response != null) {
-						this.chatMediator.sendMessageToChannel(message.getChannel(), response);
+						// TODO get rid of this...
+						if (intent.getEntity("schreibaufgabe") != null || intent.getKeyword().equals("beschreibung")) {
+							File f = new File("Schreibauftrag.pdf");
+							this.chatMediator.sendFileMessageToChannel(message.getChannel(), f, response);
+						} else if (intent.getEntity("muster") != null || intent.getKeyword().equals("mustertext")) {
+							File f = new File("Mustertext.pdf");
+							this.chatMediator.sendFileMessageToChannel(message.getChannel(), f, response);
+						} else {
+							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
+						}
 					}
 					triggeredFunctionId = state.getTriggeredFunctionId();
 
@@ -125,6 +184,8 @@ public class Messenger {
 					if (state.getFollowingMessages().isEmpty()) {
 						this.stateMap.remove(message.getChannel());
 					}
+				} else {
+					System.out.println("Something went wrong...");
 				}
 
 				messageInfos.add(
