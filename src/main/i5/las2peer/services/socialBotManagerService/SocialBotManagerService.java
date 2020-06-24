@@ -752,7 +752,9 @@ public class SocialBotManagerService extends RESTService {
                     bodyContent.add(sfa.getContent());  
             }    
             body.put("bodyContent", bodyContent);
+            body.put("msg", messageInfo.getMessage().getText());
             System.out.println(messageInfo.getIntent());
+            System.out.println(messageInfo.getMessage().getText());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -809,7 +811,7 @@ public class SocialBotManagerService extends RESTService {
 			// TODO
 		}
 	}
-
+        // Aaron :  if name of body is empty add as part of an array of contents ? 
 	private void formAttributes(VLE vle, ServiceFunctionAttribute triggeredFunctionAttribute, Bot bot,
 			JSONObject triggeredBody, String functionPath, HashMap<String, ServiceFunctionAttribute> attlist,
 			JSONObject triggerAttributes) throws ServiceNotFoundException, ServiceNotAvailableException,
@@ -1056,9 +1058,6 @@ public class SocialBotManagerService extends RESTService {
 	}
 
   
-    
-    
-
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");
 		String channel = null;

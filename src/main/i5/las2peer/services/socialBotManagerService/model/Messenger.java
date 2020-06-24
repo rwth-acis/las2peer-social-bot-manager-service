@@ -37,13 +37,6 @@ public class Messenger {
     private HashMap<String, String> context;
     // Used to know to which Function the received intents/messages are to be sent
     private HashMap<String, String> triggeredFunction;
-    
-    // Used to keep track at which question one currently is of the given assessment
-    // Key is the channelId
-    private HashMap<String, Integer> currQuestion;
-    // Used to keep the assessment that is currently being done
-    // Key is the channelId 
-    private HashMap<String, String[][]> currAssessment;
 
 	private Random random;
     
@@ -64,15 +57,10 @@ public class Messenger {
 
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
-        // Used to quit the Assessment, TODO: maybe think about a way to include this during the Modeling ? 
-        IncomingMessage quit = new IncomingMessage("quit" , "");
-        this.knownIntents.put("quit", quit);
 		this.random = new Random();
         // Initialize the assessment setup
         this.context = new HashMap<String, String>();
         this.triggeredFunction = new HashMap<String, String>();
-        this.currQuestion = new HashMap<String, Integer>();
-        this.currAssessment = new HashMap<String, String[][]>();
 	}
 
 	public String getName() {
@@ -126,6 +114,7 @@ public class Messenger {
 					IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
 					// TODO: Log this? (`!` command with unknown intent / keyword)
 					if (incMsg == null) {
+                        System.out.println("incmsg not null");
 						continue;
 					}
 
@@ -139,6 +128,7 @@ public class Messenger {
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
+                    // what if you want to start an assessment with a command? 
                     System.out.println("Intent Extraction now with  : " + this.context.get(message.getChannel()));
                     if( this.context.get(message.getChannel()) == "Basic" ){
                         intent = bot.getRasaServer("0").getIntent(message.getText());
@@ -149,14 +139,7 @@ public class Messenger {
 					
 				}
                 System.out.println(intent.getKeyword());
-                if(intent.getKeyword().equals("quit")){
-                    if( this.context.get(message.getChannel()) == "Assessment" ){
-                        context.put(message.getChannel(), "Basic");
-                        System.out.println("I just left Assessment Mode");
-                    } else {
-                        this.chatMediator.sendMessageToChannel(message.getChannel(), "No Assessment to quit");
-                    }
-                } else if(intent.getKeyword().equals("topicsQuestion")){
+                 if(intent.getKeyword().equals("topicsQuestion")){
                     // TODO: too hard coded, find a way to do this in a prettier way
                     IncomingMessage states = this.stateMap.get(message.getChannel());
                     states = this.knownIntents.get("assessment");
@@ -189,27 +172,37 @@ public class Messenger {
 					// TODO: Tweak this
 					if (intent.getConfidence() >= 0.1f) {
 						state = this.knownIntents.get(intent.getKeyword());
-					}
+					   System.out.println("ddjdj");
+                    }
 				}
 
 				// No matching intent found, perform default action
                 if(this.context.get(message.getChannel()) != "Basic"){
+                    System.out.println("KEKEKE");
                     triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                     
                 } else {
                     if (state == null) {
                         state = this.knownIntents.get("default");
                     }
-
+                    // problem mit chat response : wo soll der service call statt finden? 
                     if (state != null) {
-                        String response = state.getResponse(this.random);
-                        if (response != null) {
-                            this.chatMediator.sendMessageToChannel(message.getChannel(), response);
-                        }
+                        System.out.println("sssss");
+                        ChatResponse response = state.getResponse(this.random);
                         System.out.println(state.getNluID());
                         if(state.getNluID() != ""){
+                            System.out.println("NluId is : " + state.getNluID());
                             this.context.put(message.getChannel(), state.getNluID());
                             this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());                            
+                        }                        
+                        if (response != null) {
+                            if(response.getResponse() != ""){
+                                this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse());
+                            } else {
+                                if(response.getTriggeredFunctionId() != ""){
+                                    this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+                                }
+                            }
                         }
                         
                         if(this.context.get(message.getChannel()) != "Basic"){

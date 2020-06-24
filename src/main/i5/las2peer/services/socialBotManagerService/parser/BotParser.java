@@ -26,6 +26,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
+import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
@@ -69,7 +70,7 @@ public class BotParser {
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
 		HashMap<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
-		HashMap<String, String> responses = new HashMap<String, String>();
+		HashMap<String, ChatResponse> responses = new HashMap<String, ChatResponse>();
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
@@ -105,7 +106,7 @@ public class BotParser {
 				IncomingMessage m = addIncomingMessage(entry.getKey(), elem, config);
 				incomingMessages.put(entry.getKey(), m);
 			} else if (nodeType.equals("Chat Response")) {
-				String r = addResponse(entry.getKey(), elem, config);
+				ChatResponse r = addResponse(entry.getKey(), elem, config);
 				responses.put(entry.getKey(), r);
 			} else if (nodeType.equals("Intent Entity")) {
 				IntentEntity entity = addIntentEntity(entry.getKey(), elem, config);
@@ -226,7 +227,7 @@ public class BotParser {
 						sf.addAttribute(sfa);
 						sfa.setFunction(sf);
 					}
-					// Bot Function has...
+					// Function Parameter has...
 				} else if (sfaList.get(source) != null) {
 					ServiceFunctionAttribute sfaParent = sfaList.get(source);
 					// ...Parameter
@@ -306,7 +307,13 @@ public class BotParser {
 						throw new ParseBotException("Bot Action uses Messenger, but is not connected to Messenger");
 					}
 					sf.setMessengerName(m.getName());
-				}
+				} else if (responses.containsKey(source)){
+                    ChatResponse cr = responses.get(source);
+                    if (bsfList.get(target) != null) {
+						ServiceFunction botFunction = bsfList.get(target);
+						cr.setTriggeredFunctionId(botFunction.getId());
+					}
+                }
 
 				// GENERATES
 			} else if (type.equals("generates")) {
@@ -380,7 +387,7 @@ public class BotParser {
 					IncomingMessage m = incomingMessages.get(source);
 					// ...Chat Response
 					if (responses.get(target) != null) {
-						String response = responses.get(target);
+						ChatResponse response = responses.get(target);
 						m.addResponse(response);
 						// ...Bot Action
 					} else if (bsfList.get(target) != null) {
@@ -469,7 +476,7 @@ public class BotParser {
         return new Messenger(messengerName, messengerType, token, database);
 	}
 
-	private String addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
+	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
 		String message = null;
 
 		// TODO: Reduce code duplication
@@ -486,7 +493,7 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Message");
 		}
 
-		return message;
+		return new ChatResponse(message);
 	}
     
 	private NLUKnowledge addNLUKnowledge(String key, BotModelNode elem, BotConfiguration config)
@@ -737,9 +744,7 @@ public class BotParser {
 			} else if (name.equals("Parameter Type")) {
 				String pType = subVal.getValue();
 				sfa.setParameterType(pType);
-			} else if (name.equals("NLU Assessment")) {
-				sfa.setNluQuizContent(subVal.getValue());
-			}              
+			}           
 		}
 		return sfa;
 	}
