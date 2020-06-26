@@ -114,8 +114,12 @@ public class Messenger {
 					IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
 					// TODO: Log this? (`!` command with unknown intent / keyword)
 					if (incMsg == null) {
-                        System.out.println("incmsg not null");
+						if(this.context.get(message.getChannel()) == "Basic") {
 						continue;
+						} else {
+							incMsg = new IncomingMessage(intentKeyword, "");
+							incMsg.setEntityKeyword("newEntity");
+						}
 					}
 
 					String entityKeyword = incMsg.getEntityKeyword();

@@ -99,6 +99,7 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
 import net.minidev.json.JSONObject;
+import net.minidev.json.JSONArray;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
@@ -825,10 +826,9 @@ public class SocialBotManagerService extends RESTService {
 			for (ServiceFunctionAttribute subsfa : triggeredFunctionAttribute.getChildAttributes()) {
 				if (subsfa.isSameAsTrigger()) {
 					ServiceFunctionAttribute mappedTo = subsfa.getMappedTo();
-					if (triggerBody.get(mappedTo.getName()) != null)
+					if (triggerBody.get(mappedTo.getName()) != null) {
 						triggeredBody.put(subsfa.getName(), triggerBody.get(mappedTo.getName()));
-					else
-						triggeredBody.put(subsfa.getName(), triggerAttributes.get(mappedTo.getName()));
+					} else triggeredBody.put(subsfa.getName(), triggerAttributes.get(mappedTo.getName()));
 				} else {
 					// Use AI to generate body
 					ContentGenerator g = subsfa.getGenerator();
@@ -903,7 +903,13 @@ public class SocialBotManagerService extends RESTService {
 
 	private void mapWithStaticContent(ServiceFunctionAttribute triggeredFunctionAttribute, JSONObject triggeredBody) {
 		if (triggeredFunctionAttribute.getContent().length() > 0) {
-			triggeredBody.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
+			if(triggeredBody.containsKey(triggeredFunctionAttribute.getName())) {
+				JSONArray array = new JSONArray();
+				array.add(triggeredBody.get(triggeredFunctionAttribute.getName()));
+				array.add(triggeredFunctionAttribute.getContent());
+				triggeredBody.put(triggeredFunctionAttribute.getName(), array);
+			} else triggeredBody.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
+			
 		}
 		if (triggeredFunctionAttribute.getContentURL().length() > 0) {
 			URL url;
