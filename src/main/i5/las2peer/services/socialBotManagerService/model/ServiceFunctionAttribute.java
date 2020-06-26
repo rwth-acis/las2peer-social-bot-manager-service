@@ -18,9 +18,11 @@ public class ServiceFunctionAttribute {
 	private String content;
 	private String contentURL;
 	private String contentType;
+    // this attribute will dissapear as everything will be done with a single content attribute
+    private String nluQuizContent;
 
 	public ServiceFunctionAttribute() {
-		childAttributes = new ArrayList<ServiceFunctionAttribute>();
+		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
 	}
 
 	public String getName() {
@@ -43,12 +45,13 @@ public class ServiceFunctionAttribute {
 		return childAttributes;
 	}
 
-	public void setChildAttributes(ArrayList<ServiceFunctionAttribute> childAttributes) {
+	/*public void setChildAttributes(ArrayList<ServiceFunctionAttribute> childAttributes) {
 		this.childAttributes = childAttributes;
-	}
+	}*/
 
 	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
 		this.childAttributes.add(childAttribute);
+		System.out.println("My child is" + childAttribute);
 	}
 
 	public String getId() {
@@ -128,6 +131,7 @@ public class ServiceFunctionAttribute {
 	}
 
 	public void setParent(ServiceFunctionAttribute parent) {
+		System.out.println("My parent is" +parent);
 		this.parent = parent;
 	}
 
@@ -138,9 +142,22 @@ public class ServiceFunctionAttribute {
 	public void setItb(IfThenBlock itb) {
 		this.itb = itb;
 	}
+    
+
+
+    
 
 	@Override
 	public String toString() {
+		System.out.println(id);
+		System.out.println(name);
+		System.out.println(parameterType);
+		System.out.println(sameAsTrigger);
+		System.out.println(mappedTo);
+		System.out.println(childAttributes);
+		System.out.println(parent);System.out.println(generator);System.out.println(function);System.out.println(itb);
+		System.out.println(staticContent);System.out.println(content);System.out.println(contentURL);
+		
 		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
 				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
 				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
