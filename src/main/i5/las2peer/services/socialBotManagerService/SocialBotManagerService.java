@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -64,6 +65,7 @@ import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.api.security.AgentOperationFailedException;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.logging.L2pLogger;
 import i5.las2peer.logging.bot.BotMessage;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
@@ -154,6 +156,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private TrainingHelper nluTrain = null;
 	private Thread nluTrainThread = null;
+	private static final L2pLogger logger = L2pLogger.getInstance(SocialBotManagerService.class.getName());
 
 	public SocialBotManagerService() {
 		super();
@@ -203,6 +206,7 @@ public class SocialBotManagerService extends RESTService {
 			rt = Executors.newSingleThreadScheduledExecutor();
 			rt.scheduleAtFixedRate(new RoutineThread(), 0, BOT_ROUTINE_PERIOD, TimeUnit.SECONDS);
 		}
+		L2pLogger.setGlobalConsoleLevel(Level.WARNING);
 	}
 
 
@@ -902,6 +906,7 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	private void mapWithStaticContent(ServiceFunctionAttribute triggeredFunctionAttribute, JSONObject triggeredBody) {
+		System.out.println("hereeeeSSS");
 		if (triggeredFunctionAttribute.getContent().length() > 0) {
 			if(triggeredBody.containsKey(triggeredFunctionAttribute.getName())) {
 				JSONArray array = new JSONArray();
@@ -986,6 +991,7 @@ public class SocialBotManagerService extends RESTService {
 		ServiceFunctionAttribute mappedTo = sfa.getMappedTo();
 		// attributes of the function that triggered the bot
 		JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
+		System.out.println("Aray now");
 		if (triggerAttributes.containsKey(mappedTo.getName())) {
 			String replaceWith = triggerAttributes.getAsString(mappedTo.getName());
 			if (functionPath.contains("{" + sfa.getName() + "}")) {

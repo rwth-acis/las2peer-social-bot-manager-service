@@ -181,6 +181,7 @@ public class BotParser {
 			String type = elem.getType();
 			String source = elem.getSource();
 			String target = elem.getTarget();
+			String value = elem.getLabel().getValue().getValue();
 			// HAS
 			if (type.equals("has")) {
 				// VLE has...
@@ -350,7 +351,7 @@ public class BotParser {
 					// ...another IncomingMessage
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
-						sourceMessage.addFollowupMessage(targetMessage.getIntentKeyword(), targetMessage);
+						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
 				}
 			}

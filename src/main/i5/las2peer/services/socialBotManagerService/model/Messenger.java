@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,6 +104,7 @@ public class Messenger {
                 } 
 				Intent intent = null;
 				// Special case: `!` commands
+				// System.out.println(this.knownIntents.toString());
 				if (message.getText().startsWith("!")) {
 					// Split at first occurring whitespace
                     System.out.println("This was a command");
@@ -169,29 +171,59 @@ public class Messenger {
             
                 // Aaron: check if id is different than 0 , switch to respective nlu, context
 				String triggeredFunctionId = null;
+				System.out.println(intent);
 				IncomingMessage state = this.stateMap.get(message.getChannel());
-
+				
 				// No conversation state present, starting from scratch
-				if (state == null) {
-					// TODO: Tweak this
-					if (intent.getConfidence() >= 0.1f) {
+				// TODO: Tweak this
+				if (intent.getConfidence() >= 0.1f) {
+
+					if (state == null) {
 						state = this.knownIntents.get(intent.getKeyword());
-					   System.out.println("ddjdj");
-                    }
+
+						System.out.println(
+								intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
+						stateMap.put(message.getChannel(), state);
+					} else {
+						// any is a static forward
+						// TODO include entities of intents
+						if (state.getFollowingMessages() == null) {
+							System.out.println("no follow up messages");
+							state = this.knownIntents.get(intent.getKeyword());
+							System.out.println(
+									intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
+							stateMap.put(message.getChannel(), state);
+						} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
+							System.out.println("try follow up message");
+							state = state.getFollowingMessages().get(intent.getKeyword());
+							stateMap.put(message.getChannel(), state);
+						} else {
+							System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
+									+ intent.getConfidence() + " confidence.");
+							// try any
+							if (state.getFollowingMessages().get("any") != null) {
+								state = state.getFollowingMessages().get("any");
+								stateMap.put(message.getChannel(), state);
+							} else {
+								state = this.knownIntents.get("default");
+							//	System.out.println(state.getIntentKeyword() + " set");
+							}
+						}
+					}
+				} else {
+					System.out.println(
+							intent.getKeyword() + " not detected with " + intent.getConfidence() + " confidence.");
+					state = this.knownIntents.get("default");
+					System.out.println(state.getIntentKeyword() + " set");
 				}
+
 
 				// No matching intent found, perform default action
                 if(this.context.get(message.getChannel()) != "Basic"){
-                    System.out.println("KEKEKE");
                     triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
-                    
                 } else {
-                    if (state == null) {
-                        state = this.knownIntents.get("default");
-                    }
                     // problem mit chat response : wo soll der service call statt finden? 
                     if (state != null) {
-                        System.out.println("sssss");
                         ChatResponse response = state.getResponse(this.random);
                         System.out.println(state.getNluID());
                         if(state.getNluID() != ""){
@@ -201,7 +233,14 @@ public class Messenger {
                         }                        
                         if (response != null) {
                             if(response.getResponse() != ""){
-                                this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse());
+                            	System.out.println(response.getResponse());
+                            	String split ="";
+                            	for(int i = 0; i < response.getResponse().split("\\\\n").length ; i++) {
+                            		System.out.println(i);
+                            		split += response.getResponse().split("\\\\n")[i] + " \n ";
+                            	}
+                            	System.out.println(split);
+                                this.chatMediator.sendMessageToChannel(message.getChannel(), split);
                             } else {
                                 if(response.getTriggeredFunctionId() != ""){
                                     this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
@@ -219,6 +258,7 @@ public class Messenger {
                         }
                     }
                 }
+
 				messageInfos.add(
 						new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), bot.getVle().getName()));
 			} catch (Exception e) {

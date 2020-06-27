@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Vector;
+import java.io.File;
 
 public abstract class ChatMediator {
 	protected String authToken;
@@ -17,23 +18,31 @@ public abstract class ChatMediator {
 	/**
 	 * Sends a chat message to a channel.
 	 *
-	 * @param  channel  A channel ID valid for interacting with the chat service's API
-	 * @param  text     The content of the chat message
-	 * @param  id       An ID for the sent chat message, e.g. to be able to
-	 *                  recognize replies to it later on.
+	 * @param channel A channel ID valid for interacting with the chat service's API
+	 * @param text The content of the chat message
+	 * @param id An ID for the sent chat message, e.g. to be able to recognize replies to it later on.
 	 */
 	public abstract void sendMessageToChannel(String channel, String text, OptionalLong id);
 
 	/**
 	 * Sends a chat message to a channel.
 	 *
-	 * @param  channel  A channel ID valid for interacting with the chat service's API
-	 * @param  text     The content of the chat message
+	 * @param channel A channel ID valid for interacting with the chat service's API
+	 * @param text The content of the chat message
 	 */
 	public void sendMessageToChannel(String channel, String text) {
 		sendMessageToChannel(channel, text, OptionalLong.empty());
 	}
 
+	public abstract void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id);
+
+	public void sendFileMessageToChannel(String channel, File f, String text) {
+		sendFileMessageToChannel(channel, f, text, OptionalLong.empty());
+	}
+
+	
+	
+	
 	/**
 	 * Gets messages the mediator received since the last time the method was called.
 	 *
