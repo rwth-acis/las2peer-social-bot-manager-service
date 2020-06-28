@@ -173,49 +173,55 @@ public class Messenger {
 				String triggeredFunctionId = null;
 				System.out.println(intent);
 				IncomingMessage state = this.stateMap.get(message.getChannel());
-				
+				if(state!= null) {
+					System.out.println(state.getIntentKeyword());
+
+				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
-				if (intent.getConfidence() >= 0.1f) {
+				if(this.context.get(message.getChannel()) == "Basic"){
+					if (intent.getConfidence() >= 0.1f) {
 
-					if (state == null) {
-						state = this.knownIntents.get(intent.getKeyword());
-
-						System.out.println(
-								intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
-						stateMap.put(message.getChannel(), state);
-					} else {
-						// any is a static forward
-						// TODO include entities of intents
-						if (state.getFollowingMessages() == null) {
-							System.out.println("no follow up messages");
+						if (state == null) {
 							state = this.knownIntents.get(intent.getKeyword());
+
 							System.out.println(
 									intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
 							stateMap.put(message.getChannel(), state);
-						} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
-							System.out.println("try follow up message");
-							state = state.getFollowingMessages().get(intent.getKeyword());
-							stateMap.put(message.getChannel(), state);
 						} else {
-							System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
-									+ intent.getConfidence() + " confidence.");
-							// try any
-							if (state.getFollowingMessages().get("any") != null) {
-								state = state.getFollowingMessages().get("any");
+							// any is a static forward
+							// TODO include entities of intents
+							if (state.getFollowingMessages() == null) {
+								System.out.println("no follow up messages");
+								state = this.knownIntents.get(intent.getKeyword());
+								System.out.println(
+										intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
+								stateMap.put(message.getChannel(), state);
+							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
+								System.out.println("try follow up message");
+								state = state.getFollowingMessages().get(intent.getKeyword());
 								stateMap.put(message.getChannel(), state);
 							} else {
-								state = this.knownIntents.get("default");
-							//	System.out.println(state.getIntentKeyword() + " set");
+								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
+										+ intent.getConfidence() + " confidence.");
+								// try any
+								if (state.getFollowingMessages().get("any") != null) {
+									state = state.getFollowingMessages().get("any");
+									stateMap.put(message.getChannel(), state);
+								} else {
+									state = this.knownIntents.get("default");
+								//	System.out.println(state.getIntentKeyword() + " set");
+								}
 							}
 						}
+					} else {
+						System.out.println(
+								intent.getKeyword() + " not detected with " + intent.getConfidence() + " confidence.");
+						state = this.knownIntents.get("default");
+						System.out.println(state.getIntentKeyword() + " set");
 					}
-				} else {
-					System.out.println(
-							intent.getKeyword() + " not detected with " + intent.getConfidence() + " confidence.");
-					state = this.knownIntents.get("default");
-					System.out.println(state.getIntentKeyword() + " set");
-				}
+                } 
+
 
 
 				// No matching intent found, perform default action
