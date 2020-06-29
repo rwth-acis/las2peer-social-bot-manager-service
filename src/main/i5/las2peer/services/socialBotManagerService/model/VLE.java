@@ -7,8 +7,8 @@ import net.minidev.json.JSONObject;
 
 public class VLE {
 	private String name;
-	private String separator;
-	private String addr;
+	private String address;
+
 	private HashMap<String, VLEUser> users;
 	private HashMap<String, Bot> bots;
 
@@ -16,31 +16,23 @@ public class VLE {
 
 	private HashMap<String, JSONObject> serviceInformation;
 
-	private HashMap<String, HashSet<String>> triggerList;
+	private HashMap<Trigger, HashSet<String>> triggerList;
 	private HashMap<String, VLERoutine> routines;
 
 	public VLE() {
 		setBots(new HashMap<String, Bot>());
 		setUsers(new HashMap<String, VLEUser>());
 		setServiceInformation(new HashMap<String, JSONObject>());
-		setTriggerList(new HashMap<String, HashSet<String>>());
+		setTriggerList(new HashMap<Trigger, HashSet<String>>());
 		setRoutines(new HashMap<String, VLERoutine>());
 	}
 
-	public String getSeparator() {
-		return separator;
+	public String getAddress() {
+		return address;
 	}
 
-	public void setSeparator(String separator) {
-		this.separator = separator;
-	}
-
-	public String getAddr() {
-		return addr;
-	}
-
-	public void setAddr(String addr) {
-		this.addr = addr;
+	public void setAddress(String address) {
+		this.address = address;
 	}
 
 	public HashMap<String, VLEUser> getUsers() {
@@ -95,15 +87,15 @@ public class VLE {
 		this.bots.put(id, bot);
 	}
 
-	public HashMap<String, HashSet<String>> getTriggerList() {
+	public HashMap<Trigger, HashSet<String>> getTriggerList() {
 		return triggerList;
 	}
 
-	public void setTriggerList(HashMap<String, HashSet<String>> triggerList) {
+	public void setTriggerList(HashMap<Trigger, HashSet<String>> triggerList) {
 		this.triggerList = triggerList;
 	}
 
-	public void addTrigger(String t, String f) {
+	public void addTrigger(Trigger t, String f) {
 		HashSet<String> l = this.triggerList.get(t);
 		if (l == null) {
 			l = new HashSet<String>();
@@ -125,5 +117,4 @@ public class VLE {
 	public void addRoutine(String name, VLERoutine routine) {
 		this.routines.put(name, routine);
 	}
-
 }
