@@ -9,6 +9,8 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
+import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
@@ -17,6 +19,9 @@ import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
 
 public class Messenger {
 	private String name;
@@ -123,7 +128,17 @@ public class Messenger {
 							stateMap.put(message.getChannel(), state);
 						} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
 							System.out.println("try follow up message");
-							state = state.getFollowingMessages().get(intent.getKeyword());
+							String keyword = intent.getKeyword();
+							// check ratings
+							String txt = message.getText();
+							if (keyword.equals("highrating")
+									&& (txt.equals("1") || txt.equals("2") || txt.equals("3"))) {
+								keyword = "lowrating";
+							} else if (keyword.equals("lowrating") && (txt.equals("4") || txt.equals("5"))) {
+								keyword = "highrating";
+							}
+
+							state = state.getFollowingMessages().get(keyword);
 							stateMap.put(message.getChannel(), state);
 						} else {
 							System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
@@ -174,6 +189,60 @@ public class Messenger {
 						} else if (intent.getEntity("muster") != null || intent.getKeyword().equals("mustertext")) {
 							File f = new File("Mustertext.pdf");
 							this.chatMediator.sendFileMessageToChannel(message.getChannel(), f, response);
+						} else if (state.getIntentKeyword().equals("suggestMaterial")) {
+							// chatbot wl
+							String text = message.getText();
+							String[] words = text.split(",");
+							MiniClient client = new MiniClient();
+							client.setConnectorEndpoint("http://137.226.232.175:32303");
+
+							HashMap<String, String> headers = new HashMap<String, String>();
+							int counter = 0;
+							String s = "";
+							for (int i = 0; i < words.length; i++) {
+								JSONObject body = new JSONObject();
+								JSONArray terms = new JSONArray();
+								terms.add(words[i].trim());
+								body.put("terms", terms);
+								ClientResponse r = client.sendRequest("POST", "materials", body.toJSONString(),
+										"application/json", "application/json", headers);
+
+								JSONParser p = new JSONParser();
+								JSONObject result = (JSONObject) p.parse(r.getResponse());
+								if (result.keySet().size() > 1) {
+									counter++;
+									JSONArray materials = (JSONArray) result.get("@graph");
+									for (Object j : materials) {
+										JSONObject jo = (JSONObject) j;
+										s += "\\n" + words[i] + ": [" + jo.getAsString("title") + "]("
+												+ jo.getAsString("link") + ")";
+									}
+								}
+							}
+							response = response.replace("$X", "" + s);
+							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
+						} else if (state.getIntentKeyword().equals("liste")) {
+							String text = message.getText();
+							String[] words = text.split(",");
+							JSONArray wordsCleaned = new JSONArray();
+							for (int i = 0; i < words.length; i++) {
+								wordsCleaned.add(words[i].trim());
+							}
+							MiniClient client = new MiniClient();
+							client.setConnectorEndpoint("http://137.226.232.175:32303");
+
+							HashMap<String, String> headers = new HashMap<String, String>();
+
+							JSONObject body = new JSONObject();
+							body.put("terms", wordsCleaned);
+							ClientResponse r = client.sendRequest("POST", "compare", body.toJSONString(),
+									"application/json", "application/json", headers);
+
+							JSONParser p = new JSONParser();
+							JSONObject result = (JSONObject) p.parse(r.getResponse());
+
+							response = response.replace("$X", result.getAsString("matchCount"));
+							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
 						} else {
 							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
 						}
