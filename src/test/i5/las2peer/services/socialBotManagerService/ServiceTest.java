@@ -90,5 +90,4 @@ public class ServiceTest {
 	public void testMethod() {
 
 	}
-
 }

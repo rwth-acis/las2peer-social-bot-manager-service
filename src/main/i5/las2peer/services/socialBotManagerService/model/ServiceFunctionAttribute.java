@@ -5,15 +5,19 @@ import java.util.ArrayList;
 public class ServiceFunctionAttribute {
 	private String id;
 	private String name;
-	private String type;
+	private String parameterType;
 	private boolean sameAsTrigger = false;
-	private String mappedTo;
+	private ServiceFunctionAttribute mappedTo;
 	private ArrayList<ServiceFunctionAttribute> childAttributes;
-	private String generatorId;
-	private String functionId;
+	private ServiceFunctionAttribute parent;
+	private ContentGenerator generator;
+	private ServiceFunction function;
+	private IfThenBlock itb;
+
 	private boolean staticContent;
 	private String content;
 	private String contentURL;
+	private String contentType;
 
 	public ServiceFunctionAttribute() {
 		childAttributes = new ArrayList<ServiceFunctionAttribute>();
@@ -27,12 +31,12 @@ public class ServiceFunctionAttribute {
 		this.name = name;
 	}
 
-	public String getType() {
-		return type;
+	public String getContentType() {
+		return contentType;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setContentType(String type) {
+		this.contentType = type;
 	}
 
 	public ArrayList<ServiceFunctionAttribute> getChildAttributes() {
@@ -63,28 +67,28 @@ public class ServiceFunctionAttribute {
 		this.sameAsTrigger = sameAsTrigger;
 	}
 
-	public String getGeneratorId() {
-		return generatorId;
+	public ContentGenerator getGenerator() {
+		return generator;
 	}
 
-	public void setGeneratorId(String generatorId) {
-		this.generatorId = generatorId;
+	public void setGenerator(ContentGenerator generator) {
+		this.generator = generator;
 	}
 
-	public String getMappedTo() {
+	public ServiceFunctionAttribute getMappedTo() {
 		return mappedTo;
 	}
 
-	public void setMappedTo(String mappedTo) {
+	public void setMappedTo(ServiceFunctionAttribute mappedTo) {
 		this.mappedTo = mappedTo;
 	}
 
-	public String getFunctionId() {
-		return functionId;
+	public ServiceFunction getFunction() {
+		return function;
 	}
 
-	public void setFunctionId(String functionId) {
-		this.functionId = functionId;
+	public void setFunction(ServiceFunction function) {
+		this.function = function;
 	}
 
 	public boolean hasStaticContent() {
@@ -110,4 +114,38 @@ public class ServiceFunctionAttribute {
 	public void setContentURL(String contentURL) {
 		this.contentURL = contentURL;
 	}
+
+	public String getParameterType() {
+		return parameterType;
+	}
+
+	public void setParameterType(String parameterType) {
+		this.parameterType = parameterType;
+	}
+
+	public ServiceFunctionAttribute getParent() {
+		return parent;
+	}
+
+	public void setParent(ServiceFunctionAttribute parent) {
+		this.parent = parent;
+	}
+
+	public IfThenBlock getItb() {
+		return itb;
+	}
+
+	public void setItb(IfThenBlock itb) {
+		this.itb = itb;
+	}
+
+	@Override
+	public String toString() {
+		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
+				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
+				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
+				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
+				+ ", contentType=" + contentType + "]";
+	}
+
 }

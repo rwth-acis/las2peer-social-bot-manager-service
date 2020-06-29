@@ -1,4 +1,4 @@
-<project name="las2peer-Template-Project" default="all" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="las2peer-Social-Bot-Manager" default="all" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
     
     <!-- select the las2peer (core) version you want to use -->
 	<!-- <property name="core.version" value="0.7.3" /> (set in service.properties) -->
@@ -54,7 +54,7 @@
     <target name="download-ivy" unless="skip.download">
         <mkdir dir="${ivy.jar.dir}"/>
         <echo message="installing ivy..."/>
-        <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
             dest="${ivy.jar.file}" usetimestamp="true" skipexisting="true"/>
     </target>
     <!-- Try to load Ivy here from local Ivy directory -->
@@ -69,7 +69,7 @@
     <!-- Get Dependencies from our Maven Repository via Ivy -->
     <target name="get_deps" depends="install-ivy, init_deps" description="--> resolve dependencies">
         <ivy:settings>
-            <credentials host="role.dbis.rwth-aachen.de:9911/archiva"  realm="Repository internal"/>
+            <credentials host="archiva.dbis.rwth-aachen.de:9911"  realm="Repository internal"/>
         </ivy:settings>
     	<ivy:retrieve type="jar, bundle" conf="platform" pattern="${lib}/[artifact]-[revision].[ext]"/>
     	<ivy:retrieve type="jar, bundle" conf="bundle" pattern="${servicelib}/[artifact]-[revision].[ext]"/>
@@ -290,5 +290,16 @@ agent-user-${las2peer_user3.name}.xml;${las2peer_user3.password}
     </target>
     
     <target name="all" depends="clean, jar, startscripts, generate_agents, junit, javadoc" />
-    
+	
+	<target name="run" depends="jar">
+		<java classname="i5.las2peer.tools.L2pNodeLauncher"
+			classpathref="libraries"
+	     	failonerror="true"
+	     	fork="true">
+	        <jvmarg value="-Xdebug" />
+	        <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5432" />
+	    	<arg value='-p'/>
+			<arg value='9013'/>
+	 	</java>
+	</target>
 </project>
