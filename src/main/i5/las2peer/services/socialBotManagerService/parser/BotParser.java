@@ -91,8 +91,10 @@ public class BotParser {
 			if (nodeType.equals("Instance")) {
 				VLE resetVle = setVLEInstance(elem);
 				VLE r = config.getServiceConfiguration(resetVle.getName());
-				for (Bot b : r.getBots().values()) {
-					b.deactivateAll();
+				if (r != null) {
+					for (Bot b : r.getBots().values()) {
+						b.deactivateAll();
+					}
 				}
 			}
 		}
