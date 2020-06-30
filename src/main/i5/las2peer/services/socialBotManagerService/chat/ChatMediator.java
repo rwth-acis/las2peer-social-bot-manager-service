@@ -69,4 +69,6 @@ public abstract class ChatMediator {
 		}
 		return result.toString();
 	}
+
+	public abstract void close();
 }

@@ -127,4 +127,15 @@ public class SlackChatMediator extends ChatMediator {
 		// TODO Auto-generated method stub
 
 	}
+
+	@Override
+	public void close() {
+		try {
+			this.rtm.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.slack = null;
+	}
 }

@@ -264,4 +264,8 @@ public class Messenger {
 			}
 		}
 	}
+
+	public void close() {
+		chatMediator.close();
+	}
 }
