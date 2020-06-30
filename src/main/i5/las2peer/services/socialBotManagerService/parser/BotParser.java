@@ -733,7 +733,9 @@ public class BotParser {
 			BotModelValue subVal = subElem.getValue();
 			String name = subVal.getName();
 			if (name.equals("Content Type")) {
-				sfa.setContentType(subVal.getValue());
+				if(subVal.getValue() == "Quiz") {
+					sfa.setContentType("String");
+				} else sfa.setContentType(subVal.getValue());	
 			} else if (name.equals("Name")) {
 				sfa.setName(subVal.getValue());
 			} else if (name.equals("Static")) {
