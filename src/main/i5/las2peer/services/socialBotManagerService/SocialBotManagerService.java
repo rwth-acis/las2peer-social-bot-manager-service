@@ -1018,7 +1018,8 @@ public class SocialBotManagerService extends RESTService {
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                    client.setLogin("alice", "pwalice");         
+                    //client.setLogin("alice", "pwalice");   
+                    client.setLogin(botAgent.getLoginName(), botPass);
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
@@ -1045,7 +1046,8 @@ public class SocialBotManagerService extends RESTService {
             if(triggeredBody.get("text")== null ){
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                    client.setLogin("alice", "pwalice");         
+                    //client.setLogin("alice", "pwalice");     
+                    client.setLogin(botAgent.getLoginName(), botPass);
                     HashMap<String, String> headers = new HashMap<String, String>();
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
