@@ -1020,6 +1020,7 @@ public class SocialBotManagerService extends RESTService {
                     client.setConnectorEndpoint(vle.getAddress());
                     //client.setLogin("alice", "pwalice");   
                     client.setLogin(botAgent.getLoginName(), botPass);
+                    System.out.println("botagent is " +  botAgent.getLoginName());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
@@ -1048,6 +1049,7 @@ public class SocialBotManagerService extends RESTService {
                     client.setConnectorEndpoint(vle.getAddress());
                     //client.setLogin("alice", "pwalice");     
                     client.setLogin(botAgent.getLoginName(), botPass);
+                    System.out.println("botagent is " +  botAgent.getLoginName());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
