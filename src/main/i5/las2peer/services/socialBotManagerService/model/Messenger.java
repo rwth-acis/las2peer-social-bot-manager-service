@@ -42,7 +42,7 @@ public class Messenger {
 	private Random random;
     
 
-	public Messenger(String id, String chatService, String token,/* String rasaUrl, String rasaAssessmentUrl,*/ SQLDatabase database)
+	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
@@ -78,12 +78,22 @@ public class Messenger {
     // set the context of the specified channel
     public void setContext(String channel, String contextName){
         context.put(channel, contextName);
+        
     }
     
     public void setContextToBasic(String channel){
         context.put(channel, "Basic");
-    }    
-    
+        
+        IncomingMessage state = this.stateMap.get(channel);
+        if(state.getFollowingMessages() == null) {
+        	System.out.println("Conversation flow ended now");
+        } else {
+        	state = state.getFollowingMessages().get("");
+        	stateMap.put(channel, state);
+        	this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
+        }
+
+    }
     public String getContext(String channel){
         return this.context.get(channel);
     }
@@ -223,19 +233,18 @@ public class Messenger {
                 } 
 
 
-
+				Boolean contextOn = false; 
 				// No matching intent found, perform default action
                 if(this.context.get(message.getChannel()) != "Basic"){
                     triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+                    contextOn = true; 
                 } else {
-                    // problem mit chat response : wo soll der service call statt finden? 
                     if (state != null) {
                         ChatResponse response = state.getResponse(this.random);
                         System.out.println(state.getNluID());
                         if(state.getNluID() != ""){
                             System.out.println("NluId is : " + state.getNluID());
                             this.context.put(message.getChannel(), state.getNluID());
-                            this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());                            
                         }                        
                         if (response != null) {
                             if(response.getResponse() != ""){
@@ -250,6 +259,7 @@ public class Messenger {
                             } else {
                                 if(response.getTriggeredFunctionId() != ""){
                                     this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+                                    contextOn = true; 
                                 }
                             }
                         }
@@ -257,16 +267,14 @@ public class Messenger {
                         if(this.context.get(message.getChannel()) != "Basic"){
                             triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                         } else triggeredFunctionId = state.getTriggeredFunctionId();
-                        System.out.println(triggeredFunctionId);
                         // If conversation flow is terminated, reset state
                         if (state.getFollowingMessages().isEmpty()) {
                             this.stateMap.remove(message.getChannel());
                         }
                     }
                 }
-
 				messageInfos.add(
-						new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), bot.getVle().getName()));
+						new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), bot.getVle().getName(), contextOn));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

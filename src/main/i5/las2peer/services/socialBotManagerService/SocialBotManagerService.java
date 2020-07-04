@@ -708,7 +708,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(botFunctionId);
 			String functionPath = "";
-			if (botFunction.getActionType().equals(ActionType.SERVICE) || botFunction.getActionType().equals(ActionType.SENDMESSAGE))
+			if (botFunction.getActionType().equals(ActionType.SERVICE))
 				functionPath = botFunction.getFunctionPath();
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -732,7 +732,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 			String functionPath = "";
-			if (botFunction.getActionType().equals(ActionType.SERVICE) || botFunction.getActionType().equals(ActionType.SENDMESSAGE))
+			if (botFunction.getActionType().equals(ActionType.SERVICE))
 				functionPath = botFunction.getFunctionPath();
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -751,15 +751,8 @@ public class SocialBotManagerService extends RESTService {
             for(String entityName : messageInfo.getIntent().getEntities()){
                 body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
             }
-/*            body.put("topic", messageInfo.getIntent().getEntity("topic").getValue());*/
-            ArrayList <String> bodyContent = new ArrayList<String>();
-            for(ServiceFunctionAttribute sfa : botFunction.getAttributes()){
-                    bodyContent.add(sfa.getContent());  
-            }    
-            body.put("bodyContent", bodyContent);
             body.put("msg", messageInfo.getMessage().getText());
-            System.out.println(messageInfo.getIntent());
-            System.out.println(messageInfo.getMessage().getText());
+            body.put("contextOn", messageInfo.contextActive());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -790,7 +783,7 @@ public class SocialBotManagerService extends RESTService {
 
 						String functionPath = "";
 						// add path if the triggered function is a service function
-						if (triggeredFunction.getActionType().equals(ActionType.SERVICE) || triggeredFunction.getActionType().equals(ActionType.SENDMESSAGE))
+						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
 							functionPath = triggeredFunction.getFunctionPath();
 						JSONObject triggeredBody = new JSONObject();
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -1026,6 +1019,24 @@ public class SocialBotManagerService extends RESTService {
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
                     System.out.println(r.getResponse()); 
+                    if(Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
+                    	JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+                        try{	
+							Bot bot = vle.getBots().get(botAgent.getIdentifier());
+							String messengerID = sf.getMessengerName();
+	                        JSONObject response = (JSONObject) parser.parse(r.getResponse());                        
+	                        System.out.println(response);
+	                        triggeredBody.put("text", response.getAsString("text"));
+	                        ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();          
+	            			triggerChat(chat, triggeredBody);
+	            			if(Boolean.valueOf(response.getAsString("closeContext"))){
+	                            System.out.println("Closed Context");
+	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"));
+                            }
+                        } catch (ParseException e) {
+    			         e.printStackTrace();
+    		          }
+                    }
                 
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
@@ -1044,29 +1055,6 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("Bot Action is missing Messenger");
 				return;
 			}            
-            if(triggeredBody.get("text")== null ){
-                    MiniClient client = new MiniClient();
-                    client.setConnectorEndpoint(vle.getAddress());
-                    //client.setLogin("alice", "pwalice");     
-                    client.setLogin(botAgent.getLoginName(), botPass);
-                    System.out.println("botagent is " +  botAgent.getLoginName());
-                    HashMap<String, String> headers = new HashMap<String, String>();
-                    ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
-                    System.out.println("Connect Success");
-                    JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-                    try{
-                            JSONObject response = (JSONObject) p.parse(r.getResponse());                        
-                            System.out.println(response);
-                            triggeredBody.put("text", response.getAsString("text"));
-                        if(Boolean.valueOf(response.getAsString("closeContext"))){
-                            System.out.println("Closed Context");
-                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"));
-                        }
-                    } catch (ParseException e) {
-			         e.printStackTrace();
-		          }
-
-            }
   
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();          
 			triggerChat(chat, triggeredBody);
