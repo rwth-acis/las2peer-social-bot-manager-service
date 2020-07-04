@@ -190,7 +190,7 @@ public class Messenger {
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if(this.context.get(message.getChannel()) == "Basic"){
-					if (intent.getConfidence() >= 0.1f) {
+					if (intent.getConfidence() >= 0.45f) {
 
 						if (state == null) {
 							state = this.knownIntents.get(intent.getKeyword());
