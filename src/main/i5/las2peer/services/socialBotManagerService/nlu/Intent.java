@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 import net.minidev.json.JSONArray;
@@ -20,13 +21,10 @@ public class Intent {
 
 		JSONArray entities = (JSONArray) json.get("entities");
 		HashMap<String, Entity> entitiesMap = new HashMap<String, Entity>();
-		entities.forEach(
-			o ->
-			{
-				Entity entity = new Entity((JSONObject)o);
-				entitiesMap.put(entity.getEntityName(), entity);
-			}
-		);
+		entities.forEach(o -> {
+			Entity entity = new Entity((JSONObject) o);
+			entitiesMap.put(entity.getEntityName(), entity);
+		});
 		this.entities = entitiesMap;
 	}
 
@@ -48,5 +46,9 @@ public class Intent {
 
 	public Entity getEntity(String entity) {
 		return this.entities.get(entity);
+	}
+
+	public Collection<Entity> getEntities() {
+		return this.entities.values();
 	}
 }

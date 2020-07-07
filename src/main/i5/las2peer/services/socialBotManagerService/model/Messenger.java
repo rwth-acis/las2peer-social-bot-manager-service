@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
@@ -16,6 +17,7 @@ import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
@@ -145,7 +147,29 @@ public class Messenger {
 									+ intent.getConfidence() + " confidence.");
 							// try any
 							if (state.getFollowingMessages().get("any") != null) {
-								state = state.getFollowingMessages().get("any");
+								String tmp = message.getText().replaceAll("[^0-9]", "");
+								if (tmp.length() > 0 && state.getIntentKeyword().contains("showtasks")) {
+									// try to get tasknumber
+									int t = Integer.parseInt(tmp);
+									if ((message.getRole() % 2) == (t % 2) && t < 9) {
+										state = knownIntents.get("t" + tmp);
+									} else {
+										state = state.getFollowingMessages().get("any");
+									}
+								} else if (state.getIntentKeyword().contains("functions")) {
+									if (message.getText().equals("a") || message.getText().equals("a)")
+											|| message.getText().contains("anzeigen")) {
+										state = knownIntents.get("showtasks" + message.getRole());
+									} else if (message.getText().equals("b") || message.getText().equals("b)")
+											|| message.getText().contains("abgeben")) {
+										state = knownIntents.get("submission");
+									} else if (message.getText().equals("c") || message.getText().equals("c)")
+											|| message.getText().contains("Feedback")) {
+										state = knownIntents.get("userfeedback");
+									}
+								} else {
+									state = state.getFollowingMessages().get("any");
+								}
 								stateMap.put(message.getChannel(), state);
 							} else {
 								state = this.knownIntents.get("default");
@@ -160,6 +184,7 @@ public class Messenger {
 					System.out.println(state.getIntentKeyword() + " set");
 				}
 
+				// tud
 				if (intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
 						|| intent.getKeyword().equals("will")) {
 					if (intent.getEntity("muster") != null) {
@@ -176,6 +201,17 @@ public class Messenger {
 						state = this.knownIntents.get("beschreibung");
 					} else {
 						state = this.knownIntents.get("default");
+					}
+				}
+
+				// ul
+				else if (intent.getEntities().size() > 0) {
+					Collection<Entity> entities = intent.getEntities();
+					System.out.println("try to use entity...");
+					for (Entity e : entities) {
+						System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
+						state = this.knownIntents.get(e.getEntityName());
+						stateMap.put(message.getChannel(), state);
 					}
 				}
 
@@ -243,6 +279,14 @@ public class Messenger {
 
 							response = response.replace("$X", result.getAsString("matchCount"));
 							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
+						} else if (state.getIntentKeyword().equals("showtasks")) {
+							if (message.getRole() % 2 == 1) {
+								state = this.knownIntents.get("showtasks1");
+							} else {
+								state = this.knownIntents.get("showtasks2");
+							}
+							response = state.getResponse(this.random);
+							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
 						} else {
 							this.chatMediator.sendMessageToChannel(message.getChannel(), response);
 						}
@@ -263,6 +307,7 @@ public class Messenger {
 				e.printStackTrace();
 			}
 		}
+
 	}
 
 	public void close() {
