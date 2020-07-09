@@ -83,7 +83,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		String[] auth = authToken.split(":");
 		username = auth[0];
 		password = auth[1];
-		password = authToken;
+	//	password = authToken;
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
 		}
