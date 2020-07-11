@@ -55,7 +55,6 @@ public class Messenger {
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
 		this.name = id;
-
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();
@@ -155,33 +154,7 @@ public class Messenger {
 					
 				}
                 System.out.println(intent.getKeyword());
-                 if(intent.getKeyword().equals("topicsQuestion")){
-                    // TODO: too hard coded, find a way to do this in a prettier way
-                    IncomingMessage states = this.stateMap.get(message.getChannel());
-                    states = this.knownIntents.get("assessment");
-                    System.out.println(states);
-                    String triggeredFunctionIds =null; 
-                    triggeredFunctionIds = states.getTriggeredFunctionId();
-                    ServiceFunction botFunction = bot.getBotServiceFunctions().get(triggeredFunctionIds);
-                    String answer = "The available topics are: ";
-                    JSONParser parser = new JSONParser();
-                    JSONObject content;
-                    for(ServiceFunctionAttribute sfa : botFunction.getAttributes()){
-                        // parse exception catcher here
-                        content = (JSONObject) parser.parse(sfa.getContent());
-                        System.out.println(content.getAsString("topic"));
-                        answer += "\n" + content.getAsString("topic");
-                    }
-        
-                    System.out.println(answer);
-                    this.chatMediator.sendMessageToChannel(message.getChannel(), answer);
-                   
-                }
-                // simple way, will need to take care of intents with same names but from different servers
-            
-                // Aaron: check if id is different than 0 , switch to respective nlu, context
 				String triggeredFunctionId = null;
-				System.out.println(intent);
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				if(state!= null) {
 					System.out.println(state.getIntentKeyword());
@@ -190,11 +163,9 @@ public class Messenger {
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if(this.context.get(message.getChannel()) == "Basic"){
-					if (intent.getConfidence() >= 0.45f) {
-
+					if (intent.getConfidence() >= 0.40f) {
 						if (state == null) {
 							state = this.knownIntents.get(intent.getKeyword());
-
 							System.out.println(
 									intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
 							stateMap.put(message.getChannel(), state);
@@ -231,8 +202,6 @@ public class Messenger {
 						System.out.println(state.getIntentKeyword() + " set");
 					}
                 } 
-
-
 				Boolean contextOn = false; 
 				// No matching intent found, perform default action
                 if(this.context.get(message.getChannel()) != "Basic"){
@@ -250,6 +219,7 @@ public class Messenger {
                             if(response.getResponse() != ""){
                             	System.out.println(response.getResponse());
                             	String split ="";
+                            	// allows users to use linebreaks \n during the modeling for chat responses
                             	for(int i = 0; i < response.getResponse().split("\\\\n").length ; i++) {
                             		System.out.println(i);
                             		split += response.getResponse().split("\\\\n")[i] + " \n ";
@@ -263,7 +233,6 @@ public class Messenger {
                                 }
                             }
                         }
-                        
                         if(this.context.get(message.getChannel()) != "Basic"){
                             triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                         } else triggeredFunctionId = state.getTriggeredFunctionId();

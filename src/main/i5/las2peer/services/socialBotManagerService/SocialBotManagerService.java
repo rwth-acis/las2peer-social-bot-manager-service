@@ -1011,8 +1011,8 @@ public class SocialBotManagerService extends RESTService {
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                    //client.setLogin("alice", "pwalice");   
-                    client.setLogin(botAgent.getLoginName(), botPass);
+                    client.setLogin("alice", "pwalice");   
+                   // client.setLogin(botAgent.getLoginName(), botPass);
                     System.out.println("botagent is " +  botAgent.getLoginName());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
