@@ -899,7 +899,6 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	private void mapWithStaticContent(ServiceFunctionAttribute triggeredFunctionAttribute, JSONObject triggeredBody) {
-		System.out.println("hereeeeSSS");
 		if (triggeredFunctionAttribute.getContent().length() > 0) {
 			if(triggeredBody.containsKey(triggeredFunctionAttribute.getName())) {
 				JSONArray array = new JSONArray();
@@ -1011,8 +1010,8 @@ public class SocialBotManagerService extends RESTService {
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                    client.setLogin("alice", "pwalice");   
-                   // client.setLogin(botAgent.getLoginName(), botPass);
+                   // client.setLogin("alice", "pwalice");   
+                    client.setLogin(botAgent.getLoginName(), botPass);
                     System.out.println("botagent is " +  botAgent.getLoginName());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
@@ -1029,7 +1028,7 @@ public class SocialBotManagerService extends RESTService {
 	                        triggeredBody.put("text", response.getAsString("text"));
 	                        ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();          
 	            			triggerChat(chat, triggeredBody);
-	            			if(Boolean.valueOf(response.getAsString("closeContext"))){
+	            			if(response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))){
 	                            System.out.println("Closed Context");
 	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"));
                             }

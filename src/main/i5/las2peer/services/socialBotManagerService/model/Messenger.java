@@ -84,14 +84,15 @@ public class Messenger {
         context.put(channel, "Basic");
         
         IncomingMessage state = this.stateMap.get(channel);
-        if(state.getFollowingMessages() == null) {
-        	System.out.println("Conversation flow ended now");
-        } else {
-        	state = state.getFollowingMessages().get("");
-        	stateMap.put(channel, state);
-        	this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
+        if(state != null) {
+	        if(state.getFollowingMessages() == null) {
+	        	System.out.println("Conversation flow ended now");
+	        } else {
+	        	state = state.getFollowingMessages().get("");
+	        	stateMap.put(channel, state);
+	        	this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
+	        }
         }
-
     }
     public String getContext(String channel){
         return this.context.get(channel);
