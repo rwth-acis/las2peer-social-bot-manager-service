@@ -1,5 +1,5 @@
-databaseName=<databaseName>
-databaseHost=<databaseHost>
-databasePort=<databasePort>
-databaseUser=<databaseUser>
-databasePassword=<databasePassword>
+databaseName=SBF_MODELS
+databaseHost=mobsos-mysql.sbf-dev
+databasePort=3306
+databaseUser=root
+databasePassword=password
