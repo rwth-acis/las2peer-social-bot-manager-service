@@ -202,7 +202,9 @@ public class Messenger {
 						state = this.knownIntents.get("default");
 						System.out.println(state.getIntentKeyword() + " set");
 					}
-                } 
+                } else if(intent.getConfidence() < 0.40f) {
+                	intent = new Intent("default","","");
+                }
 				Boolean contextOn = false; 
 				// No matching intent found, perform default action
                 if(this.context.get(message.getChannel()) != "Basic"){
@@ -210,15 +212,24 @@ public class Messenger {
                     contextOn = true; 
                 } else {
                     if (state != null) {
-                        ChatResponse response = state.getResponse(this.random);
-                        System.out.println(state.getNluID());
+                    	ChatResponse response = null;
+                    	if(intent.getEntitieValues().size()==1) {
+	                    	for(ChatResponse res : state.getResponseArray() ){
+	                    		System.out.println(res.getTriggerEntity());
+	                    		if(res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
+	                    			response = res;
+	                    		}
+	                    	}
+                    	}
+                    	if(response == null) {
+                    		response = state.getResponse(this.random);
+                    	}
                         if(state.getNluID() != ""){
                             System.out.println("NluId is : " + state.getNluID());
                             this.context.put(message.getChannel(), state.getNluID());
                         }                        
                         if (response != null) {
                             if(response.getResponse() != ""){
-                            	System.out.println(response.getResponse());
                             	String split ="";
                             	// allows users to use linebreaks \n during the modeling for chat responses
                             	for(int i = 0; i < response.getResponse().split("\\\\n").length ; i++) {

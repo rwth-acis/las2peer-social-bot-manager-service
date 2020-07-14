@@ -363,6 +363,7 @@ public class BotParser {
 			String type = elem.getType();
 			String source = elem.getSource();
 			String target = elem.getTarget();
+			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
 				// Action triggers action
 				if (usfList.get(source) != null) {
@@ -389,7 +390,9 @@ public class BotParser {
 					// ...Chat Response
 					if (responses.get(target) != null) {
 						ChatResponse response = responses.get(target);
+						response.addTriggerEntity(value);
 						m.addResponse(response);
+						
 						// ...Bot Action
 					} else if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);

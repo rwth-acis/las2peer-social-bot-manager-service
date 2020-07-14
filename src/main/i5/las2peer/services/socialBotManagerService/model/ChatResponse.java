@@ -7,9 +7,10 @@ import java.util.Random;
 public class ChatResponse {
 	String response;
 	String triggeredFunctionId;
-
+	String triggerEntity;
 	public ChatResponse(String response) {
 		this.response = response;
+		this.triggerEntity = "";
 		
 	}
     public String getResponse(){
@@ -20,8 +21,17 @@ public class ChatResponse {
         this.triggeredFunctionId = functionId;
     }
     
+    
     public String getTriggeredFunctionId(){
         return this.triggeredFunctionId;
+    }
+    
+    public String getTriggerEntity(){
+        return this.triggerEntity;
+    }
+    
+    public void addTriggerEntity(String triggerEntity){
+        this.triggerEntity = triggerEntity;
     }
 
 }

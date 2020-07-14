@@ -61,4 +61,13 @@ public class Intent {
         }
         return extractedEntities;
     }
+    
+    public ArrayList<String> getEntitieValues(){
+        ArrayList<String> extractedEntitieValues= new ArrayList<String>();
+        for(Entry<String, Entity> entry : entities.entrySet()) {
+            String value = entry.getValue().getValue();
+            extractedEntitieValues.add(value);
+        }
+        return extractedEntitieValues;
+    }
 }
