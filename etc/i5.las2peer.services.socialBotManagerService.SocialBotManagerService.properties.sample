@@ -1,4 +1,4 @@
-databaseName=SBF_MODELS
+databaseName=LAS2PEERMON
 databaseHost=mobsos-mysql.sbf-dev
 databasePort=3306
 databaseUser=root
