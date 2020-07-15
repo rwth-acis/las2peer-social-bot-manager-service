@@ -126,7 +126,7 @@ import net.minidev.json.parser.ParseException;
 				license = @License(
 						name = "",
 						url = "")))
-@ServicePath("/SBFManager1")
+@ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
 
@@ -1043,7 +1043,7 @@ public class SocialBotManagerService extends RESTService {
 				MiniClient client = new MiniClient();
 				client.setConnectorEndpoint(vle.getAddress());
 				HashMap<String, String> headers = new HashMap<String, String>();
-				ClientResponse result = client.sendRequest("GET", "SBFManager1/email/" + triggerUID, "",
+				ClientResponse result = client.sendRequest("GET", "SBFManager/email/" + triggerUID, "",
 						MediaType.TEXT_HTML, MediaType.TEXT_HTML, headers);
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
@@ -1306,7 +1306,7 @@ public class SocialBotManagerService extends RESTService {
 					for (MessageInfo m : messageInfos) {
 						try {
 							ClientResponse result = client.sendRequest("POST",
-									"SBFManager1/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
+									"SBFManager/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
 									MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 							System.out.println(result.getResponse());
 						} catch (Exception e) {
@@ -1399,9 +1399,9 @@ public class SocialBotManagerService extends RESTService {
 										body.put("attributes", atts);
 
 										HashMap<String, String> headers = new HashMap<String, String>();
-										String path = "SBFManager1/bots/" + b.getName() + "/trigger/routine";
+										String path = "SBFManager/bots/" + b.getName() + "/trigger/routine";
 										try {
-											path = "SBFManager1/bots/" + URLEncoder.encode(b.getName(), "UTF-8")
+											path = "SBFManager/bots/" + URLEncoder.encode(b.getName(), "UTF-8")
 													+ "/trigger/routine";
 										} catch (UnsupportedEncodingException e) {
 											// TODO Auto-generated catch block
