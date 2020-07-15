@@ -48,8 +48,8 @@ CREATE TABLE `users`  (
 DROP TABLE IF EXISTS `models`;
 CREATE TABLE `models`  (
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `model_json` BLOB CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`name`)
+  `model_json` BLOB NULL DEFAULT NULL,
+  PRIMARY KEY (`name`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;
