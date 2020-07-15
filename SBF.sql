@@ -42,4 +42,14 @@ CREATE TABLE `users`  (
   PRIMARY KEY (`id`, `email`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 414 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for models
+-- ----------------------------
+DROP TABLE IF EXISTS `models`;
+CREATE TABLE `models`  (
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `model_json` BLOB CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  PRIMARY KEY ('name')
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
 SET FOREIGN_KEY_CHECKS = 1;
