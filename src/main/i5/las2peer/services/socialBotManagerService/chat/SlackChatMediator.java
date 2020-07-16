@@ -16,6 +16,8 @@ import com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageRespon
 import com.github.seratch.jslack.api.methods.response.conversations.ConversationsListResponse;
 import com.github.seratch.jslack.api.model.Conversation;
 import com.github.seratch.jslack.api.model.ConversationType;
+import com.github.seratch.jslack.api.model.block.LayoutBlock;
+import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.rtm.RTMClient;
 import com.github.seratch.jslack.api.rtm.message.Message;
 import com.github.seratch.jslack.api.rtm.message.Message.MessageBuilder;
@@ -48,9 +50,13 @@ public class SlackChatMediator extends ChatMediator {
 		}
 		String message = msg.build().toJSONString();
 		try {
+			String userId =  (slack.methods().authTest(req -> req.token(authToken))).getUserId();
+			String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile().getImageOriginal();
+			String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
+			System.out.println(slack.methods().usersInfo(req -> req.token(authToken).user("B0132KDPHMJ")));
 			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
 																													// ID
-					.text(text));
+					.text(text).iconUrl(url).username(name));
 			System.out.println("Message sent: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
