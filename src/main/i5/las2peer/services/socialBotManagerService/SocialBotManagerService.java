@@ -13,6 +13,8 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.Blob;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -124,7 +126,7 @@ import net.minidev.json.parser.ParseException;
 				license = @License(
 						name = "",
 						url = "")))
-@ServicePath("/SBFManager2")
+@ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
 
@@ -1048,34 +1050,17 @@ public class SocialBotManagerService extends RESTService {
 				value = "Save BotModel",
 				notes = "Stores the BotModel in the shared storage.")
 		public Response putModel(@PathParam("name") String name, BotModel body) {
-			// fetch or create envelope by file identifier
-			Envelope fileEnv = null;
-			JSONObject models = new JSONObject();
-			try {
-				try {
-					// load existing models
-					fileEnv = Context.get().requestEnvelope(ENVELOPE_MODEL);
-					Serializable s = fileEnv.getContent();
-					if (s instanceof JSONObject) {
-						models = (JSONObject) s;
-					} else {
-						// return wrong content exception error
-						System.out.println("Wrong content");
-					}
-				} catch (EnvelopeNotFoundException e) {
-					// Create new model list
-					fileEnv = Context.get().createEnvelope(ENVELOPE_MODEL, Context.get().getServiceAgent());
-				}
-				// Update envelope content
-				fileEnv.setPublic();
-				models.put(name, body);
-				fileEnv.setContent(models);
-				// store envelope with file content
-				Context.get().storeEnvelope(fileEnv, Context.get().getServiceAgent());
-			} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e) {
-				// return Envelope exception error
-				e.printStackTrace();
-			}
+			
+			// insert model into database
+			Connection con = database.getDataSource().getConnection();
+			PreparedStatement ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");
+			String model_string = body.toString();
+			Blob blob = con.createBlob();
+			blob.setBytes(1, model_string.getBytes());
+			ps.setString(1, name);
+			ps.setBlob(2, blob);
+			ps.executeUpdate();
+			
 			return Response.ok().entity("Model stored.").build();
 		}
 
