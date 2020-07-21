@@ -124,7 +124,7 @@ import net.minidev.json.parser.ParseException;
 				license = @License(
 						name = "",
 						url = "")))
-@ServicePath("/SBFManager")
+@ServicePath("/SBFManager2")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
 
