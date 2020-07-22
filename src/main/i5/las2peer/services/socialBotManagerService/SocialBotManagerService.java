@@ -1052,14 +1052,36 @@ public class SocialBotManagerService extends RESTService {
 		public Response putModel(@PathParam("name") String name, BotModel body) {
 			
 			// insert model into database
-			Connection con = database.getDataSource().getConnection();
-			PreparedStatement ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");
-			String model_string = body.toString();
-			Blob blob = con.createBlob();
-			blob.setBytes(1, model_string.getBytes());
-			ps.setString(1, name);
-			ps.setBlob(2, blob);
-			ps.executeUpdate();
+			Connection con = null;
+			PreparedStatement ps = null;
+			
+			try {
+				con = service.database.getDataSource().getConnection();
+				ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");String model_string = body.toString();
+				Blob blob = con.createBlob();
+				blob.setBytes(1, model_string.getBytes());
+				ps.setString(1, name);
+				ps.setBlob(2, blob);
+				ps.executeUpdate();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+			
+			
+			
 			
 			return Response.ok().entity("Model stored.").build();
 		}
