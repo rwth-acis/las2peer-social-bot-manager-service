@@ -9,6 +9,8 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
+import com.github.seratch.jslack.api.methods.SlackApiException;
+
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
@@ -79,6 +81,10 @@ public class Messenger {
         context.put(channel, contextName);
         
     }
+    
+  /*  public String getEmail(String channel) throws IOException, SlackApiException {
+    	return  chatMediator.getEmail(channel);
+    };*/
     
     public void setContextToBasic(String channel){
         context.put(channel, "Basic");
@@ -254,6 +260,9 @@ public class Messenger {
                         }
                     }
                 }
+              /*  if(message.getEmail() == null) {
+                	message.setEmail(this.getEmail(message.getChannel()));
+                }*/
 				messageInfos.add(
 						new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), bot.getVle().getName(), contextOn));
 			} catch (Exception e) {

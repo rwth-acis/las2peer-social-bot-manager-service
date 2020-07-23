@@ -741,11 +741,13 @@ public class SocialBotManagerService extends RESTService {
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
 				formAttributes(vle, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
-
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
 			// TODO: Handle multiple messengers
-			body.remove("email");
+			// why the remove email? 
+			//	body.remove("email");
+			System.out.println(messageInfo.getMessage().getEmail());
+			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
             body.put("intent", messageInfo.getIntent().getKeyword());
             for(String entityName : messageInfo.getIntent().getEntities()){
@@ -1007,11 +1009,23 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 		if (sf.getActionType().equals(ActionType.SERVICE)) {
             System.out.println(sf.getFunctionName());
+			if (triggeredBody.get("email") == null) {
+				
+				// TODO Anonymous agent error
+				MiniClient client = new MiniClient();
+				client.setConnectorEndpoint(vle.getAddress());
+				HashMap<String, String> headers = new HashMap<String, String>();
+				ClientResponse result = client.sendRequest("GET", "SBFManager/email/" + triggerUID, "",
+						MediaType.TEXT_HTML, MediaType.TEXT_HTML, headers);
+				String mail = result.getResponse().trim();
+				triggeredBody.put("email", mail);
+			}   
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                   // client.setLogin("alice", "pwalice");   
-                    client.setLogin(botAgent.getLoginName(), botPass);
+                    client.setLogin("alice", "pwalice");   
+                  //  client.setLogin(botAgent.getLoginName(), botPass);
+                    
                     System.out.println("botagent is " +  botAgent.getLoginName());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
@@ -1065,12 +1079,12 @@ public class SocialBotManagerService extends RESTService {
 		String text = body.getAsString("text");
 		String channel = null;
         
-		if (body.containsKey("email")) {
+		if (body.containsKey("channel")) {
+			channel = body.getAsString("channel");
+		} else if (body.containsKey("email")) {
 			String email = body.getAsString("email");
 			channel = chat.getChannelByEmail(email);
-		} else if (body.containsKey("channel")) {
-			channel = body.getAsString("channel");
-		}
+			} 
         System.out.println(channel);
 		chat.sendMessageToChannel(channel, text);
 	}
@@ -1387,7 +1401,7 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println(df.format(d1) + ": " + b.getName());
 										MiniClient client = new MiniClient();
 										client.setConnectorEndpoint(vle.getAddress());
-
+										
 										JSONObject body = new JSONObject();
 										body.put("serviceAlias", vle.getName());
 
