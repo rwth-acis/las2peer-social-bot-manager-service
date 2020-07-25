@@ -37,9 +37,12 @@ public class Messenger {
 	private HashMap<String, IncomingMessage> stateMap;
     // Used for keeping context between assessment and non-assessment states
     // Key is the channelId
-    private HashMap<String, String> context;
+    private HashMap<String, String> currentNluModel;
     // Used to know to which Function the received intents/messages are to be sent
+    // Is additionally used to check if we are currently communicating with a service(if set, then yes otherwise no)
     private HashMap<String, String> triggeredFunction;
+    // dont think i need this one
+   // private HashMap<String, Bool> contextWithService;
 
 	private Random random;
     
@@ -61,7 +64,7 @@ public class Messenger {
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();
         // Initialize the assessment setup
-        this.context = new HashMap<String, String>();
+        this.currentNluModel = new HashMap<String, String>();
         this.triggeredFunction = new HashMap<String, String>();
 	}
 
@@ -77,17 +80,17 @@ public class Messenger {
 		return this.chatMediator;
 	}
     // set the context of the specified channel
-    public void setContext(String channel, String contextName){
+    /*public void setContext(String channel, String contextName){
         context.put(channel, contextName);
         
-    }
+    }*/
     
   /*  public String getEmail(String channel) throws IOException, SlackApiException {
     	return  chatMediator.getEmail(channel);
     };*/
     
     public void setContextToBasic(String channel){
-        context.put(channel, "Basic");
+        triggeredFunction.remove(channel);
         
         IncomingMessage state = this.stateMap.get(channel);
         if(state != null) {
@@ -97,11 +100,12 @@ public class Messenger {
 	        	state = state.getFollowingMessages().get("");
 	        	stateMap.put(channel, state);
 	        	this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
+	        	
 	        }
         }
     }
     public String getContext(String channel){
-        return this.context.get(channel);
+        return this.triggeredFunction.get(channel);
     }
 
     
@@ -115,8 +119,8 @@ public class Messenger {
 		//System.out.println(newMessages.size());
 		for (ChatMessage message : newMessages) {
 			try {
-                if(this.context.get(message.getChannel()) == null){
-                    this.context.put(message.getChannel(), "Basic");
+                if(this.currentNluModel.get(message.getChannel()) == null){
+                    this.currentNluModel.put(message.getChannel(), "0");
                 } 
 				Intent intent = null;
 				// Special case: `!` commands
@@ -132,7 +136,7 @@ public class Messenger {
 					IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
 					// TODO: Log this? (`!` command with unknown intent / keyword)
 					if (incMsg == null) {
-						if(this.context.get(message.getChannel()) == "Basic") {
+						if(this.currentNluModel.get(message.getChannel()) == "0") {
 						continue;
 						} else {
 							incMsg = new IncomingMessage(intentKeyword, "");
@@ -151,13 +155,9 @@ public class Messenger {
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
                     // what if you want to start an assessment with a command? 
-                    System.out.println("Intent Extraction now with  : " + this.context.get(message.getChannel()));
-                    if( this.context.get(message.getChannel()) == "Basic" ){
-                        intent = bot.getRasaServer("0").getIntent(message.getText());
-                        System.out.println("Extracted Basic");
-                    } else {
-                        intent = bot.getRasaServer(context.get(message.getChannel())).getIntent(message.getText());
-                    }                  
+                    System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
+                    intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
+                                    
 					
 				}
                 System.out.println(intent.getKeyword());
@@ -169,7 +169,7 @@ public class Messenger {
 				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
-				if(this.context.get(message.getChannel()) == "Basic"){
+				if(!this.triggeredFunction.containsKey(message.getChannel())){
 					if (intent.getConfidence() >= 0.40f) {
 						if (state == null) {
 							state = this.knownIntents.get(intent.getKeyword());
@@ -179,9 +179,10 @@ public class Messenger {
 						} else {
 							// any is a static forward
 							// TODO include entities of intents
-							if (state.getFollowingMessages() == null) {
+							if (state.getFollowingMessages() == null || state.getFollowingMessages().isEmpty()) {
 								System.out.println("no follow up messages");
 								state = this.knownIntents.get(intent.getKeyword());
+								this.currentNluModel.put(message.getChannel(), "0");
 								System.out.println(
 										intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
 								stateMap.put(message.getChannel(), state);
@@ -198,6 +199,7 @@ public class Messenger {
 									stateMap.put(message.getChannel(), state);
 								} else {
 									state = this.knownIntents.get("default");
+									
 								//	System.out.println(state.getIntentKeyword() + " set");
 								}
 							}
@@ -211,9 +213,10 @@ public class Messenger {
                 } else if(intent.getConfidence() < 0.40f) {
                 	intent = new Intent("default","","");
                 }
+			
 				Boolean contextOn = false; 
 				// No matching intent found, perform default action
-                if(this.context.get(message.getChannel()) != "Basic"){
+                if(this.triggeredFunction.containsKey(message.getChannel())){
                     triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                     contextOn = true; 
                 } else {
@@ -231,8 +234,8 @@ public class Messenger {
                     		response = state.getResponse(this.random);
                     	}
                         if(state.getNluID() != ""){
-                            System.out.println("NluId is : " + state.getNluID());
-                            this.context.put(message.getChannel(), state.getNluID());
+                            System.out.println("New NluId is : " + state.getNluID());
+                            this.currentNluModel.put(message.getChannel(), state.getNluID());
                         }                        
                         if (response != null) {
                             if(response.getResponse() != ""){
@@ -248,10 +251,12 @@ public class Messenger {
                                 if(response.getTriggeredFunctionId() != ""){
                                     this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
                                     contextOn = true; 
+                                } else {
+                                	System.out.println("No Bot Action was given to the Response");
                                 }
                             }
                         }
-                        if(this.context.get(message.getChannel()) != "Basic"){
+                        if(this.triggeredFunction.containsKey(message.getChannel())){
                             triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
                         } else triggeredFunctionId = state.getTriggeredFunctionId();
                         // If conversation flow is terminated, reset state
