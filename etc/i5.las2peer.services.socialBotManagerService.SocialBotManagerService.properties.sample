@@ -1,5 +1,5 @@
 databaseUser = root
-databasePassword =G8Z3h5mFSa
+databasePassword = password
 databaseName = las2peermon
 databaseHost = localhost
 databasePort = 3306
