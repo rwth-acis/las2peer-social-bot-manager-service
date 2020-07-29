@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -126,7 +128,7 @@ import net.minidev.json.parser.ParseException;
 				license = @License(
 						name = "",
 						url = "")))
-@ServicePath("/SBFManager2")
+@ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
 
@@ -983,7 +985,7 @@ public class SocialBotManagerService extends RESTService {
 				MiniClient client = new MiniClient();
 				client.setConnectorEndpoint(vle.getAddress());
 				HashMap<String, String> headers = new HashMap<String, String>();
-				ClientResponse result = client.sendRequest("GET", "SBFManager2/email/" + triggerUID, "",
+				ClientResponse result = client.sendRequest("GET", "SBFManager/email/" + triggerUID, "",
 						MediaType.TEXT_HTML, MediaType.TEXT_HTML, headers);
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
@@ -1054,17 +1056,29 @@ public class SocialBotManagerService extends RESTService {
 			// insert model into database
 			Connection con = null;
 			PreparedStatement ps = null;
+			Response resp = null;
 			
 			try {
 				con = service.database.getDataSource().getConnection();
-				ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");String model_string = body.toString();
+				ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");
+				
+				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+				ObjectOutputStream out = new ObjectOutputStream(bOut);
+				out.writeObject(body);
+				
 				Blob blob = con.createBlob();
-				blob.setBytes(1, model_string.getBytes());
+				blob.setBytes(1, bOut.toByteArray());
 				ps.setString(1, name);
 				ps.setBlob(2, blob);
 				ps.executeUpdate();
+				
+				resp = Response.ok().entity("Model stored.").build();
 			} catch (SQLException e) {
 				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} catch (IOException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			} finally {
 				try {
 					if (ps != null)
@@ -1080,10 +1094,7 @@ public class SocialBotManagerService extends RESTService {
 				;
 			}
 			
-			
-			
-			
-			return Response.ok().entity("Model stored.").build();
+			return resp;
 		}
 
 		@GET
@@ -1246,7 +1257,7 @@ public class SocialBotManagerService extends RESTService {
 					for (MessageInfo m : messageInfos) {
 						try {
 							ClientResponse result = client.sendRequest("POST",
-									"SBFManager2/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
+									"SBFManager/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
 									MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 							System.out.println(result.getResponse());
 						} catch (Exception e) {
@@ -1339,9 +1350,9 @@ public class SocialBotManagerService extends RESTService {
 										body.put("attributes", atts);
 
 										HashMap<String, String> headers = new HashMap<String, String>();
-										String path = "SBFManager2/bots/" + b.getName() + "/trigger/routine";
+										String path = "SBFManager/bots/" + b.getName() + "/trigger/routine";
 										try {
-											path = "SBFManager2/bots/" + URLEncoder.encode(b.getName(), "UTF-8")
+											path = "SBFManager/bots/" + URLEncoder.encode(b.getName(), "UTF-8")
 													+ "/trigger/routine";
 										} catch (UnsupportedEncodingException e) {
 											// TODO Auto-generated catch block

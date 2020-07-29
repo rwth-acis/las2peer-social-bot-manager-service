@@ -1,5 +1,5 @@
-databaseName=LAS2PEERMON
-databaseHost=mobsos-mysql.sbf-dev
-databasePort=3306
-databaseUser=root
-databasePassword=password
+databaseName=<databaseName>
+databaseHost=<databaseHost>
+databasePort=<databasePort>
+databaseUser=<databaseUser>
+databasePassword=<databasePassword>
