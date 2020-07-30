@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.Blob;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -1052,25 +1053,38 @@ public class SocialBotManagerService extends RESTService {
 				value = "Save BotModel",
 				notes = "Stores the BotModel in the shared storage.")
 		public Response putModel(@PathParam("name") String name, BotModel body) {
-			
-			// insert model into database
 			Connection con = null;
 			PreparedStatement ps = null;
 			Response resp = null;
 			
 			try {
+				// Open database connection
 				con = service.database.getDataSource().getConnection();
-				ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");
 				
+				// Write serialised model in Blob
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				ObjectOutputStream out = new ObjectOutputStream(bOut);
 				out.writeObject(body);
-				
 				Blob blob = con.createBlob();
 				blob.setBytes(1, bOut.toByteArray());
+				
+				// Check if model with given name already exists in database. If yes, update it. Else, insert it
+				ps = con.prepareStatement("SELECT * FROM models WHERE name = ?");
 				ps.setString(1, name);
-				ps.setBlob(2, blob);
-				ps.executeUpdate();
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					ps.close();
+					ps = con.prepareStatement("UPDATE models SET model_json = ? WHERE name = ?");
+					ps.setBlob(1, blob);
+					ps.setString(2, name);
+					ps.executeUpdate();
+				} else {
+					ps.close();
+					ps = con.prepareStatement("INSERT INTO models(name, model_json) VALUES (?, ?)");
+					ps.setString(1, name);
+					ps.setBlob(2, blob);
+					ps.executeUpdate();
+				}
 				
 				resp = Response.ok().entity("Model stored.").build();
 			} catch (SQLException e) {
