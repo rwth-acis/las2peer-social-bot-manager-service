@@ -7,17 +7,33 @@ import java.util.ArrayList;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
+
+
 public class Intent {
 	private String intentKeyword;
 	private float confidence;
 
 	private HashMap<String, Entity> entities;
 
+	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
+			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
+			{ new String("ß"), "ss" } };
+
+	public static String replaceUmlaute(String orig) {
+		String result = orig;
+
+		for (int i = 0; i < UMLAUT_REPLACEMENTS.length; i++) {
+			result = result.replace(UMLAUT_REPLACEMENTS[i][0], UMLAUT_REPLACEMENTS[i][1]);
+		}
+
+		return result;
+	}
+
 	// Constructor for intent extraction through Rasa NLU.
 	public Intent(JSONObject json) {
 		JSONObject intentInner = (JSONObject) json.get("intent");
 		float confidence = intentInner.getAsNumber("confidence").floatValue();
-		this.intentKeyword = intentInner.getAsString("name");
+		this.intentKeyword = replaceUmlaute(intentInner.getAsString("name"));
 		this.confidence = confidence;
 
 		JSONArray entities = (JSONArray) json.get("entities");
@@ -34,7 +50,7 @@ public class Intent {
 
 	// Constructor for bypassing intent extraction. Used for '!'-commands, for example.
 	public Intent(String intentKeyword, String entityName, String entityValue) {
-		this.intentKeyword = intentKeyword;
+		this.intentKeyword = replaceUmlaute(intentKeyword);
 		this.confidence = 1.0f;
 		this.entities = new HashMap<String, Entity>();
 		this.entities.put(entityName, new Entity(entityName, entityValue));
@@ -70,4 +86,5 @@ public class Intent {
         }
         return extractedEntitieValues;
     }
+
 }
