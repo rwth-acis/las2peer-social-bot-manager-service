@@ -343,9 +343,10 @@ public class BotParser {
 					}
 				}
 				// TRIGGERS
-				// PRECEDES
-			} else if (type.equals("precedes")) {
-				// IncomingMessage precedes...
+				// LEADSTO
+				// left precedes in the query so that older bots can still be used with the manager, but will need to get removed later on
+			} else if (type.equals("leadsTo") || type.equals("precedes") ) {
+				// IncomingMessage leads to...
 				if (incomingMessages.containsKey(source)) {
 					IncomingMessage sourceMessage = incomingMessages.get(source);
 					// ...another IncomingMessage
