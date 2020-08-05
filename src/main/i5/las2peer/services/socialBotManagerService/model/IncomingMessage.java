@@ -63,7 +63,7 @@ public class IncomingMessage {
 	}
 
 	public void addFollowupMessage(String intentKeyword, IncomingMessage msg) {
-		this.followupMessages.put(intentKeyword, msg);
+		this.followupMessages.put(replaceUmlaute(intentKeyword), msg);
 	}
 
 	public void addResponse(ChatResponse response) {
