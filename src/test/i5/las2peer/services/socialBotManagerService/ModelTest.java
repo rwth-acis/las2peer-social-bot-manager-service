@@ -356,16 +356,30 @@ public class ModelTest {
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 	        JSONObject obj = (JSONObject) parser.parse(testJSONString);
 	        
+	        
+	        // Connect to service
 			MiniClient c = new MiniClient();
 			c.setLogin(testAgent.getIdentifier(), testPass);
 			c.setConnectorEndpoint(connector.getHttpEndpoint());
-			ClientResponse result = c.sendRequest("POST", mainPath + "models/test", obj.toJSONString(JSONStyle.NO_COMPRESS), "application/json;charset=UTF-8", "*/*", new HashMap<String, String>());
-			System.out.println(result.getResponse());
-			Assert.assertEquals("bad request", 200, result.getHttpCode());
+			
+			// Store the model under 5 different names
+			for (int i = 0; i < 5; i++) {
+				ClientResponse response = c.sendRequest("POST", mainPath + "models/test" + i, obj.toJSONString(JSONStyle.NO_COMPRESS), "application/json;charset=UTF-8", "*/*", new HashMap<String, String>());
+				System.out.println("Model " + i + ": " + response.getResponse());
+				Assert.assertEquals("Model " + i + ": bad request", 200, response.getHttpCode());
+			}
+			
+			// Check if fetched model names match the names of the previously stored models
+			ClientResponse response = c.sendRequest("GET", mainPath + "models", "");
+			Assert.assertEquals("bad request", 200, response.getHttpCode());
+			System.out.println("Models: " + response.getResponse());
+			
+			// Check if models can be fetched successfully
+			response = c.sendRequest("GET", mainPath + "models/test1", "");
+			Assert.assertEquals("bad request", 200, response.getHttpCode());
+			System.out.println("Models: " + response.getResponse());
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 	}
-
-	
 }
