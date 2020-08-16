@@ -12,11 +12,14 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import javax.websocket.DeploymentException;
+import javax.ws.rs.core.MediaType;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
+import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
@@ -805,8 +808,18 @@ public class BotParser {
 				if (vle.getServiceInformation().get(s.getServiceName()) == null
 						/*&& s.getActionType().equals(ActionType.SERVICE)*/ ) {
 					try {
+						System.out.println("Service name is:" + s.getServiceName());
 						JSONObject j = readJsonFromUrl(vle.getAddress() + "/" + s.getServiceName() + "/swagger.json");
+						System.out.println("Information is: "+ j);
 						vle.addServiceInformation(s.getServiceName(), j);
+						if(s.getServiceName().equals("AssessmentHandler")) {
+							MiniClient client = new MiniClient();
+							client.setConnectorEndpoint(vle.getAddress());
+							HashMap<String, String> headers = new HashMap<String, String>();
+							ClientResponse result = client.sendRequest("GET", "AssessmentHandler/b","",
+									MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
+							System.out.println(result);
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
