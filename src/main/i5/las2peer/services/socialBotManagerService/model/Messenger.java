@@ -16,6 +16,7 @@ import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -26,7 +27,8 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 
 public class Messenger {
-	private String name;
+	private String name = "";
+	private String chatService = "";
 
 	private ChatMediator chatMediator;
 	private RasaNlu rasa;
@@ -42,9 +44,10 @@ public class Messenger {
 	public Messenger(String id, String chatService, String token, String rasaUrl, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
+		this.chatService = chatService;
 		this.rasa = new RasaNlu(rasaUrl);
 		if (chatService.contentEquals("Slack")) {
-			this.chatMediator = new SlackChatMediator(token);
+			this.chatMediator = new SlackEventChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
 			this.chatMediator = new RocketChatMediator(token, database, this.rasa);
 		} else { // TODO: Implement more backends
@@ -312,5 +315,13 @@ public class Messenger {
 
 	public void close() {
 		chatMediator.close();
+	}
+
+	public String getChatService() {
+		return chatService;
+	}
+
+	public void setChatService(String chatService) {
+		this.chatService = chatService;
 	}
 }

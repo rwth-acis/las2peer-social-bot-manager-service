@@ -8,17 +8,17 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
-// TODO: Currently needed because of class with the same name in this package
-import com.github.seratch.jslack.Slack;
-import com.github.seratch.jslack.api.methods.SlackApiException;
-import com.github.seratch.jslack.api.methods.response.channels.UsersLookupByEmailResponse;
-import com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse;
-import com.github.seratch.jslack.api.methods.response.conversations.ConversationsListResponse;
-import com.github.seratch.jslack.api.model.Conversation;
-import com.github.seratch.jslack.api.model.ConversationType;
-import com.github.seratch.jslack.api.rtm.RTMClient;
-import com.github.seratch.jslack.api.rtm.message.Message;
-import com.github.seratch.jslack.api.rtm.message.Message.MessageBuilder;
+import com.slack.api.Slack;
+import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.conversations.ConversationsListResponse;
+import com.slack.api.methods.response.users.UsersLookupByEmailResponse;
+import com.slack.api.model.Conversation;
+import com.slack.api.model.ConversationType;
+import com.slack.api.rtm.RTMClient;
+import com.slack.api.rtm.RTMMessageHandler;
+import com.slack.api.rtm.message.Message;
+import com.slack.api.rtm.message.Message.MessageBuilder;
 
 import net.minidev.json.JSONObject;
 
@@ -110,7 +110,7 @@ public class SlackChatMediator extends ChatMediator {
 				this.slack = new Slack();
 				this.rtm = this.slack.rtm(authToken);
 
-				this.rtm.addMessageHandler(messageCollector);
+				this.rtm.addMessageHandler((RTMMessageHandler) messageCollector);
 				this.rtm.connect();
 				this.botUser = rtm.getConnectedBotUser().toString();
 				this.messageCollector.setConnected(true);

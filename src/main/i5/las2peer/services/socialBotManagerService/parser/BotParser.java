@@ -18,6 +18,7 @@ import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.security.BotAgent;
+import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -33,6 +34,7 @@ import i5.las2peer.services.socialBotManagerService.model.IntentEntity;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
+import i5.las2peer.services.socialBotManagerService.model.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
@@ -62,7 +64,6 @@ public class BotParser {
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
 			throws ParseBotException, IOException, DeploymentException {
-
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
 		HashMap<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
@@ -98,12 +99,11 @@ public class BotParser {
 				}
 			}
 		}
-
 		// NODES
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 			BotModelNode elem = entry.getValue();
 			String nodeType = elem.getType();
-			// VLE
+			// VLE			
 			if (nodeType.equals("Instance")) {
 				vle = setVLEInstance(elem);
 				config.addServiceConfiguration(vle.getName(), vle);
@@ -180,7 +180,6 @@ public class BotParser {
 
 		int checkGeneratorIns = 0;
 		int checkGeneratorOuts = 0;
-
 		// EDGES
 		for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 			BotModelEdge elem = entry.getValue();
@@ -211,6 +210,11 @@ public class BotParser {
 					if (messengers.get(target) != null) {
 						Messenger m = messengers.get(target);
 						b.addMessenger(m);
+						// Slack identifier applicationID + workspace(team)ID 
+						if (m.getChatService().equals("Slack")) {
+							SlackEventChatMediator mediator = ((SlackEventChatMediator) m.getChatMediator());
+							vle.addBotbySlackID(m.getName(), mediator.getTeamID(), b);
+						}
 					}
 					// User Function has...
 				} else if (usfList.get(source) != null) {
@@ -461,6 +465,7 @@ public class BotParser {
 		}
 
 		return new Messenger(messengerName, messengerType, token, rasaUrl, database);
+		
 	}
 
 	private String addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
@@ -730,7 +735,7 @@ public class BotParser {
 			}
 		}
 	}
-
+	
 	private JSONArray swaggerHelperFunction(BotConfiguration config) {
 		JSONArray jaf = new JSONArray();
 		HashMap<String, ServiceFunction> allFunctions = new HashMap<String, ServiceFunction>();
@@ -766,7 +771,7 @@ public class BotParser {
 		}
 		return jaf;
 	}
-
+	
 	private static String readAll(Reader rd) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		int cp;

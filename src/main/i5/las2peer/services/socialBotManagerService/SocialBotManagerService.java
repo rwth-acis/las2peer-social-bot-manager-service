@@ -46,6 +46,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.gson.Gson;
+import com.slack.api.app_backend.events.EventHandler;
+import com.slack.api.app_backend.events.EventTypeExtractor;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -71,6 +73,7 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
@@ -82,6 +85,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
+import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
@@ -102,6 +106,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+
 
 /**
  * las2peer-SocialBotManager-Service
@@ -305,12 +310,13 @@ public class SocialBotManagerService extends RESTService {
 				for (Entry<String, Bot> botEntry : vle.getBots().entrySet()) {
 					Bot b = botEntry.getValue();
 					JSONObject jb = new JSONObject();
-					JSONObject ac = new JSONObject();
+					JSONObject ac = new JSONObject();							
 					ac.putAll(b.getActive());
 					jb.put("active", ac);
 					jb.put("id", b.getId());
 					jb.put("name", b.getName());
 					jb.put("version", b.getVersion());
+					
 					botList.put(botEntry.getValue().getName(), jb);
 				}
 				vleList.put(vleName, botList);
@@ -347,6 +353,7 @@ public class SocialBotManagerService extends RESTService {
 					j.put(pair.getKey(), jb);
 					// it.remove(); // avoids a ConcurrentModificationException
 				}
+				j.put("slack", vle.getSlackBotMap().toString());				
 			}
 			return Response.ok().entity(j).build();
 		}
@@ -379,7 +386,11 @@ public class SocialBotManagerService extends RESTService {
 						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().build();
 			}
+			
 			// initialized = true;
 			JSONObject logData = new JSONObject();
 			logData.put("status", "initialized");
@@ -618,6 +629,86 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}).start();
 			return Response.ok().build();
+		}
+		
+		@POST
+		@Path("/slack/action")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(
+				value = "Receive an Slack event")
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "") })
+		public Response slackAction(String body) {
+			
+			JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			JSONObject parsedBody;
+			try {
+				parsedBody = (JSONObject) jsonParser.parse(body);
+				String token = (String) parsedBody.get("token"); //deprecated verification token
+				String type = (String) parsedBody.get("type");	 // event type (e.g event_callback, url_verification)
+				String teamID = (String) parsedBody.get("team_id"); // workspace/team where this event occurred
+				String appID = (String) parsedBody.get("api_app_id"); // application this event is intended for
+				
+				//TODO Verifying requests from Slack https://api.slack.com/authentication/verifying-requests-from-slack
+				// Verification tokens are deprecated. Use signed secrets
+				
+				// Verification when subscribe to be notified of events in Slack
+				if (type.contentEquals("url_verification")) {
+					String challenge = (String) parsedBody.get("challenge");
+					return Response.ok().entity(challenge).build();
+				}
+				
+				// Handle the received event
+				else if (type.contentEquals("event_callback")) {
+					
+					new Thread(new Runnable() {
+						@Override
+						public void run() {	
+							
+							//Identify bot
+							Collection<VLE> vles = getConfig().getVLEs().values();
+							Bot bot = null;
+							for (VLE vle : vles) {
+								bot = vle.getBotbySlackID(appID, teamID);
+							}					
+							if (bot == null) 
+								System.out.println("cannot relate event to a bot");
+							System.out.println("slack event: bot identified: " + bot.getName());
+							
+							JSONObject parsedEventBody = (JSONObject) parsedBody.get("event");
+							String type = (String) parsedEventBody.get("type");							
+							switch (type) {
+							case "message":
+								System.out.println("slack event: message");
+								Messenger messenger = bot.getMessenger(appID);
+								SlackEventChatMediator mediator = (SlackEventChatMediator) messenger.getChatMediator();
+								mediator.addMessage(parsedEventBody);
+								ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+								bot.handleMessages(messageInfos);
+								break;
+							case "app_mention":
+								System.out.println("slack event: app mention");
+								break;
+							case "team_join":
+								System.out.println("slack event: team_join");
+								break;
+							default:
+								System.out.println("unknown slack event received");
+							}	
+						
+						}
+					}).start();
+				}
+				
+			} catch (ParseException e) {				
+				e.printStackTrace();
+				return Response.status(Response.Status.BAD_REQUEST).build();
+			}
+			
+			return Response.ok().build();			
 		}
 
 		@DELETE

@@ -1,16 +1,24 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import java.sql.Timestamp;
+
 public class ChatMessage {
 	private String channel;
 	private String user;
 	private int role;
 	private String email;
 	private String text;
+	private double timestamp;
 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text;
+	}
+
+	public ChatMessage(String channel, String user, String text, String timestamp) {
+		this(channel, user, text);
+		this.timestamp = Double.parseDouble(timestamp);
 	}
 
 	public void setText(String text) {

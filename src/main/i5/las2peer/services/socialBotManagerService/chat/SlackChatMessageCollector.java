@@ -1,6 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import com.github.seratch.jslack.api.rtm.*;
+import com.slack.api.rtm.RTMMessageHandler;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;

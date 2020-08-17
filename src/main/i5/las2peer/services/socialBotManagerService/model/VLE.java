@@ -11,7 +11,8 @@ public class VLE {
 
 	private HashMap<String, VLEUser> users;
 	private HashMap<String, Bot> bots;
-
+	private HashMap<String, Bot> slackBots;
+	
 	private String environmentSeparator = "";
 
 	private HashMap<String, JSONObject> serviceInformation;
@@ -21,6 +22,7 @@ public class VLE {
 
 	public VLE() {
 		setBots(new HashMap<String, Bot>());
+		setSlackBots(new HashMap<String, Bot>());
 		setUsers(new HashMap<String, VLEUser>());
 		setServiceInformation(new HashMap<String, JSONObject>());
 		setTriggerList(new HashMap<Trigger, HashSet<String>>());
@@ -117,4 +119,21 @@ public class VLE {
 	public void addRoutine(String name, VLERoutine routine) {
 		this.routines.put(name, routine);
 	}
+	
+	public void addBotbySlackID(String appID, String teamID, Bot bot) {
+		this.slackBots.put(teamID.concat(appID), bot);
+	}
+	
+	public Bot getBotbySlackID(String appID, String teamID) {
+		return this.slackBots.get(teamID.concat(appID));		
+	}
+	
+	public HashMap<String, Bot> getSlackBotMap() {
+		return this.slackBots;
+	}
+	
+	private void setSlackBots(HashMap<String, Bot> hashMap) {
+		this.slackBots = hashMap;		
+	}
+	
 }
