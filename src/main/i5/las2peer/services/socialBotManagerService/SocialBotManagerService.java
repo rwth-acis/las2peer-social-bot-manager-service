@@ -1011,24 +1011,14 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 		if (sf.getActionType().equals(ActionType.SERVICE)) {
             System.out.println(sf.getFunctionName());
-			if (triggeredBody.get("email") == null) {
-				
-				// TODO Anonymous agent error
-				MiniClient client = new MiniClient();
-				client.setConnectorEndpoint(vle.getAddress());
-				HashMap<String, String> headers = new HashMap<String, String>();
-				ClientResponse result = client.sendRequest("GET", "SBFManager/email/" + triggerUID, "",
-						MediaType.TEXT_HTML, MediaType.TEXT_HTML, headers);
-				String mail = result.getResponse().trim();
-				triggeredBody.put("email", mail);
-			}   
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                    client.setLogin("alice", "pwalice");   
-                  //  client.setLogin(botAgent.getLoginName(), botPass);
-                    
-                    System.out.println("botagent is " +  botAgent.getLoginName());
+                  //  client.setLogin("alice", "pwalice");   
+                    System.out.println(botAgent.getLoginName() + "    pass " +  botPass);
+                   client.setLogin(botAgent.getLoginName(), botPass);
+                    triggeredBody.put("botName", botAgent.getIdentifier());
+                    System.out.println("botagent is " +  botAgent.getIdentifier());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
