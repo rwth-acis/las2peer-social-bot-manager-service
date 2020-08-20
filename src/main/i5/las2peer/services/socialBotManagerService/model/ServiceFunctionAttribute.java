@@ -148,16 +148,7 @@ public class ServiceFunctionAttribute {
     
 
 	@Override
-	public String toString() {
-		System.out.println(id);
-		System.out.println(name);
-		System.out.println(parameterType);
-		System.out.println(sameAsTrigger);
-		System.out.println(mappedTo);
-		System.out.println(childAttributes);
-		System.out.println(parent);System.out.println(generator);System.out.println(function);System.out.println(itb);
-		System.out.println(staticContent);System.out.println(content);System.out.println(contentURL);
-		
+	public String toString() {		
 		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
 				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
 				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb

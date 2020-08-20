@@ -63,6 +63,9 @@ public class SlackChatMediator extends ChatMediator {
 			this.reconnect();
 			rtm.sendMessage(message);
 			System.out.println("Sent message with Exception: " + e.getMessage());
+			if(e.getMessage().toLowerCase().equals("timeout")) {
+				sendMessageToChannel(channel, text, id);
+			}
 		}
 		try {
 			if(usersByChannel.get(channel) == null) {
