@@ -662,7 +662,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 				
 				// Handle the received event
-				else if (type.contentEquals("event_callback")) {
+				if (type.contentEquals("event_callback")) {
 					
 					new Thread(new Runnable() {
 						@Override
@@ -683,6 +683,8 @@ public class SocialBotManagerService extends RESTService {
 							switch (type) {
 							case "message":
 								System.out.println("slack event: message");
+								if (parsedEventBody.get("bot_id") != null)
+									break;
 								Messenger messenger = bot.getMessenger(appID);
 								SlackEventChatMediator mediator = (SlackEventChatMediator) messenger.getChatMediator();
 								mediator.addMessage(parsedEventBody);
@@ -691,9 +693,17 @@ public class SocialBotManagerService extends RESTService {
 								break;
 							case "app_mention":
 								System.out.println("slack event: app mention");
+								messenger = bot.getMessenger(appID);
+								mediator = (SlackEventChatMediator) messenger.getChatMediator();
+								String channel = (String) parsedEventBody.get("channel");
+								String user = (String) parsedEventBody.get("user");
+								mediator.sendMessageToChannel(channel, "hello " + user);
 								break;
 							case "team_join":
 								System.out.println("slack event: team_join");
+								messenger = bot.getMessenger(appID);
+								mediator = (SlackEventChatMediator) messenger.getChatMediator();
+								mediator.sendMessageToChannel("C01880R2NPQ", "hello");
 								break;
 							default:
 								System.out.println("unknown slack event received");
@@ -708,7 +718,7 @@ public class SocialBotManagerService extends RESTService {
 				return Response.status(Response.Status.BAD_REQUEST).build();
 			}
 			
-			return Response.ok().build();			
+			return Response.status(200).build();			
 		}
 
 		@DELETE
