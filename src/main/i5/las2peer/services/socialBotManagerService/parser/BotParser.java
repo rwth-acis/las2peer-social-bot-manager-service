@@ -545,7 +545,8 @@ public class BotParser {
 		if (url == null) {
 			throw new ParseBotException("NLU Knowledge without URL");
 		}
-
+		
+		System.out.println("add NLU:" + rasaName + " . " + id + " . " + url);
 		return new NLUKnowledge(rasaName, id, url);
 	}
 

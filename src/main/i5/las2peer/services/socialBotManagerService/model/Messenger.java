@@ -55,9 +55,7 @@ public class Messenger {
 			throws IOException, DeploymentException, ParseBotException {
 
 		this.chatService = chatService;
-		this.rasa = new RasaNlu(rasaUrl);
-//		this.rasa = new RasaNlu(rasaUrl);
-//        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
+
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackEventChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
@@ -161,7 +159,11 @@ public class Messenger {
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
                     // what if you want to start an assessment with a command? 
+					System.out.println("Message Text  : " + message.getText());
+					System.out.println("Message Channel  : " + message.getChannel());
                     System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
+                    System.out.println("Rasa Server  : " + bot.getRasaServer(currentNluModel.get(message.getChannel())));
+                    System.out.println("Intent  : " + bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText()));
                     intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
 
 
@@ -281,10 +283,6 @@ public class Messenger {
 			}
 		}
 
-	}
-
-	public void close() {
-		chatMediator.close();
 	}
 
 	public String getChatService() {

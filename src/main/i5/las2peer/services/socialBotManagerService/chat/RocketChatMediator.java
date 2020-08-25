@@ -792,4 +792,5 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 		}
 	}
+
 }

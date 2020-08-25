@@ -185,12 +185,6 @@ public class SlackEventChatMediator extends ChatMediator {
 		return null;
 	}
 
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-
-	}
-
 	public String getTeamID() {
 		return this.teamID;
 	}
