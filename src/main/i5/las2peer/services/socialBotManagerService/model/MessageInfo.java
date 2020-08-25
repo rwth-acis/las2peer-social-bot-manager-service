@@ -9,16 +9,18 @@ public class MessageInfo {
 	String triggeredFunctionId;
 	String botName;
 	String serviceAlias;
+	boolean contextWithService;
 
 	public MessageInfo(ChatMessage message,	Intent intent,
 			String triggeredFunctionId, String botName,
-			String serviceAlias)
+			String serviceAlias, boolean contextWithService)
 	{
 		this.message = message;
 		this.intent = intent;
 		this.triggeredFunctionId = triggeredFunctionId;
 		this.botName = botName;
 		this.serviceAlias = serviceAlias;
+		this.contextWithService = contextWithService;
 	}
 
 	public ChatMessage getMessage() {
@@ -39,5 +41,9 @@ public class MessageInfo {
 
 	public String getServiceAlias() {
 		return this.serviceAlias;
+	}
+	
+	public boolean contextActive() {
+		return this.contextWithService;
 	}
 }

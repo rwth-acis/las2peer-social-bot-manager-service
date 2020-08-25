@@ -1,5 +1,6 @@
-databaseName=<databaseName>
-databaseHost=<databaseHost>
-databasePort=<databasePort>
-databaseUser=<databaseUser>
-databasePassword=<databasePassword>
+databaseUser = root
+databasePassword = password
+databaseName = LAS2PEERMON
+databaseHost = mobsos-mysql.sbf-dev
+databasePort = 3306
+

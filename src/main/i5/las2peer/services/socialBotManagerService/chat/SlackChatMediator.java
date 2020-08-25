@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.OptionalLong;
 import java.util.Vector;
 
@@ -26,14 +27,14 @@ public class SlackChatMediator extends ChatMediator {
 	private Slack slack = null;
 	private RTMClient rtm = null;
 	private SlackChatMessageCollector messageCollector = new SlackChatMessageCollector();
-
 	private String botUser;
-
+	// this variable is only good when using a bot in a private conversation
+	public static HashMap<String, String> usersByChannel;
 	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
 		super(authToken);
 		this.slack = new Slack();
 		this.rtm = this.slack.rtm(authToken);
-
+		this.usersByChannel  = new HashMap<String,String>();
 		this.rtm.addMessageHandler(messageCollector);
 		this.rtm.connect();
 		this.botUser = rtm.getConnectedBotUser().toString();
@@ -48,16 +49,34 @@ public class SlackChatMediator extends ChatMediator {
 		}
 		String message = msg.build().toJSONString();
 		try {
+			String userId =  (slack.methods().authTest(req -> req.token(authToken))).getUserId();
+			String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile().getImageOriginal();
+			String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
 			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
 																													// ID
-					.text(text));
+					.text(text).iconUrl(url).username(name));
 			System.out.println("Message sent: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
 			this.reconnect();
 			rtm.sendMessage(message);
 			System.out.println("Sent message with Exception: " + e.getMessage());
+			if(e.getMessage().toLowerCase().equals("timeout")) {
+				sendMessageToChannel(channel, text, id);
+			}
 		}
+		try {
+			if(usersByChannel.get(channel) == null) {
+				System.out.println("1");
+				String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel)).getChannel().getUser();
+				System.out.println("2 + " + user);
+				usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser().getProfile().getEmail());
+				System.out.println("3");
+			}
+		} catch (Exception e) {
+			System.out.println("Could not extract Email for reason + " + e);
+		}
+
 	}
 
 	// static for calling from `SlackChatMessageCollector`
@@ -65,7 +84,6 @@ public class SlackChatMediator extends ChatMediator {
 		String channel = o.getAsString("channel");
 		String user = o.getAsString("user");
 		String text = o.getAsString("text");
-
 		if (channel == null || user == null || text == null) {
 			throw new InvalidChatMessageException();
 		}
@@ -80,6 +98,16 @@ public class SlackChatMediator extends ChatMediator {
 		return messages;
 	}
 
+	/*public String getEmails(String channel) {
+
+		if(usersByChannel.get(channel) == null)
+		{
+			return "No Email available at the moment";
+		}
+		System.out.println("Email is " + usersByChannel.get(channel));
+		return usersByChannel.get(channel); // slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser().getProfile().getEmail();
+	}
+*/
 	public String getBotUser() {
 		return this.botUser.toString();
 	}
@@ -121,21 +149,9 @@ public class SlackChatMediator extends ChatMediator {
 			}
 		}
 	}
-
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public void close() {
-		try {
-			this.rtm.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		this.slack = null;
 	}
 }

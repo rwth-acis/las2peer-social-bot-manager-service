@@ -8,6 +8,7 @@ import java.util.HashSet;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class Bot {
 	private String name;
@@ -24,6 +25,9 @@ public class Bot {
 	private HashMap<String, Messenger> messengers;
 
 	private String botAgent;
+    
+    private HashMap<String, RasaNlu> rasaServers; 
+    
 
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
@@ -31,6 +35,7 @@ public class Bot {
 		generatorList = new HashMap<String, ContentGenerator>();
 		active = new HashMap<String, Boolean>();
 		this.messengers = new HashMap<String, Messenger>();
+        this.rasaServers = new HashMap<String, RasaNlu>();
 	}
 
 	public String getName() {
@@ -68,6 +73,14 @@ public class Bot {
 	public void addBotServiceFunction(String name, ServiceFunction serviceFunction) {
 		this.botServiceFunctions.put(name, serviceFunction);
 	}
+    
+	public RasaNlu getRasaServer(String id) {
+		return this.rasaServers.get(id);
+	}    
+    
+	public void addRasaServer(String id, String Url) {
+		this.rasaServers.put(id, new RasaNlu(Url));
+	}    
 
 	public HashSet<Trigger> getTriggerList() {
 		return triggerList;
@@ -84,7 +97,7 @@ public class Bot {
 	public HashMap<String, ContentGenerator> getGeneratorList() {
 		return generatorList;
 	}
-
+    
 	public void setGeneratorList(HashMap<String, ContentGenerator> generatorList) {
 		this.generatorList = generatorList;
 	}
