@@ -8,6 +8,7 @@ import java.util.HashSet;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class Bot {
@@ -140,15 +141,20 @@ public class Bot {
 		// methods synchronized?
 		return this.messengers.get(name);
 	}
+	
+	public Messenger getMessenger(ChatService chatservice) {
+		for( Messenger messenger: this.messengers.values())	{
+			if(messenger.getChatService() == chatservice)
+				return messenger;
+		}
+		return null;
+	}
 
 	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
 		this.messengers.put(messenger.getName(), messenger);
 	}
 
 	public void deactivateAll() {
-		for (Messenger m : this.messengers.values()) {
-			m.close();
-		}
 		for (String k : this.active.keySet()) {
 			this.active.put(k, false);
 		}

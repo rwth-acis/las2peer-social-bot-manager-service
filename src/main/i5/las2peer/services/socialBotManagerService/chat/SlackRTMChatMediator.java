@@ -23,14 +23,14 @@ import com.slack.api.rtm.message.Message.MessageBuilder;
 
 import net.minidev.json.JSONObject;
 
-public class SlackChatMediator extends ChatMediator {
+public class SlackRTMChatMediator extends ChatMediator {
 	private Slack slack = null;
 	private RTMClient rtm = null;
 	private SlackChatMessageCollector messageCollector = new SlackChatMessageCollector();
 	private String botUser;
 	// this variable is only good when using a bot in a private conversation
 	public static HashMap<String, String> usersByChannel;
-	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
+	public SlackRTMChatMediator(String authToken) throws IOException, DeploymentException {
 		super(authToken);
 		this.slack = new Slack();
 		this.rtm = this.slack.rtm(authToken);
@@ -112,7 +112,6 @@ public class SlackChatMediator extends ChatMediator {
 		return this.botUser.toString();
 	}
 
-	@Override
 	public String getChannelByEmail(String email) {
 		Slack slack = Slack.getInstance();
 		try {

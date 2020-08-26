@@ -2,13 +2,9 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.OptionalLong;
-import java.util.Vector;
 
 import com.slack.api.Slack;
-import com.slack.api.app_backend.events.handler.MessageHandler;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.auth.AuthTestResponse;
 import com.slack.api.methods.response.bots.BotsInfoResponse;
@@ -16,11 +12,8 @@ import com.slack.api.methods.response.bots.BotsInfoResponse.Bot;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 
 import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 
-
-public class SlackEventChatMediator extends ChatMediator {
+public class SlackEventChatMediator extends EventChatMediator {
 	
 	/**
 	 * Main object of the Slack API Java library
@@ -38,17 +31,38 @@ public class SlackEventChatMediator extends ChatMediator {
 	private String appID;
 	
 	/**
-	 * Stores received messages
-	 */
-	private Vector<ChatMessage> messageCollector = new Vector<ChatMessage>();
-	
-	/**
 	 * @param authToken used to authenticate the bot when accessing the slack API
 	 */
 	public SlackEventChatMediator(String authToken) {
 		super(authToken);
 		this.slack = Slack.getInstance();
 		this.requestAuthTest();
+	}
+	
+	@Override
+	public void handleEvent(JSONObject event) {
+	
+		String type = (String) event.get("type");							
+		switch (type) {
+		case "message":
+			System.out.println("slack event: message");
+			if (event.get("bot_id") != null)
+				break;
+			this.addMessage(event);			
+			break;
+		case "app_mention":
+			System.out.println("slack event: app mention");			
+			String channel = (String) event.get("channel");
+			String user = (String) event.get("user");
+			this.sendMessageToChannel(channel, "hello " + user);
+			break;
+		case "team_join":
+			System.out.println("slack event: team_join");			
+			this.sendMessageToChannel("C01880R2NPQ", "hello");
+			break;
+		default:
+			System.out.println("unknown slack event received");
+		}
 	}
 	
 	/**
@@ -99,7 +113,7 @@ public class SlackEventChatMediator extends ChatMediator {
 	}
 	
 	/**
-	 * Adds a message to the message collector
+	 * Adds a message to the message collection
 	 * @param message The Slack message event in JSON format
 	 */
 	public void addMessage(JSONObject parsedMessage) {
@@ -120,7 +134,7 @@ public class SlackEventChatMediator extends ChatMediator {
 				throw new InvalidChatMessageException("missing message fields");
 			}			
 			
-			messageCollector.add(new ChatMessage(channel, user, text, timestamp));
+			this.addMessage(new ChatMessage(channel, user, text, timestamp));
 
 		} catch (InvalidChatMessageException e) {
 			e.printStackTrace();
@@ -172,19 +186,6 @@ public class SlackEventChatMediator extends ChatMediator {
 
 	}
 
-	@Override
-	public Vector<ChatMessage> getMessages() {
-		Vector<ChatMessage> messages = this.messageCollector;
-		this.messageCollector = new Vector<ChatMessage>();
-		return messages;
-	}
-
-	@Override
-	public String getChannelByEmail(String email) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public String getTeamID() {
 		return this.teamID;
 	}
@@ -200,5 +201,6 @@ public class SlackEventChatMediator extends ChatMediator {
 	public void setAppID(String appID) {
 		this.appID = appID;
 	}
+
 
 }

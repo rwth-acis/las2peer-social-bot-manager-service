@@ -14,8 +14,10 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackRTMChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
@@ -29,7 +31,7 @@ import net.minidev.json.parser.ParseException;
 
 public class Messenger {
 	private String name = "";
-	private String chatService = "";
+	private ChatService chatService;
 
 	private ChatMediator chatMediator;
 	//private RasaNlu rasa;
@@ -54,10 +56,12 @@ public class Messenger {
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
-		this.chatService = chatService;
-
+		this.chatService = ChatService.fromString(chatService);
+		System.out.println("Messenger: " + chatService.toString());
 		if (chatService.contentEquals("Slack")) {
 			this.chatMediator = new SlackEventChatMediator(token);
+		} else if (chatService.contentEquals("Telegram")) {
+			this.chatMediator = new TelegramChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
 			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
 		} else { // TODO: Implement more backends
@@ -285,11 +289,11 @@ public class Messenger {
 
 	}
 
-	public String getChatService() {
+	public ChatService getChatService() {
 		return chatService;
 	}
 
-	public void setChatService(String chatService) {
+	public void setChatService(ChatService chatService) {
 		this.chatService = chatService;
 	}
 }

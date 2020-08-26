@@ -223,7 +223,7 @@ public class BotParser {
 						Messenger m = messengers.get(target);
 						b.addMessenger(m);
 						// Slack identifier applicationID + workspace(team)ID
-						if (m.getChatService().equals("Slack")) {
+						if (m.getChatService().toString().equals("Slack")) {
 							SlackEventChatMediator mediator = ((SlackEventChatMediator) m.getChatMediator());
 							vle.addBotbySlackID(m.getName(), mediator.getTeamID(), b);
 						}
@@ -453,6 +453,7 @@ public class BotParser {
 		}
 		j.put("botIds", jarr);
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
+		System.out.println("bot initiated");
 	}
 
 	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)

@@ -73,6 +73,9 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
+import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
@@ -661,7 +664,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 		
 		@POST
-		@Path("/slack/action")
+		@Path("/events/slack")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiOperation(
@@ -702,41 +705,19 @@ public class SocialBotManagerService extends RESTService {
 							Bot bot = null;
 							for (VLE vle : vles) {
 								bot = vle.getBotbySlackID(appID, teamID);
+								System.out.println("appId:"+ appID + " teamID:" + teamID);
 							}					
-							if (bot == null) 
+							if (bot == null) {
 								System.out.println("cannot relate event to a bot");
-							System.out.println("slack event: bot identified: " + bot.getName());
-							
-							JSONObject parsedEventBody = (JSONObject) parsedBody.get("event");
-							String type = (String) parsedEventBody.get("type");							
-							switch (type) {
-							case "message":
-								System.out.println("slack event: message");
-								if (parsedEventBody.get("bot_id") != null)
-									break;
+							} else {							 
+								System.out.println("slack event: bot identified: " + bot.getName());
+								
+								//Handle event
+								JSONObject parsedEventBody = (JSONObject) parsedBody.get("event");						
 								Messenger messenger = bot.getMessenger(appID);
-								SlackEventChatMediator mediator = (SlackEventChatMediator) messenger.getChatMediator();
-								mediator.addMessage(parsedEventBody);
-								ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
-								bot.handleMessages(messageInfos);
-								break;
-							case "app_mention":
-								System.out.println("slack event: app mention");
-								messenger = bot.getMessenger(appID);
-								mediator = (SlackEventChatMediator) messenger.getChatMediator();
-								String channel = (String) parsedEventBody.get("channel");
-								String user = (String) parsedEventBody.get("user");
-								mediator.sendMessageToChannel(channel, "hello " + user);
-								break;
-							case "team_join":
-								System.out.println("slack event: team_join");
-								messenger = bot.getMessenger(appID);
-								mediator = (SlackEventChatMediator) messenger.getChatMediator();
-								mediator.sendMessageToChannel("C01880R2NPQ", "hello");
-								break;
-							default:
-								System.out.println("unknown slack event received");
-							}	
+								EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+								mediator.handleEvent(parsedEventBody);
+							}
 						
 						}
 					}).start();
@@ -748,6 +729,49 @@ public class SocialBotManagerService extends RESTService {
 			}
 			
 			return Response.status(200).build();			
+		}
+		
+		@POST
+		@Path("/events/telegram/{token}")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(
+				value = "Receive an Telegram event")
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "") })
+		public Response telegramEvent(String body, @PathParam("token") String token) {
+										
+					new Thread(new Runnable() {
+						@Override
+						public void run() {	
+							
+							//Identify bot
+							Collection<VLE> vles = getConfig().getVLEs().values();
+							Bot bot = null;
+							for (VLE vle : vles) {
+								bot = vle.getBotbyTelegramToken(token);
+							}					
+							if (bot == null) 
+								System.out.println("cannot relate event to a bot");
+							System.out.println("telegram event: bot identified: " + bot.getName());
+							
+							//Handle event											
+							Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+							EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+							JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+							JSONObject parsedBody;
+							try {
+								parsedBody = (JSONObject) jsonParser.parse(body);
+								mediator.handleEvent(parsedBody);
+							} catch (ParseException e) {
+								e.printStackTrace();
+							}						
+						}
+					}).start();
+					
+			return Response.status(200).build();				
 		}
 
 		@DELETE
@@ -1175,7 +1199,7 @@ public class SocialBotManagerService extends RESTService {
 			channel = body.getAsString("channel");
 		} else if (body.containsKey("email")) {
 			String email = body.getAsString("email");
-			channel = chat.getChannelByEmail(email);
+			channel = ((RocketChatMediator) chat).getChannelByEmail(email);
 			} 
         System.out.println(channel);
 		chat.sendMessageToChannel(channel, text);

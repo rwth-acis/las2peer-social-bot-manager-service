@@ -3,6 +3,8 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
+import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import net.minidev.json.JSONObject;
 
 public class VLE {
@@ -136,4 +138,12 @@ public class VLE {
 		this.slackBots = hashMap;		
 	}
 	
+	public Bot getBotbyTelegramToken(String token) {
+		for(Bot bot: bots.values()) {
+			TelegramChatMediator mediator = (TelegramChatMediator) bot.getMessenger(ChatService.TELEGRAM).getChatMediator();
+			if(mediator.hasToken(token))
+				return bot;
+		}
+		return null;
+	}
 }

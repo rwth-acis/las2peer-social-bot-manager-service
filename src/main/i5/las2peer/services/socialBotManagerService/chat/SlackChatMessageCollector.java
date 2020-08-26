@@ -18,8 +18,8 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 			if (type != null) {
 				if(type.equals("message")) {
 					ChatMessage message;
-					message = SlackChatMediator.parseSlackMessage(messageJson);
-					message.setEmail(SlackChatMediator.usersByChannel.get(message.getChannel()));
+					message = SlackRTMChatMediator.parseSlackMessage(messageJson);
+					message.setEmail(SlackRTMChatMediator.usersByChannel.get(message.getChannel()));
 					this.addMessage(message);
 				} else if(type.equals("goodbye")) {
 					System.out.println("Slack client disconnected");

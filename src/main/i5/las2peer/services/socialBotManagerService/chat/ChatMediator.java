@@ -48,14 +48,6 @@ public abstract class ChatMediator {
 	 */
 	public abstract Vector<ChatMessage> getMessages();
 
-	/**
-	 * Gets the IM channel ID for the user registered under the given E-Mail address.
-	 *
-	 * @param email The E-Mail address of the user to query
-	 * @return If user was found, their IM channel ID, null otherwise.
-	 */
-	public abstract String getChannelByEmail(String email);
-
 	protected String getDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
 		StringBuilder result = new StringBuilder();
 		boolean first = true;
