@@ -4,12 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
-
 public class IncomingMessage {
 	String intentKeyword;
 	String entityKeyword;
-    String NluID;
+	String NluID;
 
 	ArrayList<ChatResponse> responses;
 

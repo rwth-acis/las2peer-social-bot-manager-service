@@ -32,15 +32,15 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
+import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.IntentEntity;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
-
 import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
-
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
+import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
@@ -78,7 +78,9 @@ public class BotParser {
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
 
-        HashMap<String, NLUKnowledge> nluKnowledge = new HashMap<String, NLUKnowledge>();
+		HashMap<String, NLUKnowledge> nluKnowledge = new HashMap<String, NLUKnowledge>();
+		HashMap<String, Frame> frames = new HashMap<String, Frame>();
+		HashMap<String, Slot> slots = new HashMap<String, Slot>();
 
 		HashMap<String, ServiceFunction> bsfList = new HashMap<String, ServiceFunction>();
 		HashMap<String, ServiceFunction> usfList = new HashMap<String, ServiceFunction>();
@@ -132,8 +134,14 @@ public class BotParser {
 				// Nlu Url's
 			} else if (nodeType.equals("NLU Knowledge")) {
 				NLUKnowledge nlu = addNLUKnowledge(entry.getKey(), elem, config);
-				nluKnowledge.put(entry.getKey(), nlu);
-                // VLE User
+				nluKnowledge.put(entry.getKey(), nlu);			
+			} else if (nodeType.equals("Frame")) {
+        			Frame frame = addFrame(entry.getKey(), elem, config);
+        			frames.put(entry.getKey(), frame);
+			} else if (nodeType.equals("Slot")) {
+        			Slot slot = addSlot(entry.getKey(), elem, config);
+        			slots.put(entry.getKey(), slot);	
+        	// VLE User
 			} else if (nodeType.equals("User")) {
 				VLEUser u = addUser(elem);
 				u.setId(entry.getKey());
@@ -227,11 +235,11 @@ public class BotParser {
 							SlackEventChatMediator mediator = ((SlackEventChatMediator) m.getChatMediator());
 							vle.addBotbySlackID(m.getName(), mediator.getTeamID(), b);
 						}
-                        // NLU Servers
-					} else if (nluKnowledge.get(target) != null){
-                        NLUKnowledge nlu = nluKnowledge.get(target);
-                        b.addRasaServer(nlu.getId(), nlu.getUrl());
-                    }
+					// NLU Servers
+				} else if (nluKnowledge.get(target) != null) {
+				    NLUKnowledge nlu = nluKnowledge.get(target);
+				    b.addRasaServer(nlu.getId(), nlu.getUrl());
+				}
 					// User Function has...
 				} else if (usfList.get(source) != null) {
 					ServiceFunction sf = usfList.get(source);
@@ -267,7 +275,17 @@ public class BotParser {
 						IntentEntity entity = intentEntities.get(target);
 						message.setEntityKeyword(entity.getEntityKeyword());
 					}
-				}
+					// Frame has..
+        			} else if (frames.get(source) != null) {
+        			    System.out.println("Frame has Slots: " + target);
+        				Frame frame = frames.get(source);
+        				// ...Slot
+        				if (slots.get(target) != null) {
+        					Slot slot = slots.get(target);
+        					System.out.println("adding slot");
+        					frame.addSlot(slot);
+        				}
+        			}
 				// PERFORMS
 			} else if (type.equals("performs")) {
 				// Bot performs Action
@@ -331,12 +349,12 @@ public class BotParser {
 					}
 					sf.setMessengerName(m.getName());
 				} else if (responses.containsKey(source)){
-                    ChatResponse cr = responses.get(source);
-                    if (bsfList.get(target) != null) {
-						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
-					}
-                }
+                                        ChatResponse cr = responses.get(source);
+                                        if (bsfList.get(target) != null) {
+                    						ServiceFunction botFunction = bsfList.get(target);
+                    						cr.setTriggeredFunctionId(botFunction.getId());
+                                        }
+				}
 
 				// GENERATES
 			} else if (type.equals("generates")) {
@@ -355,7 +373,8 @@ public class BotParser {
 						sAtt.setItb(itb);
 						itb.setTargetAttribute(sAtt);
 					}
-					// Messenger generates...
+					
+				// Messenger generates...
 				} else if (messengers.containsKey(source)) {
 					Messenger messenger = messengers.get(source);
 					// ...IncomingMessage
@@ -363,7 +382,21 @@ public class BotParser {
 						IncomingMessage incMsg = incomingMessages.get(target);
 						messenger.addMessage(incMsg);
 					}
-				}
+					// ...Frame
+					if (frames.containsKey(target)) {
+						Frame frame = frames.get(target);
+						messenger.addFrame(frame);
+					}
+				
+				// Slot generates
+        			} else if (slots.containsKey(source)) {
+        				Slot slot = slots.get(source);
+        				// ...BotActionAttribute
+        				if (sfaList.containsKey(target)) {
+        					ServiceFunctionAttribute attribute = sfaList.get(target);
+        					slot.setParameter(attribute);
+        				}        				
+        			}
 				// TRIGGERS
 				// LEADSTO
 				// left precedes in the query so that older bots can still be used with the manager, but will need to get removed later on
@@ -388,6 +421,7 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
+			    
 				// Action triggers action
 				if (usfList.get(source) != null) {
 					ServiceFunction userFunction = usfList.get(source);
@@ -399,7 +433,8 @@ public class BotParser {
 							b.addTrigger(t);
 						}
 					}
-					// Routine triggers action
+					
+				// Routine triggers action
 				} else if (rlist.get(source) != null) {
 					VLERoutine r = rlist.get(source);
 					if (bsfList.get(target) != null) {
@@ -407,7 +442,8 @@ public class BotParser {
 						Trigger t = new Trigger(r, botFunction);
 						r.addTrigger(t);
 					}
-					// Incoming Message triggers...
+					
+				// Incoming Message triggers...
 				} else if (incomingMessages.get(source) != null) {
 					IncomingMessage m = incomingMessages.get(source);
 					// ...Chat Response
@@ -416,13 +452,23 @@ public class BotParser {
 						response.addTriggerEntity(value);
 						m.addResponse(response);
 
-						// ...Bot Action
+					// ...Bot Action
 					} else if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
 						m.setTriggeredFunction(botFunction);
 					}
 				}
-			}
+				
+				// Frame triggers...
+				} else if (frames.get(source) != null) {
+				Frame frame = frames.get(source);
+        				// ...Bot Action
+        				if (bsfList.get(target) != null) {
+        					ServiceFunction botFunction = bsfList.get(target);
+        					frame.setServiceFunction(botFunction);
+        				}
+				}					
+		
 		}
 
 		if (checkGeneratorIns != checkGeneratorOuts) {
@@ -743,7 +789,7 @@ public class BotParser {
 			sf.setActionType(ActionType.SENDMESSAGE);
 			sf.setMessengerName(messengerID);
 			sf.setServiceName(service);
-            sf.setFunctionName(sfName);
+			sf.setFunctionName(sfName);
 		} else {
 			// default case
 			sf.setFunctionName(sfName);
@@ -806,6 +852,54 @@ public class BotParser {
 				}
 			}
 		}
+	}
+	
+	private Frame addFrame(String key, BotModelNode elem, BotConfiguration config) {
+
+		Frame frame = new Frame();
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			switch (subVal.getName()) {
+			case "name":
+			    frame.setName(subVal.getValue());
+			    break;
+			case "intent":
+			    frame.setIntent(subVal.getValue());
+			    break;
+			case "message":
+			    frame.setMessage(subVal.getValue());
+			    break;
+			}
+		}
+		return frame;
+	}
+	
+	private Slot addSlot(String key, BotModelNode elem, BotConfiguration config) {
+
+		Slot slot = new Slot();
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			switch (subVal.getName()) {
+			case "name":
+			    slot.setName(subVal.getValue());
+			    break;
+			case "entity":
+			    slot.setEntity(subVal.getValue());
+			    break;
+			case "required":
+			    slot.setRequired(Boolean.parseBoolean(subVal.getValue()));
+			    break;
+			case "priority":
+			    slot.setPriority(Integer.parseInt(subVal.getValue()));
+			    break;
+			case "message":
+			    slot.setMessage(subVal.getValue());
+			    break;
+			}
+		}		
+		return slot;
 	}
 
 	private JSONArray swaggerHelperFunction(BotConfiguration config) {

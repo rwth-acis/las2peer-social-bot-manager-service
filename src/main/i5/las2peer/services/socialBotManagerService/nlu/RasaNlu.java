@@ -14,7 +14,7 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
-public class RasaNlu {
+public class RasaNlu extends LanguageUnderstander {
 	private String url;
     private String[] Intents; 
 	public RasaNlu(String url) {
