@@ -152,7 +152,10 @@ public class Messenger {
     }
 
     public MessageInfo handleMessage(ChatMessage message, Bot bot) {
-
+    	
+    if (message == null || message.getText() == null)
+    	return null;
+    	
 	if (this.currentNluModel.get(message.getChannel()) == null) {
 	    this.currentNluModel.put(message.getChannel(), "0");
 	}

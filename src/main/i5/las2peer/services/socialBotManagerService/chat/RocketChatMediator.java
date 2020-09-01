@@ -219,7 +219,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return messages;
 	}
 
-	@Override
 	public String getChannelByEmail(String email) {
 		List<UserDocument> users = client.getDbManager().getUserCollection().getData();
 		for (UserDocument u : users) {

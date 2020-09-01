@@ -43,6 +43,8 @@ public class DialogueManagerGenerator {
 		node.setPassive(false);
 		node.addResponse(frame.getMessage());
 		root.addChild(node);
+		manager.setGoal(frame);
+		manager.goalMessage = frame.getMessage();
 		System.out.println("adding node: " + node.getIntent());
 		for (Slot slot : frame.getSlots().values()) {
 		    AgendaDialogueNode subNode = new AgendaDialogueNode();

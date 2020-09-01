@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import i5.las2peer.services.socialBotManagerService.chat.StaticResponses;
 import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;

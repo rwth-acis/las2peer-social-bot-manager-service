@@ -653,7 +653,8 @@ public class SocialBotManagerService extends RESTService {
 				
 				//ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 				//messenger.handleMessages(messageInfos, bot);
-				messenger.handleMessage(message, bot);
+					if(message != null)
+						messenger.handleMessage(message, bot);
 				//for (MessageInfo m : messageInfos) {
 				 //   try {
 				//	BotAgent botAgent = getBotAgents().get(m.getBotName());
@@ -716,7 +717,9 @@ public class SocialBotManagerService extends RESTService {
 		    JSONObject parsedBody;
 		    try {
 			parsedBody = (JSONObject) jsonParser.parse(body);
-			mediator.handleEvent(parsedBody);
+			ChatMessage message = mediator.handleEvent(parsedBody);
+			if(message != null)
+				messenger.handleMessage(message, bot);
 		    } catch (ParseException e) {
 			e.printStackTrace();
 		    }
