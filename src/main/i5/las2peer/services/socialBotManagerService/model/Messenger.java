@@ -369,7 +369,7 @@ public class Messenger {
 									JSONObject result = (JSONObject) p.parse(r.getResponse());
 
 								//	response = response.replace("$X", result.getAsString("matchCount"));
-									this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse().replace("$X", result.getAsString("matchCount"));
+									this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse().replace("$X", result.getAsString("matchCount")));
 								} else if (state.getIntentKeyword().equals("showtasks")) {
 									if (message.getRole() % 2 == 1) {
 										state = this.knownIntents.get("showtasks1");
