@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -40,14 +41,10 @@ public abstract class ChatMediator {
 		sendFileMessageToChannel(channel, f, text, OptionalLong.empty());
 	}
 
-	
-	
-	
 	/**
 	 * Gets messages the mediator received since the last time the method was called.
 	 *
-	 * @return A Vector containing the ChatMessages received
-	 *         since the last time the method was called.
+	 * @return A Vector containing the ChatMessages received since the last time the method was called.
 	 */
 	public abstract Vector<ChatMessage> getMessages();
 
@@ -73,4 +70,6 @@ public abstract class ChatMediator {
 		}
 		return result.toString();
 	}
+
+	public abstract void close();
 }

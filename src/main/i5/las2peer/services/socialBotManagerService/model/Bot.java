@@ -16,7 +16,7 @@ public class Bot {
 	private String version = "1.0.0";
 	private String service;
 	private VLE vle;
-	private HashMap<String,Boolean> active;
+	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
 	private HashSet<Trigger> triggerList;
@@ -122,11 +122,11 @@ public class Bot {
 		this.version = version;
 	}
 
-	public HashMap<String,Boolean> getActive() {
+	public HashMap<String, Boolean> getActive() {
 		return active;
 	}
 
-	public void setActive(HashMap<String,Boolean> active) {
+	public void setActive(HashMap<String, Boolean> active) {
 		this.active = active;
 	}
 
@@ -136,19 +136,19 @@ public class Bot {
 
 	public Messenger getMessenger(String name) {
 		// TODO: I'm not too sure about thread safety when calling
-		//       something on this. Might need to make ChatMediator
-		//       methods synchronized?
+		// something on this. Might need to make ChatMediator
+		// methods synchronized?
 		return this.messengers.get(name);
 	}
 
-	public void addMessenger(Messenger messenger)
-			throws IOException, DeploymentException, ParseBotException
-	{
+	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
 		this.messengers.put(messenger.getName(), messenger);
 	}
 
-
 	public void deactivateAll() {
+		for (Messenger m : this.messengers.values()) {
+			m.close();
+		}
 		for (String k : this.active.keySet()) {
 			this.active.put(k, false);
 		}
@@ -156,15 +156,15 @@ public class Bot {
 
 	public int countActive() {
 		int trueCount = 0;
-		for(boolean b:active.values()) {
-			if(b)
+		for (boolean b : active.values()) {
+			if (b)
 				trueCount++;
 		}
 		return trueCount;
 	}
 
 	public void handleMessages(ArrayList<MessageInfo> messageInfos) {
-		for (Messenger m: this.messengers.values()) {
+		for (Messenger m : this.messengers.values()) {
 			m.handleMessages(messageInfos, this);
 		}
 	}

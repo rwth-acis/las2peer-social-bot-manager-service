@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Vector;
@@ -11,17 +12,24 @@ import javax.websocket.DeploymentException;
 
 import com.github.seratch.jslack.api.methods.SlackApiException;
 
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
+import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+
+import net.minidev.json.JSONArray;
+
 
 public class Messenger {
 	private String name;
@@ -116,7 +124,6 @@ public class Messenger {
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
-		//System.out.println(newMessages.size());
 		for (ChatMessage message : newMessages) {
 			try {
                 if(this.currentNluModel.get(message.getChannel()) == null){
@@ -169,7 +176,7 @@ public class Messenger {
 				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
-				if(!this.triggeredFunction.containsKey(message.getChannel())){
+			if(!this.triggeredFunction.containsKey(message.getChannel())){
 					if (intent.getConfidence() >= 0.40f) {
 						if (state == null) {
 							state = this.knownIntents.get(intent.getKeyword());
@@ -188,6 +195,15 @@ public class Messenger {
 								stateMap.put(message.getChannel(), state);
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
 								System.out.println("try follow up message");
+								// check ratings
+								String keyword = intent.getKeyword();
+								String txt = message.getText();
+								if (keyword.equals("highrating")
+										&& (txt.equals("1") || txt.equals("2") || txt.equals("3"))) {
+									keyword = "lowrating";
+								} else if (keyword.equals("lowrating") && (txt.equals("4") || txt.equals("5"))) {
+									keyword = "highrating";
+								}
 								state = state.getFollowingMessages().get(intent.getKeyword());
 								stateMap.put(message.getChannel(), state);
 							} else {
@@ -197,10 +213,32 @@ public class Messenger {
 								if (state.getFollowingMessages().get("any") != null) {
 									state = state.getFollowingMessages().get("any");
 									stateMap.put(message.getChannel(), state);
+									String tmp = message.getText().replaceAll("[^0-9]", "");
+									if (tmp.length() > 0 && state.getIntentKeyword().contains("showtasks")) {
+										// try to get tasknumber
+										int t = Integer.parseInt(tmp);
+										if ((message.getRole() % 2) == (t % 2) && t < 9) {
+											state = knownIntents.get("t" + tmp);
+										} else {
+											state = state.getFollowingMessages().get("any");
+										}
+									} else if (state.getIntentKeyword().contains("functions")) {
+										if (message.getText().equals("a") || message.getText().equals("a)")
+											|| message.getText().contains("anzeigen")) {
+											state = knownIntents.get("showtasks" + message.getRole());
+										} else if (message.getText().equals("b") || message.getText().equals("b)")
+											|| message.getText().contains("abgeben")) {
+											state = knownIntents.get("submission");
+										} else if (message.getText().equals("c") || message.getText().equals("c)")
+											|| message.getText().contains("Feedback")) {
+											state = knownIntents.get("userfeedback");
+										}
+									} else {
+										state = state.getFollowingMessages().get("any");
+									}
+									stateMap.put(message.getChannel(), state);
 								} else {
 									state = this.knownIntents.get("default");
-									
-								//	System.out.println(state.getIntentKeyword() + " set");
 								}
 							}
 						}
@@ -213,7 +251,40 @@ public class Messenger {
                 } else if(intent.getConfidence() < 0.40f) {
                 	intent = new Intent("default","","");
                 }
-			
+				
+				// tud
+				if ((intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
+						|| intent.getKeyword().equals("will")) && !this.triggeredFunction.containsKey(message.getChannel())) {
+					if (intent.getEntity("muster") != null) {
+						state = this.knownIntents.get("mustertext");
+					} else if (intent.getEntity("video") != null) {
+						state = this.knownIntents.get("video");
+					} else if (intent.getEntity("help") != null) {
+						state = this.knownIntents.get("help");
+					} else if (intent.getEntity("pause") != null) {
+						state = this.knownIntents.get("pause");
+					} else if (intent.getEntity("upload") != null) {
+						state = this.knownIntents.get("upload");
+					} else if (intent.getEntity("schreibaufgabe") != null) {
+						state = this.knownIntents.get("beschreibung");
+					} else {
+						state = this.knownIntents.get("default");
+					}
+				}
+
+				// ul
+				else if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
+					Collection<Entity> entities = intent.getEntities();
+					System.out.println("try to use entity...");
+					for (Entity e : entities) {
+						System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
+						state = this.knownIntents.get(e.getEntityName());
+						stateMap.put(message.getChannel(), state);
+					}
+				}
+
+
+
 				Boolean contextOn = false; 
 				// No matching intent found, perform default action
                 if(this.triggeredFunction.containsKey(message.getChannel())){
@@ -239,14 +310,84 @@ public class Messenger {
                         }                        
                         if (response != null) {
                             if(response.getResponse() != ""){
-                            	String split ="";
-                            	// allows users to use linebreaks \n during the modeling for chat responses
-                            	for(int i = 0; i < response.getResponse().split("\\\\n").length ; i++) {
-                            		System.out.println(i);
-                            		split += response.getResponse().split("\\\\n")[i] + " \n ";
+                            	if (intent.getEntity("schreibaufgabe") != null || intent.getKeyword().equals("beschreibung")) {
+									File f = new File("Schreibauftrag.pdf");
+									this.chatMediator.sendFileMessageToChannel(message.getChannel(), f, response.getResponse());
+								} else if (intent.getEntity("muster") != null || intent.getKeyword().equals("mustertext")) {
+									File f = new File("Mustertext.pdf");
+									this.chatMediator.sendFileMessageToChannel(message.getChannel(), f, response.getResponse());
+								} else if (state.getIntentKeyword().equals("suggestMaterial")) {
+									// chatbot wl
+									String text = message.getText();
+									String[] words = text.split(",");
+									MiniClient client = new MiniClient();
+									client.setConnectorEndpoint("http://137.226.232.175:32303");
+
+									HashMap<String, String> headers = new HashMap<String, String>();
+									int counter = 0;
+									String s = "";
+									for (int i = 0; i < words.length; i++) {
+										JSONObject body = new JSONObject();
+										JSONArray terms = new JSONArray();
+										terms.add(words[i].trim());
+										body.put("terms", terms);
+										ClientResponse r = client.sendRequest("POST", "materials", body.toJSONString(),
+												"application/json", "application/json", headers);
+
+										JSONParser p = new JSONParser();
+										JSONObject result = (JSONObject) p.parse(r.getResponse());
+										if (result.keySet().size() > 1) {
+											counter++;
+											JSONArray materials = (JSONArray) result.get("@graph");
+											for (Object j : materials) {
+												JSONObject jo = (JSONObject) j;
+												s += "\\n" + words[i] + ": [" + jo.getAsString("title") + "]("
+														+ jo.getAsString("link") + ")";
+											}
+										}
+									}
+							//		response = response.replace("$X", "" + s);
+									this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse().replace("$X", "" + s));
+								} else if (state.getIntentKeyword().equals("liste")) {
+									String text = message.getText();
+									String[] words = text.split(",");
+									JSONArray wordsCleaned = new JSONArray();
+									for (int i = 0; i < words.length; i++) {
+										wordsCleaned.add(words[i].trim());
+									}
+									MiniClient client = new MiniClient();
+									client.setConnectorEndpoint("http://137.226.232.175:32303");
+
+									HashMap<String, String> headers = new HashMap<String, String>();
+
+									JSONObject body = new JSONObject();
+									body.put("terms", wordsCleaned);
+									ClientResponse r = client.sendRequest("POST", "compare", body.toJSONString(),
+											"application/json", "application/json", headers);
+
+									JSONParser p = new JSONParser();
+									JSONObject result = (JSONObject) p.parse(r.getResponse());
+
+								//	response = response.replace("$X", result.getAsString("matchCount"));
+									this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse().replace("$X", result.getAsString("matchCount"));
+								} else if (state.getIntentKeyword().equals("showtasks")) {
+									if (message.getRole() % 2 == 1) {
+										state = this.knownIntents.get("showtasks1");
+									} else {
+										state = this.knownIntents.get("showtasks2");
+									}
+									response = state.getResponse(this.random);
+									this.chatMediator.sendMessageToChannel(message.getChannel(), response.getResponse());
+                            	} else {
+	                            	String split ="";
+	                            	// allows users to use linebreaks \n during the modeling for chat responses
+	                            	for(int i = 0; i < response.getResponse().split("\\\\n").length ; i++) {
+	                            		System.out.println(i);
+	                            		split += response.getResponse().split("\\\\n")[i] + " \n ";
+	                            	}
+	                            	System.out.println(split);
+	                                this.chatMediator.sendMessageToChannel(message.getChannel(), split);
                             	}
-                            	System.out.println(split);
-                                this.chatMediator.sendMessageToChannel(message.getChannel(), split);
                             } else {
                                 if(response.getTriggeredFunctionId() != ""){
                                     this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
@@ -265,14 +406,16 @@ public class Messenger {
                         }
                     }
                 }
-              /*  if(message.getEmail() == null) {
-                	message.setEmail(this.getEmail(message.getChannel()));
-                }*/
 				messageInfos.add(
 						new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), bot.getVle().getName(), contextOn));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+
+	}
+
+	public void close() {
+		chatMediator.close();
 	}
 }

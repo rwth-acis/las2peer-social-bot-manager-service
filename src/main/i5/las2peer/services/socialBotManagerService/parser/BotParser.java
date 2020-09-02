@@ -92,6 +92,22 @@ public class BotParser {
 		int vleCount = 0;
 		VLE vle = null;
 
+		// reset old bot if exist...
+		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
+			BotModelNode elem = entry.getValue();
+			String nodeType = elem.getType();
+			// VLE
+			if (nodeType.equals("Instance")) {
+				VLE resetVle = setVLEInstance(elem);
+				VLE r = config.getServiceConfiguration(resetVle.getName());
+				if (r != null) {
+					for (Bot b : r.getBots().values()) {
+						b.deactivateAll();
+					}
+				}
+			}
+		}
+
 		// NODES
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 			BotModelNode elem = entry.getValue();
