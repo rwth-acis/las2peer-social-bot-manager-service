@@ -752,9 +752,9 @@ public class SocialBotManagerService extends RESTService {
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
             body.put("intent", messageInfo.getIntent().getKeyword());
-            for(String entityName : messageInfo.getIntent().getEntities()){
+       /*     for(String entityName : messageInfo.getIntent().getEntities()){
                 body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
-            }
+            }*/
             body.put("msg", messageInfo.getMessage().getText());
             body.put("contextOn", messageInfo.contextActive());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
