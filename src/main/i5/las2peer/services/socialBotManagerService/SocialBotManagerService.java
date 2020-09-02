@@ -217,6 +217,7 @@ public class SocialBotManagerService extends RESTService {
 	protected void initResources() {
 		getResourceConfig().register(BotResource.class);
 		getResourceConfig().register(BotModelResource.class);
+		getResourceConfig().register(TrainingResource.class);
 		getResourceConfig().register(this);
 	}
 
@@ -1411,6 +1412,151 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}
 		}
+		
 	}
-
+	
+	@Api(
+			value = "Training Resource")
+	@SwaggerDefinition(
+			info = @Info(
+					title = "las2peer Bot Manager Service",
+					version = "1.0.13",
+					description = "A las2peer service for managing social bots.",
+					termsOfService = "",
+					contact = @Contact(
+							name = "Alexander Tobias Neumann",
+							url = "",
+							email = "neumann@dbis.rwth-aachen.de"),
+					license = @License(
+							name = "",
+							url = "")))
+	@Path("/training")
+	public static class TrainingResource {
+		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
+		
+		/**
+		 * Store training data in the database.
+		 *
+		 * @param body training data body
+		 * 
+		 * @param name training data name
+		 *
+		 * @return Returns an HTTP response with plain text string content.
+		 */
+		@POST
+		@Path("/{dataName}")
+		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "Data stored.") })
+		@ApiOperation(
+				value = "Store Training Data",
+				notes = "Stores the current training data.")
+		public Response storeData(String body, @PathParam("dataName") String name) {
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
+			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Check if data with given name already exists in database. If yes, update it. Else, insert it
+				ps = con.prepareStatement("SELECT * FROM training WHERE name = ?");
+				ps.setString(1, name);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					ps.close();
+					ps = con.prepareStatement("UPDATE training SET data = ? WHERE name = ?");
+					ps.setString(1, body);
+					ps.setString(2, name);
+					ps.executeUpdate();
+				} else {
+					ps.close();
+					ps = con.prepareStatement("INSERT INTO training(name, data) VALUES (?, ?)");
+					ps.setString(1, name);
+					ps.setString(2, body);
+					ps.executeUpdate();
+				}
+				
+				resp = Response.ok().entity("Training data stored.").build();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+			
+			return resp;
+		}
+		
+		/**
+		 * Retrieve training data from database.
+		 * 
+		 * @param name training data name
+		 *
+		 * @return Returns an HTTP response with plain text string content.
+		 */
+		@GET
+		@Path("/{dataName}")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "Data stored.") })
+		@ApiOperation(
+				value = "Fetch Training Data",
+				notes = "Fetches the current training data.")
+		public Response getData(@PathParam("dataName") String name) {
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
+			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Fetch data with given name
+				ps = con.prepareStatement("SELECT * FROM training WHERE name = ?");
+				ps.setString(1, name);
+				ResultSet rs = ps.executeQuery();
+				rs.next();
+				
+				// Write serialised model in Blob
+				String s = rs.getString("data");
+				
+				resp = Response.ok().entity(s).build();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+			return resp;	
+		}
+	}
 }

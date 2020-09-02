@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -e
 
 # print all comands to console if DEBUG is set
