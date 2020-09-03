@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,6 +17,9 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.Blob;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -216,6 +223,7 @@ public class SocialBotManagerService extends RESTService {
 	protected void initResources() {
 		getResourceConfig().register(BotResource.class);
 		getResourceConfig().register(BotModelResource.class);
+		getResourceConfig().register(TrainingResource.class);
 		getResourceConfig().register(this);
 	}
 
@@ -1120,35 +1128,62 @@ public class SocialBotManagerService extends RESTService {
 				value = "Save BotModel",
 				notes = "Stores the BotModel in the shared storage.")
 		public Response putModel(@PathParam("name") String name, BotModel body) {
-			// fetch or create envelope by file identifier
-			Envelope fileEnv = null;
-			JSONObject models = new JSONObject();
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
 			try {
-				try {
-					// load existing models
-					fileEnv = Context.get().requestEnvelope(ENVELOPE_MODEL);
-					Serializable s = fileEnv.getContent();
-					if (s instanceof JSONObject) {
-						models = (JSONObject) s;
-					} else {
-						// return wrong content exception error
-						System.out.println("Wrong content");
-					}
-				} catch (EnvelopeNotFoundException e) {
-					// Create new model list
-					fileEnv = Context.get().createEnvelope(ENVELOPE_MODEL, Context.get().getServiceAgent());
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Write serialised model in Blob
+				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+				ObjectOutputStream out = new ObjectOutputStream(bOut);
+				out.writeObject(body);
+				Blob blob = con.createBlob();
+				blob.setBytes(1, bOut.toByteArray());
+				
+				// Check if model with given name already exists in database. If yes, update it. Else, insert it
+				ps = con.prepareStatement("SELECT * FROM models WHERE name = ?");
+				ps.setString(1, name);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					ps.close();
+					ps = con.prepareStatement("UPDATE models SET model = ? WHERE name = ?");
+					ps.setBlob(1, blob);
+					ps.setString(2, name);
+					ps.executeUpdate();
+				} else {
+					ps.close();
+					ps = con.prepareStatement("INSERT INTO models(name, model) VALUES (?, ?)");
+					ps.setString(1, name);
+					ps.setBlob(2, blob);
+					ps.executeUpdate();
 				}
-				// Update envelope content
-				fileEnv.setPublic();
-				models.put(name, body);
-				fileEnv.setContent(models);
-				// store envelope with file content
-				Context.get().storeEnvelope(fileEnv, Context.get().getServiceAgent());
-			} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e) {
-				// return Envelope exception error
+				
+				resp = Response.ok().entity("Model stored.").build();
+			} catch (SQLException e) {
 				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} catch (IOException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
 			}
-			return Response.ok().entity("Model stored.").build();
+			
+			return resp;
 		}
                 
 
@@ -1162,35 +1197,44 @@ public class SocialBotManagerService extends RESTService {
 				value = "Retrieve BotModels",
 				notes = "Get all stored BotModels.")
 		public Response getModels() {
-			// fetch or create envelope by file identifier
-			Envelope fileEnv = null;
-			JSONObject models = new JSONObject();
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
 			try {
-				try {
-					fileEnv = Context.get().requestEnvelope(ENVELOPE_MODEL);
-					Serializable s = fileEnv.getContent();
-					if (s instanceof JSONObject) {
-						models = (JSONObject) s;
-					} else {
-						System.out.println("Wrong content");
-					}
-				} catch (EnvelopeNotFoundException e) {
-					// logger.info("File (" + ENVELOPE_MODEL + ") not found. Creating new one. " + e.toString());
-					fileEnv = Context.get().createEnvelope(ENVELOPE_MODEL, Context.get().getServiceAgent());
-					// update envelope content
-					fileEnv.setPublic();
-					fileEnv.setContent(models);
-					// store envelope with file content
-					Context.get().storeEnvelope(fileEnv, Context.get().getServiceAgent());
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Check if model with given name already exists in database. If yes, update it. Else, insert it
+				ps = con.prepareStatement("SELECT name FROM models");
+				ResultSet rs = ps.executeQuery();
+				
+				// Fetch all model names in the database
+				JSONArray models = new JSONArray();
+				while(rs.next()) {
+					models.add(rs.getString("name"));
 				}
-			} catch (EnvelopeAccessDeniedException e) {
-				// TODO Auto-generated catch block
+				
+				resp = Response.ok().entity(models.toJSONString()).build();
+			} catch (SQLException e) {
 				e.printStackTrace();
-			} catch (EnvelopeOperationFailedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
 			}
-			return Response.ok().entity(models.keySet()).build();
+			
+			return resp;
 		}
 
 		@GET
@@ -1204,35 +1248,51 @@ public class SocialBotManagerService extends RESTService {
 				value = "Get BotModel by name",
 				notes = "Returns the BotModel for the given name.")
 		public Response getModelByName(@PathParam("name") String name) {
-			// fetch or create envelope by file identifier
-			Envelope fileEnv = null;
-			JSONObject models = new JSONObject();
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
 			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Fetch model with given name
+				ps = con.prepareStatement("SELECT * FROM models WHERE name = ?");
+				ps.setString(1, name);
+				ResultSet rs = ps.executeQuery();
+				rs.next();
+				
+				// Write serialised model in Blob
+				Blob b = rs.getBlob("model");
+				InputStream stream = b.getBinaryStream();
+				ObjectInputStream in = new ObjectInputStream(stream);
+				BotModel model = (BotModel) in.readObject();
+				
+				resp = Response.ok().entity(model).build();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} catch (IOException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
 				try {
-					fileEnv = Context.get().requestEnvelope(ENVELOPE_MODEL);
-					Serializable s = fileEnv.getContent();
-					if (s instanceof JSONObject) {
-						models = (JSONObject) s;
-					} else {
-						System.out.println("Wrong content");
-					}
-				} catch (EnvelopeNotFoundException e) {
-					// logger.info("File (" + ENVELOPE_MODEL + ") not found. Creating new one. " + e.toString());
-					fileEnv = Context.get().createEnvelope(ENVELOPE_MODEL, Context.get().getServiceAgent());
-					// update envelope content
-					fileEnv.setPublic();
-					fileEnv.setContent(models);
-					// store envelope with file content
-					Context.get().storeEnvelope(fileEnv, Context.get().getServiceAgent());
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
 				}
-			} catch (EnvelopeAccessDeniedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (EnvelopeOperationFailedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
 			}
-			return Response.ok().entity(models.get(name)).build();
+			return resp;	
 		}
 	}
 
@@ -1424,6 +1484,151 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}
 		}
+		
 	}
-
+	
+	@Api(
+			value = "Training Resource")
+	@SwaggerDefinition(
+			info = @Info(
+					title = "las2peer Bot Manager Service",
+					version = "1.0.13",
+					description = "A las2peer service for managing social bots.",
+					termsOfService = "",
+					contact = @Contact(
+							name = "Alexander Tobias Neumann",
+							url = "",
+							email = "neumann@dbis.rwth-aachen.de"),
+					license = @License(
+							name = "",
+							url = "")))
+	@Path("/training")
+	public static class TrainingResource {
+		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
+		
+		/**
+		 * Store training data in the database.
+		 *
+		 * @param body training data body
+		 * 
+		 * @param name training data name
+		 *
+		 * @return Returns an HTTP response with plain text string content.
+		 */
+		@POST
+		@Path("/{dataName}")
+		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "Data stored.") })
+		@ApiOperation(
+				value = "Store Training Data",
+				notes = "Stores the current training data.")
+		public Response storeData(String body, @PathParam("dataName") String name) {
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
+			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Check if data with given name already exists in database. If yes, update it. Else, insert it
+				ps = con.prepareStatement("SELECT * FROM training WHERE name = ?");
+				ps.setString(1, name);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					ps.close();
+					ps = con.prepareStatement("UPDATE training SET data = ? WHERE name = ?");
+					ps.setString(1, body);
+					ps.setString(2, name);
+					ps.executeUpdate();
+				} else {
+					ps.close();
+					ps = con.prepareStatement("INSERT INTO training(name, data) VALUES (?, ?)");
+					ps.setString(1, name);
+					ps.setString(2, body);
+					ps.executeUpdate();
+				}
+				
+				resp = Response.ok().entity("Training data stored.").build();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+			
+			return resp;
+		}
+		
+		/**
+		 * Retrieve training data from database.
+		 * 
+		 * @param name training data name
+		 *
+		 * @return Returns an HTTP response with plain text string content.
+		 */
+		@GET
+		@Path("/{dataName}")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "Data stored.") })
+		@ApiOperation(
+				value = "Fetch Training Data",
+				notes = "Fetches the current training data.")
+		public Response getData(@PathParam("dataName") String name) {
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
+			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Fetch data with given name
+				ps = con.prepareStatement("SELECT * FROM training WHERE name = ?");
+				ps.setString(1, name);
+				ResultSet rs = ps.executeQuery();
+				rs.next();
+				
+				// Write serialised model in Blob
+				String s = rs.getString("data");
+				
+				resp = Response.ok().entity(s).build();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+			return resp;	
+		}
+	}
 }
