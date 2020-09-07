@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ServiceFunctionAttribute {
 	private String id;
@@ -20,7 +21,13 @@ public class ServiceFunctionAttribute {
 	private String contentType;
     // this attribute will dissapear as everything will be done with a single content attribute
     private String nluQuizContent;
-
+    
+    	//retrieved by swagger
+    	private String description;
+    	private String example;
+    	private List<String> enumList;
+    	private boolean required;
+    	
 	public ServiceFunctionAttribute() {
 		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
 	}
@@ -51,9 +58,8 @@ public class ServiceFunctionAttribute {
 
 	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
 		this.childAttributes.add(childAttribute);
-		System.out.println("My child is" + childAttribute);
+		System.out.println("My child is " + childAttribute.getName());
 	}
-
 	public String getId() {
 		return id;
 	}
@@ -131,7 +137,7 @@ public class ServiceFunctionAttribute {
 	}
 
 	public void setParent(ServiceFunctionAttribute parent) {
-		System.out.println("My parent is" +parent);
+		System.out.println("My parent is " +parent.getName());
 		this.parent = parent;
 	}
 
@@ -154,6 +160,38 @@ public class ServiceFunctionAttribute {
 				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
 				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
 				+ ", contentType=" + contentType + "]";
+	}
+
+	public String getDescription() {
+	    return description;
+	}
+
+	public void setDescription(String description) {
+	    this.description = description;
+	}
+
+	public String getExample() {
+	    return example;
+	}
+
+	public void setExample(String example) {
+	    this.example = example;
+	}
+
+	public List<String> getEnumList() {
+	    return enumList;
+	}
+
+	public void setEnumList(List<String> list) {
+	    this.enumList = list;
+	}
+
+	public boolean isRequired() {
+	    return required;
+	}
+
+	public void setRequired(boolean required) {
+	    this.required = required;
 	}
 
 }

@@ -93,7 +93,6 @@ public class BotParser {
 
 		int vleCount = 0;
 		VLE vle = null;
-
 		// reset old bot if exist...
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 			BotModelNode elem = entry.getValue();
@@ -111,6 +110,7 @@ public class BotParser {
 		}
 		// NODES
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
+		  
 			BotModelNode elem = entry.getValue();
 			String nodeType = elem.getType();
 			// VLE
@@ -201,6 +201,7 @@ public class BotParser {
 		int checkGeneratorIns = 0;
 		int checkGeneratorOuts = 0;
 		// EDGES
+
 		for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 			BotModelEdge elem = entry.getValue();
 			String type = elem.getType();
@@ -421,7 +422,7 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
-			    
+
 				// Action triggers action
 				if (usfList.get(source) != null) {
 					ServiceFunction userFunction = usfList.get(source);
@@ -457,18 +458,25 @@ public class BotParser {
 						ServiceFunction botFunction = bsfList.get(target);
 						m.setTriggeredFunction(botFunction);
 					}
-				}
 				
 				// Frame triggers...
 				} else if (frames.get(source) != null) {
 				Frame frame = frames.get(source);
         				// ...Bot Action
         				if (bsfList.get(target) != null) {
+        				    System.out.println("frame triggers bot action");
         					ServiceFunction botFunction = bsfList.get(target);
         					frame.setServiceFunction(botFunction);
+        					
+        					// automatic         					
+        					if(frame.getSlots().isEmpty()) {        					    
+        					    FrameServiceMapper mapper = new FrameServiceMapper();
+        					    frame = mapper.retrieve(frame, botFunction);
+        					    System.out.println(frame.getSlots().size());
+        					}
         				}
 				}					
-		
+			}
 		}
 
 		if (checkGeneratorIns != checkGeneratorOuts) {
@@ -970,7 +978,7 @@ public class BotParser {
 		return sb.toString();
 	}
 
-	private static JSONObject readJsonFromUrl(String url) throws IOException, ParseException {
+	public static JSONObject readJsonFromUrl(String url) throws IOException, ParseException {
 		InputStream is = new URL(url).openStream();
 		try {
 			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));

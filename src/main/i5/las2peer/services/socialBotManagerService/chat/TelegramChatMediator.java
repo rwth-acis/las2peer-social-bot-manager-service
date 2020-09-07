@@ -42,7 +42,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	    }
 	    
 	    ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
-	    //this.addMessage(chatMessage);
+	    this.addMessage(chatMessage);
 	    return chatMessage;
 	    
 	} catch (InvalidChatMessageException e) {
@@ -57,7 +57,7 @@ public class TelegramChatMediator extends EventChatMediator {
      */
     public void settingWebhook() {
 
-	String url = "https://366ffc193086.ngrok.io";
+	String url = "https://0df6633aed63.ngrok.io";
 	ClientResponse result = client.sendRequest("GET",
 		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());

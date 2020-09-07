@@ -10,7 +10,9 @@
     </publications>
     <dependencies>
         <!-- las2peer core -->
-        <dependency org="i5" name="las2peer-bundle" rev="${core.version}" changing="true" conf="platform->*" />
+        <dependency org="i5" name="las2peer-bundle" rev="${core.version}" changing="true" conf="platform->*" >
+            <exclude module="jackson-core"/>
+        </dependency>
         <!-- JUnit -->
         <dependency org="junit" name="junit" rev="4.12" conf="platform->*" />
         
@@ -31,6 +33,7 @@
         	<exclude module="asm-commons"/>
         </dependency>
         <dependency org="commons-codec" name="commons-codec" rev="1.13" conf="bundle->*" />        
-     
+        <dependency org="io.swagger.parser.v3" name="swagger-parser-v3" rev="2.0.19"/>
+        <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.10.2"/>
     </dependencies>
 </ivy-module>

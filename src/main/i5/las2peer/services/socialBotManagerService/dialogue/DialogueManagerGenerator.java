@@ -63,8 +63,10 @@ public class DialogueManagerGenerator {
 	    AgendaDialogueNode node = new AgendaDialogueNode();
 	    node.setIntent(message.getIntentKeyword());
 	    node.setPassive(true);
-	    for (ChatResponse response : message.getResponseArray()) {
-		node.addResponse(response.getResponse());
+	    if(message.getResponseArray() != null) {
+        	    for (ChatResponse response : message.getResponseArray()) {
+        		node.addResponse(response.getResponse());
+        	    }
 	    }
 	    root.addChild(node);
 	    System.out.println("adding node: " + node.getIntent());

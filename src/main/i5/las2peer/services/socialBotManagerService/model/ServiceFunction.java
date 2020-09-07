@@ -143,5 +143,12 @@ public class ServiceFunction extends TriggerFunction{
 	public void addTrigger(Trigger t) {
 		this.trigger.add(t);
 	}
+	
+	@Override
+	public String toString() {		
+		return "ServiceFunction [id=" + id + ", name=" + serviceName + ", functionName=" + functionName
+				+ ", functionPath=" + functionPath + ", httpMethod=" + httpMethod + ", consumes=" + consumes
+				+ ", produces=" + produces + ", actionType=" + actionType + "]";
+	}
 
 }

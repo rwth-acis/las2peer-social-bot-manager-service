@@ -1,5 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.List;
+
 public class Slot {
 
     /**
@@ -18,6 +20,11 @@ public class Slot {
      * optional
      */
     boolean required;
+    
+    /**
+     * Identifies if this slot is filled by entity extraction or by free direct user input
+     */
+    boolean entity_extraction;
 
     /**
      * Identifies the priority with which this slot must be filled. A low number
@@ -35,6 +42,8 @@ public class Slot {
      * The service parameter that the value of this slot should fill
      */
     ServiceFunctionAttribute parameter;
+    
+    List<Slot> children;
 
     public String getName() {
 	return name;
@@ -82,6 +91,26 @@ public class Slot {
 
     public void setParameter(ServiceFunctionAttribute parameter) {
 	this.parameter = parameter;
+    }
+
+    protected boolean isEntity_extraction() {
+        return entity_extraction;
+    }
+
+    protected void setEntity_extraction(boolean entity_extraction) {
+        this.entity_extraction = entity_extraction;
+    }
+
+    protected List<Slot> getChildren() {
+        return children;
+    }
+
+    protected void setChildren(List<Slot> children) {
+        this.children = children;
+    }
+    
+    public void addChildren(Slot slot) {
+	this.children.add(slot);
     }
 
 }

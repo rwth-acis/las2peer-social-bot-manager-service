@@ -295,6 +295,9 @@ public class SocialBotManagerService extends RESTService {
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of bots") })
 	@ApiOperation(value = "Get all bots", notes = "Returns a list of all registered bots.")
 	public Response getBots() {
+	    
+	    System.out.println("start reading swagger");
+
 	    JSONObject vleList = new JSONObject();
 	    // Iterate through VLEs
 	    for (Entry<String, VLE> vleEntry : getConfig().getVLEs().entrySet()) {
@@ -605,7 +608,8 @@ public class SocialBotManagerService extends RESTService {
 	@ApiOperation(value = "Receive an Slack event")
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
 	public Response slackAction(String body) {
-
+	    
+	    	    
 	    JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 	    JSONObject parsedBody;
 	    try {
@@ -718,8 +722,8 @@ public class SocialBotManagerService extends RESTService {
 		    try {
 			parsedBody = (JSONObject) jsonParser.parse(body);
 			ChatMessage message = mediator.handleEvent(parsedBody);
-			if(message != null)
-				messenger.handleMessage(message, bot);
+			//if(message != null)
+			//	messenger.handleMessage(message, bot);
 		    } catch (ParseException e) {
 			e.printStackTrace();
 		    }
@@ -1096,6 +1100,7 @@ public class SocialBotManagerService extends RESTService {
 	    HashMap<String, String> headers = new HashMap<String, String>();
 	    System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 		    + sf.getConsumes() + " " + sf.getProduces() + " My string iss:" + triggeredBody.toJSONString());
+	    System.out.println(sf.toString());
 	    ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
 		   triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
 	    
