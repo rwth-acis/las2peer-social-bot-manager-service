@@ -33,7 +33,6 @@
         	<exclude module="asm-commons"/>
         </dependency>
         <dependency org="commons-codec" name="commons-codec" rev="1.13" conf="bundle->*" />        
-        <dependency org="io.swagger.parser.v3" name="swagger-parser-v3" rev="2.0.19"/>
-        <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.10.2"/>
+        <dependency org="com.reprezen.kaizen" name="openapi-parser" rev="4.0.4" conf="bundle->*"/>
     </dependencies>
 </ivy-module>

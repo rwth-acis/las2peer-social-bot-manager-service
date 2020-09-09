@@ -25,7 +25,7 @@ public class ServiceFunctionAttribute {
     	//retrieved by swagger
     	private String description;
     	private String example;
-    	private List<String> enumList;
+    	private List<Object> enumList;
     	private boolean required;
     	
 	public ServiceFunctionAttribute() {
@@ -178,11 +178,11 @@ public class ServiceFunctionAttribute {
 	    this.example = example;
 	}
 
-	public List<String> getEnumList() {
+	public List<Object> getEnumList() {
 	    return enumList;
 	}
 
-	public void setEnumList(List<String> list) {
+	public void setEnumList(List<Object> list) {
 	    this.enumList = list;
 	}
 

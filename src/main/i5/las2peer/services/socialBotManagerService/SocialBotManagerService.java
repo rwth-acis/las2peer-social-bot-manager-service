@@ -95,6 +95,7 @@ import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
+import i5.las2peer.services.socialBotManagerService.parser.Hello;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -296,8 +297,7 @@ public class SocialBotManagerService extends RESTService {
 	@ApiOperation(value = "Get all bots", notes = "Returns a list of all registered bots.")
 	public Response getBots() {
 	    
-	    System.out.println("start reading swagger");
-
+	    
 	    JSONObject vleList = new JSONObject();
 	    // Iterate through VLEs
 	    for (Entry<String, VLE> vleEntry : getConfig().getVLEs().entrySet()) {
