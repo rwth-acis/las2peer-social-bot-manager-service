@@ -95,7 +95,6 @@ import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
-import i5.las2peer.services.socialBotManagerService.parser.Hello;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

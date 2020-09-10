@@ -45,6 +45,8 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.model.VLEUser;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -463,16 +465,14 @@ public class BotParser {
 				} else if (frames.get(source) != null) {
 				Frame frame = frames.get(source);
         				// ...Bot Action
-        				if (bsfList.get(target) != null) {
-        				    System.out.println("frame triggers bot action");
+        				if (bsfList.get(target) != null) {        				    
         					ServiceFunction botFunction = bsfList.get(target);
         					frame.setServiceFunction(botFunction);
         					
         					// automatic         					
-        					if(frame.getSlots().isEmpty()) {        					    
-        					    FrameServiceMapper mapper = new FrameServiceMapper();
-        					    frame = mapper.retrieve(frame, botFunction);
-        					    System.out.println(frame.getSlots().size());
+        					if(frame.getSlots().isEmpty()) {
+        					    FrameMapper mapper = new FrameMapper();
+        					    frame = mapper.create(botFunction, frame);
         					}
         				}
 				}					
@@ -496,11 +496,12 @@ public class BotParser {
 		// pass content generators
 		// passContentGenerators(config, bsfList, usfList, sfaList, gList);
 
-		JSONArray jaf = swaggerHelperFunction(config);
-
 		JSONObject j = new JSONObject();
-		j.put("triggerFunctions", jaf);
-		System.out.println(jaf.toJSONString());
+
+			JSONArray jaf = swaggerHelperFunction(config);		
+			j.put("triggerFunctions", jaf);
+			System.out.println(jaf.toJSONString());
+
 		JSONArray jarr = new JSONArray();
 		for (BotAgent b : botAgents.values()) {
 			jarr.add(b.getIdentifier());

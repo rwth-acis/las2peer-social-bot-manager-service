@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.parser;
+package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -9,11 +9,9 @@ public class Test {
 	public static void main(String[] args){
 		
 		String url = "https://petstore3.swagger.io/api/v3/openapi.json";
-		
-		
-			
+					
 			try {
-				OpenAPIReader.readAction(url, "/pet", "post");
+				OpenAPIReader.readModel(url);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

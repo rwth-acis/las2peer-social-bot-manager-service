@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.parser;
+package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,12 +23,12 @@ import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribu
 
 public class OpenAPIReader {
 
-	public static OpenApi3 readModel(String url) {
+	public static OpenApi3 readModel(String jsonUrl) {
 
 		boolean validate = true;
 		URI modelUri = null;
 		try {
-			modelUri = new URI(url);
+			modelUri = new URI(jsonUrl);
 		} catch (URISyntaxException e1) {
 			System.out.println("no valid uri");
 			e1.printStackTrace();
@@ -44,16 +44,28 @@ public class OpenAPIReader {
 
 	}
 
-	public static ServiceFunction readAction(String baseUrl, String functionPath, String httpMethod) {
-
-		String swaggerUrl = "https://petstore3.swagger.io/api/v3/openapi.json";
-		OpenApi3 model = readModel(swaggerUrl);
+	public static ServiceFunction readAction(OpenApi3 model, String functionPath, String httpMethod) {
 
 		Operation operation = getOperationByPath(model, functionPath, httpMethod);
 		ServiceFunction action = parseAction(model, operation);
 		action.setActionType(ActionType.REST);
 		action.setHttpMethod(httpMethod);
-		action.setFunctionPath(baseUrl + functionPath);
+		action.setFunctionPath(functionPath);
+		action.setFunctionName(operation.getOperationId());
+
+		return action;
+
+	}
+
+	public static ServiceFunction readAction(OpenApi3 model, String operationId) {
+
+		Operation operation = getOperationByOperationId(model, operationId);
+		ServiceFunction action = parseAction(model, operation);
+		action.setActionType(ActionType.REST);
+		String httpMethod = Overlay.of(operation).getPathInParent();
+		action.setHttpMethod(httpMethod);
+		String functionPath = Overlay.of(operation).getPathFromRoot();
+		action.setFunctionPath(functionPath);
 		action.setFunctionName(operation.getOperationId());
 
 		return action;
@@ -92,12 +104,37 @@ public class OpenAPIReader {
 
 	}
 
+	private static Operation getOperationByOperationId(OpenApi3 openAPI, String operationId) {
+		
+		System.out.println("get Operation by Id: " + operationId);
+		
+		for (Path pathItem : openAPI.getPaths().values()) {
+			if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
+				return pathItem.getGet();
+			if (pathItem.getPost() != null && pathItem.getPost().getOperationId().equals(operationId))
+				return pathItem.getPost();
+			if (pathItem.getPut() != null && pathItem.getPut().getOperationId().equals(operationId))
+				return pathItem.getPut();
+			if (pathItem.getDelete() != null && pathItem.getDelete().getOperationId().equals(operationId))
+				return pathItem.getDelete();
+		}
+		
+		System.out.println("Operation not found");
+		return null;
+	}
+
 	private static ServiceFunction parseAction(OpenApi openAPI, Operation operation) {
 		ServiceFunction action = new ServiceFunction();
-
+		
+		if(openAPI == null)
+			System.out.println("no model specified");
+		
+		if(operation == null)
+			System.out.println("no operation specified");
+		
 		// Operation ID
-		String operationId = operation.getOperationId();
-		if (operationId != null) {
+		if (operation.getOperationId() != null) {
+			String operationId = operation.getOperationId();
 			action.setFunctionName(operationId);
 		} else {
 			System.out.println("no operation id");
@@ -240,7 +277,7 @@ public class OpenAPIReader {
 		OpenApi3 model = new OpenApi3Parser().parse(modelUri, validate);
 		System.out.printf("== Model %s\n", modelUri);
 		if (!validate || model.isValid()) {
-			// describeModel(model);
+			describeModel(model);
 		} else {
 			for (ValidationItem item : model.getValidationItems()) {
 				System.out.println(item);
