@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueManager;
+import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueNode;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 
 public class AgendaDialogueManagerTest {

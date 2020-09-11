@@ -46,7 +46,6 @@ import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.model.VLEUser;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
-import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -872,12 +871,13 @@ public class BotParser {
 			switch (subVal.getName()) {
 			case "name":
 			    frame.setName(subVal.getValue());
+			    frame.setEndMessage(subVal.getValue());
 			    break;
 			case "intent":
 			    frame.setIntent(subVal.getValue());
 			    break;
 			case "message":
-			    frame.setMessage(subVal.getValue());
+			    frame.setStartMessage(subVal.getValue());
 			    break;
 			}
 		}

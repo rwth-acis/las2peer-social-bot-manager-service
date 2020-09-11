@@ -1,9 +1,8 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.task;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Random;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -28,58 +27,41 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 	Iterator<AgendaDialogueNode> iterator = stack.iterator();
 	while (iterator.hasNext()) {
 	    AgendaDialogueNode node = iterator.next();
-	    if (node.hasIntent(intent)) {
-		stack.pushAll(node.getChildren());
-		// Chat Node
-		if (node.isPassive()) {
-		    if (node.hasChildren()) {
-			stack.remove(node);
-			stack.addAll(0, node.getChildren());
-		    }
-		    ArrayList<String> responses = node.getResponses();
-		    if (!responses.isEmpty()) {
-			String response = responses.get(new Random().nextInt(responses.size()));
-			System.out.println(response);
-			return response;
-		    }
-		}
 
+	    if (node.hasIntent(intent)) {
+
+		// Add children to stack
 		if (node.hasChildren()) {
 		    stack.remove(node);
 		    stack.addAll(0, node.getChildren());
 		}
 
-		// Entity as Slot value
+		// Identify entities as slot values
 		if (semantic.getEntity(node.getEntity()) != null) {
+
 		    this.state.addSlotValue(node.getIntent(), semantic.getEntity(node.getEntity()).getValue());
 		    System.out.println("Slot received: " + semantic.getEntity(node.getEntity()).getValue());
 		    stack.remove(node);
-		    if (isFilled()) {
-
-			String response = this.goalMessage.concat(" : ");
-			System.out.println("values: " + this.state.slotValues.size());
-			for (String value : this.state.slotValues.values()) {
-			    System.out.println(value);
-			    response = response.concat(", ").concat(value);
-			}
-			this.reset();
-			return response;
-		    }
 		}
+
+		// Check if all information is collected
+		if (isFilled()) {
+		    String response = this.goalMessage.concat(" : ");
+		    System.out.println("values: " + this.state.slotValues.size());
+		    for (String value : this.state.slotValues.values()) {
+			System.out.println(value);
+			response = response.concat(", ").concat(value);
+		    }
+		    this.reset();
+		    return response;
+		}
+		
+		// Return request message of next slot
+		return next().getResponses().get(0);
 	    }
 	}
-	String response;
-	if (this.next().getResponses().size() > 0) {
-	    response = this.next().getResponses().get(0).concat(stack.toString());
 
-	} else {
-	    response = "hello";
-	}
-	
-	    System.out.println(response);
-	    this.stack.printAll();
-	    return response;
-
+	return this.handleDefault();
     }
 
     public void reset() {
@@ -97,10 +79,10 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 
     private AgendaDialogueNode next() {
 	for (AgendaDialogueNode node : this.stack) {
-	    if (!node.isPassive() && !node.hasChildren())
+	    if (!node.hasChildren())
 		return node;
 	}
-	return this.stack.get(1);
+	return this.stack.get(0);
     }
 
     private boolean isFilled() {
@@ -132,7 +114,7 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 	return root;
     }
 
-    protected void setRoot(AgendaDialogueNode root) {
+    public void setRoot(AgendaDialogueNode root) {
 	this.root = root;
     }
 
@@ -142,6 +124,21 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 
     public void setGoal(Frame goal) {
 	this.goal = goal;
+    }
+
+    @Override
+    public boolean hasIntent(String intent) {
+	for (AgendaDialogueNode node: root.getDescendants()) {
+	    if(node.hasIntent(intent))
+		return true;
+	}
+	return false;
+    }
+
+    @Override
+    public String handleDefault() {
+	String response = "default message";
+	return response;
     }
 
 }

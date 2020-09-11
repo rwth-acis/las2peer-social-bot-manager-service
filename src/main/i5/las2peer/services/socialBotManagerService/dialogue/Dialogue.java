@@ -1,25 +1,22 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
+import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 public class Dialogue {
 
-    AbstractDialogueManager manager;
+    MetaDialogueManager manager;
     LanguageUnderstander nlu;
     LanguageGenerator nlg;
     
-    public Dialogue(AbstractDialogueManager dialogueManager) {
-	this.manager = dialogueManager;
-    }
-    
-    public Dialogue(AbstractDialogueManager manager, LanguageUnderstander nlu, LanguageGenerator nlg) {
+   // public Dialogue(AbstractDialogueManager dialogueManager) {
+//	this.manager = dialogueManager;
+   // }
 
-	this.manager = manager;
-	this.nlu = nlu;
-	this.nlg = nlg;
+    public Dialogue(Messenger messenger) {
+	MetaDialogueManager manager = new MetaDialogueManager(messenger);
     }
-
 
     public String handle(MessageInfo message) {
 
@@ -38,11 +35,11 @@ public class Dialogue {
 //	return outputSemantic;
   //  }
 
-    public AbstractDialogueManager getManager() {
+    public MetaDialogueManager getManager() {
 	return manager;
     }
 
-    public void setManager(AbstractDialogueManager manager) {
+    public void setManager(MetaDialogueManager manager) {
 	this.manager = manager;
     }
 

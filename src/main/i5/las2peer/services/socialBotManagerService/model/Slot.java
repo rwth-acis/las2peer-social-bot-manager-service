@@ -134,12 +134,16 @@ public class Slot {
 		this.nlgIntent = nlg_intent;
 	}
 
-	protected List<Slot> getChildren() {
+	public List<Slot> getChildren() {
 		return children;
 	}
 
-	protected void setChildren(List<Slot> children) {
+	public void setChildren(List<Slot> children) {
 		this.children = children;
+	}
+	
+	public boolean hasChildren() {
+	    return !this.children.isEmpty();
 	}
 
 	public void addChildren(Slot slot) {

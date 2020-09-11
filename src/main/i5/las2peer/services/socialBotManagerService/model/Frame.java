@@ -9,7 +9,9 @@ public class Frame {
 
 	private String intent;
 
-	private String message;
+	private String startMessage;
+	
+	private String endMessage;
 
 	private ServiceFunction serviceFunction;
 
@@ -23,7 +25,7 @@ public class Frame {
 		super();
 		this.name = name;
 		this.intent = intent;
-		this.message = message;
+		this.startMessage = message;
 		this.serviceFunction = serviceFunction;
 		this.slots = slots;
 	}
@@ -64,20 +66,28 @@ public class Frame {
 		this.serviceFunction = serviceFunction;
 	}
 
-	public String getMessage() {
-		return message;
+	public String getStartMessage() {
+		return this.startMessage;
 	}
 
-	public void setMessage(String message) {
-		this.message = message;
+	public void setStartMessage(String message) {
+		this.startMessage = message;
 	}
 
 	public String toString() {
 		String res = "Frame - name: ".concat(this.getName()).concat(" intent: ").concat(this.getIntent())
-				.concat(" message: ").concat(this.getMessage()).concat("slots: ").concat(String.valueOf(this.slots.size()));
+				.concat(" start message: ").concat(this.getStartMessage()).concat("slots: ").concat(String.valueOf(this.slots.size()));
 		for (Slot slot : getSlots().values()) {
 			res = res.concat(slot.toString());
 		}
 		return res;
+	}
+
+	public String getEndMessage() {
+	    return endMessage;
+	}
+
+	public void setEndMessage(String endMessage) {
+	    this.endMessage = endMessage;
 	}
 }

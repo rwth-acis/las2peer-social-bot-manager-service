@@ -16,10 +16,8 @@ import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
-import i5.las2peer.services.socialBotManagerService.dialogue.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueManagerGenerator;
-import i5.las2peer.services.socialBotManagerService.dialogue.DialogueManagerType;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
@@ -55,11 +53,6 @@ public class Messenger {
      * This map contains all known incoming message intents. The key is the intent keyword
      */
     private HashMap<String, IncomingMessage> knownIntents;
-    
-    /**
-     * Dialogue Manager of this messenger
-     */
-    private AbstractDialogueManager dialogueManager;
 
     // Used for keeping conversation state per channel
     private HashMap<String, IncomingMessage> stateMap;
@@ -98,7 +91,6 @@ public class Messenger {
 	this.triggeredFunction = new HashMap<String, String>();
 	// Dialogue Manager
 	DialogueManagerGenerator generator = new DialogueManagerGenerator();
-	this.dialogueManager = generator.generate(DialogueManagerType.AGENDA_TREE, this);	
 	this.intentFrames = new HashMap<String, Frame>();
 	this.openDialogues = new HashMap<String, Dialogue>();
     }
@@ -170,16 +162,16 @@ public class Messenger {
 	MessageInfo info = new MessageInfo();
 	info.intent = intent;
 	info.message = message;
-
+	
 	String response = null;
 	// Open Dialogues
 	if (this.openDialogues.containsKey(channel)) {
 	    System.out.println("resume open dialogue: " + message.getChannel());
 	    response = this.openDialogues.get(channel).handle(info);
 	} else {
-	    DialogueManagerGenerator generator = new DialogueManagerGenerator();
-	    AbstractDialogueManager manager = generator.generate(DialogueManagerType.AGENDA_TREE, this);
-	    Dialogue dialogue = new Dialogue(manager);
+	    //DialogueManagerGenerator generator = new DialogueManagerGenerator();
+	   // AbstractDialogueManager manager = generator.generate(DialogueManagerType.SIMPLE, this);
+	    Dialogue dialogue = new Dialogue(this);
 	    this.openDialogues.put(channel, dialogue);
 	    response = dialogue.handle(info);
 	    System.out.println("start new dialogue: " + message.getChannel());

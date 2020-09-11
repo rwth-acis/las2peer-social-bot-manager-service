@@ -721,8 +721,8 @@ public class SocialBotManagerService extends RESTService {
 		    try {
 			parsedBody = (JSONObject) jsonParser.parse(body);
 			ChatMessage message = mediator.handleEvent(parsedBody);
-			//if(message != null)
-			//	messenger.handleMessage(message, bot);
+			if(message != null)
+			    messenger.handleMessage(message, bot);
 		    } catch (ParseException e) {
 			e.printStackTrace();
 		    }

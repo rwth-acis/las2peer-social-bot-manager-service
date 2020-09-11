@@ -6,4 +6,11 @@ public abstract class AbstractDialogueManager {
 
 	public abstract String handle(Intent inputSemantic);
 
+	public abstract boolean hasIntent(String intent);
+	
+	public boolean hasIntent(Intent intent) {
+	    return this.hasIntent(intent.getKeyword());
+	}
+
+	public abstract String handleDefault();
 }

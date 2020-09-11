@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,7 +63,7 @@ public class AgendaDialogueNode {
 	return (!this.getChildren().isEmpty());
     }
 
-    protected void addChild(AgendaDialogueNode child) {
+    public void addChild(AgendaDialogueNode child) {
 	this.children.add(child);
     }
 
