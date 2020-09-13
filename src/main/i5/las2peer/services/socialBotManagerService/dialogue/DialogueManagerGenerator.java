@@ -54,7 +54,7 @@ public class DialogueManagerGenerator {
 	// root node
 	AgendaDialogueNode root = new AgendaDialogueNode();
 	root.setIntent(frame.getIntent());
-	root.addResponse(frame.getStartMessage());
+	root.addResponse(frame.getStartMessage().concat("\n"));
 	manager.setRoot(root);
 	manager.setGoal(frame);
 	manager.goalMessage = frame.getEndMessage();
@@ -70,10 +70,15 @@ public class DialogueManagerGenerator {
     }
 
     private AgendaDialogueNode getNode(Slot slot) {
-	AgendaDialogueNode node = new AgendaDialogueNode();	
+	AgendaDialogueNode node = new AgendaDialogueNode();
 	node.setIntent(slot.getNlu_intent());
 	node.setEntity(slot.getEntity());
 	node.addResponse(slot.getMessage());
+	if (slot.getParameter() != null && slot.getParameter().getParameterType() != null) {
+	    node.setInputType(InputType.valueOf(slot.getParameter().getParameterType()));
+	} else {
+	    node.setInputType(InputType.String);
+	}
 
 	if (slot.hasChildren()) {
 	    for (Slot subSlot : slot.getChildren()) {

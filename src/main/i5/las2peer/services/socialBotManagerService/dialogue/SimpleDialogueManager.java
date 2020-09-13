@@ -17,8 +17,7 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
 	this.intentMessageMap = new MultivaluedHashMap<String, String>();
     }
 
-    @Override
-    public String handle(Intent intent) {
+    public DialogueAct handle(Intent intent) {
 
 	List<String> responses = this.intentMessageMap.get(intent.getKeyword());
 	if (responses.isEmpty()) {
@@ -27,8 +26,7 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
 	}
 
 	String response = responses.get(new Random().nextInt(responses.size()));
-	System.out.println(response);
-	return response;
+	return new DialogueAct(response);
 
     }
 
@@ -43,13 +41,13 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
 
     @Override
     public String handleDefault() {
-	
-	if(intentMessageMap.get("default") != null) {
+
+	if (intentMessageMap.get("default") != null) {
 	    List<String> responses = intentMessageMap.get("default");
 	    return responses.get(new Random().nextInt(responses.size()));
 	}
-	
-	return "I am a bot";	
+
+	return "I am a bot";
     }
 
 }

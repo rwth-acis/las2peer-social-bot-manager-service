@@ -2,6 +2,8 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
+import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 public class Dialogue {
@@ -9,21 +11,29 @@ public class Dialogue {
     MetaDialogueManager manager;
     LanguageUnderstander nlu;
     LanguageGenerator nlg;
+    DialogueAct lastAct;
     
-   // public Dialogue(AbstractDialogueManager dialogueManager) {
-//	this.manager = dialogueManager;
-   // }
-
+    
     public Dialogue(Messenger messenger) {
-	MetaDialogueManager manager = new MetaDialogueManager(messenger);
+	this.manager = new MetaDialogueManager(messenger);
     }
 
     public String handle(MessageInfo message) {
-
-	//Intent inputSemantic = nlu.getIntent(message);
-	String outputSemantic = manager.handle(message.getIntent());
+	
+	Intent semantic = message.getIntent();
+	
+	if(lastAct != null && lastAct.hasExpected()) {
+	    String intent = lastAct.getExpected().getIntend();
+	    semantic.setKeyword(intent);
+	    Entity entity = new Entity(lastAct.getExpected().getEntity(), message.getMessage().getText());
+	    semantic.addEntity(lastAct.getExpected().getEntity(), entity);
+	}
+	
+	DialogueAct act = manager.handle(semantic);
+	this.lastAct = act;
+	System.out.println(act);
 	// String response = nlg.translate(outputSemantic);
-	return outputSemantic;
+	return act.getMessage();
     }
     
 

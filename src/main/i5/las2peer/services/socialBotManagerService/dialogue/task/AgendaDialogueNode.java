@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.task;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 
 public class AgendaDialogueNode {
@@ -35,6 +36,8 @@ public class AgendaDialogueNode {
      */
     private ArrayList<String> responses;
     
+    private InputType inputType;
+    
     /**
      * Bot actions
      */
@@ -65,6 +68,7 @@ public class AgendaDialogueNode {
 
     public void addChild(AgendaDialogueNode child) {
 	this.children.add(child);
+	System.out.println("node " + this.getIntent() + " add child " + child.getIntent());
     }
 
     public String getIntent() {
@@ -123,6 +127,18 @@ public class AgendaDialogueNode {
 
     public void setPassive(boolean bool) {
 	this.passive = bool;
+    }
+
+    public InputType getInputType() {
+        return inputType;
+    }
+
+    public void setInputType(InputType inputType) {
+        this.inputType = inputType;
+    }
+
+    public void setResponses(ArrayList<String> responses) {
+        this.responses = responses;
     }
 
 

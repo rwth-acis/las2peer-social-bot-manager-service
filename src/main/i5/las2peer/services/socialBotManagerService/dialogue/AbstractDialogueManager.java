@@ -4,7 +4,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public abstract class AbstractDialogueManager {
 
-	public abstract String handle(Intent inputSemantic);
+	public abstract DialogueAct handle(Intent inputSemantic);
 
 	public abstract boolean hasIntent(String intent);
 	

@@ -60,6 +60,10 @@ public class Intent {
 	public String getKeyword() {
 		return this.intentKeyword;
 	}
+	
+	public void setKeyword(String keyword) {
+	    this.intentKeyword = keyword;
+	}
 
 	public float getConfidence() {
 		return this.confidence;
@@ -67,6 +71,10 @@ public class Intent {
 
 	public Entity getEntity(String entity) {
 		return this.entities.get(entity);
+	}
+	
+	public void addEntity(String key, Entity entity) {
+	    this.entities.put(key, entity);
 	}
 
 	public ArrayList<String> getEntities() {
