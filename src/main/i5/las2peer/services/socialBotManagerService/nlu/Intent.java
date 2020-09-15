@@ -77,22 +77,17 @@ public class Intent {
 	    this.entities.put(key, entity);
 	}
 
-	public ArrayList<String> getEntities() {
-		ArrayList<String> extractedEntities = new ArrayList<String>();
-		for (Entry<String, Entity> entry : entities.entrySet()) {
-			String key = entry.getKey();
-			extractedEntities.add(key);
-		}
-		return extractedEntities;
-	}
+    public ArrayList<String> getEntitieValues(){
+        ArrayList<String> extractedEntitieValues= new ArrayList<String>();
+        for(Entry<String, Entity> entry : entities.entrySet()) {
+            String value = entry.getValue().getValue();
+            extractedEntitieValues.add(value);
+        }
+        return extractedEntitieValues;
+    }
 
-	public ArrayList<String> getEntitieValues() {
-		ArrayList<String> extractedEntitieValues = new ArrayList<String>();
-		for (Entry<String, Entity> entry : entities.entrySet()) {
-			String value = entry.getValue().getValue();
-			extractedEntitieValues.add(value);
-		}
-		return extractedEntitieValues;
+	public Collection<Entity> getEntities() {
+		return this.entities.values();
 	}
 
 }

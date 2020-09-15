@@ -153,4 +153,5 @@ public class SlackRTMChatMediator extends ChatMediator {
 		// TODO Auto-generated method stub
 
 	}
+
 }
