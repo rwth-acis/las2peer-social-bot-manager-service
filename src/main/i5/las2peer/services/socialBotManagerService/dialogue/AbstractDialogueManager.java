@@ -12,5 +12,5 @@ public abstract class AbstractDialogueManager {
 	    return this.hasIntent(intent.getKeyword());
 	}
 
-	public abstract String handleDefault();
+	public abstract DialogueAct handleDefault();
 }

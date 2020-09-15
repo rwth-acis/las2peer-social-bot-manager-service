@@ -105,9 +105,9 @@ public class OpenAPIReader {
 	}
 
 	private static Operation getOperationByOperationId(OpenApi3 openAPI, String operationId) {
-		
+
 		System.out.println("get Operation by Id: " + operationId);
-		
+
 		for (Path pathItem : openAPI.getPaths().values()) {
 			if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
 				return pathItem.getGet();
@@ -118,20 +118,20 @@ public class OpenAPIReader {
 			if (pathItem.getDelete() != null && pathItem.getDelete().getOperationId().equals(operationId))
 				return pathItem.getDelete();
 		}
-		
+
 		System.out.println("Operation not found");
 		return null;
 	}
 
 	private static ServiceFunction parseAction(OpenApi openAPI, Operation operation) {
 		ServiceFunction action = new ServiceFunction();
-		
-		if(openAPI == null)
+
+		if (openAPI == null)
 			System.out.println("no model specified");
-		
-		if(operation == null)
+
+		if (operation == null)
 			System.out.println("no operation specified");
-		
+
 		// Operation ID
 		if (operation.getOperationId() != null) {
 			String operationId = operation.getOperationId();
@@ -173,21 +173,31 @@ public class OpenAPIReader {
 				System.out.println("invalid media type: " + contentType);
 			} else {
 				action.setConsumes(contentType);
-			}
 
-			// ContentBody
-			ServiceFunctionAttribute bodyAttribute = new ServiceFunctionAttribute();
-			if (mediaType.getSchema() != null) {
-				Schema schema = mediaType.getSchema();
-				String name = schema.getXml().getName();
-				bodyAttribute.setName(name);
-				bodyAttribute = addChildrenAttributes(openAPI, schema, bodyAttribute);
-				bodyAttribute.setContentType("body");
-				action.addAttribute(bodyAttribute);
+				// ContentBody
+				ServiceFunctionAttribute bodyAttribute = new ServiceFunctionAttribute();
+				if (mediaType.getSchema() != null) {
+					Schema schema = mediaType.getSchema();
+					String name = schema.getXml().getName();
+					bodyAttribute.setName(name);
+					bodyAttribute = addChildrenAttributes(openAPI, schema, bodyAttribute);
+					bodyAttribute.setContentType("body");
+					action.addAttribute(bodyAttribute);
+				}
 			}
 
 		}
-
+		
+		if(operation.getResponses() == null) {
+			System.out.println("no responses");
+			return action;
+		}
+		
+		if(operation.getResponses().get("200") == null) {
+			System.out.println("no 200 response");
+			return action;
+		}
+		
 		if (operation.getResponses().get("200").getContentMediaType("application/json") != null)
 			action.setProduces("application/json");
 

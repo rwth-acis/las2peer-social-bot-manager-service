@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.task;
 
 import static org.junit.Assert.assertEquals;
 

@@ -5,8 +5,17 @@ public class DialogueAct {
     String intent;
     String message;
     ExpectedInput expected;
+    boolean full;
+    
+    public boolean isFull() {
+		return full;
+	}
 
-    public DialogueAct() {
+	public void setFull(boolean full) {
+		this.full = full;
+	}
+
+	public DialogueAct() {
 
     }
 
@@ -78,5 +87,6 @@ public class DialogueAct {
     public String toString() {
 	return "DialogueAct [intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
     }
+
 
 }

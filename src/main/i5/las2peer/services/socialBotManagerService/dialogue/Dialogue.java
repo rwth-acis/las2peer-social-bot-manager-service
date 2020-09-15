@@ -30,7 +30,12 @@ public class Dialogue {
 	}
 	
 	DialogueAct act = manager.handle(semantic);
-	this.lastAct = act;
+	if (act.isFull()) {
+		this.lastAct = null;
+	} else {
+		this.lastAct = act;
+	}
+	
 	System.out.println(act);
 	// String response = nlg.translate(outputSemantic);
 	return act.getMessage();

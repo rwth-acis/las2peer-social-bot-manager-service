@@ -40,14 +40,14 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
     }
 
     @Override
-    public String handleDefault() {
+    public DialogueAct handleDefault() {
 
 	if (intentMessageMap.get("default") != null) {
 	    List<String> responses = intentMessageMap.get("default");
-	    return responses.get(new Random().nextInt(responses.size()));
+	    return new DialogueAct(responses.get(new Random().nextInt(responses.size())));
 	}
 
-	return "I am a bot";
+	return new DialogueAct("I am a bot");
     }
 
 }

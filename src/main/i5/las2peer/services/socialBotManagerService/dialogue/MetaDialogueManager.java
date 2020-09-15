@@ -9,36 +9,41 @@ import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public class MetaDialogueManager {
 
-    Collection<AbstractDialogueManager> managers;
-    AbstractDialogueManager active;
+	Collection<AbstractDialogueManager> managers;
+	AbstractDialogueManager active;
 
-    public MetaDialogueManager(Messenger messenger) {
+	public MetaDialogueManager(Messenger messenger) {
 
-	this.managers = new ArrayList<AbstractDialogueManager>();
-	DialogueManagerGenerator generator = new DialogueManagerGenerator();
-	if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
-	    managers.add(generator.generate(DialogueManagerType.SIMPLE, messenger));
-	if (messenger.getFrames() != null && !messenger.getFrames().isEmpty()) {
-	    for (Frame frame : messenger.getFrames()) {
-		managers.add(generator.generate(DialogueManagerType.AGENDA_TREE, messenger, frame));
-	    }
+		this.managers = new ArrayList<AbstractDialogueManager>();
+		DialogueManagerGenerator generator = new DialogueManagerGenerator();
+		if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
+			managers.add(generator.generate(DialogueManagerType.SIMPLE, messenger));
+		if (messenger.getFrames() != null && !messenger.getFrames().isEmpty()) {
+			for (Frame frame : messenger.getFrames()) {
+				managers.add(generator.generate(DialogueManagerType.AGENDA_TREE, messenger, frame));
+			}
+		}
+
 	}
 
-    }
+	public DialogueAct handle(Intent semantic) {
 
-    public DialogueAct handle(Intent semantic) {
+		String intent = semantic.getKeyword();
 
-	String intent = semantic.getKeyword();
+		for (AbstractDialogueManager manager : this.managers) {
+			if (manager.hasIntent(intent)) {
+				active = manager;
+				DialogueAct response = manager.handle(semantic);
+				if (response.isFull()) {
+					active = null;
+				}
+				return response;
+			}
+		}
 
-	for (AbstractDialogueManager manager : this.managers) {
-	    if (manager.hasIntent(intent)) {
-		active = manager;
-		DialogueAct response = manager.handle(semantic);
-		return response;
-	    }
+		if (active != null)
+			return active.handleDefault();
+		return new DialogueAct("hi");
 	}
-
-	return new DialogueAct(active.handleDefault());
-    }
 
 }
