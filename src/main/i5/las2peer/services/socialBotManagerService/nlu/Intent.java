@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
 

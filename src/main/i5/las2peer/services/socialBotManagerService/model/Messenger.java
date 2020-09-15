@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,8 +9,6 @@ import java.util.Random;
 import java.util.Vector;
 
 import javax.websocket.DeploymentException;
-
-import com.github.seratch.jslack.api.methods.SlackApiException;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
@@ -22,6 +21,7 @@ import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueManagerGenerator;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
@@ -247,7 +247,7 @@ public class Messenger {
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 
-				if (!this.triggeredFunction.containsKey(message.getChannel())) 
+				if (!this.triggeredFunction.containsKey(message.getChannel())) {
 
 					if (intent.getConfidence() >= 0.40f) {
 						if (state == null) {
@@ -344,7 +344,7 @@ public class Messenger {
 					}
 				}
 
-				// ul
+				// ul				
 				else if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
 					Collection<Entity> entities = intent.getEntities();
 					System.out.println("try to use entity...");

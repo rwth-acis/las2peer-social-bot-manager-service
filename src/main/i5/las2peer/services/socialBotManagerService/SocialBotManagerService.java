@@ -100,6 +100,7 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
@@ -815,8 +816,8 @@ public class SocialBotManagerService extends RESTService {
 	    body.put("email", messageInfo.getMessage().getEmail());
 	    body.put("channel", messageInfo.getMessage().getChannel());
 	    body.put("intent", messageInfo.getIntent().getKeyword());
-	    for (String entityName : messageInfo.getIntent().getEntities()) {
-		body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
+	    for (Entity entity : messageInfo.getIntent().getEntities()) {
+	    	body.put(entity.getEntityName(), entity.getValue());
 	    }
 	    body.put("msg", messageInfo.getMessage().getText());
 	    body.put("contextOn", messageInfo.contextActive());

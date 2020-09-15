@@ -213,7 +213,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return messages;
 	}
 
-	@Override
 	public String getChannelByEmail(String email) {
 		List<UserDocument> users = client.getDbManager().getUserCollection().getData();
 		for (UserDocument u : users) {
@@ -813,7 +812,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		}
 	}
 
-	@Override
 	public void close() {
 		shouldCheckRooms = false;
 		checkRooms = null;
