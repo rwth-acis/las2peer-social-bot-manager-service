@@ -1133,7 +1133,7 @@ public class SocialBotManagerService extends RESTService {
 				// Open database connection
 				con = service.database.getDataSource().getConnection();
 				
-				// Check if model with given name already exists in database. If yes, update it. Else, insert it
+				
 				ps = con.prepareStatement("SELECT name FROM models");
 				ResultSet rs = ps.executeQuery();
 				
@@ -1557,6 +1557,62 @@ public class SocialBotManagerService extends RESTService {
 				;
 			}
 			return resp;	
+		}
+		
+		/**
+		 * Retrieve the names of all datasets in the database.
+		 * 
+		 * @param name training data name
+		 *
+		 * @return Returns an HTTP response with plain text string content.
+		 */
+		@GET
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(
+				value = { @ApiResponse(
+						code = HttpURLConnection.HTTP_OK,
+						message = "List of datasets") })
+		@ApiOperation(
+				value = "Retrieve datasets",
+				notes = "Get all stored datasets.")
+		public Response getDatasets() {
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			
+			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				ps = con.prepareStatement("SELECT name FROM training");
+				ResultSet rs = ps.executeQuery();
+				
+				// Fetch all model names in the database
+				JSONArray models = new JSONArray();
+				while(rs.next()) {
+					models.add(rs.getString("name"));
+				}
+				
+				resp = Response.ok().entity(models.toJSONString()).build();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+			
+			return resp;
 		}
 	}
 }
