@@ -20,6 +20,7 @@ import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -49,7 +50,12 @@ public class Messenger {
 	 * The chat mediator connects to the external messenger application
 	 */
 	private ChatMediator chatMediator;
-
+	
+	/**
+	 * dialogue handler
+	 */
+	private DialogueHandler dialogueHandler;
+	
 	/**
 	 * This map contains all domains of this messenger
 	 */
@@ -87,25 +93,35 @@ public class Messenger {
 
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
-
+		
+		this.name = id;
+		
+		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
-		if (chatService.contentEquals("Slack")) {
+		switch (this.chatService) {
+		case SLACK_EVENT:
 			this.chatMediator = new SlackEventChatMediator(token);
-		} else if (chatService.contentEquals("Telegram")) {
+			break;
+		case TELEGRAM:
 			this.chatMediator = new TelegramChatMediator(token);
-		} else if (chatService.contentEquals("Rocket.Chat")) {
+			break;
+		case ROCKET_CHAT:
 			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-		} else { // TODO: Implement more backends
+			break;
+		default:
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
-		this.name = id;
+						
+		// State map
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();
+		
 		// Initialize the assessment setup
 		this.currentNluModel = new HashMap<String, String>();
 		this.triggeredFunction = new HashMap<String, String>();
+		
 		// Dialogue Manager
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 		this.intentFrames = new HashMap<String, Frame>();

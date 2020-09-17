@@ -3,7 +3,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.task;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 
 public class AgendaDialogueNode {
@@ -36,7 +36,7 @@ public class AgendaDialogueNode {
      */
     private ArrayList<String> responses;
     
-    private InputType inputType;
+    private ExpectedInputType inputType;
     
     /**
      * Bot actions
@@ -129,11 +129,11 @@ public class AgendaDialogueNode {
 	this.passive = bool;
     }
 
-    public InputType getInputType() {
+    public ExpectedInputType getInputType() {
         return inputType;
     }
 
-    public void setInputType(InputType inputType) {
+    public void setInputType(ExpectedInputType inputType) {
         this.inputType = inputType;
     }
 
