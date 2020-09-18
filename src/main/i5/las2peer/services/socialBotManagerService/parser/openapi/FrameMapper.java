@@ -23,9 +23,8 @@ public class FrameMapper {
 	for (ServiceFunctionAttribute attr : action.getAttributes()) {
 
 	    System.out.println("add slot");
-	    Slot slot = new Slot();
+	    Slot slot = new Slot(attr.getName());
 	    slot.setParameter(attr);
-	    slot.setName(attr.getName());
 	    slot.setNlu_intent("inform_" + attr.getName());
 	    slot.setNlg_intent("request_" + attr.getName());
 	    frame.addSlot(slot);
@@ -48,9 +47,8 @@ public class FrameMapper {
 
 	    // children
 	    for (ServiceFunctionAttribute subattr : attr.getChildAttributes()) {
-		Slot childSlot = new Slot();
+		Slot childSlot = new Slot(subattr.getName());
 		childSlot.setParameter(subattr);
-		childSlot.setName(subattr.getName());
 		childSlot.setNlu_intent("inform_" + attr.getName() + "_" + subattr.getName());
 		childSlot.setNlg_intent("request_" + attr.getName() + "_" + subattr.getName());
 
@@ -72,11 +70,10 @@ public class FrameMapper {
 
 		// children of children TODO recursive function
 		for (ServiceFunctionAttribute subsubattr : subattr.getChildAttributes()) {
-		    Slot childchildSlot = new Slot();
+		    Slot childchildSlot = new Slot(subsubattr.getName());
 		    childchildSlot.setParameter(subsubattr);
-		    childchildSlot.setName(subsubattr.getName());
-		    childchildSlot
-			    .setNlu_intent("inform_" + attr.getName() + "_" + subattr.getName() + "_" + subsubattr.getName());
+		    childchildSlot.setNlu_intent(
+			    "inform_" + attr.getName() + "_" + subattr.getName() + "_" + subsubattr.getName());
 		    childchildSlot.setNlg_intent(
 			    "request_" + attr.getName() + "_" + subattr.getName() + "_" + subsubattr.getName());
 
@@ -95,11 +92,11 @@ public class FrameMapper {
 			childchildSlot.setEntity(subsubattr.getName());
 		    }
 		    childchildSlot.setMessage(message);
-		    childSlot.addChildren(childchildSlot);
+		    childSlot.addChild(childchildSlot);
 
 		}
 
-		slot.addChildren(childSlot);
+		slot.addChild(childSlot);
 	    }
 
 	}

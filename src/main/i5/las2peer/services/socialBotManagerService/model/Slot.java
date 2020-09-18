@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+
 public class Slot {
 
     /**
      * name of this slot
      */
-    String name;
+    final String name;
 
     /**
      * intent that corresponds to the intent recognition of the NLU module
@@ -17,7 +19,7 @@ public class Slot {
     String nluIntent;
 
     /**
-     * intent that corresponding to the intent recognition of the NLG module
+     * intent that corresponding to the message creation of the NLG module
      */
     String nlgIntent;
 
@@ -52,23 +54,27 @@ public class Slot {
     String message;
 
     /**
+    * 
+     */
+    ExpectedInputType inputType;
+
+    /**
      * The service parameter that the value of this slot should fill
      */
     ServiceFunctionAttribute parameter;
 
+    /**
+     * children of this slot
+     **/
     List<Slot> children;
 
-    public Slot() {
-	super();
+    public Slot(String name) {
+	this.name = name;
 	this.children = new ArrayList<Slot>();
     }
 
     public String getName() {
 	return name;
-    }
-
-    public void setName(String name) {
-	this.name = name;
     }
 
     public String getEntity() {
@@ -147,7 +153,11 @@ public class Slot {
 	return !this.children.isEmpty();
     }
 
-    public void addChildren(Slot slot) {
+    public boolean isLeaf() {
+	return !this.hasChildren();
+    }
+
+    public void addChild(Slot slot) {
 	System.out.println("slot " + this.getName() + " add child " + slot.getName());
 	this.children.add(slot);
     }
@@ -175,5 +185,30 @@ public class Slot {
 	}
 	return res;
     }
+
+    public String getNluIntent() {
+        return nluIntent;
+    }
+
+    public void setNluIntent(String nluIntent) {
+        this.nluIntent = nluIntent;
+    }
+
+    public String getNlgIntent() {
+        return nlgIntent;
+    }
+
+    public void setNlgIntent(String nlgIntent) {
+        this.nlgIntent = nlgIntent;
+    }
+
+    public ExpectedInputType getInputType() {
+        return inputType;
+    }
+
+    public void setInputType(ExpectedInputType inputType) {
+        this.inputType = inputType;
+    }
+
 
 }

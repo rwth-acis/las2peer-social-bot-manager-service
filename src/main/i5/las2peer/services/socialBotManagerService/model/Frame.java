@@ -105,7 +105,27 @@ public class Frame {
 	return map;
     }
 
-    public Collection<? extends Slot> getDescendants() {
+    public Collection<Slot> getRequired() {
+	Collection<Slot> slots = this.getDescendants();
+	Collection<Slot> res = new ArrayList<Slot>();
+	for (Slot slot : slots) {
+	    if (slot.isRequired())
+		res.add(slot);
+	}
+	return res;
+    }
+
+    public Collection<? extends Slot> getLeafs() {
+	Collection<Slot> leafs = this.getDescendants();
+	for (Slot slot : leafs) {
+	    if (slot.hasChildren())
+		leafs.remove(slot);
+	}
+
+	return leafs;
+    }
+
+    public Collection<Slot> getDescendants() {
 	Collection<Slot> desc = new ArrayList<Slot>();
 	for (Slot slot : this.slots.values()) {
 	    desc.addAll(slot.getDescendants());
