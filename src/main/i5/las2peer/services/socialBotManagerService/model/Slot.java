@@ -1,10 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.task.SlotSet;
 
 public class Slot {
 
@@ -70,7 +70,20 @@ public class Slot {
 
     public Slot(String name) {
 	this.name = name;
-	this.children = new ArrayList<Slot>();
+	this.children = new SlotSet();
+    }
+    
+    /**
+     * @param value
+     * @return true if the input value is acceptable for this slot
+     */
+    public boolean validate(String value) {
+	
+	assert this.inputType != null: "no inputType defined.";
+	if(this.inputType == null)
+	    this.inputType = ExpectedInputType.Free;
+		
+	return this.inputType.validate(value);
     }
 
     public String getName() {
@@ -163,7 +176,7 @@ public class Slot {
     }
 
     public Collection<? extends Slot> getDescendants() {
-	Collection<Slot> desc = new ArrayList<Slot>();
+	Collection<Slot> desc = new SlotSet();
 	desc.add(this);
 	if (this.hasChildren())
 	    for (Slot slot : this.getChildren()) {
@@ -208,6 +221,22 @@ public class Slot {
 
     public void setInputType(ExpectedInputType inputType) {
         this.inputType = inputType;
+    }
+    
+    public String getInformIntent() {
+	return "inform_" + name;
+    }
+    
+    public String getRequestIntent() {
+	return "request_" + name;
+    }
+    
+    public String getConfirmIntent() {
+	return "confirm_" + name;
+    }
+    
+    public String getDenyIntent() {
+	return "deny_" + name;
     }
 
 

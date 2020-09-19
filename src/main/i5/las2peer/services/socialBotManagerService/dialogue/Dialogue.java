@@ -10,7 +10,7 @@ public class Dialogue {
 
 	MetaDialogueManager manager;
 	LanguageUnderstander nlu;
-	LanguageGenerator nlg;
+	AbstractLanguageGenerator nlg;
 	DialogueAct lastAct;
 
 	public Dialogue(Messenger messenger) {
@@ -63,11 +63,11 @@ public class Dialogue {
 		this.nlu = nlu;
 	}
 
-	public LanguageGenerator getNlg() {
+	public AbstractLanguageGenerator getNlg() {
 		return nlg;
 	}
 
-	public void setNlg(LanguageGenerator nlg) {
+	public void setNlg(AbstractLanguageGenerator nlg) {
 		this.nlg = nlg;
 	}
 

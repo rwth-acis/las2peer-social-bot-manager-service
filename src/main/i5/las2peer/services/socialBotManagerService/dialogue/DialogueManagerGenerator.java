@@ -4,6 +4,8 @@ import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueNode;
+import i5.las2peer.services.socialBotManagerService.dialogue.task.DialogueGoal;
+import i5.las2peer.services.socialBotManagerService.dialogue.task.NaiveDialogueManager;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
@@ -21,6 +23,9 @@ public class DialogueManagerGenerator {
 		System.out.println("generate Dialogue Manager " + type);
 		AbstractDialogueManager manager;
 		switch (type) {
+		case NAIVE:
+		    manager = generateNaiveDialogueManager(frame);
+		    break;
 		case AGENDA_TREE:
 			manager = generateAgendaDialogueManager(frame);
 			break;
@@ -31,6 +36,14 @@ public class DialogueManagerGenerator {
 			manager = null;
 		}
 		return manager;
+	}
+
+	private AbstractDialogueManager generateNaiveDialogueManager(Frame frame) {
+	   
+	   DialogueGoal goal = new DialogueGoal(frame);
+	   NaiveDialogueManager manager = new NaiveDialogueManager(goal);
+	   
+	   return manager;
 	}
 
 	private AbstractDialogueManager generateSimpleDialogueManager(Messenger messenger) {

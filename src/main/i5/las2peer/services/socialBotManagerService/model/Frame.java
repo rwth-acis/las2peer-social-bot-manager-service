@@ -1,10 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import i5.las2peer.services.socialBotManagerService.dialogue.task.SlotSet;
 
 public class Frame {
 
@@ -105,9 +105,18 @@ public class Frame {
 	return map;
     }
 
-    public Collection<Slot> getRequired() {
-	Collection<Slot> slots = this.getDescendants();
-	Collection<Slot> res = new ArrayList<Slot>();
+    public Slot getSlot(String intent) {
+
+	String name = intent;
+	String prefix = "inform_";
+	if (intent.startsWith(prefix))
+	    name = intent.substring(prefix.length());
+	return slots.get(name);
+    }
+
+    public SlotSet getRequired() {
+	SlotSet slots = this.getDescendants();
+	SlotSet res = new SlotSet();
 	for (Slot slot : slots) {
 	    if (slot.isRequired())
 		res.add(slot);
@@ -115,8 +124,8 @@ public class Frame {
 	return res;
     }
 
-    public Collection<? extends Slot> getLeafs() {
-	Collection<Slot> leafs = this.getDescendants();
+    public SlotSet getLeafs() {
+	SlotSet leafs = this.getDescendants();
 	for (Slot slot : leafs) {
 	    if (slot.hasChildren())
 		leafs.remove(slot);
@@ -125,8 +134,8 @@ public class Frame {
 	return leafs;
     }
 
-    public Collection<Slot> getDescendants() {
-	Collection<Slot> desc = new ArrayList<Slot>();
+    public SlotSet getDescendants() {
+	SlotSet desc = new SlotSet();
 	for (Slot slot : this.slots.values()) {
 	    desc.addAll(slot.getDescendants());
 	}

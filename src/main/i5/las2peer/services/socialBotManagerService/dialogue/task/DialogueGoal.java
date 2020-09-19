@@ -109,6 +109,14 @@ public class DialogueGoal {
 	    return false;
 	return this.frame.getDescendants().contains(slot);
     }
+    
+    public boolean contains(String name) {
+	
+	assert this.frame != null : "frame of dialogue goal is null";	
+	if(this.frame.getDescendants() == null)
+	    return false;	
+	return frame.getDescendants().contains(name);
+    }
 
     /**
      * @param slot
@@ -122,6 +130,15 @@ public class DialogueGoal {
 	assert this.contains(slot) : "slot is not part of this goal";
 		
 	return this.values.containsKey(slot);
+    }
+    
+    public Slot get(String name) {
+	
+	assert this.frame != null : "frame of dialogue goal is null";
+	assert this.contains(name): "slot is not contained in frame";
+	
+	Slot slot = frame.getSlot(name);
+	return slot;
     }
     
     /**

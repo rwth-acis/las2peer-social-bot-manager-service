@@ -1,21 +1,25 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DialogueAct {
 
     String intent;
+    Map<String, String> entities;
     String message;
     ExpectedInput expected;
     boolean full;
-    
+
     public boolean isFull() {
-		return full;
-	}
+	return full;
+    }
 
-	public void setFull(boolean full) {
-		this.full = full;
-	}
+    public void setFull(boolean full) {
+	this.full = full;
+    }
 
-	public DialogueAct() {
+    public DialogueAct() {
 
     }
 
@@ -34,6 +38,22 @@ public class DialogueAct {
 	this.intent = intent;
 	this.message = message;
 	this.expected = expected;
+    }
+
+    public void addEntity(String name, String value) {
+	if(!this.hasEntities())
+	    this.entities = new HashMap<String, String>();
+	this.entities.put(name, value);
+    }
+    
+    public Map<String, String> getEntities() {
+	return this.entities;
+    }
+
+    public boolean hasEntities() {
+	if (this.entities != null && !this.entities.isEmpty())
+	    return true;
+	return false;
     }
 
     public String getMessage() {
@@ -73,7 +93,7 @@ public class DialogueAct {
     }
 
     public DialogueAct concat(DialogueAct act) {
-	
+
 	if (act.hasIntent())
 	    this.intent = act.intent;
 	if (act.hasMessage())
@@ -87,6 +107,5 @@ public class DialogueAct {
     public String toString() {
 	return "DialogueAct [intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
     }
-
 
 }
