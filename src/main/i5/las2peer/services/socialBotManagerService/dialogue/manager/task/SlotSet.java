@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +28,16 @@ public class SlotSet extends ArrayList<Slot> {
 	    intents.add(slot.getDenyIntent());
 	}
 	return intents;
+    }
+
+    public Slot get(String name) {
+	for (Slot slot : this) {
+	    if (name.contentEquals(slot.getName()) || name.contentEquals(slot.getInformIntent())
+		    || name.contentEquals(slot.getRequestIntent()) || name.contentEquals(slot.getConfirmIntent())
+		    || name.contentEquals(slot.getDenyIntent()))
+		return slot;
+	}
+	return null;
     }
 
 }

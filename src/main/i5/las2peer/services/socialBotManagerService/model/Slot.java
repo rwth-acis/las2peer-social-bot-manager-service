@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
-import i5.las2peer.services.socialBotManagerService.dialogue.task.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotSet;
 
 public class Slot {
 
@@ -209,6 +209,10 @@ public class Slot {
 
     public String getNlgIntent() {
         return nlgIntent;
+    }
+    
+    public boolean hasParameter() {
+	return this.parameter != null;
     }
 
     public void setNlgIntent(String nlgIntent) {

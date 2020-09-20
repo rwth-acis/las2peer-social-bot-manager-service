@@ -1,11 +1,12 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.Collection;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueManager;
-import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueNode;
-import i5.las2peer.services.socialBotManagerService.dialogue.task.DialogueGoal;
-import i5.las2peer.services.socialBotManagerService.dialogue.task.NaiveDialogueManager;
+import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.AgendaDialogueManager;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.AgendaDialogueNode;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DialogueGoal;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.NaiveDialogueManager;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
@@ -42,6 +43,7 @@ public class DialogueManagerGenerator {
 	   
 	   DialogueGoal goal = new DialogueGoal(frame);
 	   NaiveDialogueManager manager = new NaiveDialogueManager(goal);
+	   manager.setStartIntent(frame.getIntent());
 	   
 	   return manager;
 	}

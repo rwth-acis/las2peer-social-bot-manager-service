@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.AbstractLanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;

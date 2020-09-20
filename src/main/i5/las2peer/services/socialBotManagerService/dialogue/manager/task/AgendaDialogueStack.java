@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import java.util.Collection;
 import java.util.Iterator;

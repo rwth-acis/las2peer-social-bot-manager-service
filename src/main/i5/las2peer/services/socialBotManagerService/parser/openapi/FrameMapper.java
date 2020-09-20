@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
@@ -27,6 +28,17 @@ public class FrameMapper {
 	    slot.setParameter(attr);
 	    slot.setNlu_intent("inform_" + attr.getName());
 	    slot.setNlg_intent("request_" + attr.getName());
+	    slot.setRequired(attr.isRequired());
+	    switch(attr.getContentType()) {
+	    case "enum":
+		slot.setInputType(ExpectedInputType.Enum);
+		break;
+	    case "integer":
+		slot.setInputType(ExpectedInputType.Number);
+		break;
+	    default: 
+		slot.setInputType(ExpectedInputType.Free);
+	    }
 	    frame.addSlot(slot);
 
 	    String message = "I want to know \n name: ".concat(attr.getName()).concat("\n");
@@ -45,13 +57,27 @@ public class FrameMapper {
 	    }
 	    slot.setMessage(message);
 
+	  
+	    
 	    // children
 	    for (ServiceFunctionAttribute subattr : attr.getChildAttributes()) {
-		Slot childSlot = new Slot(subattr.getName());
+		Slot childSlot = new Slot(attr.getName() + "_" + subattr.getName());
 		childSlot.setParameter(subattr);
 		childSlot.setNlu_intent("inform_" + attr.getName() + "_" + subattr.getName());
 		childSlot.setNlg_intent("request_" + attr.getName() + "_" + subattr.getName());
+		childSlot.setRequired(subattr.isRequired());
 
+		 switch(subattr.getContentType()) {
+		    case "enum":
+			childSlot.setInputType(ExpectedInputType.Enum);
+			break;
+		    case "integer":
+			childSlot.setInputType(ExpectedInputType.Number);
+			break;
+		    default: 
+			childSlot.setInputType(ExpectedInputType.Free);
+		    }
+		
 		message = "I want to know \n name: ".concat(subattr.getName()).concat("\n");
 		if (subattr.getDescription() != null)
 		    message = message.concat(" Description: ").concat(subattr.getDescription()).concat("\n");
@@ -70,13 +96,24 @@ public class FrameMapper {
 
 		// children of children TODO recursive function
 		for (ServiceFunctionAttribute subsubattr : subattr.getChildAttributes()) {
-		    Slot childchildSlot = new Slot(subsubattr.getName());
+		    Slot childchildSlot = new Slot(attr.getName() + "_" + subattr.getName() + "_" + subsubattr.getName());
 		    childchildSlot.setParameter(subsubattr);
 		    childchildSlot.setNlu_intent(
 			    "inform_" + attr.getName() + "_" + subattr.getName() + "_" + subsubattr.getName());
 		    childchildSlot.setNlg_intent(
 			    "request_" + attr.getName() + "_" + subattr.getName() + "_" + subsubattr.getName());
-
+		    
+			 switch(subsubattr.getContentType()) {
+			    case "enum":
+				childchildSlot.setInputType(ExpectedInputType.Enum);
+				break;
+			    case "integer":
+				childchildSlot.setInputType(ExpectedInputType.Number);
+				break;
+			    default: 
+				childchildSlot.setInputType(ExpectedInputType.Free);
+			    }
+		    
 		    message = "I want to know \n name: ".concat(subsubattr.getName()).concat("\n");
 		    if (subsubattr.getDescription() != null)
 			message = message.concat(" Description: ").concat(subsubattr.getDescription()).concat("\n");
@@ -92,6 +129,7 @@ public class FrameMapper {
 			childchildSlot.setEntity(subsubattr.getName());
 		    }
 		    childchildSlot.setMessage(message);
+		    childchildSlot.setRequired(subsubattr.isRequired());
 		    childSlot.addChild(childchildSlot);
 
 		}

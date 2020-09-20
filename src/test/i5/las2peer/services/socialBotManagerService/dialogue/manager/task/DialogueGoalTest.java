@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 

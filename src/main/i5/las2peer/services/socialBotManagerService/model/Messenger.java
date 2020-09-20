@@ -21,7 +21,7 @@ import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
-import i5.las2peer.services.socialBotManagerService.dialogue.DialogueManagerGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;

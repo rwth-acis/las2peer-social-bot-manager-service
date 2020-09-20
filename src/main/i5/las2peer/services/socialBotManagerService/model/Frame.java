@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.task.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotSet;
 
 public class Frame {
 
@@ -95,6 +95,14 @@ public class Frame {
 	this.endMessage = endMessage;
     }
 
+    public String getReqConfIntent() {
+	return ("reqconf_" + this.name);
+    }
+    
+    public String getConfirmIntent() {
+	return ("confirm_" + this.name);
+    }
+    
     public Map<String, Slot> getGoals() {
 	Map<String, Slot> map = new HashMap<String, Slot>();
 	for (Entry<String, Slot> entry : this.slots.entrySet()) {
@@ -105,12 +113,8 @@ public class Frame {
 	return map;
     }
 
-    public Slot getSlot(String intent) {
-
-	String name = intent;
-	String prefix = "inform_";
-	if (intent.startsWith(prefix))
-	    name = intent.substring(prefix.length());
+    public Slot getSlot(String name) {
+	SlotSet slots = getDescendants();
 	return slots.get(name);
     }
 

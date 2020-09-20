@@ -1,11 +1,11 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import java.util.Iterator;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;

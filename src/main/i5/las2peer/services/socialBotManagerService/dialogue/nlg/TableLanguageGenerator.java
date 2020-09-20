@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.nlg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 
 import javax.ws.rs.core.MultivaluedHashMap;
+
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 
 public class TableLanguageGenerator extends AbstractLanguageGenerator {
 
@@ -82,11 +84,16 @@ public class TableLanguageGenerator extends AbstractLanguageGenerator {
 	assert invariant() : "add nlg entry. invalid state";
     }
     
+    /**
+     * @param intent
+     * @return
+     */
     public List<String> getEntry(String intent) {	
 	assert this.table != null : "get entry. table is null";	
 	return this.table.get(intent);
     }
-
+        
+    
     /**
      * @return true if this object is in a valid state
      */

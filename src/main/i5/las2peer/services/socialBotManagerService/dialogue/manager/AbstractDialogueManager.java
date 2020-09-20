@@ -1,5 +1,6 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public abstract class AbstractDialogueManager {

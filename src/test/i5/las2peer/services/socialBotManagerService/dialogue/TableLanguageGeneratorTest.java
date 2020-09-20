@@ -7,6 +7,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGenerator;
+
 public class TableLanguageGeneratorTest {
 
     @Test

@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueManager;
-import i5.las2peer.services.socialBotManagerService.dialogue.task.AgendaDialogueNode;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.AgendaDialogueManager;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.AgendaDialogueNode;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 
 public class AgendaDialogueManagerTest {

@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.List;
 import java.util.Random;
@@ -6,6 +6,7 @@ import java.util.Random;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public class SimpleDialogueManager extends AbstractDialogueManager {
