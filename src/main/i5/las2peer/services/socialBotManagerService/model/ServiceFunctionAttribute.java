@@ -3,195 +3,209 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
+
 public class ServiceFunctionAttribute {
-	private String id;
-	private String name;
-	private String parameterType;
-	private boolean sameAsTrigger = false;
-	private ServiceFunctionAttribute mappedTo;
-	private ArrayList<ServiceFunctionAttribute> childAttributes;
-	private ServiceFunctionAttribute parent;
-	private ContentGenerator generator;
-	private ServiceFunction function;
-	private IfThenBlock itb;
+    private String id;
+    private String name;
+    private ParameterType parameterType;
+    private boolean sameAsTrigger = false;
+    private ServiceFunctionAttribute mappedTo;
+    private ArrayList<ServiceFunctionAttribute> childAttributes;
+    private ServiceFunctionAttribute parent;
+    private ContentGenerator generator;
+    private ServiceFunction function;
+    private IfThenBlock itb;
 
-	private boolean staticContent;
-	private String content;
-	private String contentURL;
-	private String contentType;
-    // this attribute will dissapear as everything will be done with a single content attribute
+    private boolean staticContent;
+    private String content;
+    private String contentURL;
+    private String contentType;
+    // this attribute will dissapear as everything will be done with a single
+    // content attribute
     private String nluQuizContent;
-    
-    	//retrieved by swagger
-    	private String description;
-    	private String example;
-    	private List<Object> enumList;
-    	private boolean required;
-    	
-	public ServiceFunctionAttribute() {
-		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
-	}
 
-	public String getName() {
-		return name;
-	}
+    // retrieved by swagger
+    private String description;
+    private String example;
+    private List<Object> enumList;
+    private boolean required;
+    private boolean array;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public ServiceFunctionAttribute() {
+	this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
+    }
 
-	public String getContentType() {
-		return contentType;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public void setContentType(String type) {
-		this.contentType = type;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public ArrayList<ServiceFunctionAttribute> getChildAttributes() {
-		return childAttributes;
-	}
+    public String getContentType() {
+	return contentType;
+    }
 
-	/*public void setChildAttributes(ArrayList<ServiceFunctionAttribute> childAttributes) {
-		this.childAttributes = childAttributes;
-	}*/
+    public void setContentType(String type) {
+	this.contentType = type;
+    }
 
-	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
-		this.childAttributes.add(childAttribute);
-		System.out.println("My child is " + childAttribute.getName());
-	}
-	public String getId() {
-		return id;
-	}
+    public ArrayList<ServiceFunctionAttribute> getChildAttributes() {
+	return childAttributes;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    /*
+     * public void setChildAttributes(ArrayList<ServiceFunctionAttribute>
+     * childAttributes) { this.childAttributes = childAttributes; }
+     */
 
-	public boolean isSameAsTrigger() {
-		return sameAsTrigger;
-	}
+    public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
+	this.childAttributes.add(childAttribute);
+	System.out.println("My child is " + childAttribute.getName());
+    }
 
-	public void setSameAsTrigger(boolean sameAsTrigger) {
-		this.sameAsTrigger = sameAsTrigger;
-	}
+    public String getId() {
+	return id;
+    }
 
-	public ContentGenerator getGenerator() {
-		return generator;
-	}
+    public void setId(String id) {
+	this.id = id;
+    }
 
-	public void setGenerator(ContentGenerator generator) {
-		this.generator = generator;
-	}
+    public boolean isSameAsTrigger() {
+	return sameAsTrigger;
+    }
 
-	public ServiceFunctionAttribute getMappedTo() {
-		return mappedTo;
-	}
+    public void setSameAsTrigger(boolean sameAsTrigger) {
+	this.sameAsTrigger = sameAsTrigger;
+    }
 
-	public void setMappedTo(ServiceFunctionAttribute mappedTo) {
-		this.mappedTo = mappedTo;
-	}
+    public ContentGenerator getGenerator() {
+	return generator;
+    }
 
-	public ServiceFunction getFunction() {
-		return function;
-	}
+    public void setGenerator(ContentGenerator generator) {
+	this.generator = generator;
+    }
 
-	public void setFunction(ServiceFunction function) {
-		this.function = function;
-	}
+    public ServiceFunctionAttribute getMappedTo() {
+	return mappedTo;
+    }
 
-	public boolean hasStaticContent() {
-		return staticContent;
-	}
+    public void setMappedTo(ServiceFunctionAttribute mappedTo) {
+	this.mappedTo = mappedTo;
+    }
 
-	public void setStaticContent(boolean staticContent) {
-		this.staticContent = staticContent;
-	}
+    public ServiceFunction getFunction() {
+	return function;
+    }
 
-	public String getContent() {
-		return content;
-	}
+    public void setFunction(ServiceFunction function) {
+	this.function = function;
+    }
 
-	public void setContent(String content) {
-		this.content = content;
-	}
+    public boolean hasStaticContent() {
+	return staticContent;
+    }
 
-	public String getContentURL() {
-		return contentURL;
-	}
+    public void setStaticContent(boolean staticContent) {
+	this.staticContent = staticContent;
+    }
 
-	public void setContentURL(String contentURL) {
-		this.contentURL = contentURL;
-	}
+    public String getContent() {
+	return content;
+    }
 
-	public String getParameterType() {
-		return parameterType;
-	}
+    public void setContent(String content) {
+	this.content = content;
+    }
 
-	public void setParameterType(String parameterType) {
-		this.parameterType = parameterType;
-	}
+    public String getContentURL() {
+	return contentURL;
+    }
 
-	public ServiceFunctionAttribute getParent() {
-		return parent;
-	}
+    public void setContentURL(String contentURL) {
+	this.contentURL = contentURL;
+    }
 
-	public void setParent(ServiceFunctionAttribute parent) {
-		System.out.println("My parent is " +parent.getName());
-		this.parent = parent;
-	}
+    public ParameterType getParameterType() {
+	return parameterType;
+    }
 
-	public IfThenBlock getItb() {
-		return itb;
-	}
+    public void setParameterType(ParameterType parameterType) {
+	this.parameterType = parameterType;
+    }
 
-	public void setItb(IfThenBlock itb) {
-		this.itb = itb;
-	}
-    
+    public ServiceFunctionAttribute getParent() {
+	return parent;
+    }
 
+    public void setParent(ServiceFunctionAttribute parent) {
+	System.out.println("My parent is " + parent.getName());
+	this.parent = parent;
+    }
 
-    
+    public IfThenBlock getItb() {
+	return itb;
+    }
 
-	@Override
-	public String toString() {		
-		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
-				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
-				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
-				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
-				+ ", contentType=" + contentType + "]";
-	}
+    public void setItb(IfThenBlock itb) {
+	this.itb = itb;
+    }
 
-	public String getDescription() {
-	    return description;
-	}
+    public boolean hasChildren() {
+	return (this.childAttributes != null && !this.childAttributes.isEmpty());
+    }
 
-	public void setDescription(String description) {
-	    this.description = description;
-	}
+    @Override
+    public String toString() {
+	return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
+		+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
+		+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
+		+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
+		+ ", contentType=" + contentType + "]";
+    }
 
-	public String getExample() {
-	    return example;
-	}
+    public String getDescription() {
+	return description;
+    }
 
-	public void setExample(String example) {
-	    this.example = example;
-	}
+    public void setDescription(String description) {
+	this.description = description;
+    }
 
-	public List<Object> getEnumList() {
-	    return enumList;
-	}
+    public String getExample() {
+	return example;
+    }
 
-	public void setEnumList(List<Object> list) {
-	    this.enumList = list;
-	}
+    public void setExample(String example) {
+	this.example = example;
+    }
 
-	public boolean isRequired() {
-	    return required;
-	}
+    public List<Object> getEnumList() {
+	return enumList;
+    }
 
-	public void setRequired(boolean required) {
-	    this.required = required;
-	}
+    public void setEnumList(List<Object> list) {
+	this.enumList = list;
+    }
+
+    public boolean isRequired() {
+	return required;
+    }
+
+    public void setRequired(boolean required) {
+	this.required = required;
+    }
+
+    public boolean isArray() {
+	return this.array;
+    }
+
+    public void setArray(boolean value) {
+	this.array = value;
+    }
 
 }

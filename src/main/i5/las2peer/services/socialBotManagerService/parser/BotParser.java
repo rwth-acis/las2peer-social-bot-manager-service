@@ -47,6 +47,7 @@ import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.model.VLEUser;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -853,7 +854,7 @@ public class BotParser {
 		sfa.setContentURL(subVal.getValue());
 	    } else if (name.equals("Parameter Type")) {
 		String pType = subVal.getValue();
-		sfa.setParameterType(pType);
+		sfa.setParameterType(ParameterType.fromString(pType));
 	    }
 	}
 	return sfa;

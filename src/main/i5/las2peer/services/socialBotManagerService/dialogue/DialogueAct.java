@@ -3,12 +3,15 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 import java.util.HashMap;
 import java.util.Map;
 
+import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+
 public class DialogueAct {
 
     String intent;
     Map<String, String> entities;
     String message;
     ExpectedInput expected;
+    ServiceFunction action;
     boolean full;
 
     public boolean isFull() {
@@ -106,6 +109,22 @@ public class DialogueAct {
     @Override
     public String toString() {
 	return "DialogueAct [intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
+    }
+
+    public ServiceFunction getAction() {
+        return action;
+    }
+
+    public void setAction(ServiceFunction action) {
+        this.action = action;
+    }
+
+    public void setEntities(Map<String, String> entities) {
+        this.entities = entities;
+    }
+    
+    public boolean hasAction() {
+	return this.action != null;
     }
 
 }

@@ -11,6 +11,7 @@ import net.minidev.json.JSONObject;
 public class Intent {
     private String intentKeyword;
     private float confidence;
+    private IntentType intentType;
 
     private HashMap<String, Entity> entities;
 
@@ -42,6 +43,7 @@ public class Intent {
 	    entitiesMap.put(entity.getEntityName(), entity);
 	});
 	this.entities = entitiesMap;
+	this.intentType = getType();
     }
 
     // Constructor for bypassing intent extraction. Used for '!'-commands, for
@@ -101,9 +103,16 @@ public class Intent {
 	if(intent.startsWith("conf"))
 	    return IntentType.CONFIRM;
 	if(intent.startsWith("deny"))
-	    return IntentType.DENY;
-	
+	    return IntentType.DENY;	
 	return IntentType.TALK;	
+    }
+
+    public IntentType getIntentType() {
+        return intentType;
+    }
+
+    public void setIntentType(IntentType intentType) {
+        this.intentType = intentType;
     }
 
 }

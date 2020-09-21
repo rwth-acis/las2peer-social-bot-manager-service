@@ -7,6 +7,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
+import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
@@ -47,9 +48,11 @@ public class DialogueGoal {
 	assert this.values != null : "slot value map of dialogue goal is null";
 
 	for (Slot slot : frame.getDescendants()) {
-	    if (!this.values.containsKey(slot)) {
-		System.out.println("key not contained: " + slot.getName());
-		return false;
+	    if (!this.values.containsKey(slot)) {		
+		if (slot.isLeaf()) {
+		    System.out.println("key not contained: " + slot.getName());
+		    return false;
+		}
 	    }
 	}
 	return true;
@@ -75,6 +78,9 @@ public class DialogueGoal {
 
 	// fill slot
 	if (this.values.containsKey(slot)) {
+	    if (slot.getParameter().isArray()) {
+		value = values.get(slot).concat(", ").concat(value);
+	    }
 	    System.out.println("override slot " + slot.getName() + " value: " + values.get(slot) + " with " + value);
 	}
 	this.values.put(slot, value);
@@ -180,6 +186,14 @@ public class DialogueGoal {
 	return null;
     }
 
+    public void reset() {
+	this.values.clear();
+    }
+
+    public Frame getFrame() {
+	return this.frame;
+    }
+
     public DialogueAct getReqConfAct() {
 
 	assert this.frame != null : "frame of dialogue goal is null";
@@ -197,14 +211,37 @@ public class DialogueGoal {
 	// default message
 	String message = "We have all necessary data \n";
 	for (Map.Entry<String, String> entry : act.getEntities().entrySet())
-	    message = message.concat(entry.getKey()).concat(": \t ").concat(entry.getValue()).concat(" \n");
-	message.concat("is this right? \n");
+	    message = message.concat(entry.getKey()).replaceAll("_", " ").concat(": \t ").concat(entry.getValue())
+		    .concat(" \n");
+	message = message.concat("is this right? \n");
 	act.setMessage(message);
 
 	// expected input
 	ExpectedInput input = new ExpectedInput();
 	input.setIntend(frame.getConfirmIntent());
 	input.setType(ExpectedInputType.Confirmation);
+	act.setExpected(input);
+	return (act);
+    }
+
+    public DialogueAct getReqOptionalAct() {
+
+	assert this.frame != null : "frame of dialogue goal is null";
+	assert this.values != null : "slot value map of dialogue goal is null";
+	assert this.isReady() : "goal is not ready yet";
+
+	// ntent and entities
+	DialogueAct act = new DialogueAct();
+
+	// default message
+	String message = "There are more optional parameter. \n Do you want to fill them?";
+	act.setMessage(message);
+
+	// expected input
+	ExpectedInput input = new ExpectedInput();
+	input.setIntend(frame.getConfirmIntent() + "_optional");
+	input.setType(ExpectedInputType.Confirmation);
+	act.setExpected(input);
 	return (act);
     }
 
@@ -271,6 +308,42 @@ public class DialogueGoal {
 	input.setIntend(slot.getConfirmIntent());
 	input.setType(ExpectedInputType.Confirmation);
 	return (act);
+    }
+
+    public ServiceFunction getServiceAction() {
+
+	ServiceFunction template = frame.getServiceFunction();
+	ServiceFunction action = new ServiceFunction();
+	action.setActionType(template.getActionType());
+	action.setConsumes(template.getConsumes());
+	action.setFunctionName(template.getFunctionName());
+	action.setFunctionPath(template.getFunctionPath());
+	action.setHttpMethod(template.getHttpMethod());
+	action.setProduces(template.getProduces());
+	action.setServiceName(template.getServiceName());
+	if (template.hasAttributes()) {
+	    for (ServiceFunctionAttribute attr : template.getAttributes()) {
+		action.addAttribute(copy(attr));
+	    }
+	}
+	return action;
+
+    }
+
+    private ServiceFunctionAttribute copy(ServiceFunctionAttribute template) {
+
+	ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
+	attr.setContentType(template.getContentType());
+	attr.setName(template.getName());
+	attr.setParameterType(template.getParameterType());
+	attr.setContent(this.values.get(template.getName()));
+	if (template.hasChildren()) {
+	    for (ServiceFunctionAttribute child : template.getChildAttributes()) {
+		attr.addChildAttribute(copy(child));
+	    }
+	}
+
+	return attr;
     }
 
 }

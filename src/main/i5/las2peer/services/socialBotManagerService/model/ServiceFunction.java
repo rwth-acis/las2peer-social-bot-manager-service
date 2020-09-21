@@ -151,4 +151,8 @@ public class ServiceFunction extends TriggerFunction{
 				+ ", produces=" + produces + ", actionType=" + actionType + "]";
 	}
 
+	public boolean hasAttributes() {
+	    return (this.attributes != null && !this.attributes.isEmpty());
+	}
+
 }

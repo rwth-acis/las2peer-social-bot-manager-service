@@ -57,7 +57,7 @@ public class TelegramChatMediator extends EventChatMediator {
      */
     public void settingWebhook() {
 
-	String url = "https://3180d63348f9.ngrok.io";
+	String url = "https://037654659c14.ngrok.io";
 	ClientResponse result = client.sendRequest("GET",
 		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());
@@ -73,7 +73,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	} catch (UnsupportedEncodingException e) {
 	    e.printStackTrace();
 	}
-	ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + encoded + "&chat_id=" + channel,
+	ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + encoded + "&chat_id=" + channel + "&parse_mode=Markdown",
 		MediaType.TEXT_PLAIN);
     }
 

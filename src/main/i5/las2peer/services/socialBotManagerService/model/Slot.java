@@ -80,9 +80,15 @@ public class Slot {
     public boolean validate(String value) {
 	
 	assert this.inputType != null: "no inputType defined.";
+	
 	if(this.inputType == null)
 	    this.inputType = ExpectedInputType.Free;
-		
+	
+	if(this.getInputType() == ExpectedInputType.Enum) {
+	    if(!this.getParameter().getEnumList().contains(value))
+		return false;
+	}
+	
 	return this.inputType.validate(value);
     }
 
@@ -186,8 +192,7 @@ public class Slot {
     }
 
     public String toString() {
-	String res = "Slot ".concat(this.getName()).concat(" nluIntent: ").concat(this.getNlu_intent())
-		.concat(" nlgIntent: ").concat(this.getNlg_intent()).concat(" message: ").concat(this.getMessage());
+	String res = "Slot ".concat(this.getName());
 	if (this.isEntity_extraction()) {
 	    res = res.concat(" entity: ").concat(this.getEntity());
 	}
