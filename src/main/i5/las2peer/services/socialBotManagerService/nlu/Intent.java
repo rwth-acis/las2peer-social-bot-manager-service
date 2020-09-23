@@ -21,10 +21,8 @@ public class Intent {
 
     public static String replaceUmlaute(String orig) {
 	String result = orig;
-
-	for (int i = 0; i < UMLAUT_REPLACEMENTS.length; i++) {
+	for (int i = 0; i < UMLAUT_REPLACEMENTS.length; i++)
 	    result = result.replace(UMLAUT_REPLACEMENTS[i][0], UMLAUT_REPLACEMENTS[i][1]);
-	}
 
 	return result;
     }
@@ -53,11 +51,13 @@ public class Intent {
 	this.confidence = 1.0f;
 	this.entities = new HashMap<String, Entity>();
 	this.entities.put(entityName, new Entity(entityName, entityValue));
+	this.intentType = getType();
     }
 
     public Intent(String keyword, float confidence) {
 	this.intentKeyword = replaceUmlaute(keyword);
 	this.confidence = confidence;
+	this.intentType = getType();
     }
 
     public String getKeyword() {
@@ -90,29 +90,31 @@ public class Intent {
     }
 
     public Collection<Entity> getEntities() {
-	return this.entities.values();
+	if (this.entities != null)
+	    return this.entities.values();
+	return new ArrayList<Entity>();
     }
-    
+
     public IntentType getType() {
-	
+
 	String intent = this.getKeyword();
-	if(intent.startsWith("info"))
+	if (intent.startsWith("info"))
 	    return IntentType.INFORM;
-	if(intent.startsWith("requ"))
+	if (intent.startsWith("requ"))
 	    return IntentType.REQUEST;
-	if(intent.startsWith("conf"))
+	if (intent.startsWith("conf"))
 	    return IntentType.CONFIRM;
-	if(intent.startsWith("deny"))
-	    return IntentType.DENY;	
-	return IntentType.TALK;	
+	if (intent.startsWith("deny"))
+	    return IntentType.DENY;
+	return IntentType.TALK;
     }
 
     public IntentType getIntentType() {
-        return intentType;
+	return intentType;
     }
 
     public void setIntentType(IntentType intentType) {
-        this.intentType = intentType;
+	this.intentType = intentType;
     }
 
 }

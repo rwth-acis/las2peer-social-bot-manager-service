@@ -1,5 +1,8 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
@@ -24,26 +27,18 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	assert semantic != null : "naive dm handle: semantic is null";
 	assert semantic.getKeyword() != null : "naive dm handle: semantic has no intent";
 	assert semantic.getIntentType() != null : "no intent type set";
-	System.out.println(semantic.getIntentType());
 
 	// first call
 	String intent = semantic.getKeyword();
-	if (intent.equals(start_intent)) {
-	    // request next slot
-	    goal.reset();
-	    optional = false;
-	    Slot nextSlot = goal.next();
-	    DialogueAct act = goal.getRequestAct(nextSlot);
-	    return act;
-	}
+	if (intent.equals(start_intent))
+	    return requestNextSlot();
 
 	// get corresponding slot
 	Slot slot = null;
 	if (goal.contains(intent)) {
 	    slot = goal.getSlot(intent);
-	    if (slot == null) {
+	    if (slot == null)
 		System.out.println("naive dm handle: slot not found for intent: " + intent);
-	    }
 	}
 
 	DialogueAct act = new DialogueAct();
@@ -55,17 +50,12 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 		String value = entity.getValue();
 		if (slot.validate(value))
 		    this.goal.fill(slot, value);
-		else {
-		    // request slot again
-		    Slot nextSlot = goal.next();
-		    act = goal.getRequestAct(nextSlot);
-		    return act;
-		}
-
+		else
+		    return requestNextSlot();
 	    }
 
 	    // arrays
-	    if (slot.getParameter().isArray()) {
+	    if (slot != null && slot.getParameter().isArray()) {
 
 		String name = slot.getName().replaceAll("_", " ").substring(0, slot.getName().length() - 1);
 		act.setMessage("do you want to add another " + name);
@@ -75,114 +65,86 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 		act.setExpected(input);
 		return act;
 
-	    } else {
-
-		// check if ready
-		if (!optional && goal.isReady())
-		    return goal.getReqConfAct();
-
-	    }
+	    } else if (!optional && goal.isReady())
+		return goal.getReqConfAct();
 
 	    // check if full
 	    if (goal.isFull())
 		return goal.getReqConfAct();
 
-	    // request next slot
-	    Slot nextSlot = goal.next();
-	    act = goal.getRequestAct(nextSlot);
-	    return act;
+	    return requestNextSlot();
 
 	case REQUEST:
 
-	    // inform about slot
-	    act = goal.getInformAct(slot);
-	    return act;
+	    // inform about filled slot value
+	    if (slot != null)
+		return goal.getInformAct(slot);
+
+	    // inform about expected slot value
+	    // TODO
+
 	case CONFIRM:
 
-	    System.out.println(semantic.getKeyword());
+	    // user confirms that collected slot information is correct
 	    if (semantic.getKeyword().contentEquals(goal.getFrame().getConfirmIntent())) {
 
-		if (!goal.isFull()) {
+		// ask if optional slots should be filled
+		if (!goal.isFull() && goal.isReady()) {
 		    act = goal.getReqOptionalAct();
 		    this.optional = true;
 		    return act;
 		}
 
-		// perform action
-		act.setAction(goal.getServiceAction());
-		act.setMessage("perform action");
-		goal.reset();
-		optional = false;
-
-		return act;
+		// perform the action
+		return perform();
 	    }
 
-	    if (semantic.getKeyword().contentEquals(goal.getFrame().getConfirmIntent().concat("_optional"))) {
+	    // user want to fill further optional slots
+	    if (semantic.getKeyword().contentEquals(goal.getFrame().getConfirmIntent().concat("_optional")))
+		return requestNextSlot();
 
-		// request next slot
-		nextSlot = goal.next();
-		act = goal.getRequestAct(nextSlot);
-		return act;
-	    }
+	    // user wants to fill more values for same slot
+	    if (slot != null && semantic.getKeyword().contentEquals(slot.getConfirmIntent()))
+		return goal.getRequestAct(slot);
 
-	    if (semantic.getKeyword().contentEquals(slot.getConfirmIntent())) {
-		act = goal.getRequestAct(slot);
-		return act;
-	    }
-
-	    break;
+	    // user confirm but bot dont know why
+	    return this.handleDefault();
 
 	case DENY:
 
-	    // deny frame
+	    // deny that collected information is correct
 	    if (semantic.getKeyword().contentEquals(goal.getFrame().getConfirmIntent())) {
-		// reset
-		goal.reset();
-		optional = false;
-		nextSlot = goal.next();
-		act = goal.getRequestAct(nextSlot);
-		return act;
+
+		// delete collected information and start all over
+		this.reset();
+		return requestNextSlot();
 	    }
 
 	    // deny optional frame
-	    if (semantic.getKeyword().contentEquals(goal.getFrame().getConfirmIntent().concat("_optional"))) {
-
-		// perform action
-		act.setAction(goal.getServiceAction());
-		act.setMessage("perform action");
-		goal.reset();
-		optional = false;
-		return act;
-	    }
+	    if (semantic.getKeyword().contentEquals(goal.getFrame().getConfirmIntent().concat("_optional")))
+		return perform();
 
 	    // deny array slot
-	    if (semantic.getKeyword().contentEquals(slot.getConfirmIntent())) {
+	    if (slot != null && semantic.getKeyword().contentEquals(slot.getConfirmIntent())) {
 
 		// check if ready
 		if (!optional && goal.isReady())
 		    return goal.getReqConfAct();
 
 		// request next slot
-		nextSlot = goal.next();
-		act = goal.getRequestAct(nextSlot);
-		return act;
+		return requestNextSlot();
 	    }
 
-	    // delete slot value
-	    goal.delete(slot);
-
-	    // ask for new value
-	    act = goal.getInformAct(slot);
-	    break;
+	    // User wants so delete specific slot
+	    if (slot != null && goal.isFilled(slot)) {
+		goal.delete(slot);
+		return goal.getInformAct(slot);
+	    }
 
 	default:
 	    // request next slot
-	    nextSlot = goal.next();
-	    act = goal.getRequestAct(nextSlot);
-	    return act;
+	    return new DialogueAct("naive dm default with known intent");
 	}
-
-	return act;
     }
 
     @Override
@@ -197,14 +159,56 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 
     @Override
     public DialogueAct handleDefault() {
-	// request next slot
+	return requestNextSlot();
+    }
+
+    public void reset() {
+	goal.reset();
+	optional = false;
+    }
+
+    private DialogueAct requestNextSlot() {
 	Slot nextSlot = goal.next();
 	DialogueAct act = goal.getRequestAct(nextSlot);
 	return act;
     }
 
+    private DialogueAct perform() {
+	DialogueAct act = new DialogueAct();
+	act.setAction(goal.getServiceAction());
+	act.setMessage("perform action");
+	this.reset();
+	return act;
+
+    }
+
+    private DialogueAct repeat() {
+
+	DialogueAct act = new DialogueAct();
+//
+	return act;
+
+    }
+
     public void setStartIntent(String intent) {
 	this.start_intent = intent;
+    }
+
+    @Override
+    public Collection<String> getIntents() {
+	Collection<String> intents = new ArrayList<String>();
+	Collection<Slot> slots = goal.getFrame().getSlots().values();
+	for (Slot slot : slots) {
+	    intents.add(slot.getConfirmIntent());
+	    intents.add(slot.getInformIntent());
+	    intents.add(slot.getRequestIntent());
+	    intents.add(slot.getDenyIntent());
+	}
+
+	intents.add(start_intent);
+	intents.add(goal.getFrame().getConfirmIntent());
+	intents.add(goal.getFrame().getConfirmIntent() + "_optional");
+	return intents;
     }
 
 }
