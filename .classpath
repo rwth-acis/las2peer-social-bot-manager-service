@@ -6,20 +6,10 @@
 	<classpathentry kind="lib" path="servicebundle/annotations-13.0.jar"/>
 	<classpathentry kind="lib" path="servicebundle/commons-codec-1.13.jar"/>
 	<classpathentry kind="lib" path="servicebundle/commons-dbcp2-2.7.0.jar"/>
-	<classpathentry kind="lib" path="servicebundle/commons-io-2.6.jar"/>
-	<classpathentry kind="lib" path="servicebundle/commons-lang3-3.7.jar"/>
 	<classpathentry kind="lib" path="servicebundle/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="servicebundle/commons-pool2-2.7.0.jar"/>
 	<classpathentry kind="lib" path="servicebundle/geronimo-jta_1.1_spec-1.1.1.jar"/>
 	<classpathentry kind="lib" path="servicebundle/gson-2.8.6.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jackson-annotations-2.10.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jackson-core-2.10.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jackson-databind-2.10.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jackson-dataformat-yaml-2.10.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jackson-datatype-jsr310-2.10.1.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jakarta.activation-api-1.2.1.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jakarta.validation-api-2.0.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/jakarta.xml.bind-api-2.3.2.jar"/>
 	<classpathentry kind="lib" path="servicebundle/javax.servlet-api-3.1.0.jar"/>
 	<classpathentry kind="lib" path="servicebundle/javax.websocket-api-1.1.jar"/>
 	<classpathentry kind="lib" path="servicebundle/javax.websocket-client-api-1.1.jar"/>
@@ -40,12 +30,6 @@
 	<classpathentry kind="lib" path="servicebundle/slack-api-model-1.1.3.jar"/>
 	<classpathentry kind="lib" path="servicebundle/slack-app-backend-1.1.3.jar"/>
 	<classpathentry kind="lib" path="servicebundle/slf4j-api-1.7.30.jar"/>
-	<classpathentry kind="lib" path="servicebundle/snakeyaml-1.24.jar"/>
-	<classpathentry kind="lib" path="servicebundle/swagger-annotations-2.1.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/swagger-core-2.1.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/swagger-models-2.1.2.jar"/>
-	<classpathentry kind="lib" path="servicebundle/swagger-parser-core-2.0.19.jar"/>
-	<classpathentry kind="lib" path="servicebundle/swagger-parser-v3-2.0.19.jar"/>
 	<classpathentry kind="lib" path="servicebundle/tyrus-standalone-client-1.17.jar"/>
 	<classpathentry kind="lib" path="lib/hamcrest-core-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/junit-4.12.jar"/>
@@ -60,5 +44,6 @@
 	<classpathentry kind="lib" path="servicebundle/jsonoverlay-4.0.4.jar"/>
 	<classpathentry kind="lib" path="servicebundle/openapi-parser-4.0.4.jar"/>
 	<classpathentry kind="lib" path="servicebundle/snakeyaml-1.23.jar"/>
+	<classpathentry kind="lib" path="servicebundle/swagger-parser-1.0.33.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>

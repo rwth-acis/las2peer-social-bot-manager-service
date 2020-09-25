@@ -34,5 +34,6 @@
         </dependency>
         <dependency org="commons-codec" name="commons-codec" rev="1.13" conf="bundle->*" />        
         <dependency org="com.reprezen.kaizen" name="openapi-parser" rev="4.0.4" conf="bundle->*"/>
+        <dependency org="io.swagger" name="swagger-parser" rev="1.0.33" conf="bundle->*"/>
     </dependencies>
 </ivy-module>

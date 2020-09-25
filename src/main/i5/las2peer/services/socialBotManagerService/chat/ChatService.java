@@ -6,59 +6,60 @@ package i5.las2peer.services.socialBotManagerService.chat;
  */
 public enum ChatService {
 
-	ROCKET_CHAT("Rocket.Chat", RocketChatMediator.class),
+    ROCKET_CHAT("Rocket.Chat", RocketChatMediator.class),
 
-	SLACK_EVENT("Slack", SlackEventChatMediator.class),
+    SLACK("Slack", SlackEventChatMediator.class),
 
-	SLACK_RTM("Slack RTM", SlackRTMChatMediator.class),
+    SLACK_RTM("Slack RTM", SlackRTMChatMediator.class),
 
-	TELEGRAM("Telegram", TelegramChatMediator.class),
+    TELEGRAM("Telegram", TelegramChatMediator.class),
 
-	UNKNOWN("", null);
+    UNKNOWN("", null);
 
-	/**
-	 * The string representation of the messenger service used by the sync meta
-	 * model.
-	 */
-	public final String string;
+    /**
+     * The string representation of the messenger service used by the sync meta
+     * model.
+     */
+    public final String string;
 
-	/**
-	 * The class of the chat mediator that connects to the messenger service
-	 */
-	public final Class<? extends ChatMediator> mediatorClass;
+    /**
+     * The class of the chat mediator that connects to the messenger service
+     */
+    public final Class<? extends ChatMediator> mediatorClass;
 
-	ChatService(String string, Class<? extends ChatMediator> mediatorClass) {
-		this.string = string;
-		this.mediatorClass = mediatorClass;
+    ChatService(String string, Class<? extends ChatMediator> mediatorClass) {
+	this.string = string;
+	this.mediatorClass = mediatorClass;
+    }
+
+    /**
+     * @return The string representation
+     */
+    @Override
+    public final String toString() {
+	return this.string;
+    }
+
+    /**
+     * 
+     * 
+     * @ @return TRUE if string represents the chat service
+     */
+    public final boolean isEquals(String string) {
+	return (this.string.equals(string));
+    }
+
+    /**
+     * @param string representation of a chat service
+     * @return the enum representation of a chat service
+     */
+    public static ChatService fromString(String string) {
+
+	for (ChatService service : ChatService.values()) {
+	    if (string.equalsIgnoreCase(service.toString()))
+		return service;
 	}
-
-	/**
-	 * @return The string representation
-	 */
-	public final String toString() {
-		return this.string;
-	}
-
-	/**
-	 * 
-	 * 
-	 * @ @return TRUE if string represents the chat service
-	 */
-	public final boolean isEquals(String string) {
-		return (this.string.equals(string));
-	}
-
-	/**
-	 * @param string representation of a chat service
-	 * @return the enum representation of a chat service
-	 */
-	public static ChatService fromString(String string) {
-
-		for (ChatService service : ChatService.values()) {
-			if (string.equalsIgnoreCase(service.toString()))
-				return service;
-		}
-		return ChatService.UNKNOWN;
-	}
+	return ChatService.UNKNOWN;
+    }
 
 }

@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,7 @@ import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 
-public class OpenAPIReader {
+public class OpenAPIReaderV3 {
 
     public static OpenApi3 readModel(String jsonUrl) {
 
@@ -251,45 +252,49 @@ public class OpenAPIReader {
 
     private static ServiceFunctionAttribute processAttribute(Schema property, ServiceFunctionAttribute attr) {
 
-		// parameter description (optional)
-		if (property.getDescription() != null)
-			attr.setDescription(property.getDescription());
+	// parameter description (optional)
+	if (property.getDescription() != null)
+	    attr.setDescription(property.getDescription());
 
-		// parameter example value (optional)
-		if (property.getExample() != null)
-			attr.setExample(property.getExample().toString());
+	// parameter example value (optional)
+	if (property.getExample() != null)
+	    attr.setExample(property.getExample().toString());
 
-		// enum parameter
-		if (property.hasEnums()) {
-			attr.setContentType("enum");
-			attr.setEnumList(property.getEnums());
-			return attr;
-		}
-		
-		System.out.println(property.getType());
-		// parameter type
-		switch (property.getType()) {
-		case "integer":
-			attr.setContentType("integer");
-			break;
-		case "string":
-			attr.setContentType("string");
-			break;
-		case "boolean":
-			attr.setContentType("boolean");
-			break;
-		case "array":
-		    	attr.setArray(true);
-		    	System.out.println(attr.isArray());
-		    	String type = property.getItemsSchema().getType();
-			attr.setContentType(type);			
-			break;
-		default:
-			System.out.println("unknown parameter content type");
-		}
-
-		return attr;
+	// enum parameter
+	if (property.hasEnums()) {
+	    attr.setContentType("enum");
+	    List<String> enums = new ArrayList<String>();
+	    for (Object e : property.getEnums()) {
+		enums.add(String.valueOf(e));
+	    }
+	    attr.setEnumList(enums);
+	    return attr;
 	}
+
+	System.out.println(property.getType());
+	// parameter type
+	switch (property.getType()) {
+	case "integer":
+	    attr.setContentType("integer");
+	    break;
+	case "string":
+	    attr.setContentType("string");
+	    break;
+	case "boolean":
+	    attr.setContentType("boolean");
+	    break;
+	case "array":
+	    attr.setArray(true);
+	    System.out.println(attr.isArray());
+	    String type = property.getItemsSchema().getType();
+	    attr.setContentType(type);
+	    break;
+	default:
+	    System.out.println("unknown parameter content type");
+	}
+
+	return attr;
+    }
 
     private static OpenApi3 processModel(URI modelUri, boolean validate) throws Exception {
 	OpenApi3 model = new OpenApi3Parser().parse(modelUri, validate);

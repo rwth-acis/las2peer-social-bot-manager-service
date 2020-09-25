@@ -26,12 +26,9 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
-
-import net.minidev.json.JSONArray;
 
 
 public class Messenger {
@@ -100,7 +97,7 @@ public class Messenger {
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
 		switch (this.chatService) {
-		case SLACK_EVENT:
+	case SLACK:
 			this.chatMediator = new SlackEventChatMediator(token);
 			break;
 		case TELEGRAM:
