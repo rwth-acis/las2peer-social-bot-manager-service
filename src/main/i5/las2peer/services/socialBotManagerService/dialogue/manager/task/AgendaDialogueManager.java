@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
@@ -8,7 +9,6 @@ import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
-import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public class AgendaDialogueManager extends AbstractDialogueManager {
@@ -42,7 +42,7 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 						this.state.addSlotValue(node.getIntent(), entity);
 						System.out.println("Slot received: " + entity);
 						System.out.println(this.state.slotValues);
-						
+
 					}
 					stack.remove(node);
 				}
@@ -108,14 +108,14 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 	/*
 	 * public String handle(AgendaDialogueNode node) { String response = "";
 	 * stack.remove(node);
-	 * 
+	 *
 	 * // Add children to stack if (node.hasChildren()) { // Add node response if
 	 * (!node.getResponses().isEmpty()) { response =
 	 * response.concat(node.getResponses().get(0)); response =
 	 * response.concat("\n"); } stack.addAll(0, node.getChildren());
 	 * AgendaDialogueNode subNode = node.getChildren().get(0); response =
 	 * response.concat(handle(subNode)); } else {
-	 * 
+	 *
 	 * // Return request message of next slot response =
 	 * response.concat(next().getResponses().get(0)); } return response; }
 	 */
@@ -142,12 +142,11 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 		System.out.println("check if filled");
 		for (Slot slot : goal.getDescendants()) {
 			System.out.println(slot.getNlu_intent());
-			if (!slot.hasChildren()) {
+			if (!slot.hasChildren())
 				if (!this.state.slotValues.containsKey(slot.getNlu_intent())) {
 					System.out.println("key not contained: " + slot.getNlu_intent());
 					return false;
 				}
-			}
 		}
 		System.out.println("is filled");
 		return true;
@@ -188,10 +187,9 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 
 	@Override
 	public boolean hasIntent(String intent) {
-		for (AgendaDialogueNode node : root.getDescendants()) {
+		for (AgendaDialogueNode node : root.getDescendants())
 			if (node.hasIntent(intent))
 				return true;
-		}
 		return false;
 	}
 
@@ -208,6 +206,12 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 		act.setExpected(input);
 		return act;
 
+	}
+
+	@Override
+	public Collection<String> getIntents() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

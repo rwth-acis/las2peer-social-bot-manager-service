@@ -4,127 +4,134 @@ import java.util.HashMap;
 import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
 public class DialogueAct {
 
-    String intent;
-    Map<String, String> entities;
-    String message;
-    ExpectedInput expected;
-    ServiceFunction action;
-    boolean full;
+	String intent;
+	Map<String, String> entities;
+	String message;
+	ExpectedInput expected;
+	ServiceFunction action;
+	boolean full;
 
-    public boolean isFull() {
-	return full;
-    }
+	public boolean isFull() {
+		return full;
+	}
 
-    public void setFull(boolean full) {
-	this.full = full;
-    }
+	public void setFull(boolean full) {
+		this.full = full;
+	}
 
-    public DialogueAct() {
+	public DialogueAct() {
 
-    }
+	}
 
-    public DialogueAct(String message) {
-	this.message = message;
-    }
+	public DialogueAct(String message) {
+		this.message = message;
+	}
 
-    public DialogueAct(String message, ExpectedInput expected) {
-	super();
-	this.message = message;
-	this.expected = expected;
-    }
+	public DialogueAct(String message, ExpectedInput expected) {
+		super();
+		this.message = message;
+		this.expected = expected;
+	}
 
-    public DialogueAct(String intent, String message, ExpectedInput expected) {
-	super();
-	this.intent = intent;
-	this.message = message;
-	this.expected = expected;
-    }
+	public DialogueAct(String intent, String message, ExpectedInput expected) {
+		super();
+		this.intent = intent;
+		this.message = message;
+		this.expected = expected;
+	}
 
-    public void addEntity(String name, String value) {
-	if(!this.hasEntities())
-	    this.entities = new HashMap<String, String>();
-	this.entities.put(name, value);
-    }
-    
-    public Map<String, String> getEntities() {
-	return this.entities;
-    }
+	public void addEntity(String name, String value) {
+		if (!this.hasEntities())
+			this.entities = new HashMap<String, String>();
+		this.entities.put(name, value);
+	}
 
-    public boolean hasEntities() {
-	if (this.entities != null && !this.entities.isEmpty())
-	    return true;
-	return false;
-    }
+	public Map<String, String> getEntities() {
+		return this.entities;
+	}
 
-    public String getMessage() {
-	return message;
-    }
+	public boolean hasEntities() {
+		if (this.entities != null && !this.entities.isEmpty())
+			return true;
+		return false;
+	}
 
-    public void setMessage(String message) {
-	this.message = message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public ExpectedInput getExpected() {
-	return expected;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    public void setExpected(ExpectedInput expected) {
-	this.expected = expected;
-    }
+	public ExpectedInput getExpected() {
+		return expected;
+	}
 
-    public String getIntent() {
-	return intent;
-    }
+	public void setExpected(ExpectedInput expected) {
+		this.expected = expected;
+	}
 
-    public void setIntent(String intent) {
-	this.intent = intent;
-    }
+	public String getIntent() {
+		return intent;
+	}
 
-    public boolean hasIntent() {
-	return (this.intent != null);
-    }
+	public void setIntent(String intent) {
+		this.intent = intent;
+	}
 
-    public boolean hasMessage() {
-	return this.message != null;
-    }
+	public boolean hasIntent() {
+		return (this.intent != null);
+	}
 
-    public boolean hasExpected() {
-	return this.expected != null;
-    }
+	public boolean hasMessage() {
+		return this.message != null;
+	}
 
-    public DialogueAct concat(DialogueAct act) {
+	public boolean hasExpected() {
+		return this.expected != null;
+	}
 
-	if (act.hasIntent())
-	    this.intent = act.intent;
-	if (act.hasMessage())
-	    this.message = this.message.concat(act.getMessage());
-	if (act.hasExpected())
-	    this.expected = act.getExpected();
-	return this;
-    }
+	public DialogueAct concat(DialogueAct act) {
 
-    @Override
-    public String toString() {
-	return "DialogueAct [intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
-    }
+		if (act.hasIntent())
+			this.intent = act.intent;
+		if (act.hasMessage())
+			this.message = this.message.concat(act.getMessage());
+		if (act.hasExpected())
+			this.expected = act.getExpected();
+		return this;
+	}
 
-    public ServiceFunction getAction() {
-        return action;
-    }
+	@Override
+	public String toString() {
+		return "DialogueAct [intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
+	}
 
-    public void setAction(ServiceFunction action) {
-        this.action = action;
-    }
+	public ServiceFunction getAction() {
+		return action;
+	}
 
-    public void setEntities(Map<String, String> entities) {
-        this.entities = entities;
-    }
-    
-    public boolean hasAction() {
-	return this.action != null;
-    }
+	public void setAction(ServiceFunction action) {
+		this.action = action;
+	}
+
+	public void setEntities(Map<String, String> entities) {
+		this.entities = entities;
+	}
+
+	public void addEntity(Entity entity) {
+		if (!this.hasEntities())
+			this.entities = new HashMap<String, String>();
+		this.entities.put(entity.getEntityName(), entity.getValue());
+	}
+
+	public boolean hasAction() {
+		return this.action != null;
+	}
 
 }

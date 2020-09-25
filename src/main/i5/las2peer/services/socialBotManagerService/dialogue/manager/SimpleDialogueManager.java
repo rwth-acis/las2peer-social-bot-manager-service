@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -11,44 +12,49 @@ import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public class SimpleDialogueManager extends AbstractDialogueManager {
 
-    MultivaluedMap<String, String> intentMessageMap;
+	MultivaluedMap<String, String> intentMessageMap;
 
-    public SimpleDialogueManager() {
-	super();
-	this.intentMessageMap = new MultivaluedHashMap<String, String>();
-    }
-
-    public DialogueAct handle(Intent intent) {
-
-	List<String> responses = this.intentMessageMap.get(intent.getKeyword());
-	if (responses.isEmpty()) {
-	    System.out.println("no responses for intent keyword: " + intent.getKeyword());
-	    return null;
+	public SimpleDialogueManager() {
+		super();
+		this.intentMessageMap = new MultivaluedHashMap<String, String>();
 	}
 
-	String response = responses.get(new Random().nextInt(responses.size()));
-	return new DialogueAct(response);
+	@Override
+	public DialogueAct handle(Intent intent) {
 
-    }
+		List<String> responses = this.intentMessageMap.get(intent.getKeyword());
+		if (responses.isEmpty()) {
+			System.out.println("no responses for intent keyword: " + intent.getKeyword());
+			return null;
+		}
 
-    public void addIntent(String intent, String message) {
-	this.intentMessageMap.add(intent, message);
-    }
+		String response = responses.get(new Random().nextInt(responses.size()));
+		return new DialogueAct(response);
 
-    @Override
-    public boolean hasIntent(String intent) {
-	return this.intentMessageMap.containsKey(intent);
-    }
-
-    @Override
-    public DialogueAct handleDefault() {
-
-	if (intentMessageMap.get("default") != null) {
-	    List<String> responses = intentMessageMap.get("default");
-	    return new DialogueAct(responses.get(new Random().nextInt(responses.size())));
 	}
 
-	return new DialogueAct("I am a bot");
-    }
+	public void addIntent(String intent, String message) {
+		this.intentMessageMap.add(intent, message);
+	}
+
+	@Override
+	public boolean hasIntent(String intent) {
+		return this.intentMessageMap.containsKey(intent);
+	}
+
+	@Override
+	public DialogueAct handleDefault() {
+		if (intentMessageMap.get("default") != null) {
+			List<String> responses = intentMessageMap.get("default");
+			return new DialogueAct(responses.get(new Random().nextInt(responses.size())));
+		}
+		return new DialogueAct("simple dm default");
+
+	}
+
+	@Override
+	public Collection<String> getIntents() {
+		return this.intentMessageMap.keySet();
+	}
 
 }
