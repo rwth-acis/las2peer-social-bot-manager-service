@@ -129,6 +129,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		});
 
 	}
+
 	@Override
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
@@ -383,7 +384,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		try {
 
 			conn = database.getDataSource().getConnection();
-			stmt = conn.prepareStatement("INSERT into users (email, role) values (?, 3)");
+			stmt = conn.prepareStatement("SELECT role FROM users WHERE email=?");
 			stmt.setString(1, email);
 			rs = stmt.executeQuery();
 			while (rs.next())
@@ -554,13 +555,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 				StatefulResponse statefulResponse = states.get(email);
 
-
-			
-
 				int role = getStudentRole(email);
 
 				/*if (statefulResponse == null && dataProvided == null) {
-
+				
 					DataAsking userDataQuestion = new DataAsking(rasa, database, email);
 					room.sendMessage(userDataQuestion.getResponse());
 					states.put(email, userDataQuestion);
@@ -670,7 +668,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												ClientResponse result = c.sendRequest("POST",
 														"tmitocar/" + message.getRoomId(), bodyJSON.toString(),
 														MediaType.APPLICATION_JSON, "text/html", headers);
-
+											
 												System.out.println("Submitted text: " + result.getHttpCode());
 												boolean isActive = true;
 												while (isActive) {
@@ -699,7 +697,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 												ending = ".pdf";
 												tempFile = new File(message.getRoomId() + ending);
-
 
 												FileWriter writer = new FileWriter(tempFile);
 												writer.write("Wip...");
@@ -734,7 +731,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												Files.write(result.getRawResponse(), tempFile);
 											} else {
 												room.sendMessage(
-														"Ich kann dir leider kein Feedback geben. Du erfÃ¼llst nicht die notwendingen Bedingungen. PrÃ¼fe deine Email Adresse oder deine Kursberechtigungen.");
+														"Ich kann dir leider kein Feedback geben. Du erfÃ¼llst nicht die notwendingen Bedingungen. Prüfe deine Email Adresse oder deine Kursberechtigungen.");
 											}
 											if (tempFile != null) {
 												room.uploadFile(tempFile, message.getRoomId() + ending, "",
