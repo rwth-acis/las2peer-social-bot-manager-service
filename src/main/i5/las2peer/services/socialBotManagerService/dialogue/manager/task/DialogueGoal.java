@@ -31,7 +31,7 @@ public class DialogueGoal {
 
 	for (Slot slot : frame.getRequired()) {
 
-	    if (!this.values.containsKey(slot)) {
+	    if (!this.values.containsKey(slot) && !slot.hasChildren()) {
 		System.out.println("key not contained: " + slot.getName());
 		return false;
 	    }
@@ -48,7 +48,7 @@ public class DialogueGoal {
 	assert this.values != null : "slot value map of dialogue goal is null";
 
 	for (Slot slot : frame.getDescendants()) {
-	    if (!this.values.containsKey(slot)) {		
+	    if (!this.values.containsKey(slot)) {
 		if (slot.isLeaf()) {
 		    System.out.println("key not contained: " + slot.getName());
 		    return false;

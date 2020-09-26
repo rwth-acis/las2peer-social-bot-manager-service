@@ -168,6 +168,15 @@ public class ServiceFunctionAttribute {
 		+ ", contentType=" + contentType + "]";
     }
 
+    public String toStringNoChildren() {
+	return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
+		+ ", generator=" + generator + ", function=" + function + ", itb="
+		+ itb
+		+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
+		+ ", contentType=" + contentType + ", number of children=" + this.childAttributes.size()
+		+ ", description=" + description + ", example=" + example + "]";
+    }
+
     public String getDescription() {
 	return description;
     }

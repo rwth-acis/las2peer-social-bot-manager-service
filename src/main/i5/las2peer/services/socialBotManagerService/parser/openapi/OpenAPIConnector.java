@@ -12,30 +12,51 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+import io.swagger.models.Swagger;
+import io.swagger.parser.SwaggerParser;
+import io.swagger.parser.util.SwaggerDeserializationResult;
 import net.minidev.json.JSONObject;
 
 public class OpenAPIConnector {
 
     public static ServiceFunction readFunction(ServiceFunction action) {
 
-	if (action.getServiceName() == null) {
-	    System.out.println("no base url specified");
-	    return null;
-	}
+	assert action != null : "read open api function: action parameter is null";
+	assert action.getServiceName() != null : "read open api function: action has no service url specified";
+	assert (action.getFunctionName() != null || (action.getFunctionPath() != null
+		&& action.getHttpMethod() != null)) : "read open api function: no function specified";
 
-	// read model
+	// retrieve path of model definition
 	String modelUrl = getSwaggerDocument(action.getServiceName());
 	if (modelUrl == null) {
 	    System.out.println("swagger definition not found");
 	    return null;
 	}
+
+	// read model definition
 	OpenApi3 model = OpenAPIReaderV3.readModel(modelUrl);
 	if (model == null) {
 	    System.out.println("open api model not found: " + modelUrl);
 	    return null;
 	}
 
-	// read function
+	// read function V2
+	if (!model.isValid()) {
+	    SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUrl, null, true);
+	    Swagger swagger = swaggerParseResult.getSwagger();
+	    if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
+		action = OpenAPIReaderV2.readAction(swagger, action.getFunctionPath(), action.getHttpMethod());
+		return action;
+	    } else if (action.getFunctionName() != null) {
+		action = OpenAPIReaderV2.readAction(swagger, action.getFunctionName());
+		return action;
+	    } else {
+		System.out.println("service function not defined");
+	    }
+
+	}
+
+	// read function V3
 	if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
 	    action = OpenAPIReaderV3.readAction(model, action.getFunctionPath(), action.getHttpMethod());
 	} else if (action.getFunctionName() != null) {
@@ -81,22 +102,24 @@ public class OpenAPIConnector {
 
 	URL url;
 	try {
-	    url = new URL(baseUrl + "/swagger.json");
+	    String res = baseUrl + "/swagger.json";
+	    url = new URL(res);
 
 	    HttpURLConnection huc = (HttpURLConnection) url.openConnection();
 	    huc.setRequestMethod("HEAD");
 	    int responseCode = huc.getResponseCode();
 
 	    if (responseCode == 200)
-		return url.getPath();
+		return res;
 
-	    url = new URL(baseUrl + "/api/v3/openapi.json");
+	    res = baseUrl + "/api/v3/openapi.json";
+	    url = new URL(res);
 	    huc = (HttpURLConnection) url.openConnection();
 	    huc.setRequestMethod("HEAD");
 	    responseCode = huc.getResponseCode();
 
 	    if (responseCode == 200)
-		return url.getPath();
+		return res;
 
 	} catch (MalformedURLException e) {
 	    e.printStackTrace();

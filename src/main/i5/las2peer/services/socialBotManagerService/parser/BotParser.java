@@ -113,6 +113,7 @@ public class BotParser {
 	    }
 	}
 	// NODES
+	System.out.println("NODES");
 	for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 
 	    BotModelNode elem = entry.getValue();
@@ -141,6 +142,7 @@ public class BotParser {
 		nluKnowledge.put(entry.getKey(), nlu);
 	    } else if (nodeType.equals("Frame")) {
 		Frame frame = addFrame(entry.getKey(), elem, config);
+		System.out.println("add Frame");
 		frames.put(entry.getKey(), frame);
 	    } else if (nodeType.equals("Slot")) {
 		Slot slot = addSlot(entry.getKey(), elem, config);
@@ -169,6 +171,7 @@ public class BotParser {
 	    } else if (nodeType.equals("Bot Action")) {
 		ServiceFunction sf = addAction(entry.getKey(), elem, config);
 		bsfList.put(entry.getKey(), sf);
+		System.out.println("add Bot Action");
 		// User Action
 	    } else if (nodeType.equals("User Action")) {
 		ServiceFunction sf = addAction(entry.getKey(), elem, config);
@@ -208,7 +211,7 @@ public class BotParser {
 	int checkGeneratorIns = 0;
 	int checkGeneratorOuts = 0;
 	// EDGES
-
+	System.out.println("EDGES");
 	for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 	    BotModelEdge elem = entry.getValue();
 	    String type = elem.getType();
@@ -412,6 +415,7 @@ public class BotParser {
 		    if (frames.containsKey(target)) {
 			Frame frame = frames.get(target);
 			messenger.addFrame(frame);
+			System.out.println("messenger generates frame");
 		    }
 
 		    // Slot generates
@@ -487,6 +491,7 @@ public class BotParser {
 
 		    // Frame triggers...
 		} else if (frames.get(source) != null) {
+		    System.out.println("Frame triggers action");
 		    Frame frame = frames.get(source);
 		    // ...Bot Action
 		    if (bsfList.get(target) != null) {
@@ -496,6 +501,7 @@ public class BotParser {
 			// automatic
 			if (frame.getSlots().isEmpty()) {
 			    FrameMapper mapper = new FrameMapper();
+			    System.out.println("automatic frame mapping");
 			    frame = mapper.create(botFunction, frame);
 			}
 		    }

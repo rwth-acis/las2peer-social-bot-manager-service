@@ -2,10 +2,9 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import com.reprezen.jsonoverlay.Overlay;
 
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -18,6 +17,7 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.Property;
+import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
@@ -62,12 +62,11 @@ public class OpenAPIReaderV2 {
 	Operation operation = getOperationByOperationId(model, operationId);
 	ServiceFunction action = parseAction(model, operation);
 	action.setActionType(ActionType.REST);
-	String httpMethod = Overlay.of(operation).getPathInParent();
-	action.setHttpMethod(httpMethod);
-	String functionPath = Overlay.of(operation).getPathFromRoot();
-	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
-
+	action.setHttpMethod(getMethodByOperationId(model, operationId));
+	Iterator<ServiceFunctionAttribute> iter = action.getAttributes().iterator();
+	ServiceFunctionAttribute pet = iter.next();
+	System.out.println(pet.toStringNoChildren());
 	return action;
 
     }
@@ -123,6 +122,25 @@ public class OpenAPIReaderV2 {
 	return null;
     }
 
+    private static String getMethodByOperationId(Swagger openAPI, String operationId) {
+
+	System.out.println("get Operation by Id: " + operationId);
+
+	for (Path pathItem : openAPI.getPaths().values()) {
+	    if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
+		return "get";
+	    if (pathItem.getPost() != null && pathItem.getPost().getOperationId().equals(operationId))
+		return "post";
+	    if (pathItem.getPut() != null && pathItem.getPut().getOperationId().equals(operationId))
+		return "put";
+	    if (pathItem.getDelete() != null && pathItem.getDelete().getOperationId().equals(operationId))
+		return "delete";
+	}
+
+	System.out.println("Operation not found");
+	return null;
+    }
+
     private static ServiceFunction parseAction(Swagger model, Operation operation) {
 	ServiceFunction action = new ServiceFunction();
 
@@ -140,11 +158,9 @@ public class OpenAPIReaderV2 {
 	// Parameters
 	List<Parameter> parameters = operation.getParameters();
 	if (operation.getParameters() != null) {
-
-	    for (Parameter parameter : operation.getParameters()) {
+	    for (Parameter parameter : parameters) {
 
 		ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
-		action.addAttribute(attr);
 
 		attr.setRequired(parameter.getRequired());
 		if (parameter.getName() != null)
@@ -153,6 +169,8 @@ public class OpenAPIReaderV2 {
 		    attr.setDescription(parameter.getDescription());
 		if (parameter.getIn() != null)
 		    attr.setContentType(parameter.getIn());
+
+		System.out.println("parameter.getIn:" + parameter.getIn());
 
 		// Body Parameter
 		if (parameter.getIn().contentEquals("body")) {
@@ -168,6 +186,8 @@ public class OpenAPIReaderV2 {
 		    attr.setParameterType(ParameterType.BODY);
 
 		}
+		System.out.println(attr.toStringNoChildren());
+		action.addAttribute(attr);
 	    }
 
 	}
@@ -179,6 +199,20 @@ public class OpenAPIReaderV2 {
 	    action.setProduces("application/json");
 
 	return action;
+
+    }
+
+    private static ServiceFunctionAttribute processAttribute(Model property, ServiceFunctionAttribute attr) {
+
+		// parameter description (optional)
+		if (property.getDescription() != null)
+		    attr.setDescription(property.getDescription());
+
+		// parameter example value (optional)
+		if (property.getExample() != null)
+		    attr.setExample(property.getExample().toString());
+
+	return attr;
 
     }
 
@@ -201,12 +235,16 @@ public class OpenAPIReaderV2 {
 	    childAttr.setParameterType(ParameterType.CHILD);
 
 	    // nested schemas
-	    if (property.getType().equals("object")) {
+
+	    if (property instanceof RefProperty) {
+		RefProperty refProperty = (RefProperty) property;
 		childAttr.setContentType("object");
 		if (rec > 8) {
 		    System.out.println("to much nesting");
 		} else {
-		    childAttr = addChildrenAttributes(openAPI, property, childAttr, rec + 1);
+		    String ref = ((RefProperty) property).get$ref().substring("#/definitions/".length());
+		    Model schema1 = openAPI.getDefinitions().get(ref);
+		    childAttr = addChildrenAttributes(openAPI, schema1, childAttr, rec + 1);
 		}
 		// values
 	    } else {
@@ -215,6 +253,7 @@ public class OpenAPIReaderV2 {
 
 	    parentAttr.addChildAttribute(childAttr);
 	    childAttr.setParent(parentAttr);
+	    System.out.println(childAttr.toStringNoChildren());
 
 	}
 	return parentAttr;
@@ -243,7 +282,7 @@ public class OpenAPIReaderV2 {
 	case "string":
 	    StringProperty stringProperty = (StringProperty) property;
 	    attr.setContentType("string");
-	    if(stringProperty.getEnum() != null && stringProperty.getEnum().size() > 0) {
+	    if (stringProperty.getEnum() != null && stringProperty.getEnum().size() > 0) {
 		attr.setContentType("enum");
 		attr.setEnumList(stringProperty.getEnum());
 	    }

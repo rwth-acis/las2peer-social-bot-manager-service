@@ -25,8 +25,8 @@ public class Test {
 
     public void parse() throws ParseException {
 	String specUrl = "https://petstore.swagger.io/v2/swagger.json";
-	SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(specUrl, null, true);
 
+	SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(specUrl, null, true);
 	Swagger swagger = swaggerParseResult.getSwagger();
 	// System.out.println(Json.pretty(swagger));
 	Path path = swagger.getPath("/pet");
