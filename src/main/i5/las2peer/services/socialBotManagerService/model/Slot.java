@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotSet;
@@ -34,6 +35,12 @@ public class Slot {
      * optional
      */
     boolean required;
+
+    /**
+     * Identifies if only one of its children should be filled (TRUE) or not (FALSE)
+     * 
+     */
+    boolean selection;
 
     /**
      * Identifies if this slot is filled by entity extraction or by free direct user
@@ -72,23 +79,23 @@ public class Slot {
 	this.name = name;
 	this.children = new SlotSet();
     }
-    
+
     /**
      * @param value
      * @return true if the input value is acceptable for this slot
      */
     public boolean validate(String value) {
-	
-	assert this.inputType != null: "no inputType defined.";
-	
-	if(this.inputType == null)
+
+	assert this.inputType != null : "no inputType defined.";
+
+	if (this.inputType == null)
 	    this.inputType = ExpectedInputType.Free;
-	
-	if(this.getInputType() == ExpectedInputType.Enum) {
-	    if(!this.getParameter().getEnumList().contains(value))
+
+	if (this.getInputType() == ExpectedInputType.Enum) {
+	    if (!this.getParameter().getEnumList().contains(value))
 		return false;
 	}
-	
+
 	return this.inputType.validate(value);
     }
 
@@ -191,13 +198,14 @@ public class Slot {
 	return desc;
     }
 
+    @Override
     public String toString() {
 	String res = "Slot ".concat(this.getName());
 	if (this.isEntity_extraction()) {
 	    res = res.concat(" entity: ").concat(this.getEntity());
 	}
-
-	res = res.concat("children: ");
+	res = res.concat(" Selection ".concat(Boolean.toString(this.isSelection())));
+	res = res.concat(" children: ");
 	for (Slot slot : this.children) {
 	    res = res.concat(slot.toString());
 	}
@@ -205,48 +213,144 @@ public class Slot {
     }
 
     public String getNluIntent() {
-        return nluIntent;
+	return nluIntent;
     }
 
     public void setNluIntent(String nluIntent) {
-        this.nluIntent = nluIntent;
+	this.nluIntent = nluIntent;
     }
 
     public String getNlgIntent() {
-        return nlgIntent;
+	return nlgIntent;
     }
-    
+
     public boolean hasParameter() {
 	return this.parameter != null;
     }
 
     public void setNlgIntent(String nlgIntent) {
-        this.nlgIntent = nlgIntent;
+	this.nlgIntent = nlgIntent;
     }
 
     public ExpectedInputType getInputType() {
-        return inputType;
+	return inputType;
     }
 
     public void setInputType(ExpectedInputType inputType) {
-        this.inputType = inputType;
+	this.inputType = inputType;
     }
-    
+
     public String getInformIntent() {
 	return "inform_" + name;
     }
-    
+
     public String getRequestIntent() {
 	return "request_" + name;
     }
-    
+
     public String getConfirmIntent() {
 	return "confirm_" + name;
     }
-    
+
     public String getDenyIntent() {
 	return "deny_" + name;
     }
 
+    public boolean isSelection() {
+	return selection;
+    }
+
+    public void setSelection(boolean selection) {
+	this.selection = selection;
+    }
+
+    public SlotSet getRequired() {
+	SlotSet slots = new SlotSet();
+	if (this.isSelection()) {
+	    slots.add(this);
+	    return slots;
+	}
+
+	if (this.isLeaf() && this.isRequired()) {
+	    slots.add(this);
+	    return slots;
+	}
+
+	if (this.hasChildren()) {
+	    for (Slot slot : this.getChildren()) {
+		slots.addAll(slot.getRequired());
+	    }
+	}
+	return slots;
+    }
+
+    public SlotSet getRequired(String branch) {
+	SlotSet slots = new SlotSet();
+	if (!this.isSelection()) {
+	    return getRequired();
+	}
+
+	if (this.hasChildren()) {
+	    for (Slot slot : this.getChildren()) {
+		if (slot.getEntity() != null && slot.getEntity().contentEquals(branch))
+		    slots.addAll(slot.getRequired());
+	    }
+	}
+
+	return slots;
+    }
+
+    public Slot getChild(String name) {
+	if (this.hasChildren()) {
+	    for (Slot slot : this.getChildren()) {
+		if (slot.getName().contentEquals(name))
+		    return slot;
+	    }
+	}
+	return null;
+    }
+
+    public boolean isReady(Map<Slot, String> state) {
+	// One child is ready
+	if (this.isSelection()) {
+	    for (Slot slot : this.getChildren()) {
+		if (slot.isReady(state))
+		    return true;
+	    }
+	    return false;
+	}
+
+	// all children are ready
+	if (this.hasChildren()) {
+	    for (Slot slot : this.getChildren()) {
+		if (!slot.isReady(state))
+		    return false;
+	    }
+	    return true;
+	}
+
+	// this is ready
+	return state.containsKey(this.name);
+    }
+
+    public Collection<? extends Slot> getDescendants(Map<Slot, String> values) {
+	Collection<Slot> desc = new SlotSet();
+	desc.add(this);
+
+	if (this.isSelection()) {
+	    for (Slot slot : this.getChildren()) {
+		if (slot.getEntity().contentEquals(values.get(this))) {
+		    desc.addAll(slot.getDescendants(values));
+		    return desc;
+		}
+	    }
+	}
+
+	if (this.hasChildren())
+	    for (Slot slot : this.getChildren()) {
+		desc.addAll(slot.getDescendants(values));
+	    }
+	return desc;
+    }
 
 }

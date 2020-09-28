@@ -7,7 +7,7 @@ public class TestTest {
     public static void main(String[] args) {
 
 	try {
-	    new Test().parse();
+	    new Testt().parse();
 	} catch (ParseException e) {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();

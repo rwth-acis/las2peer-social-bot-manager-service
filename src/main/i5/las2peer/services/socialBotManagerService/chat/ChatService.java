@@ -1,17 +1,22 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * This enum lists all available messenger services. The string value has to
  * match the sync meta model.
  */
 public enum ChatService {
 
+    @JsonProperty("Rocket.Chat")
     ROCKET_CHAT("Rocket.Chat", RocketChatMediator.class),
 
+    @JsonProperty("Slack")
     SLACK("Slack", SlackEventChatMediator.class),
 
     SLACK_RTM("Slack RTM", SlackRTMChatMediator.class),
 
+    @JsonProperty("Telegram")
     TELEGRAM("Telegram", TelegramChatMediator.class),
 
     UNKNOWN("", null);

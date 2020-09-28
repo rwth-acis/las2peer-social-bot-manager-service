@@ -1591,7 +1591,8 @@ public class SocialBotManagerService extends RESTService {
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 	@ApiOperation(value = "Create bot", notes = "creates the bot.")
-	public Response creatBot(i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
+	public Response createBot(
+		i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger bot) {
 
 	    System.out.println(bot);
 	    return Response.ok().build();

@@ -7,9 +7,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@ApiModel(value = "Bot", description = "Bot model")
 @XmlRootElement(name = "Bot")
 public class Bot {
 
+    @ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
     private String name;
     private List<Function> function = new ArrayList<Function>();
     private List<Messenger> messenger = new ArrayList<Messenger>();

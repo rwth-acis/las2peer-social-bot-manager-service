@@ -29,11 +29,17 @@ public class DialogueGoal {
 	assert this.frame != null : "frame of dialogue goal is null";
 	assert this.values != null : "slot value map of dialogue goal is null";
 
-	for (Slot slot : frame.getRequired()) {
+	for (Slot slot : frame.getRequired(this.values)) {
 
-	    if (!this.values.containsKey(slot) && !slot.hasChildren()) {
-		System.out.println("key not contained: " + slot.getName());
-		return false;
+	    if (!this.values.containsKey(slot)) {
+		if (slot.isLeaf()) {
+		    System.out.println("not full. key not contained: " + slot.getName());
+		    return false;
+		}
+		if (slot.isSelection()) {
+		    System.out.println("not full. key not contained: " + slot.getName());
+		    return false;
+		}
 	    }
 	}
 	return true;
@@ -47,10 +53,10 @@ public class DialogueGoal {
 	assert this.frame != null : "frame of dialogue goal is null";
 	assert this.values != null : "slot value map of dialogue goal is null";
 
-	for (Slot slot : frame.getDescendants()) {
+	for (Slot slot : frame.getDescendants(this.values)) {
 	    if (!this.values.containsKey(slot)) {
 		if (slot.isLeaf()) {
-		    System.out.println("key not contained: " + slot.getName());
+		    System.out.println("not full. key not contained: " + slot.getName());
 		    return false;
 		}
 	    }
@@ -169,11 +175,28 @@ public class DialogueGoal {
      */
     public Slot next() {
 
+	System.out.println("next() " + frame.getRequired());
+
 	for (Slot slot : frame.getRequired()) {
+
 	    if (!this.values.containsKey(slot)) {
 		if (slot.isLeaf())
 		    return slot;
+		if (slot.isSelection())
+		    return slot;
 	    }
+
+	    if (slot.isSelection() && this.values.containsKey(slot)) {
+		if (!slot.isReady(values)) {
+		    for (Slot subSlot : slot.getRequired(this.values.get(slot))) {
+			if (!this.values.containsKey(subSlot)) {
+			    if (subSlot.isLeaf())
+				return subSlot;
+			}
+		    }
+		}
+	    }
+
 	}
 
 	for (Slot slot : frame.getDescendants()) {
@@ -280,6 +303,7 @@ public class DialogueGoal {
 	input.setEntity(slot.getEntity());
 	act.setExpected(input);
 	return act;
+
     }
 
     public DialogueAct getInformAct(Slot slot) {

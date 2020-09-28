@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +10,12 @@ import java.util.Map;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
+import io.swagger.models.ComposedModel;
 import io.swagger.models.Model;
+import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
+import io.swagger.models.RefModel;
 import io.swagger.models.Swagger;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
@@ -21,6 +25,7 @@ import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
+import io.swagger.util.Json;
 
 public class OpenAPIReaderV2 {
 
@@ -141,10 +146,10 @@ public class OpenAPIReaderV2 {
 	return null;
     }
 
-    private static ServiceFunction parseAction(Swagger model, Operation operation) {
+    private static ServiceFunction parseAction(Swagger swagger, Operation operation) {
 	ServiceFunction action = new ServiceFunction();
 
-	assert model != null : "no model specified";
+	assert swagger != null : "no model specified";
 	assert operation != null : "no operation specified";
 
 	// Operation ID
@@ -176,13 +181,10 @@ public class OpenAPIReaderV2 {
 		if (parameter.getIn().contentEquals("body")) {
 		    String ref = ((BodyParameter) parameter).getSchema().getReference()
 			    .substring("#/definitions/".length());
-		    Model schema = model.getDefinitions().get(ref);
-
-		    attr = processAttribute(schema, attr);
 
 		    String name = ref;
 		    attr.setName(name);
-		    attr = addChildrenAttributes(model, schema, attr);
+		    attr = addChildrenAttributes(swagger, ref, attr);
 		    attr.setParameterType(ParameterType.BODY);
 
 		}
@@ -202,60 +204,107 @@ public class OpenAPIReaderV2 {
 
     }
 
-    private static ServiceFunctionAttribute processAttribute(Model property, ServiceFunctionAttribute attr) {
-
-		// parameter description (optional)
-		if (property.getDescription() != null)
-		    attr.setDescription(property.getDescription());
-
-		// parameter example value (optional)
-		if (property.getExample() != null)
-		    attr.setExample(property.getExample().toString());
-
-	return attr;
-
-    }
-
-    private static ServiceFunctionAttribute addChildrenAttributes(Swagger openAPI, Model schema,
+    private static ServiceFunctionAttribute addChildrenAttributes(Swagger openAPI, String ref,
 	    ServiceFunctionAttribute bodyAttribute) {
-	return addChildrenAttributes(openAPI, schema, bodyAttribute, 0);
+	return addChildrenAttributes(openAPI, ref, bodyAttribute, null, 0);
     }
 
     private static ServiceFunctionAttribute addChildrenAttributes(Swagger openAPI, Model schema,
-	    ServiceFunctionAttribute parentAttr, int rec) {
+	    ServiceFunctionAttribute bodyAttribute, String ref, String dis) {
+	return addChildrenAttributes(openAPI, ref, bodyAttribute, dis, 0);
+    }
 
-	Map<String, Property> properties = schema.getProperties();
-	for (Map.Entry<String, Property> pair : properties.entrySet()) {
+    private static ServiceFunctionAttribute addChildrenAttributes(Swagger swagger, String ref,
+	    ServiceFunctionAttribute parentAttr, String dis, int rec) {
 
-	    String name = pair.getKey();
-	    Property property = pair.getValue();
+	Model model = swagger.getDefinitions().get(ref);
+	assert model != null : "model not found by ref: " + ref;
 
-	    ServiceFunctionAttribute childAttr = new ServiceFunctionAttribute();
-	    childAttr.setName(name);
-	    childAttr.setParameterType(ParameterType.CHILD);
+	// Discriminator
+	if (dis == null)
+	    dis = getDiscriminator(swagger, model);
 
-	    // nested schemas
-
-	    if (property instanceof RefProperty) {
-		RefProperty refProperty = (RefProperty) property;
-		childAttr.setContentType("object");
-		if (rec > 8) {
-		    System.out.println("to much nesting");
-		} else {
-		    String ref = ((RefProperty) property).get$ref().substring("#/definitions/".length());
-		    Model schema1 = openAPI.getDefinitions().get(ref);
-		    childAttr = addChildrenAttributes(openAPI, schema1, childAttr, rec + 1);
-		}
-		// values
-	    } else {
-		childAttr = processAttribute(property, childAttr);
-	    }
-
-	    parentAttr.addChildAttribute(childAttr);
-	    childAttr.setParent(parentAttr);
-	    System.out.println(childAttr.toStringNoChildren());
-
+	if (model instanceof ComposedModel) {
+	    ComposedModel cm = (ComposedModel) model;
+	    model = cm.getChild();
 	}
+
+	Json.prettyPrint(model.getClass());
+	// Add properties of model to attribute
+	if (model.getProperties() == null) {
+	    System.out.println("schema " + model.getTitle() + "has no properties. Skip");
+	} else {
+
+	    Map<String, Property> properties = model.getProperties();
+	    for (Map.Entry<String, Property> pair : properties.entrySet()) {
+
+		String name = pair.getKey();
+		Property property = pair.getValue();
+
+		ServiceFunctionAttribute childAttr = new ServiceFunctionAttribute();
+		childAttr.setName(name);
+
+		// discriminator
+		System.out.println("name: " + name + "  dis: " + dis);
+		if (dis != null && dis.contentEquals(name)) {
+		    childAttr.setParameterType(ParameterType.DISCRIMINATOR);
+		    childAttr = processAttribute(property, childAttr);
+		    childAttr.setRequired(true);
+		    List<String> modelRefs = getSubModels(swagger, ref);
+		    parentAttr.addChildAttribute(childAttr);
+		    childAttr.setParent(parentAttr);
+		    System.out.println(childAttr.toStringNoChildren());
+		    for (String sm : modelRefs) {
+			parentAttr = addChildrenAttributes(swagger, sm, parentAttr, sm, rec);
+		    }
+
+		} else {
+		    childAttr.setParameterType(ParameterType.CHILD);
+		    if (dis != null)
+			childAttr.setDiscriminator(dis);
+
+		    // nested schemas
+		    if (property instanceof RefProperty) {
+			childAttr.setContentType("object");
+		    } else {
+			childAttr = processAttribute(property, childAttr);
+		    }
+
+		    if (childAttr.getContentType().contentEquals("object")) {
+			if (rec > 8) {
+			    System.out.println("to much nesting");
+			} else {
+
+			    if (property instanceof RefProperty) {
+				ref = ((RefProperty) property).get$ref().substring("#/definitions/".length());
+				childAttr = addChildrenAttributes(swagger, ref, childAttr, dis, rec + 1);
+			    }
+
+			    if (property instanceof ArrayProperty) {
+				System.out.println("array property");
+				ArrayProperty arrayProperty = (ArrayProperty) property;
+				if (arrayProperty.getItems() != null) {
+				    System.out.println("array has items " + arrayProperty.getName());
+				    ref = ((RefProperty) arrayProperty.getItems()).get$ref()
+					    .substring("#/definitions/".length());
+				    System.out.println("ref " + ref);
+				    childAttr = addChildrenAttributes(swagger, ref, childAttr, dis, rec + 1);
+				}
+			    }
+
+			}
+		    }
+		    if (childAttr != null) {
+			parentAttr.addChildAttribute(childAttr);
+			childAttr.setParent(parentAttr);
+			System.out.println(childAttr.toStringNoChildren());
+		    }
+
+		}
+
+	    }
+	}
+
 	return parentAttr;
 
     }
@@ -295,6 +344,11 @@ public class OpenAPIReaderV2 {
 	    ArrayProperty arrayProperty = (ArrayProperty) property;
 	    String type = arrayProperty.getItems().getType();
 	    attr.setContentType(type);
+	    if (arrayProperty.getItems() instanceof RefProperty) {
+		System.out.println("array with ref objects");
+		attr.setContentType("object");
+	    }
+
 	    break;
 	default:
 	    System.out.println("unknown parameter content type");
@@ -311,6 +365,38 @@ public class OpenAPIReaderV2 {
 	System.out.printf("== Model %s\n", modelUri);
 	System.out.printf("------\n\n");
 	return swagger;
+    }
+
+    public static String getDiscriminator(Swagger swagger, Model model) {
+	if (model instanceof ModelImpl) {
+	    ModelImpl mi = (ModelImpl) model;
+	    if (mi.getDiscriminator() != null && mi.getDiscriminator() != "")
+		return mi.getDiscriminator();
+	}
+	return null;
+    }
+
+    public static List<String> getSubModels(Swagger swagger, String ref) {
+	List<String> result = new ArrayList<String>();
+
+	for (Map.Entry<String, Model> entry : swagger.getDefinitions().entrySet()) {
+	    if (entry.getValue() instanceof ComposedModel) {
+		ComposedModel cm = (ComposedModel) entry.getValue();
+		for (Model allOfModel : cm.getAllOf()) {
+		    if (allOfModel instanceof RefModel) {
+			String ref2 = ((RefModel) allOfModel).get$ref();
+			String ref2sub = ref2.substring("#/definitions/".length());
+			System.out.println("ref " + ref);
+			if (ref.contentEquals(ref2sub) || ref.contentEquals(ref2))
+			    result.add(entry.getKey());
+
+		    }
+		}
+
+	    }
+
+	}
+	return result;
     }
 
 }

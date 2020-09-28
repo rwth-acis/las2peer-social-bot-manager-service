@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -7,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
@@ -47,5 +47,28 @@ public class DialogueGoalTest {
 	assertFalse(goal.isFilled(slot3));
     }
     
-    
+    @Test
+    public void testGetRequired() {
+
+	DialogueGoal goal = new DialogueGoal(frame);
+	slot1.setSelection(true);
+	slot2.setRequired(true);
+	SlotSet slots = frame.getRequired();
+	assertTrue(slots.contains(slot1));
+	assertTrue(slots.contains(slot2));
+
+    }
+
+    @Test
+    public void testGetRequiredSelection() {
+
+	DialogueGoal goal = new DialogueGoal(frame);
+	slot3.setRequired(true);
+	slot5.setRequired(true);
+	SlotSet slots = frame.getRequired();
+	assertEquals(2, slots.size());
+	assertTrue(slots.contains(slot3));
+	assertTrue(slots.contains(slot5));
+    }
+
 }

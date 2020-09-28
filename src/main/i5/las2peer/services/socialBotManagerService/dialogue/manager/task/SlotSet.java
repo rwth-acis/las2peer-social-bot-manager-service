@@ -40,4 +40,14 @@ public class SlotSet extends ArrayList<Slot> {
 	return null;
     }
 
+    @Override
+    public String toString() {
+	String res = "SlotSet ["; 
+	for(Slot slot: this) {
+	    res = res.concat(slot.toString());
+	}
+	res = res.concat("]");
+		return res;
+    }
+
 }

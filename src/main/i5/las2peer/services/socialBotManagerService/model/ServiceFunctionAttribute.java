@@ -31,6 +31,7 @@ public class ServiceFunctionAttribute {
     private List<String> enumList;
     private boolean required;
     private boolean array;
+    private String discriminator;
 
     public ServiceFunctionAttribute() {
 	this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
@@ -62,6 +63,10 @@ public class ServiceFunctionAttribute {
      */
 
     public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
+	if (childAttribute == null) {
+	    System.out.println("child is null");
+	    return;
+	}
 	this.childAttributes.add(childAttribute);
 	System.out.println("My child is " + childAttribute.getName());
     }
@@ -170,11 +175,10 @@ public class ServiceFunctionAttribute {
 
     public String toStringNoChildren() {
 	return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
-		+ ", generator=" + generator + ", function=" + function + ", itb="
-		+ itb
-		+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
-		+ ", contentType=" + contentType + ", number of children=" + this.childAttributes.size()
-		+ ", description=" + description + ", example=" + example + "]";
+		+ ", generator=" + generator + ", function=" + function + ", itb=" + itb + ", staticContent="
+		+ staticContent + ", content=" + content + ", contentURL=" + contentURL + ", contentType=" + contentType
+		+ ", number of children=" + this.childAttributes.size() + ", description=" + description + ", example="
+		+ example + "]";
     }
 
     public String getDescription() {
@@ -215,6 +219,44 @@ public class ServiceFunctionAttribute {
 
     public void setArray(boolean value) {
 	this.array = value;
+    }
+
+    public String getDiscriminator() {
+	return discriminator;
+    }
+
+    public void setDiscriminator(String discriminator) {
+	this.discriminator = discriminator;
+    }
+
+    public boolean isDiscriminator() {
+	return this.parameterType == ParameterType.DISCRIMINATOR;
+    }
+
+    public boolean hasDiscriminator() {
+	for (ServiceFunctionAttribute attr : this.childAttributes) {
+	    if (attr.isDiscriminator())
+		return true;
+	}
+	return false;
+    }
+
+    public ServiceFunctionAttribute getDiscriminatorAttribute() {
+	for (ServiceFunctionAttribute attr : this.childAttributes) {
+	    if (attr.isDiscriminator())
+		return attr;
+	}
+	return null;
+    }
+
+    public List<ServiceFunctionAttribute> getChildren(String dis) {
+	List<ServiceFunctionAttribute> list = new ArrayList<ServiceFunctionAttribute>();
+	for (ServiceFunctionAttribute attr : this.childAttributes) {
+	    if (attr.getDiscriminator() != null && attr.getDiscriminator().contentEquals(dis))
+		list.add(attr);
+	}
+
+	return list;
     }
 
 }
