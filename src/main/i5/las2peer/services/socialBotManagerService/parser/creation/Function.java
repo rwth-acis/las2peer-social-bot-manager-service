@@ -17,15 +17,15 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({ AccessServiceFunction.class, ChitChatFunction.class })
 public class Function {
-    @ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", value = "The function the bot should do", required = true, example = "AccessService")
-    private FunctionType type;
+	@ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", value = "The function the bot should do", required = true, example = "AccessService")
+	private FunctionType type;
 
-    public FunctionType getType() {
-	return type;
-    }
+	public FunctionType getType() {
+		return type;
+	}
 
-    public void setType(FunctionType type) {
-	this.type = type;
-    }
+	public void setType(FunctionType type) {
+		this.type = type;
+	}
 
 }
