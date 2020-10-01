@@ -25,8 +25,8 @@ public class DialogueManagerGenerator {
 		AbstractDialogueManager manager;
 		switch (type) {
 		case NAIVE:
-		    manager = generateNaiveDialogueManager(frame);
-		    break;
+			manager = generateNaiveDialogueManager(frame);
+			break;
 		case AGENDA_TREE:
 			manager = generateAgendaDialogueManager(frame);
 			break;
@@ -40,12 +40,12 @@ public class DialogueManagerGenerator {
 	}
 
 	private AbstractDialogueManager generateNaiveDialogueManager(Frame frame) {
-	   
-	   DialogueGoal goal = new DialogueGoal(frame);
-	   NaiveDialogueManager manager = new NaiveDialogueManager(goal);
-	   manager.setStartIntent(frame.getIntent());
-	   
-	   return manager;
+
+		DialogueGoal goal = new DialogueGoal(frame);
+		NaiveDialogueManager manager = new NaiveDialogueManager(goal);
+		manager.setStartIntent(frame.getIntent());
+
+		return manager;
 	}
 
 	private AbstractDialogueManager generateSimpleDialogueManager(Messenger messenger) {
@@ -82,7 +82,7 @@ public class DialogueManagerGenerator {
 
 	private AgendaDialogueNode getNode(Slot slot) {
 		AgendaDialogueNode node = new AgendaDialogueNode();
-		node.setIntent(slot.getNlu_intent());
+		node.setIntent(slot.getName());
 		node.setEntity(slot.getEntity());
 		node.addResponse(slot.getMessage());
 		if (slot.getParameter() != null && slot.getParameter().getParameterType() != null)

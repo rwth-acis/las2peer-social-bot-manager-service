@@ -15,16 +15,6 @@ public class Slot {
 	final String name;
 
 	/**
-	 * intent that corresponds to the intent recognition of the NLU module
-	 */
-	String nluIntent;
-
-	/**
-	 * intent that corresponding to the message creation of the NLG module
-	 */
-	String nlgIntent;
-
-	/**
 	 * entity identification corresponding to the entity recognition of the NLU
 	 * module
 	 */
@@ -150,22 +140,6 @@ public class Slot {
 		this.entity_extraction = entity_extraction;
 	}
 
-	public String getNlu_intent() {
-		return nluIntent;
-	}
-
-	public void setNlu_intent(String nlu_intent) {
-		this.nluIntent = nlu_intent;
-	}
-
-	public String getNlg_intent() {
-		return nlgIntent;
-	}
-
-	public void setNlg_intent(String nlg_intent) {
-		this.nlgIntent = nlg_intent;
-	}
-
 	public List<Slot> getChildren() {
 		return children;
 	}
@@ -208,24 +182,8 @@ public class Slot {
 		return res;
 	}
 
-	public String getNluIntent() {
-		return nluIntent;
-	}
-
-	public void setNluIntent(String nluIntent) {
-		this.nluIntent = nluIntent;
-	}
-
-	public String getNlgIntent() {
-		return nlgIntent;
-	}
-
 	public boolean hasParameter() {
 		return this.parameter != null;
-	}
-
-	public void setNlgIntent(String nlgIntent) {
-		this.nlgIntent = nlgIntent;
 	}
 
 	public ExpectedInputType getInputType() {

@@ -15,41 +15,45 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "Bot")
 public class Bot {
 
-    @ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
-    private String name;
-    private List<Function> function = new ArrayList<Function>();
-    private List<Messenger> messenger = new ArrayList<Messenger>();
+	@ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
+	private String name;
 
-    @XmlElement(name = "name")
-    public String getName() {
-	return name;
-    }
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	private List<Function> function = new ArrayList<Function>();
 
-    public List<Function> getFunction() {
-	return function;
-    }
 
-    public void setFunction(List<Function> function) {
-	this.function = function;
-    }
+	private List<Messenger> messenger = new ArrayList<Messenger>();
 
-    @XmlElementWrapper(name = "messengers")
-    @XmlElement(name = "messenger")
-    public List<Messenger> getMessenger() {
-	return messenger;
-    }
+	@XmlElement(name = "name")
+	public String getName() {
+		return name;
+	}
 
-    public void setMessenger(List<Messenger> messenger) {
-	this.messenger = messenger;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    @Override
-    public String toString() {
-	return "Bot [name=" + name + ", function=" + function + ", messenger=" + messenger + "]";
-    }
+	public List<Function> getFunction() {
+		return function;
+	}
+
+	public void setFunction(List<Function> function) {
+		this.function = function;
+	}
+
+	@XmlElementWrapper(name = "messengers")
+	@XmlElement(name = "messenger")
+	public List<Messenger> getMessenger() {
+		return messenger;
+	}
+
+	public void setMessenger(List<Messenger> messenger) {
+		this.messenger = messenger;
+	}
+
+	@Override
+	public String toString() {
+		return "Bot [name=" + name + ", function=" + function + ", messenger=" + messenger + "]";
+	}
 
 }

@@ -1,9 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.parser.creation;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -13,9 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @JsonSubTypes.Type(value = ChitChatFunction.class, name = "ChitChat"),
 	@JsonSubTypes.Type(value = AccessServiceFunction.class, name = "AccessService") })
-@ApiModel(discriminator = "type", subTypes = { AccessServiceFunction.class, ChitChatFunction.class })
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso({ AccessServiceFunction.class, ChitChatFunction.class })
+@ApiModel(discriminator = "type", subTypes = { ChitChatFunction.class, AccessServiceFunction.class })
 public class Function {
 	@ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", value = "The function the bot should do", required = true, example = "AccessService")
 	private FunctionType type;

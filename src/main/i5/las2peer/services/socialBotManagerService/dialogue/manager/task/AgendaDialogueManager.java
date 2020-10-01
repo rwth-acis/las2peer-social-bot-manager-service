@@ -140,14 +140,12 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 
 	private boolean isFilled() {
 		System.out.println("check if filled");
-		for (Slot slot : goal.getDescendants()) {
-			System.out.println(slot.getNlu_intent());
+		for (Slot slot : goal.getDescendants())
 			if (!slot.hasChildren())
-				if (!this.state.slotValues.containsKey(slot.getNlu_intent())) {
-					System.out.println("key not contained: " + slot.getNlu_intent());
+				if (!this.state.slotValues.containsKey(slot.getName())) {
+					System.out.println("key not contained: " + slot.getName());
 					return false;
 				}
-		}
 		System.out.println("is filled");
 		return true;
 
