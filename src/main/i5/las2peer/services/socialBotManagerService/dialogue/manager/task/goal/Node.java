@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -155,7 +155,7 @@ public class Node {
 		assert this.getChildren() != null : "children are null";
 
 		Collection<Node> desc = new ArrayList<Node>();
-		if (!(this instanceof Tree))
+		if (!(this instanceof RootNode))
 			desc.add(this);
 		for (Node node : this.getChildren())
 			desc.addAll(node.getDescendants());
@@ -200,7 +200,7 @@ public class Node {
 
 	public void invariant() {
 
-		if (!(this instanceof Tree))
+		if (!(this instanceof RootNode))
 			assert this.slot != null : "dialogue goal node has no slot";
 		if (this.value != null)
 			assert this.slot.validate(this.value) : "slot " + this.slot.getName() + "is filled with invalid value '"

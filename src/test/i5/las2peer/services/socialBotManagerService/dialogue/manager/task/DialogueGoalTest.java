@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 

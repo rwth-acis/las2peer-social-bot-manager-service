@@ -218,6 +218,12 @@ public class Slot {
 		this.selection = selection;
 	}
 
+    public boolean isArray() {
+	if (this.hasParameter())
+	    return this.getParameter().isArray();
+	return false;
+    }
+
 	public SlotSet getRequired() {
 		SlotSet slots = new SlotSet();
 		if (this.isSelection()) {

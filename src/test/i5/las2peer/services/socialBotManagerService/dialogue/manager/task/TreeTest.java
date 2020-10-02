@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
@@ -41,7 +42,7 @@ public class TreeTest {
 	@Test
 	public void BuildTreeTest() {
 
-		Tree tree = new Tree(frame);
+		RootNode tree = new RootNode(frame);
 		assertNotNull(tree.getChildren());
 		assertEquals(2, tree.getChildren().size());
 		assertEquals(2, slots[1].getChildren().size());
@@ -65,7 +66,7 @@ public class TreeTest {
 		slots[9].setRequired(true);
 		slots[1].setRequired(true);
 
-		Tree tree = new Tree(frame);
+		RootNode tree = new RootNode(frame);
 		assertFalse(tree.isReady());
 
 	}
