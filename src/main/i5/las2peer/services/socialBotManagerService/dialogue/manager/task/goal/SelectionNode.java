@@ -5,7 +5,7 @@ import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
-public class SelectionNode extends Node {
+public class SelectionNode extends Node implements Fillable {
 
     private Slot slot;
     private String value;
@@ -22,8 +22,8 @@ public class SelectionNode extends Node {
 	this.confirmed = false;
 	this.children = new HashMap<String, Node>();
 	for (Slot childSlot : slot.getChildren()) {
-	    Node childNode = new Node(childSlot);
-	    this.children.put(slot.getEntity(), childNode);
+	    Node childNode = NodeFactory.create(childSlot);
+	    this.children.put(childSlot.getEntity(), childNode);
 	}
 
 	invariant();
@@ -40,6 +40,16 @@ public class SelectionNode extends Node {
 
     }
 
+    @Override
+    public boolean validate(String value) {
+
+	assert value != null : "value parameter is null";
+	invariant();
+
+	return this.slot.validate(value);
+    }
+
+    @Override
     public void confirm() {
 
 	invariant();
@@ -81,7 +91,6 @@ public class SelectionNode extends Node {
 	return confirmed;
     }
 
-    @Override
     public void setConfirmed(boolean confirmed) {
 	this.confirmed = confirmed;
     }
@@ -91,19 +100,36 @@ public class SelectionNode extends Node {
 	return slot;
     }
 
-    @Override
     public void setSlot(Slot slot) {
 	this.slot = slot;
     }
 
-    @Override
     public String getValue() {
 	return value;
     }
 
-    @Override
     public void setValue(String value) {
 	this.value = value;
+    }
+
+    public Map<String, Node> getChildren() {
+	return children;
+    }
+
+    public void setChildren(Map<String, Node> children) {
+	this.children = children;
+    }
+
+    public Node getChild(String enu) {
+	return this.children.get(enu);
+    }
+
+    @Override
+    public NodeList getAll() {
+	NodeList nodes = new NodeList(this);
+	if (this.isFilled())
+	    nodes.add(getChild(this.value));
+	return nodes;
     }
 
     @Override
@@ -117,4 +143,5 @@ public class SelectionNode extends Node {
 	    assert this.children.containsKey(this.value) : "no child path with value " + this.value;
 	}
     }
+
 }

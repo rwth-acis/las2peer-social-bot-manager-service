@@ -7,8 +7,9 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
@@ -35,17 +36,33 @@ public class DialogueGoalTest {
 	slot1.addChild(slot3);
 	slot1.addChild(slot4);
 	slot4.addChild(slot5);
+
+	slot2.setInputType(InputType.Number);
+	slot3.setInputType(InputType.Free);
+	slot5.setInputType(InputType.Number);
     }
     
     @Test
     public void testFill() {
 	
 	DialogueGoal goal = new DialogueGoal(frame);
-	slot1.setInputType(ExpectedInputType.Number);
-	goal.fill(slot1, "1234");
-	assertTrue(goal.isFilled(slot1));
-	assertFalse(goal.isFilled(slot2));
-	assertFalse(goal.isFilled(slot3));
+	assertEquals(6, goal.getRoot().getAll().size());
+	assertEquals(2, goal.getRoot().getChildren().size());
+
+	goal.print();
+	Fillable n2 = goal.getNode("s2");
+	Fillable n3 = goal.getNode("s3");
+	Fillable n5 = goal.getNode("s5");
+
+	goal.fill(n2, "1234");
+	assertTrue(goal.isFilled(n2));
+	assertFalse(goal.isFilled(n3));
+	assertFalse(goal.isFilled(n5));
+	
+	goal.fill(n3, "aaaa");
+	assertTrue(goal.isFilled(n2));
+	assertTrue(goal.isFilled(n3));
+	assertFalse(goal.isFilled(n5));
     }
     
     @Test

@@ -5,7 +5,7 @@ import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
-public class MultiValueNode extends Node {
+public class MultiValueNode extends Node implements Fillable {
 
     private Slot slot;
     private List<String> values;
@@ -33,6 +33,16 @@ public class MultiValueNode extends Node {
 
     }
 
+    @Override
+    public boolean validate(String value) {
+
+	assert value != null : "value parameter is null";
+	invariant();
+
+	return this.slot.validate(value);
+    }
+
+    @Override
     public void confirm() {
 
 	invariant();
@@ -69,7 +79,6 @@ public class MultiValueNode extends Node {
 	return confirmed;
     }
 
-    @Override
     public void setConfirmed(boolean confirmed) {
 	this.confirmed = confirmed;
     }
@@ -79,7 +88,6 @@ public class MultiValueNode extends Node {
 	return slot;
     }
 
-    @Override
     public void setSlot(Slot slot) {
 	this.slot = slot;
     }
@@ -90,6 +98,24 @@ public class MultiValueNode extends Node {
 
     public void setValue(List<String> values) {
 	this.values = values;
+    }
+
+    @Override
+    public String getValue() {
+	String res = "";
+	res = res.concat(this.getValues().get(0));
+	if (this.getValues().size() > 0) {
+	    for (String value : this.values.subList(1, this.values.size())) {
+		res = res.concat(", ").concat(value);
+	    }
+	}
+	return res;
+
+    }
+
+    @Override
+    public NodeList getAll() {
+	return new NodeList(this);
     }
 
     @Override

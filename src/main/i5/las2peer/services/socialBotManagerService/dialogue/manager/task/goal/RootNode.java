@@ -35,6 +35,21 @@ public class RootNode extends Node {
     }
 
     @Override
+    public boolean isFilled() {
+	for (Node node : this.getChildren())
+	    if (node.isFilled())
+		return false;
+	return true;
+    }
+
+    @Override
+    public boolean isConfirmed() {
+	for (Node node : this.getChildren())
+	    if (node.isConfirmed())
+		return false;
+	return true;
+    }
+
     public void addChild(Node node) {
 	assert node != null : "node is null";
 	if (this.getChildren() == null)
@@ -42,12 +57,10 @@ public class RootNode extends Node {
 	this.getChildren().add(node);
     }
 
-    @Override
     public List<Node> getChildren() {
 	return children;
     }
 
-    @Override
     public void setChildren(List<Node> children) {
 	this.children = children;
     }
@@ -61,10 +74,20 @@ public class RootNode extends Node {
     }
 
     @Override
+    public NodeList getAll() {
+	NodeList nodes = new NodeList(this);
+	for (Node node : this.children) {
+	    nodes.addAll(node.getAll());
+	}
+	return nodes;
+    }
+
+    @Override
     public void invariant() {
 	assert this.frame != null : "frame is null";
 
     }
+
 
 
 }

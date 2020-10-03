@@ -2,7 +2,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
-public class ValueNode extends Node {
+public class ValueNode extends Node implements Fillable {
 
     private Slot slot;
     private String value;
@@ -30,6 +30,16 @@ public class ValueNode extends Node {
 
     }
 
+    @Override
+    public boolean validate(String value) {
+
+	assert value != null : "value parameter is null";
+	invariant();
+
+	return this.slot.validate(value);
+    }
+
+    @Override
     public void confirm() {
 
 	invariant();
@@ -67,7 +77,6 @@ public class ValueNode extends Node {
 	return confirmed;
     }
 
-    @Override
     public void setConfirmed(boolean confirmed) {
 	this.confirmed = confirmed;
     }
@@ -77,25 +86,27 @@ public class ValueNode extends Node {
 	return slot;
     }
 
-    @Override
     public void setSlot(Slot slot) {
 	this.slot = slot;
     }
 
-    @Override
     public String getValue() {
 	return value;
     }
 
-    @Override
     public void setValue(String value) {
 	this.value = value;
     }
 
     @Override
+    public NodeList getAll() {
+	return new NodeList(this);
+    }
+
+    @Override
     public void invariant() {
 	assert this.slot != null : "slot of value node is null";
-	if (this.isFilled())
+	if (this.value != null)
 	    assert this.slot.validate(this.getValue()) : "slot " + this.slot.getName() + " filled with invalid value "
 		    + this.value;
     }

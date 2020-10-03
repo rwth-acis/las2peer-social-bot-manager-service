@@ -56,12 +56,10 @@ public class SequenceNode extends Node {
 	return true;
     }
 
-    @Override
     public List<Node> getChildren() {
 	return children;
     }
 
-    @Override
     public void addChild(Node node) {
 	assert node != null : "node parameter is null";
 	invariant();
@@ -69,15 +67,29 @@ public class SequenceNode extends Node {
 	this.children.add(node);
     }
 
-    @Override
     public void setChildren(List<Node> children) {
 	this.children = children;
+    }
+
+    @Override
+    public NodeList getAll() {
+	NodeList nodes = new NodeList(this);
+	for (Node node : this.children) {
+	    nodes.addAll(node.getAll());
+	}
+	return nodes;
     }
 
     @Override
     public void invariant() {
 	assert this.children != null : "children are null";
 	assert !this.children.isEmpty() : "sequence node has no children";
+    }
+
+    @Override
+    public String toString() {
+	return "SequenceNode [children=" + children + ", isFilled()=" + isFilled() + ", isReady()=" + isReady()
+		+ ", isConfirmed()=" + isConfirmed() + "]";
     }
 
 }

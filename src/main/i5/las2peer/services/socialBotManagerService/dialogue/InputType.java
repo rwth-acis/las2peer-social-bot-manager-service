@@ -4,7 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-public enum ExpectedInputType {
+public enum InputType {
 
 	Free, Word, Number, Decimal, Confirmation, Date, Url, Enum;
 

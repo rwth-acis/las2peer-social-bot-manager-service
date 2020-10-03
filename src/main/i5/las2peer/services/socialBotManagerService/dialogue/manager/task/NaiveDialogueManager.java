@@ -5,9 +5,11 @@ import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Node;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -35,10 +37,10 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	    return requestNextSlot();
 
 	// get corresponding slot
-	Slot slot = null;
+	Fillable node = null;
 	if (goal.contains(intent)) {
-	    slot = goal.getSlot(intent);
-	    if (slot == null)
+	    node = goal.getNode(intent);
+	    if (node == null)
 		System.out.println("naive dm handle: slot not found for intent: " + intent);
 	}
 
@@ -49,20 +51,20 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	    // fill slot
 	    for (Entity entity : semantic.getEntities()) {
 		String value = entity.getValue();
-		if (slot.validate(value))
-		    this.goal.fill(slot, value);
+		if (node.validate(value))
+		    this.goal.fill(node, value);
 		else
 		    return requestNextSlot();
 	    }
 
 	    // arrays
-	    if (slot != null && slot.getParameter().isArray()) {
+	    if (node != null && node.getSlot().isArray()) {
 
-		String name = slot.getName().replaceAll("_", " ").substring(0, slot.getName().length() - 1);
+		String name = node.getName().replaceAll("_", " ").substring(0, node.getName().length() - 1);
 		act.setMessage("do you want to add another " + name);
 		ExpectedInput input = new ExpectedInput();
-		input.setIntend(slot.getConfirmIntent());
-		input.setType(ExpectedInputType.Confirmation);
+		input.setIntend(node.getConfirmIntent());
+		input.setType(InputType.Confirmation);
 		act.setExpected(input);
 		return act;
 
@@ -78,8 +80,8 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	case REQUEST:
 
 	    // inform about filled slot value
-	    if (slot != null)
-		return goal.getInformAct(slot);
+	    if (node != null)
+		return goal.getInformAct((Node) node);
 
 	    // inform about expected slot value
 	    // TODO
@@ -105,8 +107,8 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 		return requestNextSlot();
 
 	    // user wants to fill more values for same slot
-	    if (slot != null && semantic.getKeyword().contentEquals(slot.getConfirmIntent()))
-		return goal.getRequestAct(slot);
+	    if (node != null && semantic.getKeyword().contentEquals(node.getConfirmIntent()))
+		return goal.getRequestAct(node.getSlot());
 
 	    // user confirm but bot dont know why
 	    return this.handleDefault();
@@ -126,7 +128,7 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 		return perform();
 
 	    // deny array slot
-	    if (slot != null && semantic.getKeyword().contentEquals(slot.getConfirmIntent())) {
+	    if (node != null && semantic.getKeyword().contentEquals(node.getConfirmIntent())) {
 
 		// check if ready
 		if (!optional && goal.isReady())
@@ -137,9 +139,9 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	    }
 
 	    // User wants so delete specific slot
-	    if (slot != null && goal.isFilled(slot)) {
-		goal.delete(slot);
-		return goal.getInformAct(slot);
+	    if (node != null && goal.isFilled((Node) node)) {
+		goal.delete(node);
+		return goal.getInformAct((Node) node);
 	    }
 
 	default:
@@ -169,8 +171,8 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
     }
 
     private DialogueAct requestNextSlot() {
-	Slot nextSlot = goal.next();
-	DialogueAct act = goal.getRequestAct(nextSlot);
+	Fillable nextNode = goal.next();
+	DialogueAct act = goal.getRequestAct(nextNode.getSlot());
 	return act;
     }
 

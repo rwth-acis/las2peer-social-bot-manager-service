@@ -2,12 +2,12 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 
 public class ExpectedInput {
 
-	private ExpectedInputType type;
+	private InputType type;
 	private String intend;
 	private String entity;
 	private boolean array;
 
-	public ExpectedInput(ExpectedInputType type, String intend) {
+	public ExpectedInput(InputType type, String intend) {
 		super();
 		this.type = type;
 		this.intend = intend;
@@ -31,7 +31,7 @@ public class ExpectedInput {
 		return intend;
 	}
 
-	public ExpectedInputType getType() {
+	public InputType getType() {
 		return type;
 	}
 
@@ -43,7 +43,7 @@ public class ExpectedInput {
 		this.intend = intend;
 	}
 
-	public void setType(ExpectedInputType type) {
+	public void setType(InputType type) {
 		this.type = type;
 	}
 

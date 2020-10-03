@@ -2,7 +2,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.Collection;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.AgendaDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.AgendaDialogueNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.NaiveDialogueManager;
@@ -86,9 +86,9 @@ public class DialogueManagerGenerator {
 		node.setEntity(slot.getEntity());
 		node.addResponse(slot.getMessage());
 		if (slot.getParameter() != null && slot.getParameter().getParameterType() != null)
-			node.setInputType(ExpectedInputType.valueOf(slot.getParameter().getContentType()));
+			node.setInputType(InputType.valueOf(slot.getParameter().getContentType()));
 		else
-			node.setInputType(ExpectedInputType.Free);
+			node.setInputType(InputType.Free);
 
 		if (slot.hasChildren())
 			for (Slot subSlot : slot.getChildren())

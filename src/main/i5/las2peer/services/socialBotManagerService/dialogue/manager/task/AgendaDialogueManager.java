@@ -5,7 +5,7 @@ import java.util.Iterator;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
@@ -93,7 +93,7 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 
 			AgendaDialogueNode next = next();
 			String intent = next.getIntent();
-			ExpectedInputType type = next.getInputType();
+			InputType type = next.getInputType();
 			response = response.concat(next.getResponses().get(0));
 
 			DialogueAct act = new DialogueAct();
@@ -195,7 +195,7 @@ public class AgendaDialogueManager extends AbstractDialogueManager {
 	public DialogueAct handleDefault() {
 		AgendaDialogueNode next = next();
 		String intent = next.getIntent();
-		ExpectedInputType type = next.getInputType();
+		InputType type = next.getInputType();
 		String response = next.getResponses().get(0);
 
 		DialogueAct act = new DialogueAct();

@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 
 public class ExpectedInputTest {
 
@@ -20,7 +20,7 @@ public class ExpectedInputTest {
 	public void testInputNumber() {
 
 		ExpectedInput exp = new ExpectedInput();
-		exp.setType(ExpectedInputType.Number);
+		exp.setType(InputType.Number);
 
 		assertTrue(exp.validate("123"));
 		assertTrue(exp.validate("9"));
@@ -33,7 +33,7 @@ public class ExpectedInputTest {
 	public void testInputWord() {
 
 		ExpectedInput exp = new ExpectedInput();
-		exp.setType(ExpectedInputType.Word);
+		exp.setType(InputType.Word);
 
 		assertTrue(exp.validate("asdgegd"));
 		assertTrue(exp.validate("Gersdgolj"));
@@ -46,7 +46,7 @@ public class ExpectedInputTest {
 	public void testInputUrl() {
 
 		ExpectedInput exp = new ExpectedInput();
-		exp.setType(ExpectedInputType.Url);
+		exp.setType(InputType.Url);
 
 		assertTrue(exp.validate("https://hellotest.com"));
 		assertTrue(exp.validate("http://aisgheig"));

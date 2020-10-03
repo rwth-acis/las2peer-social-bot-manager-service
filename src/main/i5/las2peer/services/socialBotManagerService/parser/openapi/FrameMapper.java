@@ -1,6 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
@@ -42,16 +42,16 @@ public class FrameMapper {
 		if (attr.getContentType() != null)
 			switch (attr.getContentType()) {
 			case "enum":
-				slot.setInputType(ExpectedInputType.Enum);
+				slot.setInputType(InputType.Enum);
 				break;
 			case "integer":
-				slot.setInputType(ExpectedInputType.Number);
+				slot.setInputType(InputType.Number);
 				break;
 			default:
-				slot.setInputType(ExpectedInputType.Free);
+				slot.setInputType(InputType.Free);
 			}
 		else
-			slot.setInputType(ExpectedInputType.Free);
+			slot.setInputType(InputType.Free);
 
 		// selection
 		if (attr.hasDiscriminator()) {
