@@ -29,15 +29,15 @@ public class RootNode extends Node {
     @Override
     public boolean isReady() {
 	for (Node node : this.getChildren())
-	    if (node.isReady())
+	    if (!node.isReady())
 		return false;
 	return true;
     }
 
     @Override
-    public boolean isFilled() {
+    public boolean isFull() {
 	for (Node node : this.getChildren())
-	    if (node.isFilled())
+	    if (!node.isFull())
 		return false;
 	return true;
     }

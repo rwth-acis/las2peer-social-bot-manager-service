@@ -16,7 +16,7 @@ public class RepetitionNode extends Node {
 	assert slot != null : "slot parameter is null";
 	assert slot.hasChildren() : "slot has no children";
 
-	this.slot = slot;	
+	this.slot = slot;
 	this.confirmed = false;
 	this.valueChildren = new ArrayList<Node>();
 	extend();
@@ -27,9 +27,17 @@ public class RepetitionNode extends Node {
     public void extend() {
 
 	invariant();
+	assert this.slot.hasChildren();
 
-	Node node = NodeFactory.create(slot);
-	this.valueChildren.add(node);
+	Node node = null;
+	if (this.slot.getChildren().size() == 1)
+	    node = NodeFactory.create(slot.getChildren().get(0));
+
+	if (this.slot.getChildren().size() > 1)
+	    node = NodeFactory.createIgnoreArray(slot);
+
+	if (node != null)
+	    this.valueChildren.add(node);
 
     }
 
@@ -50,7 +58,6 @@ public class RepetitionNode extends Node {
 
     }
 
-    @Override
     public boolean isFilled() {
 	invariant();
 	if (this.valueChildren.isEmpty())
@@ -66,6 +73,21 @@ public class RepetitionNode extends Node {
 
 	for (Node node : this.valueChildren) {
 	    if (!node.isReady()) {
+		return false;
+	    }
+	}
+
+	return true;
+    }
+
+    @Override
+    public boolean isFull() {
+	invariant();
+	if (!this.isFilled())
+	    return false;
+
+	for (Node node : this.valueChildren) {
+	    if (!node.isFull()) {
 		return false;
 	    }
 	}
@@ -101,8 +123,7 @@ public class RepetitionNode extends Node {
     @Override
     public NodeList getAll() {
 	NodeList nodes = new NodeList(this);
-	Node node = this.valueChildren.get(this.valueChildren.size() - 1);
-	nodes.add(node);
+	nodes.addAll(this.valueChildren.get(this.valueChildren.size() - 1).getAll());
 	return nodes;
     }
 
@@ -114,6 +135,5 @@ public class RepetitionNode extends Node {
 	    node.invariant();
 	}
     }
-
 
 }

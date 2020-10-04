@@ -139,7 +139,7 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	    }
 
 	    // User wants so delete specific slot
-	    if (node != null && goal.isFilled((Node) node)) {
+	    if (node != null && node.isFilled()) {
 		goal.delete(node);
 		return goal.getInformAct((Node) node);
 	    }

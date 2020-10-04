@@ -70,6 +70,14 @@ public class MultiValueNode extends Node implements Fillable {
     @Override
     public boolean isReady() {
 	invariant();
+	if (!this.getSlot().isRequired())
+	    return true;
+	return this.isFilled();
+    }
+
+    @Override
+    public boolean isFull() {
+	invariant();
 	return this.isFilled();
     }
 
@@ -122,11 +130,10 @@ public class MultiValueNode extends Node implements Fillable {
     public void invariant() {
 	assert this.slot != null : "slot of value node is null";
 	assert this.values != null : "values list is null";
-	if (this.isFilled())
-	    for (String value : this.values) {
-		assert this.slot.validate(value) : "slot " + this.slot.getName() + " filled with invalid value "
-			+ value;
-	    }
+
+	for (String value : this.values) {
+	    assert this.slot.validate(value) : "slot " + this.slot.getName() + " filled with invalid value " + value;
+	}
     }
 
 }

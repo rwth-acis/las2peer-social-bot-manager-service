@@ -4,7 +4,7 @@ public abstract class Node {
 
     public abstract boolean isReady();
 
-    public abstract boolean isFilled();
+    public abstract boolean isFull();
 
     public abstract boolean isConfirmed();
 

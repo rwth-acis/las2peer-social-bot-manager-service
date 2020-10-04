@@ -13,6 +13,8 @@ public class NodeFactory {
 
 	assert slot != null : "slot is null";
 
+	assert !(slot.isLeaf() && slot.isSelection()) : "selection slot must have children";
+
 	// Value Node
 	if (slot.isLeaf() && !slot.isArray()) {
 	    return new ValueNode(slot);
@@ -30,15 +32,35 @@ public class NodeFactory {
 
 	// Selection Node
 	if (slot.hasChildren() && slot.isSelection() && !slot.isArray()) {
-	    return new SequenceNode(slot);
+	    return new SelectionNode(slot);
 	}
 
 	// Repetition Node
 	if (slot.hasChildren() && slot.isArray()) {
-	    return new SequenceNode(slot);
+	    return new RepetitionNode(slot);
 	}
 
 	assert false : " slot cant be assigned to a node ";
+	return null;
+    }
+
+    public static Node createIgnoreArray(Slot slot) {
+
+	assert slot != null : "slot parameter is null";
+	assert slot.hasChildren() : "slot has no children";
+
+	// Selection Node
+	if (slot.isSelection()) {
+	    return new SelectionNode(slot);
+	}
+
+	// Sequence Node
+	if (!slot.isSelection()) {
+	    return new SequenceNode(slot);
+	}
+
+
+
 	return null;
     }
 

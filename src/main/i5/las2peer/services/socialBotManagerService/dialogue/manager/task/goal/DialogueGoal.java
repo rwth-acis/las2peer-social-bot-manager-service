@@ -41,7 +41,7 @@ public class DialogueGoal {
 
 	invariant();
 
-	return this.root.isFilled();
+	return this.root.isFull();
     }
 
     /**
@@ -155,11 +155,16 @@ public class DialogueGoal {
 	assert !this.isFull() : "next node of full node tree";
 
 	for (Fillable node : root.getAll().getFillableNodes()) {	   
-		if (node.getSlot().isRequired())
+	    if (!node.isFilled() && node.getSlot().isRequired())
 		    return node;
 	    }
 
-	return root.getAll().getFillableNodes().get(0);
+	for (Fillable node : root.getAll().getFillableNodes()) {
+	    if (!node.isFilled())
+		return node;
+	}
+
+	return null;
     }
 
     public void reset() {
@@ -276,7 +281,7 @@ public class DialogueGoal {
 
 	assert node != null : "node parameter is null";
 	invariant();
-	assert node.isFilled() : "slot is not filled yet";
+	assert node.isFull() : "slot is not filled yet";
 
 	Slot slot = ((Fillable) node).getSlot();
 	DialogueAct act = new DialogueAct();

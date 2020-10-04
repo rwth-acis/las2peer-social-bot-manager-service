@@ -18,7 +18,7 @@ public class NodeList extends ArrayList<Node> {
 	List<Fillable> res = new ArrayList<Fillable>();
 	for (Node node : this) {
 	    if (node instanceof Fillable)
-		if (node.isFilled())
+		if (((Fillable) node).isFilled())
 		    res.add((Fillable) node);
 	}
 	return res;

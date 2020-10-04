@@ -40,6 +40,10 @@ public class DialogueGoalTest {
 	slot2.setInputType(InputType.Number);
 	slot3.setInputType(InputType.Free);
 	slot5.setInputType(InputType.Number);
+	slot2.setRequired(true);
+	slot3.setRequired(true);
+	slot5.setRequired(false);
+
     }
     
     @Test
@@ -54,15 +58,38 @@ public class DialogueGoalTest {
 	Fillable n3 = goal.getNode("s3");
 	Fillable n5 = goal.getNode("s5");
 
+	assertFalse(goal.isReady());
+	assertFalse(goal.isFull());
+
+	Fillable no = goal.next();
+	assertEquals(no, n3);
+
 	goal.fill(n2, "1234");
 	assertTrue(goal.isFilled(n2));
 	assertFalse(goal.isFilled(n3));
 	assertFalse(goal.isFilled(n5));
 	
+	no = goal.next();
+	assertEquals(no, n3);
+
 	goal.fill(n3, "aaaa");
 	assertTrue(goal.isFilled(n2));
 	assertTrue(goal.isFilled(n3));
 	assertFalse(goal.isFilled(n5));
+
+	assertTrue(goal.isReady());
+	assertFalse(goal.isFull());
+
+	no = goal.next();
+	assertEquals(no, n5);
+
+	goal.fill(n5, "123");
+	assertTrue(goal.isFilled(n2));
+	assertTrue(goal.isFilled(n3));
+	assertTrue(goal.isFilled(n5));
+
+	assertTrue(goal.isReady());
+	assertTrue(goal.isFull());
     }
     
     @Test
@@ -84,7 +111,19 @@ public class DialogueGoalTest {
 	slot3.setRequired(true);
 	slot5.setRequired(true);
 	SlotSet slots = frame.getRequired();
-	assertEquals(2, slots.size());
+	assertEquals(3, slots.size());
+	assertTrue(slots.contains(slot3));
+	assertTrue(slots.contains(slot5));
+    }
+
+    @Test
+    public void testCreationTest() {
+
+	DialogueGoal goal = new DialogueGoal(frame);
+	slot3.setRequired(true);
+	slot5.setRequired(true);
+	SlotSet slots = frame.getRequired();
+	assertEquals(3, slots.size());
 	assertTrue(slots.contains(slot3));
 	assertTrue(slots.contains(slot5));
     }

@@ -20,6 +20,8 @@ public interface Fillable {
 
     public boolean isReady();
 
+    public boolean isFull();
+
     public boolean isConfirmed();
 
     public default String getName() {

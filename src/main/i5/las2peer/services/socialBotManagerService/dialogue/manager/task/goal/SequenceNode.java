@@ -24,10 +24,10 @@ public class SequenceNode extends Node {
     }
 
     @Override
-    public boolean isFilled() {
+    public boolean isFull() {
 	invariant();
 	for (Node node : this.children) {
-	    if (!node.isFilled()) {
+	    if (!node.isFull()) {
 		return false;
 	    }
 	}
@@ -88,7 +88,7 @@ public class SequenceNode extends Node {
 
     @Override
     public String toString() {
-	return "SequenceNode [children=" + children + ", isFilled()=" + isFilled() + ", isReady()=" + isReady()
+	return "SequenceNode [children=" + children + ", isFull()=" + isFull() + ", isReady()=" + isReady()
 		+ ", isConfirmed()=" + isConfirmed() + "]";
     }
 

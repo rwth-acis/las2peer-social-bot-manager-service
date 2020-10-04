@@ -68,6 +68,15 @@ public class ValueNode extends Node implements Fillable {
     @Override
     public boolean isReady() {
 	invariant();
+	if (!this.getSlot().isRequired())
+	    return true;
+
+	return this.isFilled();
+    }
+
+    @Override
+    public boolean isFull() {
+	invariant();
 	return this.isFilled();
     }
 
@@ -90,6 +99,7 @@ public class ValueNode extends Node implements Fillable {
 	this.slot = slot;
     }
 
+    @Override
     public String getValue() {
 	return value;
     }

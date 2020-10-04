@@ -86,6 +86,16 @@ public class SelectionNode extends Node implements Fillable {
     }
 
     @Override
+    public boolean isFull() {
+	invariant();
+	if (!this.isFilled())
+	    return false;
+
+	Node node = this.children.get(this.value);
+	return node.isFull();
+    }
+
+    @Override
     public boolean isConfirmed() {
 	invariant();
 	return confirmed;
@@ -104,6 +114,7 @@ public class SelectionNode extends Node implements Fillable {
 	this.slot = slot;
     }
 
+    @Override
     public String getValue() {
 	return value;
     }
@@ -128,7 +139,7 @@ public class SelectionNode extends Node implements Fillable {
     public NodeList getAll() {
 	NodeList nodes = new NodeList(this);
 	if (this.isFilled())
-	    nodes.add(getChild(this.value));
+	    nodes.addAll(getChild(this.value).getAll());
 	return nodes;
     }
 

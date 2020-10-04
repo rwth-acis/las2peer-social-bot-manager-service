@@ -15,7 +15,7 @@ import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribu
 
 public class OpenAPIConnectorTestBotCreation {
 
-    // @Test
+    @Test
     public void ReadFunctionCreateBotV2Test() {
 
 	ServiceFunction action = new ServiceFunction();
@@ -35,7 +35,7 @@ public class OpenAPIConnectorTestBotCreation {
 	assertEquals("Bot", bot.getName());
 	assertEquals(ParameterType.BODY, bot.getParameterType());
 	assertNotNull(bot.getChildAttributes());
-	assertEquals(2, bot.getChildAttributes().size());
+	assertEquals(3, bot.getChildAttributes().size());
 	iter = bot.getChildAttributes().iterator();
 
 
@@ -80,7 +80,7 @@ public class OpenAPIConnectorTestBotCreation {
 
     }
 
-    @Test
+    // @Test
     public void ReadFunctionCreateBotV2Test2() {
 
 	ServiceFunction action = new ServiceFunction();
