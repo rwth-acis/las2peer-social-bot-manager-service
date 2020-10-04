@@ -839,7 +839,8 @@ public class BotParser {
 								System.out.println(b);
 								
 								botName.put("botName", b.getId());
-								client.setLogin("alice", "pwalice");
+								//client.setLogin("alice", "pwalice");
+								client.setLogin(b.getId(), "actingAgent");
 							} 
 							
 							ClientResponse result = client.sendRequest("POST", "AssessmentHandler/reset",botName.toString(),
