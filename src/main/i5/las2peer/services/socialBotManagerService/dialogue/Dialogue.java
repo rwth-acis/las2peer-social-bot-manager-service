@@ -52,6 +52,12 @@ public class Dialogue {
 	else
 	    this.lastAct = act;
 
+	if (act.hasAction()) {
+	    System.out.println(
+		    "perform action " + act.getAction().getServiceName() + " " + act.getAction().getFunctionName());
+
+	}
+
 	System.out.println(act);
 	// String response = nlg.translate(outputSemantic);
 	return act.getMessage();

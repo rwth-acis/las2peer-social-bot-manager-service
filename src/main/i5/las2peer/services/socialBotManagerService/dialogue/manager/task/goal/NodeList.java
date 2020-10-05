@@ -14,6 +14,10 @@ public class NodeList extends ArrayList<Node> {
 	this.add(node);
     }
 
+    public NodeList() {
+	// TODO Auto-generated constructor stub
+    }
+
     List<Fillable> getFilledValues() {
 	List<Fillable> res = new ArrayList<Fillable>();
 	for (Node node : this) {
@@ -56,20 +60,41 @@ public class NodeList extends ArrayList<Node> {
 	return intents;
     }
 
-    public Fillable get(String name) {
-	for (Fillable node : getFillableNodes()) {
-	    Slot slot = node.getSlot();
-	    if (name.contentEquals(slot.getName()) || name.contentEquals(slot.getInformIntent())
-		    || name.contentEquals(slot.getRequestIntent()) || name.contentEquals(slot.getConfirmIntent())
-		    || name.contentEquals(slot.getDenyIntent()))
-		return node;
+    public Slotable get(String name) {
+	for (Node nos : this) {
+	    if (nos instanceof Slotable) {
+		Slotable node = (Slotable) nos;
+		Slot slot = node.getSlot();
+		if (name.contentEquals(slot.getName()) || name.contentEquals(slot.getInformIntent())
+			|| name.contentEquals(slot.getRequestIntent()) || name.contentEquals(slot.getConfirmIntent())
+			|| name.contentEquals(slot.getDenyIntent()))
+		    return node;
+
+	    }
+
 	}
 	return null;
     }
 
+    public NodeList Fillables() {
+	
+	NodeList res = new NodeList();
+	for (Node node : this) {
+	    if (node instanceof Fillable)
+		res.add(node);
+	}
+	return res;
+	
+    }
+
     public void print() {
-	for (Fillable node : this.getFillableNodes()) {
-	    System.out.println(node.getSlot().getName());
+	for (Node node : this) {
+	    if (node instanceof Fillable)
+		System.out.println(node.getClass() + ": " + ((Fillable) node).getSlot().getName());
+	    else if (node instanceof RepetitionNode)
+		System.out.println(node.getClass() + ": " + ((RepetitionNode) node).getSlot().getName());
+	    else
+		System.out.println(node.getClass());
 	}
     }
 

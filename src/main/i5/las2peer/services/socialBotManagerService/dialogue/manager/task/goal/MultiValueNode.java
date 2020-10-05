@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
 public class MultiValueNode extends Node implements Fillable {
 
@@ -81,6 +82,11 @@ public class MultiValueNode extends Node implements Fillable {
 	return this.isFilled();
     }
 
+    public boolean isRequired() {
+	invariant();
+	return this.slot.isRequired();
+    }
+
     @Override
     public boolean isConfirmed() {
 	invariant();
@@ -122,6 +128,11 @@ public class MultiValueNode extends Node implements Fillable {
     }
 
     @Override
+    public Node next() {
+	return this;
+    }
+
+    @Override
     public NodeList getAll() {
 	return new NodeList(this);
     }
@@ -134,6 +145,12 @@ public class MultiValueNode extends Node implements Fillable {
 	for (String value : this.values) {
 	    assert this.slot.validate(value) : "slot " + this.slot.getName() + " filled with invalid value " + value;
 	}
+    }
+
+    @Override
+    public JSONObject toJSON() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

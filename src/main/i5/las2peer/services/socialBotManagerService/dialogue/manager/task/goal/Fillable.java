@@ -1,8 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
-import i5.las2peer.services.socialBotManagerService.model.Slot;
-
-public interface Fillable {
+public interface Fillable extends Slotable {
 
     public void fill(String value);
 
@@ -14,8 +12,6 @@ public interface Fillable {
 
     public String getValue();
 
-    public Slot getSlot();
-
     public boolean isFilled();
 
     public boolean isReady();
@@ -24,23 +20,4 @@ public interface Fillable {
 
     public boolean isConfirmed();
 
-    public default String getName() {
-	return getSlot().getName();
-    }
-
-    public default String getInformIntent() {
-	return "inform_" + getName();
-    }
-
-    public default String getRequestIntent() {
-	return "request_" + getName();
-    }
-
-    public default String getConfirmIntent() {
-	return "confirm_" + getName();
-    }
-
-    public default String getDenyIntent() {
-	return "deny_" + getName();
-    }
 }

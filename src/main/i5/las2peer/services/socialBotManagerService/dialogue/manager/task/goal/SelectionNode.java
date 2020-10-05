@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
 public class SelectionNode extends Node implements Fillable {
 
@@ -136,6 +137,15 @@ public class SelectionNode extends Node implements Fillable {
     }
 
     @Override
+    public Node next() {
+	invariant();
+	if (!this.isFilled())
+	    return this;
+
+	return this.children.get(this.value).next();
+    }
+
+    @Override
     public NodeList getAll() {
 	NodeList nodes = new NodeList(this);
 	if (this.isFilled())
@@ -153,6 +163,12 @@ public class SelectionNode extends Node implements Fillable {
 		    + this.value;
 	    assert this.children.containsKey(this.value) : "no child path with value " + this.value;
 	}
+    }
+
+    @Override
+    public JSONObject toJSON() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

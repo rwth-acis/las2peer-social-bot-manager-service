@@ -10,6 +10,7 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
 public class DialogueGoal {
 
@@ -125,7 +126,7 @@ public class DialogueGoal {
 	return getFrame().getSlot(name);
     }
 
-    public Fillable getNode(String name) {
+    public Slotable getNode(String name) {
 
 	assert name != null : "name parameter is null";
 	invariant();
@@ -133,6 +134,16 @@ public class DialogueGoal {
 	assert this.contains(name) : "node is not contained in frame";
 
 	return this.root.getAll().get(name);
+    }
+
+    public Fillable getFillable(String name) {
+
+	assert name != null : "name parameter is null";
+	invariant();
+	assert this.root.getAll() != null : "null nodes in tree";
+	assert this.contains(name) : "node is not contained in frame";
+
+	return (Fillable) this.root.getAll().Fillables().get(name);
 
     }
 
@@ -149,22 +160,12 @@ public class DialogueGoal {
     /**
      * @return a slot that is not filled yet.
      */
-    public Fillable next() {
+    public Node next() {
 
 	invariant();
 	assert !this.isFull() : "next node of full node tree";
 
-	for (Fillable node : root.getAll().getFillableNodes()) {	   
-	    if (!node.isFilled() && node.getSlot().isRequired())
-		    return node;
-	    }
-
-	for (Fillable node : root.getAll().getFillableNodes()) {
-	    if (!node.isFilled())
-		return node;
-	}
-
-	return null;
+	return root.next();
     }
 
     public void reset() {
@@ -313,12 +314,13 @@ public class DialogueGoal {
     }
 
     private ServiceFunctionAttribute copy(ServiceFunctionAttribute template) {
-
+	System.out.println(template.getName());
 	ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
 	attr.setContentType(template.getContentType());
 	attr.setName(template.getName());
 	attr.setParameterType(template.getParameterType());
-	// attr.setContent(this.values.get(template.getName()));
+	// if (this.getFillable(template.getName()) != null)
+	// attr.setContent(this.getFillable(template.getName()).getValue());
 	if (template.hasChildren())
 	    for (ServiceFunctionAttribute child : template.getChildAttributes())
 		attr.addChildAttribute(copy(child));
@@ -336,6 +338,13 @@ public class DialogueGoal {
 
     public void invariant() {
 	assert this.root != null : "no root node";
+    }
+
+    public JSONObject toJSON() {
+
+	JSONObject res = new JSONObject();
+
+	return res;
     }
 
 }

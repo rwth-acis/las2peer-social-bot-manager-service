@@ -5,6 +5,7 @@ import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
 public class RootNode extends Node {
 
@@ -74,6 +75,22 @@ public class RootNode extends Node {
     }
 
     @Override
+    public Node next() {
+	invariant();
+	for (Node node : this.children) {
+	    if (!node.isReady()) {
+		return node.next();
+	    }
+	}
+	for (Node node : this.children) {
+	    if (!node.isFull()) {
+		return node.next();
+	    }
+	}
+
+	return null;
+    }
+    @Override
     public NodeList getAll() {
 	NodeList nodes = new NodeList(this);
 	for (Node node : this.children) {
@@ -88,6 +105,11 @@ public class RootNode extends Node {
 
     }
 
+    @Override
+    public JSONObject toJSON() {
+	// TODO Auto-generated method stub
+	return null;
+    }
 
 
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
 public class SequenceNode extends Node {
 
@@ -72,6 +73,23 @@ public class SequenceNode extends Node {
     }
 
     @Override
+    public Node next() {
+	invariant();
+	for(Node node :this.children) {
+	    if (!node.isReady()) {
+		return node.next();
+	    }
+	}
+	for (Node node : this.children) {
+	    if (!node.isFull()) {
+		return node.next();
+	    }
+	}
+
+	return null;
+    }
+
+    @Override
     public NodeList getAll() {
 	NodeList nodes = new NodeList(this);
 	for (Node node : this.children) {
@@ -90,6 +108,12 @@ public class SequenceNode extends Node {
     public String toString() {
 	return "SequenceNode [children=" + children + ", isFull()=" + isFull() + ", isReady()=" + isReady()
 		+ ", isConfirmed()=" + isConfirmed() + "]";
+    }
+
+    @Override
+    public JSONObject toJSON() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

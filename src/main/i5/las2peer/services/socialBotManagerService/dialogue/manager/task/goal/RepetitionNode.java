@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
-public class RepetitionNode extends Node {
+public class RepetitionNode extends Node implements Slotable {
 
     private Slot slot;
     private List<Node> valueChildren;
     boolean confirmed;
+    boolean open;
 
     public RepetitionNode(Slot slot) {
 
@@ -18,6 +20,7 @@ public class RepetitionNode extends Node {
 
 	this.slot = slot;
 	this.confirmed = false;
+	this.open = true;
 	this.valueChildren = new ArrayList<Node>();
 	extend();
 
@@ -39,6 +42,7 @@ public class RepetitionNode extends Node {
 	if (node != null)
 	    this.valueChildren.add(node);
 
+	this.open = true;
     }
 
     public void confirm() {
@@ -55,7 +59,13 @@ public class RepetitionNode extends Node {
 	this.valueChildren = new ArrayList<Node>();
 	extend();
 	this.confirmed = false;
+	this.open = true;
 
+    }
+
+    public void close() {
+	invariant();
+	this.open = false;
     }
 
     public boolean isFilled() {
@@ -68,6 +78,9 @@ public class RepetitionNode extends Node {
     @Override
     public boolean isReady() {
 	invariant();
+	if (this.open == true)
+	    return false;
+
 	if (!this.isFilled())
 	    return false;
 
@@ -83,6 +96,9 @@ public class RepetitionNode extends Node {
     @Override
     public boolean isFull() {
 	invariant();
+	if (this.open == true)
+	    return false;
+
 	if (!this.isFilled())
 	    return false;
 
@@ -112,12 +128,33 @@ public class RepetitionNode extends Node {
 	this.valueChildren = valueChildren;
     }
 
+    @Override
     public Slot getSlot() {
 	return slot;
     }
 
     public void setSlot(Slot slot) {
 	this.slot = slot;
+    }
+
+    @Override
+    public String getName() {
+	invariant();
+	return this.slot.getName();
+    }
+
+    @Override
+    public Node next() {
+	invariant();
+
+	for (Node node : this.valueChildren) {
+	    if (!node.isReady()) {
+		return node.next();
+	    }
+	}
+
+	return this;
+
     }
 
     @Override
@@ -134,6 +171,12 @@ public class RepetitionNode extends Node {
 	for (Node node : this.valueChildren) {
 	    node.invariant();
 	}
+    }
+
+    @Override
+    public JSONObject toJSON() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

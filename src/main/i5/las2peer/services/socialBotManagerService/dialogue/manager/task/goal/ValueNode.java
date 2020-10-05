@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONObject;
 
 public class ValueNode extends Node implements Fillable {
 
@@ -80,6 +81,11 @@ public class ValueNode extends Node implements Fillable {
 	return this.isFilled();
     }
 
+    public boolean isRequired() {
+	invariant();
+	return this.slot.isRequired();
+    }
+
     @Override
     public boolean isConfirmed() {
 	invariant();
@@ -109,6 +115,11 @@ public class ValueNode extends Node implements Fillable {
     }
 
     @Override
+    public Node next() {
+	return this;
+    }
+
+    @Override
     public NodeList getAll() {
 	return new NodeList(this);
     }
@@ -119,6 +130,12 @@ public class ValueNode extends Node implements Fillable {
 	if (this.value != null)
 	    assert this.slot.validate(this.getValue()) : "slot " + this.slot.getName() + " filled with invalid value "
 		    + this.value;
+    }
+
+    @Override
+    public JSONObject toJSON() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

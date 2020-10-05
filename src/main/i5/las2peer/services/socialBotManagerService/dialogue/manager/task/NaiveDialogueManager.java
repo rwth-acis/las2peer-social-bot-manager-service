@@ -10,9 +10,12 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDia
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Node;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RepetitionNode;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
 public class NaiveDialogueManager extends AbstractDialogueManager {
 
@@ -37,13 +40,31 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 	    return requestNextSlot();
 
 	// get corresponding slot
-	Fillable node = null;
+	Slotable slo = null;
 	if (goal.contains(intent)) {
-	    node = goal.getNode(intent);
-	    if (node == null)
+	    slo = goal.getNode(intent);
+	    if (slo == null)
 		System.out.println("naive dm handle: slot not found for intent: " + intent);
 	}
 
+	// Repetition Node
+	if (slo instanceof RepetitionNode) {
+	    RepetitionNode rep = (RepetitionNode) slo;
+	    System.out.println("Intent of Repetition Node");
+	    if (semantic.getIntentType() == IntentType.CONFIRM) {
+		rep.extend();
+		return requestNextSlot();
+	    }
+	    if (semantic.getIntentType() == IntentType.DENY) {
+		rep.close();
+		if (goal.isFull())
+		    return goal.getReqConfAct();
+		return requestNextSlot();
+	    }
+	}
+
+	// Value Nodes
+	Fillable node = (Fillable) slo;
 	DialogueAct act = new DialogueAct();
 	switch (semantic.getIntentType()) {
 	case INFORM:
@@ -171,9 +192,30 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
     }
 
     private DialogueAct requestNextSlot() {
-	Fillable nextNode = goal.next();
-	DialogueAct act = goal.getRequestAct(nextNode.getSlot());
-	return act;
+	assert goal != null : "goal is null";
+	assert !goal.isFull() : "goal is already full";
+
+	Node nextNode = goal.next();
+	// Request to fill value
+	if (nextNode instanceof Fillable) {
+	    Fillable fi = (Fillable) nextNode;
+	    return goal.getRequestAct(fi.getSlot());
+	}
+	// Ask for repetition
+	if (nextNode instanceof RepetitionNode) {
+	    RepetitionNode rep = (RepetitionNode) nextNode;
+	    String name = rep.getName().replaceAll("_", " ");
+	    DialogueAct act = new DialogueAct();
+	    act.setMessage("do you want to add another " + name);
+	    ExpectedInput input = new ExpectedInput();
+	    input.setIntend("confirm_" + rep.getName());
+	    input.setType(InputType.Confirmation);
+	    act.setExpected(input);
+	    return act;
+	}
+
+	assert false : "next slot is no Fillable nor Repetition node: " + nextNode.getClass();
+	return null;
     }
 
     private DialogueAct perform() {

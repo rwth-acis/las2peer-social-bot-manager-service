@@ -116,10 +116,10 @@ public class FrameMapperTest {
 	assertNotNull(goal.getNode("Bot_name"));
 	assertNotNull(goal.getNode("Bot_function_type"));
 
-	goal.fill(goal.getNode("Bot_function_type"), "ChitChat");
-	assertEquals("ChitChat", goal.getNode("Bot_function_type").getValue());
-	assertTrue(goal.getNode("Bot_function_type").isFilled());
-	assertFalse(goal.getNode("Bot_function_type").isReady());
+	goal.fill(goal.getFillable("Bot_function_type"), "ChitChat");
+	assertEquals("ChitChat", goal.getFillable("Bot_function_type").getValue());
+	assertTrue(goal.getFillable("Bot_function_type").isFilled());
+	assertFalse(goal.getFillable("Bot_function_type").isReady());
 	SelectionNode ft = (SelectionNode) goal.getNode("Bot_function_type");
 
 	System.out.println("ft");
