@@ -106,9 +106,15 @@ public class RootNode extends Node {
     }
 
     @Override
-    public JSONObject toJSON() {
-	// TODO Auto-generated method stub
-	return null;
+    public Object toJSON() {
+	invariant();
+
+	JSONObject res = new JSONObject();
+	for (Node node : this.children) {
+	    res.merge(node.toJSON());
+	}
+
+	return res;
     }
 
 

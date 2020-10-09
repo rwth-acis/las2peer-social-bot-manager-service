@@ -49,7 +49,7 @@ public class DialogueGoalTest {
 
     }
     
-    // @Test
+    @Test
     public void testFill() {
 	
 	DialogueGoal goal = new DialogueGoal(frame);
@@ -95,7 +95,7 @@ public class DialogueGoalTest {
 	assertTrue(goal.isFull());
     }
     
-    // @Test
+    @Test
     public void testNextRepetitionNode() {
 		
 	frame = new Frame();
@@ -141,7 +141,7 @@ public class DialogueGoalTest {
 
     }
 
-    // @Test
+    @Test
     public void testGetRequired() {
 
 	DialogueGoal goal = new DialogueGoal(frame);
@@ -153,7 +153,7 @@ public class DialogueGoalTest {
 
     }
 
-    // @Test
+    @Test
     public void testGetRequiredSelection() {
 
 	DialogueGoal goal = new DialogueGoal(frame);
@@ -165,7 +165,7 @@ public class DialogueGoalTest {
 	assertTrue(slots.contains(slot5));
     }
 
-    // @Test
+    @Test
     public void testCreationTest() {
 
 	DialogueGoal goal = new DialogueGoal(frame);

@@ -10,6 +10,10 @@ public interface Slotable {
 	return getSlot().getName();
     }
 
+    public default String getAPIName() {
+	return getSlot().getAPIName();
+    }
+
     public default String getInformIntent() {
 	return "inform_" + getName();
     }

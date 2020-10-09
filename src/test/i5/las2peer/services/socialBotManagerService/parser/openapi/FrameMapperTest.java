@@ -20,6 +20,7 @@ import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import io.swagger.util.Json;
 
 public class FrameMapperTest {
 
@@ -40,6 +41,8 @@ public class FrameMapperTest {
 	assertNotNull(frame.getSlot("pet"));
 	assertEquals(9, frame.getDescendants().size());
 	assertNotNull(frame.getSlot("pet_name"));
+
+	DialogueGoal goal = new DialogueGoal(frame);
 
     }
 
@@ -146,9 +149,9 @@ public class FrameMapperTest {
 	assertNotNull(goal.getNode("Bot_function_type_ChitChat_messages_intent"));
 	assertNotNull(goal.getNode("Bot_function_type_ChitChat_messages_message"));
 
-	assertNotNull(goal.getNode("Bot_function_type_AccessService_operationID"));
-	assertNotNull(goal.getNode("Bot_function_type_AccessService_serviceURL"));
 
+	System.out.println("#######################");
+	Json.prettyPrint(goal.toJSON());
 
     }
 

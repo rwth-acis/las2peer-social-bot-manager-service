@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 public class RepetitionNode extends Node implements Slotable {
@@ -174,9 +175,17 @@ public class RepetitionNode extends Node implements Slotable {
     }
 
     @Override
-    public JSONObject toJSON() {
-	// TODO Auto-generated method stub
-	return null;
+    public Object toJSON() {
+	invariant();
+
+	JSONObject res = new JSONObject();
+	JSONArray ar = new JSONArray();
+	for (Node node : this.valueChildren) {
+	    ar.add(node.toJSON());
+	}
+
+	res.put(this.getAPIName(), ar);
+	return res;
     }
 
 }

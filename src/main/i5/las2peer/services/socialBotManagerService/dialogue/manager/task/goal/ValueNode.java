@@ -133,9 +133,12 @@ public class ValueNode extends Node implements Fillable {
     }
 
     @Override
-    public JSONObject toJSON() {
-	// TODO Auto-generated method stub
-	return null;
+    public Object toJSON() {
+	invariant();
+
+	JSONObject res = new JSONObject();
+	res.put(this.getAPIName(), this.getValue());
+	return res;
     }
 
 }

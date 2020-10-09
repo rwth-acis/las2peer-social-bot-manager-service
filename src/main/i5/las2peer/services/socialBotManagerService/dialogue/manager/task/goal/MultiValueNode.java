@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 public class MultiValueNode extends Node implements Fillable {
@@ -28,7 +29,7 @@ public class MultiValueNode extends Node implements Fillable {
 
 	assert value != null : "value parameter is null";
 	invariant();
-	assert this.slot.validate(value) : "value '" + value + "' is not valid for slot " + this.slot.getName();
+	assert this.slot.validate(value) : "value '" + value + "' is not valid for slot " + this.getAPIName();
 
 	this.values.add(value);
 
@@ -148,9 +149,17 @@ public class MultiValueNode extends Node implements Fillable {
     }
 
     @Override
-    public JSONObject toJSON() {
-	// TODO Auto-generated method stub
-	return null;
+    public Object toJSON() {
+	invariant();
+
+	JSONObject res = new JSONObject();
+	JSONArray ar = new JSONArray();
+	for (String value : this.values) {
+	    ar.add(value);
+	}
+	res.put(this.getAPIName(), ar);
+
+	return res;
     }
 
 }

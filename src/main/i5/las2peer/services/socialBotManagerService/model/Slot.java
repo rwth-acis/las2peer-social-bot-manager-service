@@ -92,6 +92,13 @@ public class Slot {
 	return name;
     }
 
+    public String getAPIName() {
+
+	if (this.hasParameter())
+	    return this.parameter.getName();
+	return this.name;
+    }
+
     public String getEntity() {
 	return entity;
     }

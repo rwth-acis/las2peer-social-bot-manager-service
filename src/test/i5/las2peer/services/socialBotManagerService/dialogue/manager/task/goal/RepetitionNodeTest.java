@@ -77,8 +77,18 @@ public class RepetitionNodeTest {
 
 	ValueNode va2 = ((ValueNode) sn1.getChildren().get(1));
 	va2.fill("vB");
+	assertFalse(node.isReady());
+
+	node.close();
 	assertTrue(node.isReady());
 
     }
 
+    @Test
+    public void toJSONTest() {
+
+	RepetitionNode node = new RepetitionNode(slotRep);
+	assertNotNull(node.toJSON());
+
+    }
 }

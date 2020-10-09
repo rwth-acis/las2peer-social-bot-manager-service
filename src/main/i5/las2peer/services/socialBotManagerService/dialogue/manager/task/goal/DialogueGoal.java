@@ -10,7 +10,6 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
-import net.minidev.json.JSONObject;
 
 public class DialogueGoal {
 
@@ -340,11 +339,9 @@ public class DialogueGoal {
 	assert this.root != null : "no root node";
     }
 
-    public JSONObject toJSON() {
+    public Object toJSON() {
 
-	JSONObject res = new JSONObject();
-
-	return res;
+	return this.getRoot().toJSON();
     }
 
 }

@@ -136,6 +136,10 @@ public class SelectionNode extends Node implements Fillable {
 	return this.children.get(enu);
     }
 
+    public Node getActive() {
+	return this.children.get(this.value);
+    }
+
     @Override
     public Node next() {
 	invariant();
@@ -167,8 +171,14 @@ public class SelectionNode extends Node implements Fillable {
 
     @Override
     public JSONObject toJSON() {
-	// TODO Auto-generated method stub
-	return null;
+	invariant();
+
+	JSONObject res = new JSONObject();
+	res.put(this.getAPIName(), this.getValue());
+	if (this.isFilled())
+	    res.merge(this.getActive().toJSON());
+
+	return res;
     }
 
 }
