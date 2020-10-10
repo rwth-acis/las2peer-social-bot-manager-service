@@ -1,10 +1,13 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 import net.minidev.json.JSONObject;
 
 public class RootNode extends Node {
@@ -90,6 +93,7 @@ public class RootNode extends Node {
 
 	return null;
     }
+
     @Override
     public NodeList getAll() {
 	NodeList nodes = new NodeList(this);
@@ -117,5 +121,30 @@ public class RootNode extends Node {
 	return res;
     }
 
+    public Map<String, String> getPathParameters() {
+
+	Map<String, String> res = new HashMap<>();
+	for (Node node : this.children) {
+	    if (node instanceof Fillable) {
+		Slot slot = ((Slotable) node).getSlot();
+		if (slot.getParameterType() == ParameterType.PATH)
+		    res.put(slot.getAPIName(), ((Fillable) node).getValue());
+	    }
+	}
+	return res;
+    }
+
+    public Map<String, String> getQueryParameters() {
+
+	Map<String, String> res = new HashMap<>();
+	for (Node node : this.children) {
+	    if (node instanceof Fillable) {
+		Slot slot = ((Slotable) node).getSlot();
+		if (slot.getParameterType() == ParameterType.PATH)
+		    res.put(slot.getAPIName(), ((Fillable) node).getValue());
+	    }
+	}
+	return res;
+    }
 
 }

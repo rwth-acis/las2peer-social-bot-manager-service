@@ -10,12 +10,10 @@ import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
-import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
-import net.minidev.json.JSONObject;
 
 public class OpenAPIConnector {
 
@@ -26,8 +24,14 @@ public class OpenAPIConnector {
 	assert (action.getFunctionName() != null || (action.getFunctionPath() != null
 		&& action.getHttpMethod() != null)) : "read open api function: no function specified";
 
+	// base url
+	String baseUrl = action.getServiceName();
+	String last = baseUrl.substring(baseUrl.length() - 1);
+	if (last.contentEquals("/"))
+	    baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+
 	// retrieve path of model definition
-	String modelUrl = getSwaggerDocument(action.getServiceName());
+	String modelUrl = getSwaggerDocument(baseUrl);
 	if (modelUrl == null) {
 	    System.out.println("swagger definition not found");
 	    return null;
@@ -46,14 +50,13 @@ public class OpenAPIConnector {
 	    Swagger swagger = swaggerParseResult.getSwagger();
 	    if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
 		action = OpenAPIReaderV2.readAction(swagger, action.getFunctionPath(), action.getHttpMethod());
-		return action;
 	    } else if (action.getFunctionName() != null) {
 		action = OpenAPIReaderV2.readAction(swagger, action.getFunctionName());
-		return action;
 	    } else {
 		System.out.println("service function not defined");
 	    }
-
+	    action.setServiceName(baseUrl);
+	    return action;
 	}
 
 	// read function V3
@@ -65,32 +68,32 @@ public class OpenAPIConnector {
 	    System.out.println("service function not defined");
 	}
 
+	action.setServiceName(baseUrl);
 	return action;
     }
 
-    public String sendRequest(ServiceFunction action, JSONObject body) {
+    public static String sendRequest(OpenAPIAction action) {
 
-	if (!action.getActionType().equals(ActionType.REST)) {
-	    System.out.println("wrong action type");
-	}
+	assert action != null : "action parameter is null";
+	assert action.getFunction() != null : "action parameter service function is null";
 
-	if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
-	    System.out.println("service function not defined");
-	    return null;
-	}
+	ServiceFunction sf = action.getFunction();
+	assert sf.getFunctionPath() != null : "no function path";
+	assert sf.getHttpMethod() != null : "no http method";
+	assert sf.getServiceName() != null : "no service name";
 
-	System.out.println("perform REST action");
-	System.out.println(action.toString());
+	System.out.println("perform REST action: " + action.toString());
 
 	MiniClient client = new MiniClient();
-	client.setConnectorEndpoint(action.getServiceName());
+	client.setConnectorEndpoint(action.getBasePath());
+
+	System.out.println("client: " + client);
 
 	HashMap<String, String> headers = new HashMap<String, String>();
-	ClientResponse response = client.sendRequest(action.getHttpMethod().toUpperCase(), action.getFunctionPath(),
-		body.toJSONString(), action.getConsumes(), action.getProduces(), headers);
+	ClientResponse response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(),
+		action.getBodyParameter().toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
 
-	System.out.println("Connect Success");
-	System.out.println(response.getResponse());
+	System.out.println("Response: " + response.getHttpCode() + response.getResponse() + response.getRawResponse());
 	return response.getResponse();
 
     }

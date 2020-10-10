@@ -220,7 +220,7 @@ public class NaiveDialogueManager extends AbstractDialogueManager {
 
     private DialogueAct perform() {
 	DialogueAct act = new DialogueAct();
-	act.setAction(goal.getServiceAction());
+	act.setAction(goal.getOpenAPIAction());
 	act.setMessage("perform action");
 	this.reset();
 	return act;

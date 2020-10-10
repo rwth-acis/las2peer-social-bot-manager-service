@@ -1,6 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class ServiceFunction extends TriggerFunction{
 	private String id;
@@ -154,5 +158,31 @@ public class ServiceFunction extends TriggerFunction{
 	public boolean hasAttributes() {
 	    return (this.attributes != null && !this.attributes.isEmpty());
 	}
+
+    public ServiceFunctionAttribute getBodyAttribute() {
+	for (ServiceFunctionAttribute attr : this.attributes) {
+	    if (attr.getParameterType() == ParameterType.BODY)
+		return attr;
+	}
+	return null;
+    }
+
+    public List<ServiceFunctionAttribute> getPathAttributes() {
+	List<ServiceFunctionAttribute> res = new ArrayList<ServiceFunctionAttribute>();
+	for (ServiceFunctionAttribute attr : this.attributes) {
+	    if (attr.getParameterType() == ParameterType.PATH)
+		res.add(attr);
+	}
+	return res;
+    }
+
+    public List<ServiceFunctionAttribute> getQueryAttributes() {
+	List<ServiceFunctionAttribute> res = new ArrayList<ServiceFunctionAttribute>();
+	for (ServiceFunctionAttribute attr : this.attributes) {
+	    if (attr.getParameterType() == ParameterType.QUERY)
+		res.add(attr);
+	}
+	return res;
+    }
 
 }

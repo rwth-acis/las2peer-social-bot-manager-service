@@ -6,6 +6,7 @@ import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotSet;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class Slot {
 
@@ -332,6 +333,12 @@ public class Slot {
 	    for (Slot slot : this.getChildren())
 		desc.addAll(slot.getDescendants(values));
 	return desc;
+    }
+
+    public ParameterType getParameterType() {
+	assert this.parameter != null: "slot has no assigned function parameter";
+	
+	return this.parameter.getParameterType();
     }
 
 }

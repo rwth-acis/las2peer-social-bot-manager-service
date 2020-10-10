@@ -10,6 +10,7 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 
 public class DialogueGoal {
 
@@ -155,7 +156,6 @@ public class DialogueGoal {
 
     }
 
-
     /**
      * @return a slot that is not filled yet.
      */
@@ -294,37 +294,16 @@ public class DialogueGoal {
 	return (act);
     }
 
-    public ServiceFunction getServiceAction() {
+    public OpenAPIAction getOpenAPIAction() {
 
-	ServiceFunction template = getFrame().getServiceFunction();
-	ServiceFunction action = new ServiceFunction();
-	action.setActionType(template.getActionType());
-	action.setConsumes(template.getConsumes());
-	action.setFunctionName(template.getFunctionName());
-	action.setFunctionPath(template.getFunctionPath());
-	action.setHttpMethod(template.getHttpMethod());
-	action.setProduces(template.getProduces());
-	action.setServiceName(template.getServiceName());
-	if (template.hasAttributes())
-	    for (ServiceFunctionAttribute attr : template.getAttributes())
-		action.addAttribute(copy(attr));
-	return action;
+	OpenAPIAction res = new OpenAPIAction();
+	ServiceFunction function = this.getFrame().getServiceFunction();
+	res.setFunction(function);
+	res.setBodyParameter(root.toJSON());
+	res.setPathParameters(root.getPathParameters());
+	res.setQueryParameters(root.getQueryParameters());
 
-    }
-
-    private ServiceFunctionAttribute copy(ServiceFunctionAttribute template) {
-	System.out.println(template.getName());
-	ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
-	attr.setContentType(template.getContentType());
-	attr.setName(template.getName());
-	attr.setParameterType(template.getParameterType());
-	// if (this.getFillable(template.getName()) != null)
-	// attr.setContent(this.getFillable(template.getName()).getValue());
-	if (template.hasChildren())
-	    for (ServiceFunctionAttribute child : template.getChildAttributes())
-		attr.addChildAttribute(copy(child));
-
-	return attr;
+	return res;
     }
 
     public void print() {

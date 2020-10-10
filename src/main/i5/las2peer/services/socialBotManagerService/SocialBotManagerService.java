@@ -1537,9 +1537,10 @@ public class SocialBotManagerService extends RESTService {
 		@ApiOperation(value = "Create bot", notes = "creates the bot.")
 		public Response createBot(
 				i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
-
+		   
+	    System.out.println("Bot creation method called");
 			System.out.println(bot);
-			return Response.ok().build();
+			return Response.ok().entity("hello").build();
 
 		}
 	}

@@ -7,6 +7,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 
 public class Dialogue {
 
@@ -54,22 +55,15 @@ public class Dialogue {
 
 	if (act.hasAction()) {
 	    System.out.println(
-		    "perform action " + act.getAction().getServiceName() + " " + act.getAction().getFunctionName());
-
+		    "perform action " + act.getAction().getFunction().getServiceName() + " " + act.getAction().getFunction().getFunctionName());
+	    
+	    OpenAPIConnector.sendRequest(act.getAction());
 	}
 
 	System.out.println(act);
 	// String response = nlg.translate(outputSemantic);
 	return act.getMessage();
     }
-
-    // public String handle(String message) {
-
-//	Intent inputSemantic = nlu.getIntent(message);
-    // String outputSemantic = manager.handle(inputSemantic);
-    // String response = nlg.translate(outputSemantic);
-//	return outputSemantic;
-    // }
 
     public MetaDialogueManager getManager() {
 	return manager;

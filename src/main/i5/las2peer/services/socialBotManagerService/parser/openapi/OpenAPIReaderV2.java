@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -69,6 +70,7 @@ public class OpenAPIReaderV2 {
 	action.setActionType(ActionType.REST);
 	action.setFunctionName(operation.getOperationId());
 	action.setHttpMethod(getMethodByOperationId(model, operationId));
+	action.setFunctionPath(getPathByOperationId(model, operationId));
 	Iterator<ServiceFunctionAttribute> iter = action.getAttributes().iterator();
 	ServiceFunctionAttribute pet = iter.next();
 	System.out.println(pet.toStringNoChildren());
@@ -129,8 +131,6 @@ public class OpenAPIReaderV2 {
 
     private static String getMethodByOperationId(Swagger openAPI, String operationId) {
 
-	System.out.println("get Operation by Id: " + operationId);
-
 	for (Path pathItem : openAPI.getPaths().values()) {
 	    if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
 		return "get";
@@ -142,7 +142,23 @@ public class OpenAPIReaderV2 {
 		return "delete";
 	}
 
-	System.out.println("Operation not found");
+	return null;
+    }
+
+    private static String getPathByOperationId(Swagger openAPI, String operationId) {
+
+	for (Entry<String, Path> entry : openAPI.getPaths().entrySet()) {
+	    Path pathItem = entry.getValue();
+	    if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
+		return entry.getKey();
+	    if (pathItem.getPost() != null && pathItem.getPost().getOperationId().equals(operationId))
+		return entry.getKey();
+	    if (pathItem.getPut() != null && pathItem.getPut().getOperationId().equals(operationId))
+		return entry.getKey();
+	    if (pathItem.getDelete() != null && pathItem.getDelete().getOperationId().equals(operationId))
+		return entry.getKey();
+	}
+
 	return null;
     }
 
