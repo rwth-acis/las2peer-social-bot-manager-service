@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.AbstractLanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
@@ -20,7 +21,7 @@ public class Dialogue {
 	this.manager = new MetaDialogueManager(messenger);
     }
 
-    public String handle(MessageInfo message) {
+    public ResponseMessage handle(MessageInfo message) {
 
 	Intent semantic = message.getIntent();
 
@@ -62,7 +63,16 @@ public class Dialogue {
 
 	System.out.println(act);
 	// String response = nlg.translate(outputSemantic);
-	return act.getMessage();
+	
+	ResponseMessage res = new ResponseMessage();
+	res.setMessage(act.getMessage());
+	if (act.hasEnums()) {
+	    for (String enu : act.getExpected().getEnums()) {
+		res.addButton(enu);
+	    }
+	}
+
+	return res;
     }
 
     public MetaDialogueManager getManager() {

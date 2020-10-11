@@ -86,6 +86,8 @@ public class OpenAPIConnector {
 
 	MiniClient client = new MiniClient();
 	client.setConnectorEndpoint(action.getBasePath());
+	if (sf.getProduces() == null)
+	    sf.setProduces("text/plain");
 
 	System.out.println("client: " + client);
 

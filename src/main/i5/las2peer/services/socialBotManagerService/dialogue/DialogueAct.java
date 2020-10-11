@@ -134,4 +134,10 @@ public class DialogueAct {
 	return this.action != null;
     }
 
+    public boolean hasEnums() {
+	if (!this.hasExpected())
+	    return false;
+	return this.getExpected().hasEnums();
+    }
+
 }

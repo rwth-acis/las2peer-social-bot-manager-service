@@ -258,6 +258,11 @@ public class DialogueGoal {
 	input.setType(slot.getInputType());
 	input.setIntend(slot.getInformIntent());
 	input.setEntity(slot.getEntity());
+	if (slot.getInputType() == InputType.Enum) {
+	    for (String enu : slot.getEnumList()) {
+		input.addEnum(enu);
+	    }
+	}
 	act.setExpected(input);
 	return act;
 

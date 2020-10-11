@@ -15,6 +15,7 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
+import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
@@ -22,6 +23,7 @@ import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
@@ -192,7 +194,7 @@ public class Messenger {
 		info.intent = intent;
 		info.message = message;
 
-		String response = null;
+	ResponseMessage response = null;
 		// Open Dialogues
 		if (this.openDialogues.containsKey(channel)) {
 			System.out.println("resume open dialogue: " + message.getChannel());
@@ -207,8 +209,14 @@ public class Messenger {
 			System.out.println("start new dialogue: " + message.getChannel());
 		}
 
-		this.getChatMediator().sendMessageToChannel(channel, response);
-
+	EventChatMediator medi;
+		if(!response.hasButtons())
+		    this.getChatMediator().sendMessageToChannel(channel, response.getMessage());
+	else {
+	    medi = (EventChatMediator) this.getChatMediator();
+	    medi.sendMessageToChannel(channel, response);
+	}
+		
 		MessageInfo messageInfo = new MessageInfo();
 
 		return messageInfo;

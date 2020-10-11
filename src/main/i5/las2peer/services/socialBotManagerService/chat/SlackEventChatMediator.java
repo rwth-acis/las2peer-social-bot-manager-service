@@ -11,6 +11,7 @@ import com.slack.api.methods.response.bots.BotsInfoResponse;
 import com.slack.api.methods.response.bots.BotsInfoResponse.Bot;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
 public class SlackEventChatMediator extends EventChatMediator {
@@ -145,8 +146,8 @@ public class SlackEventChatMediator extends EventChatMediator {
 		
 	}
 
-	@Override
-	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+    @Override
+    public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
 		try {
 			ChatPostMessageResponse response = slack.methods(authToken)
@@ -204,5 +205,11 @@ public class SlackEventChatMediator extends EventChatMediator {
 	public void setAppID(String appID) {
 		this.appID = appID;
 	}
+
+    @Override
+    public void sendMessageToChannel(String channel, ResponseMessage response) {
+	// TODO Auto-generated method stub
+
+    }
 
 }

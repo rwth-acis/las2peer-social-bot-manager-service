@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.util.Vector;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
 public abstract class EventChatMediator extends ChatMediator {
@@ -18,6 +19,7 @@ public abstract class EventChatMediator extends ChatMediator {
 
     public abstract ChatMessage handleEvent(JSONObject parsedEvent);
 
+    @Override
     public Vector<ChatMessage> getMessages() {
 	Vector<ChatMessage> messages = this.messages;
 	this.messages = new Vector<ChatMessage>();
@@ -32,5 +34,7 @@ public abstract class EventChatMediator extends ChatMediator {
     public void setMessages(Vector<ChatMessage> messages) {
 	this.messages = messages;
     }
+
+    public abstract void sendMessageToChannel(String channel, ResponseMessage response);
 
 }

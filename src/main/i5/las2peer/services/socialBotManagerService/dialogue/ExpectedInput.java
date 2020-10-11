@@ -1,17 +1,21 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ExpectedInput {
 
     private InputType type;
     private String intend;
     private String entity;
+    private List<String> enums;
     private boolean array;
 
     public ExpectedInput(InputType type, String intend) {
 	super();
 	this.type = type;
 	this.intend = intend;
-	this.array = false;
+	this.setArray(false);
     }
 
     public ExpectedInput() {
@@ -47,6 +51,29 @@ public class ExpectedInput {
 	this.type = type;
     }
 
+    public boolean isArray() {
+	return array;
+    }
+
+    public void setArray(boolean array) {
+	this.array = array;
+    }
+
+    public void addEnum(String enu) {
+	if (this.enums == null)
+	    this.enums = new ArrayList<>();
+
+	this.enums.add(enu);
+    }
+
+    public boolean hasEnums() {
+	return (this.enums != null && !this.enums.isEmpty());
+    }
+
+    public List<String> getEnums() {
+	return this.enums;
+    }
+
     public boolean invariant() {
 	if (this.type != null)
 	    return true;
@@ -58,5 +85,7 @@ public class ExpectedInput {
     public String toString() {
 	return "ExpectedInput [type=" + type + ", intend=" + intend + ", entity=" + entity + "]";
     }
+
+
 
 }

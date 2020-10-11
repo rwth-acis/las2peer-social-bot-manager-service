@@ -9,81 +9,112 @@ import javax.ws.rs.core.MediaType;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
 public class TelegramChatMediator extends EventChatMediator {
 
-	MiniClient client;
+    MiniClient client;
 
-	public TelegramChatMediator(String authToken) {
-		super(authToken);
+    public TelegramChatMediator(String authToken) {
+	super(authToken);
 
-		this.client = new MiniClient();
-		client.setConnectorEndpoint("https://api.telegram.org/bot" + authToken);
+	this.client = new MiniClient();
+	client.setConnectorEndpoint("https://api.telegram.org/bot" + authToken);
 
-		this.settingWebhook();
+	this.settingWebhook();
+    }
+
+    @Override
+    public ChatMessage handleEvent(JSONObject event) {
+
+	try {
+
+	    JSONObject message = (JSONObject) event.get("message");
+	    JSONObject chat = (JSONObject) message.get("chat");
+	    JSONObject from = (JSONObject) message.get("from");
+	    String channel = chat.getAsString("id");
+	    String user = from.getAsString("first_name");
+	    String text = message.getAsString("text");
+	    String timestamp = message.getAsString("date");
+
+	    if (channel == null || user == null || text == null || timestamp == null)
+		throw new InvalidChatMessageException("missing message fields");
+
+	    ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
+	    // this.addMessage(chatMessage);
+	    return chatMessage;
+
+	} catch (InvalidChatMessageException e) {
+	    e.printStackTrace();
+	    return null;
 	}
 
-	@Override
-	public ChatMessage handleEvent(JSONObject event) {
+    }
 
-		try {
+    /**
+     * Registers to receive push notifications from telegram
+     */
+    public void settingWebhook() {
 
-			JSONObject message = (JSONObject) event.get("message");
-			JSONObject chat = (JSONObject) message.get("chat");
-			JSONObject from = (JSONObject) message.get("from");
-			String channel = chat.getAsString("id");
-			String user = from.getAsString("first_name");
-			String text = message.getAsString("text");
-			String timestamp = message.getAsString("date");
+	String url = "https://00b48d109074.ngrok.io";
+	ClientResponse result = client.sendRequest("GET",
+		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
+	System.out.println(result.getResponse());
+    }
 
-			if (channel == null || user == null || text == null || timestamp == null)
-				throw new InvalidChatMessageException("missing message fields");
+    @Override
+    public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
-			ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
-			//this.addMessage(chatMessage);
-			return chatMessage;
+	System.out.println("send telegram message: " + text);
+	String encoded = "";
+	try {
+	    encoded = URLEncoder.encode(text, "UTF-8");
+	} catch (UnsupportedEncodingException e) {
+	    e.printStackTrace();
+	}
+	ClientResponse result = client.sendRequest("POST",
+		"sendmessage?text=" + encoded + "&chat_id=" + channel + "&parse_mode=Markdown", MediaType.TEXT_PLAIN);
+    }
 
-		} catch (InvalidChatMessageException e) {
-			e.printStackTrace();
-			return null;
-		}
+    @Override
+    public void sendMessageToChannel(String channel, ResponseMessage response) {
 
+	String text = response.getMessage();
+	System.out.println("send telegram message: " + text);
+	String encoded = "";
+	try {
+	    encoded = URLEncoder.encode(text, "UTF-8");
+	} catch (UnsupportedEncodingException e) {
+	    e.printStackTrace();
 	}
 
-	/**
-	 * Registers to receive push notifications from telegram
-	 */
-	public void settingWebhook() {
-
-		String url = "https://026eb1802b49.ngrok.io";
-		ClientResponse result = client.sendRequest("GET",
-				"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
-		System.out.println(result.getResponse());
+	String button = "";
+	if (response.hasButtons()) {
+	    button = button.concat("&reply_markup={\"keyboard\":[[");
+	    for (String val : response.getButtons()) {
+		button = button.concat("\"" + val + "\",");
+	    }
+	    button = button.substring(0, button.length() - 1);
+	    button = button.concat("]],\"one_time_keyboard\":true}\"");
 	}
 
-	@Override
-	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+	String markdown = "&parse_mode=Markdown";
+	String chat = "&chat_id=" + channel;
 
-		System.out.println("send telegram message: " + text);
-		String encoded = "";
-		try {
-			encoded = URLEncoder.encode(text, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + encoded + "&chat_id=" + channel + "&parse_mode=Markdown",
-				MediaType.TEXT_PLAIN);
-	}
+	ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + encoded + chat + markdown + button,
+		MediaType.TEXT_PLAIN);
 
-	@Override
-	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
-		// TODO Auto-generated method stub
+    }
 
-	}
+    @Override
+    public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
+	// TODO Auto-generated method stub
 
-	public boolean hasToken(String token) {
-		return (this.authToken.equals(token));
-	}
+    }
+
+    public boolean hasToken(String token) {
+	return (this.authToken.equals(token));
+    }
 
 }

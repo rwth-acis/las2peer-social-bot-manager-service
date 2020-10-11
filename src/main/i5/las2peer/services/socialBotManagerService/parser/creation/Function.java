@@ -10,7 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 @JsonSubTypes({ @JsonSubTypes.Type(value = ChitChatFunction.class, name = "ChitChat"),
 	@JsonSubTypes.Type(value = AccessServiceFunction.class, name = "AccessService") })
 @ApiModel(discriminator = "type", subTypes = { ChitChatFunction.class, AccessServiceFunction.class })
-public class Function {
+public abstract class Function {
 	@ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", value = "The function the bot should do", required = true, example = "AccessService")
 	private FunctionType type;
 
