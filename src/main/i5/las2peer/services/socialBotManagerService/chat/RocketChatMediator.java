@@ -804,7 +804,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						e.printStackTrace();
 					}
 				} else {
-					messageCollector.handle(message, role);
+					messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
 				}
 			}
 		}

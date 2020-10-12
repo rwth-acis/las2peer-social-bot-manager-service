@@ -45,7 +45,7 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		}
 	}
 
-	public void handle(RocketChatMessage message, int role) {
+	public void handle(RocketChatMessage message, int role, String email) {
 		Type type = message.getMsgType();
 		if (type != null) {
 			if (type.equals(Type.TEXT)) {
@@ -57,6 +57,8 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
+					System.out.println("Email of user is "+ email );
+					cm.setEmail(email);
 					cm.setRole(role);
 					this.addMessage(cm);
 					System.out.println("Message added.");
