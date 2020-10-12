@@ -1634,8 +1634,7 @@ public class SocialBotManagerService extends RESTService {
 		/**
 		 * Retrieve the names of all datasets in the database.
 		 * 
-		 * @param name training data name
-		 *
+		 * 
 		 * @return Returns an HTTP response with plain text string content.
 		 */
 		@GET

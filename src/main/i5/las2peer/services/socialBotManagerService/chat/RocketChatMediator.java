@@ -73,6 +73,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private SQLDatabase database;
 	private Thread checkRooms = null;
 	private boolean shouldCheckRooms = false;
+	private HashMap<String, Boolean> sendingMessage = new HashMap<String, Boolean>();
 
 	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
 		super(authToken);
@@ -132,9 +133,15 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 	@Override
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
-
+		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
+		if(sendingMessage.get(channel) != null) {
+			while(sendingMessage.get(channel) == true) {
+				
+			}
+		}
+		sendingMessage.put(channel, true);
 		room.getMembers(new GetMembersListener() {
 
 			@Override
@@ -155,6 +162,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					newText = newText.replace("menteeName", userName);
 					newText = newText.replace("\\n", "\n");
 					if (newText.length() > 5000) {
+						sendingMessage.put(channel, false);
 						try {
 							File tempFile = new File("message.txt");
 							FileWriter writer = new FileWriter(tempFile);
@@ -198,6 +206,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						}
 					} else {
 						room.sendMessage(newText);
+						sendingMessage.put(channel, false);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
