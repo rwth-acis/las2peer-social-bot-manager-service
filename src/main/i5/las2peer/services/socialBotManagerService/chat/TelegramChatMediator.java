@@ -57,7 +57,7 @@ public class TelegramChatMediator extends EventChatMediator {
      */
     public void settingWebhook() {
 
-	String url = "https://00b48d109074.ngrok.io";
+	String url = "https://4ac643681ece.ngrok.io";
 	ClientResponse result = client.sendRequest("GET",
 		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());
@@ -69,25 +69,28 @@ public class TelegramChatMediator extends EventChatMediator {
 	System.out.println("send telegram message: " + text);
 	String encoded = "";
 	try {
+	    text = text.replace("_", "\\_");
 	    encoded = URLEncoder.encode(text, "UTF-8");
 	} catch (UnsupportedEncodingException e) {
 	    e.printStackTrace();
 	}
 	ClientResponse result = client.sendRequest("POST",
 		"sendmessage?text=" + encoded + "&chat_id=" + channel + "&parse_mode=Markdown", MediaType.TEXT_PLAIN);
+
+	System.out.println(result.getResponse());
+
     }
 
     @Override
     public void sendMessageToChannel(String channel, ResponseMessage response) {
 
+	if (response.getButtons() == null || response.getButtons().isEmpty()) {
+	    sendMessageToChannel(channel, response.getMessage());
+	    return;
+	}
+
 	String text = response.getMessage();
 	System.out.println("send telegram message: " + text);
-	String encoded = "";
-	try {
-	    encoded = URLEncoder.encode(text, "UTF-8");
-	} catch (UnsupportedEncodingException e) {
-	    e.printStackTrace();
-	}
 
 	String button = "";
 	if (response.hasButtons()) {
@@ -96,15 +99,22 @@ public class TelegramChatMediator extends EventChatMediator {
 		button = button.concat("\"" + val + "\",");
 	    }
 	    button = button.substring(0, button.length() - 1);
-	    button = button.concat("]],\"one_time_keyboard\":true}\"");
+	    button = button.concat("]],\"one_time_keyboard\":true}");
+	}
+
+	try {
+	    text = URLEncoder.encode(text, "UTF-8");
+	} catch (UnsupportedEncodingException e) {
+	    e.printStackTrace();
 	}
 
 	String markdown = "&parse_mode=Markdown";
 	String chat = "&chat_id=" + channel;
 
-	ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + encoded + chat + markdown + button,
+	ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + text + chat + markdown + button,
 		MediaType.TEXT_PLAIN);
 
+	System.out.println(result.getResponse());
     }
 
     @Override

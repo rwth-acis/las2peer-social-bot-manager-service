@@ -99,6 +99,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Parser;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -1526,22 +1527,29 @@ public class SocialBotManagerService extends RESTService {
 			return resp;
 		}
 
-		/**
-		 * @param bot The bot model
-		 * @return ok
-		 */
-		@POST
-		@Consumes(MediaType.APPLICATION_JSON)
-		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "Create bot", notes = "creates the bot.")
-		public Response createBot(
-				i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
-		   
-	    System.out.println("Bot creation method called");
-			System.out.println(bot);
-			return Response.ok().entity("hello").build();
+	/**
+	 * @param bot The bot model
+	 * @return ok
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+	@ApiOperation(value = "Create bot", notes = "creates the bot.")
+	public Response createBot(i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
 
-		}
+	    System.out.println("Bot creation method called");
+	    System.out.println(bot);
+	    Parser parser = new Parser();
+
+	    try {
+		parser.parse(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(), bot);
+		return Response.ok().entity("bot created").build();
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+	    return Response.serverError().entity("bot creation failed").build();
+
 	}
+    }
 }

@@ -11,15 +11,26 @@ import io.swagger.annotations.ApiModelProperty;
 	@JsonSubTypes.Type(value = AccessServiceFunction.class, name = "AccessService") })
 @ApiModel(discriminator = "type", subTypes = { ChitChatFunction.class, AccessServiceFunction.class })
 public abstract class Function {
-	@ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", value = "The function the bot should do", required = true, example = "AccessService")
-	private FunctionType type;
+    @ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", value = "The function the bot should do", required = true, example = "AccessService")
+    private FunctionType type;
 
-	public FunctionType getType() {
-		return type;
-	}
+    @ApiModelProperty(dataType = "string", value = "The intent to start the service access", required = true, example = "add_pet")
+    private String intent;
 
-	public void setType(FunctionType type) {
-		this.type = type;
-	}
+    public FunctionType getType() {
+	return type;
+    }
+
+    public void setType(FunctionType type) {
+	this.type = type;
+    }
+
+    public String getIntent() {
+	return intent;
+    }
+
+    public void setIntent(String intent) {
+	this.intent = intent;
+    }
 
 }
