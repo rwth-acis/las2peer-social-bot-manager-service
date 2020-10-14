@@ -28,4 +28,9 @@ public class AccessServiceFunction extends Function {
 		this.operationID = operationID;
 	}
 
+    @Override
+    public String toString() {
+	return "AccessServiceFunction [serviceURL=" + serviceURL + ", operationID=" + operationID + "]";
+    }
+
 }

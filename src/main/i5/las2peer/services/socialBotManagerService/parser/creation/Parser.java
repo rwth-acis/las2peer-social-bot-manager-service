@@ -13,6 +13,7 @@ import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
@@ -20,9 +21,6 @@ import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
-import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
-import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
 import i5.las2peer.tools.CryptoException;
 
@@ -31,7 +29,8 @@ public class Parser {
     private static final String botPass = "actingAgent";
 
     public i5.las2peer.services.socialBotManagerService.model.Bot parse(BotConfiguration config,
-	    HashMap<String, BotAgent> botAgents, Bot data) {
+	    HashMap<String, BotAgent> botAgents,
+	    i5.las2peer.services.socialBotManagerService.parser.creation.Bot data) {
 
 	i5.las2peer.services.socialBotManagerService.model.Bot res = new i5.las2peer.services.socialBotManagerService.model.Bot();
 	List<IncomingMessage> imList = new ArrayList<>();
@@ -40,10 +39,16 @@ public class Parser {
 	res.setName(data.getName());
 
 	// VLE Instance
-	String address = "http://127.0.0.1:8070/";
-	VLE vle = new VLE();
-	vle.setAddress(address);
-	vle.setEnvironmentSeparator("singleEnvironment");
+	String vleAddress = "http://127.0.0.1:8070/";
+	String vleName = "vleName";
+
+	VLE vle = getVLEInstance(vleName, vleAddress);
+	VLE r = config.getServiceConfiguration(vle.getName());
+	if (r != null) {
+	    for (Bot b : r.getBots().values()) {
+		b.deactivateAll();
+	    }
+	}
 
 	vle.addBot(res.getId(), res);
 	res.setVle(vle);
@@ -155,6 +160,16 @@ public class Parser {
 	}
 
 	return res;
+    }
+
+    private VLE getVLEInstance(String name, String address) {
+
+	VLE vle = new VLE();
+	vle.setAddress(address);
+	vle.setName(name);
+	vle.setEnvironmentSeparator("singleEnvironment");
+
+	return vle;
     }
 
 }

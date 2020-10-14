@@ -1,5 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.parser.creation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum FunctionType {
-    SERVICE_ACCESS, CHIT_CHAT
+    @JsonProperty("AccessService")
+    SERVICE_ACCESS, @JsonProperty("ChitChat")
+    CHIT_CHAT
 }

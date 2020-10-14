@@ -142,7 +142,6 @@ public class BotParser {
 		nluKnowledge.put(entry.getKey(), nlu);
 	    } else if (nodeType.equals("Frame")) {
 		Frame frame = addFrame(entry.getKey(), elem, config);
-		System.out.println("add Frame");
 		frames.put(entry.getKey(), frame);
 	    } else if (nodeType.equals("Slot")) {
 		Slot slot = addSlot(entry.getKey(), elem, config);

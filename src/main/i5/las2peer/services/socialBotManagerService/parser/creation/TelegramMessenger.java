@@ -1,5 +1,6 @@
-package i5.las2peer.services.socialBotManagerService.parser.creation.messenger;
+package i5.las2peer.services.socialBotManagerService.parser.creation;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -15,6 +16,16 @@ public class TelegramMessenger extends Messenger {
 
     public void setToken(String token) {
 	this.token = token;
+    }
+
+    @Override
+    public ChatService getType() {
+	return ChatService.TELEGRAM;
+    }
+
+    @Override
+    public String toString() {
+	return "TelegramMessenger [token=" + token + ", getType()=" + getType() + "]";
     }
 
 }

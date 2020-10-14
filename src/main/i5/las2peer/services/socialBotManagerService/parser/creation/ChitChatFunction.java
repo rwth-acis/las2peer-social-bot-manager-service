@@ -17,4 +17,9 @@ public class ChitChatFunction extends Function {
 		this.messages = messages;
 	}
 
+    @Override
+    public String toString() {
+	return "ChitChatFunction [messages=" + messages + "]";
+    }
+
 }

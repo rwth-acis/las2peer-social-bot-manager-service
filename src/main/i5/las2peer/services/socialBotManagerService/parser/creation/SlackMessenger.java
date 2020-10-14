@@ -1,5 +1,6 @@
-package i5.las2peer.services.socialBotManagerService.parser.creation.messenger;
+package i5.las2peer.services.socialBotManagerService.parser.creation;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -28,5 +29,14 @@ public class SlackMessenger extends Messenger {
 	this.appId = appId;
     }
 
+    @Override
+    public ChatService getType() {
+	return ChatService.SLACK;
+    }
+
+    @Override
+    public String toString() {
+	return "SlackMessenger [token=" + token + ", appId=" + appId + ", getType()=" + getType() + "]";
+    }
 
 }
