@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import javax.websocket.DeploymentException;
 
-import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 
 public class Bot {
 	private String name;
@@ -153,6 +154,10 @@ public class Bot {
 	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
 		this.messengers.put(messenger.getName(), messenger);
 	}
+
+    public Map<String, Messenger> getMessengers() {
+	return this.messengers;
+    }
 
 	public void deactivateAll() {
 		for (String k : this.active.keySet()) {

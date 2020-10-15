@@ -105,12 +105,15 @@ public class BotParser {
 	    if (nodeType.equals("Instance")) {
 		VLE resetVle = setVLEInstance(elem);
 		VLE r = config.getServiceConfiguration(resetVle.getName());
+
+		// deactivate bots
 		if (r != null) {
 		    for (Bot b : r.getBots().values()) {
 			b.deactivateAll();
 		    }
 		}
 	    }
+
 	}
 	// NODES
 	System.out.println("NODES");
@@ -121,9 +124,21 @@ public class BotParser {
 	    // VLE
 	    if (nodeType.equals("Instance")) {
 		vle = setVLEInstance(elem);
+		System.out.println("VLE Instance");
+		// Remember old bots
+		if (elem.getLabel().getId().contentEquals("expand")) {
+		    System.out.println("expand");
+		    VLE vleOld = config.getServiceConfiguration(vle.getName());
+		    for (Bot bot : vleOld.getBots().values()) {
+			vle.addBot(bot.getId(), bot);
+			System.out.println("add bot " + bot.getId());
+		    }
+		}
+
 		config.addServiceConfiguration(vle.getName(), vle);
 		vles.put(entry.getKey(), vle);
 		vleCount++;
+
 	    } else if (nodeType.equals("Messenger")) {
 		Messenger m = addMessenger(entry.getKey(), elem, config, database);
 		messengers.put(entry.getKey(), m);

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Vector;
-import java.io.File;
 
 public abstract class ChatMediator {
 	protected String authToken;
@@ -62,5 +61,9 @@ public abstract class ChatMediator {
 		}
 		return result.toString();
 	}
+
+    public String getAuthToken() {
+	return authToken;
+    }
 
 }

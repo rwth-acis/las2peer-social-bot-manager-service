@@ -57,7 +57,7 @@ public class TelegramChatMediator extends EventChatMediator {
      */
     public void settingWebhook() {
 
-	String url = "https://4ac643681ece.ngrok.io";
+	String url = "https://1ff4c43b46ea.ngrok.io";
 	ClientResponse result = client.sendRequest("GET",
 		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());

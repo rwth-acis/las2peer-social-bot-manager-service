@@ -315,6 +315,14 @@ public class SocialBotManagerService extends RESTService {
 					jb.put("name", b.getName());
 					jb.put("version", b.getVersion());
 
+		    JSONArray messengerList = new JSONArray();
+		    for (Entry<String, Messenger> messengerEntry : b.getMessengers().entrySet()) {
+			JSONObject jm = new JSONObject();
+			jm.put("type", messengerEntry.getValue().getChatService().toString());
+			jm.put("name", messengerEntry.getValue().getName());
+			messengerList.add(jm);
+		    }
+		    jb.put("messengers", messengerList);
 					botList.put(botEntry.getValue().getName(), jb);
 				}
 				vleList.put(vleName, botList);
@@ -678,7 +686,7 @@ public class SocialBotManagerService extends RESTService {
 					for (VLE vle : vles)
 						bot = vle.getBotbyTelegramToken(token);
 					if (bot == null)
-						System.out.println("cannot relate event to a bot");
+			System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
 
 					// Handle event
@@ -1537,37 +1545,38 @@ public class SocialBotManagerService extends RESTService {
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 	@ApiOperation(value = "Create bot", notes = "creates the bot.")
 	public Response createBot(i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
-
-	    System.out.println("Bot creation method called");
-	    System.out.println(bot);
 	   
+	    BotModel botModel = null;
 	    try {
 
-		BotModelParser botModelParser = new BotModelParser();
-		BotModel botModel = botModelParser.parse(bot);
-		BotParser bp = BotParser.getInstance();
+		System.out.println("Parse bot into BotModel");
+		System.out.println(bot);
 
-		String returnString = "";
+		BotModelParser botModelParser = new BotModelParser();
+		botModel = botModelParser.parse(bot);
+
+	    } catch (Exception e) {
+		e.printStackTrace();
+		return Response.serverError().entity("Bot creation failed. Can't parse into bot model.").build();
+	    }
+
+	    try {
+
+		BotParser bp = BotParser.getInstance();
 		LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
 		LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
-		
-		try {
-			bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-					nodes, edges, null);
-		} catch (ParseBotException | IOException | DeploymentException e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return Response.serverError().build();
-		}
 
-		// initialized = true;
+		bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
+			nodes, edges, null);
+
 		JSONObject logData = new JSONObject();
 		logData.put("status", "initialized");
 		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 
-		return Response.ok().entity(returnString).build();
+		return Response.ok().entity("bot created").build();
 
+	    } catch (ParseBotException | IOException | DeploymentException e) {
+		return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }

@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import i5.las2peer.services.socialBotManagerService.model.BotModel;
+import i5.las2peer.services.socialBotManagerService.model.BotModelAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
+import i5.las2peer.services.socialBotManagerService.model.BotModelLabel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
@@ -25,17 +27,19 @@ public class BotModelParser {
 
 	BotModel model = new BotModel();
 
+
 	// VLE Instance
-	String vleAddress = "http://127.0.0.1:8070/";
 	String vleName = "vleName";
+	String vleAddress = "http://127.0.0.1:8070/";
 	BotModelNode vleNode = addNode("Instance");
-	addAttribute(vleNode, "name", vleName);
-	addAttribute(vleNode, "address", vleAddress);
+	addAttribute(vleNode, "Name", vleName);
+	addAttribute(vleNode, "Address", vleAddress);
+	vleNode.setLabel(getLabel("expand", "expand", "TRUE"));
 
 	// Bot
 	BotModelNode botNode = addNode("Bot");
 	assert bot.getName() != null : "bot has no name";
-	addAttribute(botNode, "name", bot.getName());
+	addAttribute(botNode, "Name", bot.getName());
 	addEdge(vleNode, botNode, "has");
 
 	// NLU Knowledge
@@ -59,12 +63,14 @@ public class BotModelParser {
 
 	    case TELEGRAM:
 		TelegramMessenger tele = (TelegramMessenger) messenger;
+		assert (tele.getToken() != null) : "no telegram authentication token";
 		addAttribute(messengerNode, "Authentication Token", tele.getToken());
 		addAttribute(messengerNode, "Name", "Telegram");
 		break;
 
 	    case SLACK:
 		SlackMessenger slack = (SlackMessenger) messenger;
+		assert (slack.getToken() != null) : "no slack authentication token";
 		addAttribute(messengerNode, "Authentication Token", slack.getToken());
 		addAttribute(messengerNode, "Name", slack.getAppId());
 		break;
@@ -85,6 +91,7 @@ public class BotModelParser {
 
 		    BotModelNode inNode = addNode("Incoming Message");
 		    addAttribute(inNode, "Intent Keyword", message.getIntent());
+		    addAttribute(inNode, "NLU ID", "0");
 
 		    BotModelNode outNode = addNode("Chat Response");
 		    addAttribute(outNode, "Message", "hi");
@@ -143,18 +150,26 @@ public class BotModelParser {
 	    node.setAttributes(new LinkedHashMap<String, BotModelNodeAttribute>());
 
 	LinkedHashMap<String, BotModelNodeAttribute> attributes = node.getAttributes();
-	BotModelNodeAttribute attr = getAttribute(name, value);
+	BotModelNodeAttribute attr = getNodeAttribute(name, value);
 	attributes.put(attr.getId(), attr);
 	node.setAttributes(attributes);
 
     }
 
-    public BotModelNodeAttribute getAttribute(String name, String value) {
+    public BotModelAttribute addAttribute() {
+	BotModelAttribute attribute = new BotModelAttribute();
+	attribute.setType("ModelAttributesNode");
+	attribute.setAttributes(new LinkedHashMap<>());
+	attribute.setLabel(getLabel("modelAttributes[label]", "Label", "Model Attributes"));
+	return attribute;
+    }
+
+    public BotModelNodeAttribute getNodeAttribute(String name, String value) {
 
 	BotModelNodeAttribute res = new BotModelNodeAttribute();
 	res.setName(name);
 	String id = getID();
-	res.setId(id);
+	res.setId(id + "[" + name.toLowerCase() + "]");
 	res.setValue(getValue(id, name, value));
 	return res;
     }
@@ -168,6 +183,15 @@ public class BotModelParser {
 	return res;
     }
 
+    public BotModelLabel getLabel(String id, String name, String value) {
+	BotModelLabel label = new BotModelLabel();
+	label.setId(id);
+	label.setName(name);
+	label.setValue(getValue(id, name, value));
+	
+	return label;
+    }
+
     public BotModelEdge addEdge(BotModelNode source, BotModelNode target, String type) {
 
 	BotModelEdge edge = new BotModelEdge();
@@ -175,6 +199,8 @@ public class BotModelParser {
 	edge.setTarget(nodes.get(target));
 	edge.setType(type);
 	String id = getID();
+	edge.setLabel(getLabel(id + "[" + "value" + "]", "Label", ""));
+
 	edgeList.put(id, edge);
 	return edge;
 
