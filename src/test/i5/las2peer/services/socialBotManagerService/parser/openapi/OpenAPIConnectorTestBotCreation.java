@@ -8,14 +8,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Test;
-
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 
 public class OpenAPIConnectorTestBotCreation {
 
-    @Test
+    // @Test
     public void ReadFunctionCreateBotV2Test() {
 
 	ServiceFunction action = new ServiceFunction();

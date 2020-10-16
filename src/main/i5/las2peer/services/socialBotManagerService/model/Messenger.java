@@ -22,7 +22,6 @@ import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
-import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
@@ -49,11 +48,6 @@ public class Messenger {
      * The chat mediator connects to the external messenger application
      */
     private ChatMediator chatMediator;
-
-    /**
-     * dialogue handler
-     */
-    private DialogueHandler dialogueHandler;
 
     /**
      * This map contains all domains of this messenger

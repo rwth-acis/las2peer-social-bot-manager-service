@@ -24,7 +24,7 @@ import io.swagger.util.Json;
 
 public class FrameMapperTest {
 
-    // @Test
+    @Test
     public void frameMapPetstoreTest() {
 
 	FrameMapper mapper = new FrameMapper();
@@ -90,7 +90,7 @@ public class FrameMapperTest {
 
     }
 
-    @Test
+    // @Test
     public void frameMapBotTest() {
 
 	FrameMapper mapper = new FrameMapper();

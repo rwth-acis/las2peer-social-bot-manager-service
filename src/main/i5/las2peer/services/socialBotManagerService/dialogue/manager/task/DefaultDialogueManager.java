@@ -17,13 +17,13 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
-public class NaiveDialogueManager extends AbstractDialogueManager {
+public class DefaultDialogueManager extends AbstractDialogueManager {
 
     DialogueGoal goal;
     String start_intent;
     boolean optional;
 
-    public NaiveDialogueManager(DialogueGoal goal) {
+    public DefaultDialogueManager(DialogueGoal goal) {
 	this.goal = goal;
     }
 

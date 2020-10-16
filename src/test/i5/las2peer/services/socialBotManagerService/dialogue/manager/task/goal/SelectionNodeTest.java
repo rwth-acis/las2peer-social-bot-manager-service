@@ -77,8 +77,6 @@ public class SelectionNodeTest {
 	assertNotNull(node.getChild("B"));
 	((ValueNode) node.getChild("B")).fill("tB");
 
-	System.out.println(node.toJSON());
-
     }
 
     @Test

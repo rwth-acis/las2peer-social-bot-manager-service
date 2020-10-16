@@ -27,7 +27,7 @@ public class NaiveDialogueManagerSimulatorTest {
 	frame = new FrameMapper().create(action, frame);
 
 	DialogueGoal goal = new DialogueGoal(frame);
-	NaiveDialogueManager manager = new NaiveDialogueManager(goal);
+	DefaultDialogueManager manager = new DefaultDialogueManager(goal);
 	manager.setStartIntent("start_intent");
 
 	RandomUserSimulator simulator = new RandomUserSimulator(manager);

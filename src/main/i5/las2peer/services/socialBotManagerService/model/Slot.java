@@ -46,13 +46,7 @@ public class Slot {
     int priority;
 
     /**
-     * The message that the bot can send to the user to ask for the information
-     * about this slot
-     */
-    String message;
-
-    /**
-     *
+     * Defines which values are valid to fill this slot.
      */
     InputType inputType;
 
@@ -66,9 +60,16 @@ public class Slot {
      **/
     List<Slot> children;
 
+    /**
+     * The message that the bot can send to the user to ask for the information
+     * about this slot
+     */
+    String requestMessage;
+
     public Slot(String name) {
 	this.name = name;
 	this.children = new SlotSet();
+
     }
 
     /**
@@ -124,12 +125,12 @@ public class Slot {
 	this.priority = priority;
     }
 
-    public String getMessage() {
-	return message;
+    public String getRequestMessage() {
+	return requestMessage;
     }
 
-    public void setMessage(String message) {
-	this.message = message;
+    public void setRequestMessage(String message) {
+	this.requestMessage = message;
     }
 
     public ServiceFunctionAttribute getParameter() {

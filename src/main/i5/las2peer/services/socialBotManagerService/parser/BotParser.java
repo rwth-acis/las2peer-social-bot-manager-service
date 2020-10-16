@@ -964,7 +964,7 @@ public class BotParser {
 	slot.setEntity(entity);
 	slot.setRequired(required);
 	slot.setPriority(priority);
-	slot.setMessage(message);
+	slot.setRequestMessage(message);
 	return slot;
     }
 
