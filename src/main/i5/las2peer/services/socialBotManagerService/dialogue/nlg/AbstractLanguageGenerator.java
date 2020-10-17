@@ -4,6 +4,6 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 
 public abstract class AbstractLanguageGenerator {
 
-    abstract public String parse(DialogueAct act);
+    abstract public ResponseMessage parse(DialogueAct act);
     
 }

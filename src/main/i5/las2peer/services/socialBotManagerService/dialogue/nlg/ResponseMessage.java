@@ -8,6 +8,10 @@ public class ResponseMessage {
     String message;
     List<String> buttons = new ArrayList<>();
 
+    public ResponseMessage(String message) {
+	this.message = message;
+    }
+
     public String getMessage() {
 	return message;
     }

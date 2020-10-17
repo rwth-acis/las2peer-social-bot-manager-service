@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.AbstractLanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
@@ -55,17 +56,23 @@ public class Dialogue {
 	    this.lastAct = act;
 
 	if (act.hasAction()) {
-	    System.out.println(
-		    "perform action " + act.getAction().getFunction().getServiceName() + " " + act.getAction().getFunction().getFunctionName());
-	    
+	    System.out.println("perform action " + act.getAction().getFunction().getServiceName() + " "
+		    + act.getAction().getFunction().getFunctionName());
+
 	    OpenAPIConnector.sendRequest(act.getAction());
 	}
 
 	System.out.println(act);
-	// String response = nlg.translate(outputSemantic);
-	
-	ResponseMessage res = new ResponseMessage();
-	res.setMessage(act.getMessage());
+
+	ResponseMessage res = nlg.parse(act);
+	if (res == null) {
+	    DefaultMessageGenerator gen = new DefaultMessageGenerator();
+	    res = gen.get(act);
+	}
+
+	if (res == null)
+	    res = new ResponseMessage(act.getMessage());
+
 	if (act.hasEnums()) {
 	    for (String enu : act.getExpected().getEnums()) {
 		res.addButton(enu);

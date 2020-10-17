@@ -19,7 +19,7 @@ public class TableLanguageGenerator extends AbstractLanguageGenerator {
     }
 
     @Override
-    public String parse(DialogueAct act) {
+    public ResponseMessage parse(DialogueAct act) {
 
 	assert this.table != null : "parse dialogue act. table is null";
 	assert act != null : "parse dialogue act. act is null";
@@ -31,9 +31,7 @@ public class TableLanguageGenerator extends AbstractLanguageGenerator {
 	// unknown intent
 	if (!table.containsKey(intent)) {
 	    System.out.println("nlg intent: " + intent + " unknown.");
-	    if (act.hasMessage())
-		return act.getMessage();
-	    return intent;
+	    return null;
 	}
 
 	// get entry from table
@@ -56,7 +54,8 @@ public class TableLanguageGenerator extends AbstractLanguageGenerator {
 	    }
 	}
 
-	return res;
+	ResponseMessage message = new ResponseMessage(res);
+	return message;
     }
 
     /**

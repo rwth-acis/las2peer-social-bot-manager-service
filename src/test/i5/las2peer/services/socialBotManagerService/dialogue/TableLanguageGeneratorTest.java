@@ -58,13 +58,13 @@ public class TableLanguageGeneratorTest {
 	DialogueAct act = new DialogueAct();
 	
 	act.setIntent("in2");
-	assertEquals("in2.message", gen.parse(act));
+	assertEquals("in2.message", gen.parse(act).getMessage());
 	act.setIntent("in1");
-	assertEquals("in1.message", gen.parse(act));
+	assertEquals("in1.message", gen.parse(act).getMessage());
 	act.setIntent("in3");
-	assertEquals("in3.message", gen.parse(act));
+	assertEquals("in3.message", gen.parse(act).getMessage());
 	act.setIntent("in2");
-	assertEquals("in2.message", gen.parse(act));
+	assertEquals("in2.message", gen.parse(act).getMessage());
 
     }
     
@@ -78,7 +78,7 @@ public class TableLanguageGeneratorTest {
 	act.setIntent("in1");
 	act.addEntity("en1", "hello");
 
-	assertEquals("in1.message with hello yes", gen.parse(act));
+	assertEquals("in1.message with hello yes", gen.parse(act).getMessage());
 	
 
     }

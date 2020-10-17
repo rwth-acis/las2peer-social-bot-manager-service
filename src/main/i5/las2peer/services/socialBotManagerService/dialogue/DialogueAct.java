@@ -9,6 +9,7 @@ import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction
 public class DialogueAct {
 
     String intent;
+    DialogueActType intentType;
     Map<String, String> entities;
     String message;
     ExpectedInput expected;
@@ -138,6 +139,14 @@ public class DialogueAct {
 	if (!this.hasExpected())
 	    return false;
 	return this.getExpected().hasEnums();
+    }
+
+    public DialogueActType getIntentType() {
+	return intentType;
+    }
+
+    public void setIntentType(DialogueActType intentType) {
+	this.intentType = intentType;
     }
 
 }

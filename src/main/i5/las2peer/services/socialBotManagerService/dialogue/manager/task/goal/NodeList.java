@@ -18,7 +18,7 @@ public class NodeList extends ArrayList<Node> {
 	// TODO Auto-generated constructor stub
     }
 
-    List<Fillable> getFilledValues() {
+    public List<Fillable> getFilledValues() {
 	List<Fillable> res = new ArrayList<Fillable>();
 	for (Node node : this) {
 	    if (node instanceof Fillable)

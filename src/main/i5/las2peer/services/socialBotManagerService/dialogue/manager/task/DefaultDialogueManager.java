@@ -20,11 +20,13 @@ import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 public class DefaultDialogueManager extends AbstractDialogueManager {
 
     DialogueGoal goal;
+    DialogueActGenerator gen;
     String start_intent;
     boolean optional;
 
     public DefaultDialogueManager(DialogueGoal goal) {
 	this.goal = goal;
+	this.gen = new DialogueActGenerator();
     }
 
     @Override
@@ -58,7 +60,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	    if (semantic.getIntentType() == IntentType.DENY) {
 		rep.close();
 		if (goal.isFull())
-		    return goal.getReqConfAct();
+		    return gen.getReqConfAct(goal.getRoot());
 		return requestNextSlot();
 	    }
 	}
@@ -90,11 +92,11 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 		return act;
 
 	    } else if (!optional && goal.isReady())
-		return goal.getReqConfAct();
+		return gen.getReqConfAct(goal.getRoot());
 
 	    // check if full
 	    if (goal.isFull())
-		return goal.getReqConfAct();
+		return gen.getReqConfAct(goal.getRoot());
 
 	    return requestNextSlot();
 
@@ -102,7 +104,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 	    // inform about filled slot value
 	    if (node != null)
-		return goal.getInformAct((Node) node);
+		return gen.getInformAct(node);
 
 	    // inform about expected slot value
 	    // TODO
@@ -114,7 +116,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 		// ask if optional slots should be filled
 		if (!goal.isFull() && goal.isReady()) {
-		    act = goal.getReqOptionalAct();
+		    act = gen.getReqOptionalAct(goal.getRoot());
 		    this.optional = true;
 		    return act;
 		}
@@ -129,7 +131,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 	    // user wants to fill more values for same slot
 	    if (node != null && semantic.getKeyword().contentEquals(node.getConfirmIntent()))
-		return goal.getRequestAct(node.getSlot());
+		return gen.getRequestAct(node);
 
 	    // user confirm but bot dont know why
 	    return this.handleDefault();
@@ -153,7 +155,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 		// check if ready
 		if (!optional && goal.isReady())
-		    return goal.getReqConfAct();
+		    return gen.getReqConfAct(goal.getRoot());
 
 		// request next slot
 		return requestNextSlot();
@@ -162,7 +164,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	    // User wants so delete specific slot
 	    if (node != null && node.isFilled()) {
 		goal.delete(node);
-		return goal.getInformAct((Node) node);
+		return gen.getInformAct(node);
 	    }
 
 	default:
@@ -199,7 +201,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	// Request to fill value
 	if (nextNode instanceof Fillable) {
 	    Fillable fi = (Fillable) nextNode;
-	    return goal.getRequestAct(fi.getSlot());
+	    return gen.getRequestAct(fi);
 	}
 	// Ask for repetition
 	if (nextNode instanceof RepetitionNode) {
