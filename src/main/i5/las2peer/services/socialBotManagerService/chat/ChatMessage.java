@@ -6,6 +6,7 @@ public class ChatMessage {
 	private int role;
 	private String email;
 	private String text;
+    private String command;
 	private double timestamp;
 
 	public ChatMessage(String channel, String user, String text) {
@@ -53,5 +54,17 @@ public class ChatMessage {
 
 	public void setRole(int role) {
 		this.role = role;
+	}
+
+	public String getCommand() {
+	    return command;
+	}
+
+    public boolean hasCommand() {
+	return this.command != null;
+    }
+
+	public void setCommand(String command) {
+	    this.command = command;
 	}
 }

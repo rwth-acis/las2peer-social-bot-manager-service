@@ -164,6 +164,7 @@ public class DialogueGoal {
 
 	invariant();
 	this.root = new RootNode(root.getFrame());
+	System.out.println("reset dialogue goal");
     }
 
     public Frame getFrame() {

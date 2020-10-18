@@ -6,6 +6,7 @@ public enum IntentType {
     DENY,
     CONFIRM,
     REQCONF,
+    REVERT, CANCEL,
 
     TALK;
 }

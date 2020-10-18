@@ -57,4 +57,9 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
 		return this.intentMessageMap.keySet();
 	}
 
+    @Override
+    public void reset() {
+
+    }
+
 }

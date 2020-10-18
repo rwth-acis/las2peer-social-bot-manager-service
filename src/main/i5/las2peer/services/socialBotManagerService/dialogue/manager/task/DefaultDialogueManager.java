@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
-import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
@@ -52,7 +51,6 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	// Repetition Node
 	if (slo instanceof RepetitionNode) {
 	    RepetitionNode rep = (RepetitionNode) slo;
-	    System.out.println("Intent of Repetition Node");
 	    if (semantic.getIntentType() == IntentType.CONFIRM) {
 		rep.extend();
 		return requestNextSlot();
@@ -82,14 +80,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 	    // arrays
 	    if (node != null && node.getSlot().isArray()) {
-
-		String name = node.getName().replaceAll("_", " ").substring(0, node.getName().length() - 1);
-		act.setMessage("do you want to add another " + name);
-		ExpectedInput input = new ExpectedInput();
-		input.setIntend(node.getConfirmIntent());
-		input.setType(InputType.Confirmation);
-		act.setExpected(input);
-		return act;
+		return gen.getReqConfArrayAct(node);
 
 	    } else if (!optional && goal.isReady())
 		return gen.getReqConfAct(goal.getRoot());
@@ -175,6 +166,9 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
     @Override
     public boolean hasIntent(String intent) {
+	assert intent != null : "intent parameter is null";
+	assert this.start_intent != null : "no start intent defined";
+
 	if (intent.contentEquals(this.start_intent))
 	    return true;
 	if (intent.contentEquals(goal.getFrame().getConfirmIntent())
@@ -206,14 +200,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	// Ask for repetition
 	if (nextNode instanceof RepetitionNode) {
 	    RepetitionNode rep = (RepetitionNode) nextNode;
-	    String name = rep.getName().replaceAll("_", " ");
-	    DialogueAct act = new DialogueAct();
-	    act.setMessage("do you want to add another " + name);
-	    ExpectedInput input = new ExpectedInput();
-	    input.setIntend("confirm_" + rep.getName());
-	    input.setType(InputType.Confirmation);
-	    act.setExpected(input);
-	    return act;
+	    return gen.getReqConfArrayAct(rep);
 	}
 
 	assert false : "next slot is no Fillable nor Repetition node: " + nextNode.getClass();

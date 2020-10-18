@@ -101,6 +101,16 @@ public class Slot {
 	return this.name;
     }
 
+    public String getDisplayName() {
+	String[] parts = this.name.split("_");
+	if (parts.length == 1)
+	    return parts[0];
+	if (parts.length == 2)
+	    return (parts[0] + " " + parts[1]);
+	int l = parts.length;
+	return (parts[l - 2] + " " + parts[l - 1]);
+    }
+
     public String getEntity() {
 	return entity;
     }
@@ -337,8 +347,8 @@ public class Slot {
     }
 
     public ParameterType getParameterType() {
-	assert this.parameter != null: "slot has no assigned function parameter";
-	
+	assert this.parameter != null : "slot has no assigned function parameter";
+
 	return this.parameter.getParameterType();
     }
 

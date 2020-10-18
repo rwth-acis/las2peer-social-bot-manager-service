@@ -1,16 +1,15 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
+package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import java.util.List;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
-import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActType;
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
-import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
 public class DialogueActGenerator {
+
+    //// Frame Dialogue Acts
 
     public DialogueAct getReqConfAct(RootNode root) {
 
@@ -53,6 +52,8 @@ public class DialogueActGenerator {
 	return (act);
     }
 
+    //// Slot Dialogue Acts
+
     public DialogueAct getRequestAct(Fillable node) {
 
 	assert node != null : "slot parameter is null";
@@ -63,7 +64,7 @@ public class DialogueActGenerator {
 	DialogueAct act = new DialogueAct();
 	act.setIntent(slot.getRequestIntent());
 	act.setIntentType(DialogueActType.REQUEST_SLOT);
-	act.addEntity("name", slot.getAPIName());
+	act.addEntity("name", slot.getDisplayName());
 	if (slot.getParameter().getDescription() != null)
 	    act.addEntity("description", slot.getParameter().getDescription());
 	if (slot.getParameter().getExample() != null)
@@ -113,6 +114,24 @@ public class DialogueActGenerator {
 	input.setIntend(slot.getConfirmIntent());
 	input.setType(InputType.Confirmation);
 	return (act);
+    }
+
+    public DialogueAct getReqConfArrayAct(Slotable node) {
+
+	assert node != null : "node parameter is null";
+
+	String name = node.getDisplayName();
+	DialogueAct act = new DialogueAct();
+	if (name.charAt(name.length() - 1) == 's') {
+	    name = name.substring(0, name.length() - 1);
+	}
+	act.setMessage("Do you want to add another *" + name + "*");
+
+	ExpectedInput input = new ExpectedInput();
+	input.setIntend(node.getConfirmIntent());
+	input.setType(InputType.Confirmation);
+	act.setExpected(input);
+	return act;
     }
 
 }

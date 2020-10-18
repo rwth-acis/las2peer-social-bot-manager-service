@@ -30,7 +30,7 @@ public class TableLanguageGenerator extends AbstractLanguageGenerator {
 	
 	// unknown intent
 	if (!table.containsKey(intent)) {
-	    System.out.println("nlg intent: " + intent + " unknown.");
+	    System.out.println("nlg intent: " + intent + " unknown for table language generator.");
 	    return null;
 	}
 

@@ -94,7 +94,7 @@ public class BotModelParser {
 		    addAttribute(inNode, "NLU ID", "0");
 
 		    BotModelNode outNode = addNode("Chat Response");
-		    addAttribute(outNode, "Message", "hi");
+		    addAttribute(outNode, "Message", message.getMessage());
 
 		    addEdge(inNode, outNode, "triggers");
 		    addMessengerEdges(inNode, "generates");

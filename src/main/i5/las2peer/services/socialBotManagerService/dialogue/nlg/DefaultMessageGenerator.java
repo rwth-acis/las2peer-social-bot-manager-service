@@ -13,9 +13,11 @@ public class DefaultMessageGenerator {
 	assert act.getIntent() != null : "dialogue act has no intent";
 	assert act.getIntentType() != null : "no intent type specified";
 
+	System.out.println("get default response for intent " + act.getIntent() + " of type " + act.getIntentType());
+
 	switch (act.getIntentType()) {
 	case REQUEST_SLOT:
-	    return getInform(act);
+	    return getRequest(act);
 	case REQCONF_FRAME:
 	    return getReqConf(act);
 	case REQCONF_OPTIONAL:
@@ -68,15 +70,20 @@ public class DefaultMessageGenerator {
 
 	String message = "";
 	Map<String, String> entities = act.getEntities();
+	System.out.println(entities.entrySet());
 
 	String name = entities.get("name");
-	message = "What is the *" + name + "* \n\n";
+	message = message.concat("What is the *").concat(name).concat("* \n\n");
+	System.out.println(message);
 
 	if (entities.containsKey("description"))
-	    message = message.concat("description:\t" + entities.get("description") + "\n");
+	    message = message.concat("Description:\t" + entities.get("description") + "\n");
+
+	if (entities.containsKey("example"))
+	    message = message.concat("Example:    \t" + entities.get("example") + "\n");
 
 	if (act.hasExpected() && act.getExpected().getType() != null)
-	    message = message.concat("input:     \t" + this.InputTypeMessage(act.getExpected()) + "\n");
+	    message = message.concat("\n" + this.InputTypeMessage(act.getExpected()) + "\n");
 	if (act.getExpected().hasEnums()) {
 	    List<String> enums = act.getExpected().getEnums();
 	    message = message.concat(enums.get(0));
@@ -84,8 +91,6 @@ public class DefaultMessageGenerator {
 		message = message.concat(", " + enu);
 	}
 
-	if (entities.containsKey("description"))
-	    message = message.concat("example:    \t" + entities.get("example") + "\n");
 
 	ResponseMessage res = new ResponseMessage(message);
 	return res;
@@ -124,7 +129,7 @@ public class DefaultMessageGenerator {
 	    message = "Please confirm or deny";
 	    break;
 	case Date:
-	    message = "Please give a date";
+	    message = "Please give a date in the format \"yyyy-MM-dd\" ";
 	    break;
 	case Decimal:
 	case Number:
@@ -134,7 +139,7 @@ public class DefaultMessageGenerator {
 	    message = "Please choose one of this possibilites: ";
 	    break;
 	case Free:
-	    message = "Please with a free text message";
+	    message = "Please answer with a free text message";
 	    break;
 	case Url:
 	    message = "Please answer with a valid url";

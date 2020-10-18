@@ -60,6 +60,7 @@ public class Intent {
 	this.intentType = getType();
     }
 
+
     public String getKeyword() {
 	return this.intentKeyword;
     }
@@ -106,6 +107,11 @@ public class Intent {
 	    return IntentType.CONFIRM;
 	if (intent.startsWith("deny"))
 	    return IntentType.DENY;
+	if (intent.startsWith("revert"))
+	    return IntentType.REVERT;
+	if (intent.startsWith("cancel"))
+	    return IntentType.CANCEL;
+
 	return IntentType.TALK;
     }
 

@@ -27,6 +27,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
     @Override
     public ChatMessage handleEvent(JSONObject event) {
+	assert event != null : "jsonobject event parameter is null";
 
 	try {
 
@@ -42,7 +43,14 @@ public class TelegramChatMediator extends EventChatMediator {
 		throw new InvalidChatMessageException("missing message fields");
 
 	    ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
-	    // this.addMessage(chatMessage);
+
+	    // check command
+	    if (text.startsWith("/")) {
+		String command = text.substring(1).split(" ")[0];
+		System.out.println(command);
+		chatMessage.setCommand(command);
+	    }
+
 	    return chatMessage;
 
 	} catch (InvalidChatMessageException e) {
@@ -57,7 +65,7 @@ public class TelegramChatMediator extends EventChatMediator {
      */
     public void settingWebhook() {
 
-	String url = "https://63c517e8d81d.ngrok.io";
+	String url = "https://e219aea5971f.ngrok.io";
 	ClientResponse result = client.sendRequest("GET",
 		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());

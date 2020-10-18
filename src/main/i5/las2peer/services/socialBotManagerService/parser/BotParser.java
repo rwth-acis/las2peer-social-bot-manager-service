@@ -129,9 +129,11 @@ public class BotParser {
 		if (elem.getLabel().getId().contentEquals("expand")) {
 		    System.out.println("expand");
 		    VLE vleOld = config.getServiceConfiguration(vle.getName());
-		    for (Bot bot : vleOld.getBots().values()) {
-			vle.addBot(bot.getId(), bot);
-			System.out.println("add bot " + bot.getId());
+		    if (vleOld != null) {
+			for (Bot bot : vleOld.getBots().values()) {
+			    vle.addBot(bot.getId(), bot);
+			    System.out.println("add bot " + bot.getId());
+			}
 		    }
 		}
 
@@ -916,13 +918,12 @@ public class BotParser {
 	    switch (subVal.getName()) {
 	    case "name":
 		frame.setName(subVal.getValue());
-		frame.setEndMessage(subVal.getValue());
 		break;
 	    case "intent":
 		frame.setIntent(subVal.getValue());
 		break;
 	    case "message":
-		frame.setStartMessage(subVal.getValue());
+		frame.setMessage(subVal.getValue());
 		break;
 	    }
 	}

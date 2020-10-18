@@ -18,4 +18,6 @@ public abstract class AbstractDialogueManager {
 	public abstract Collection<String> getIntents();
 
 	public abstract DialogueAct handleDefault();
+
+    public abstract void reset();
 }

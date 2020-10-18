@@ -180,8 +180,16 @@ public class Messenger {
 
 	System.out.println("Message Text  : " + message.getText());
 	System.out.println("Message Channel  : " + message.getChannel());
+
+	Intent intent = null;
+	if (message.hasCommand()) {
+	    System.out.println("treat command as intent: " + message.getCommand());
+	    intent = new Intent(message.getCommand(), 1.0f);
+	} else {
+
 	System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
-	Intent intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
+	    intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
+	}
 
 	String channel = message.getChannel();
 	MessageInfo info = new MessageInfo();
@@ -193,10 +201,8 @@ public class Messenger {
 	if (this.openDialogues.containsKey(channel)) {
 	    System.out.println("resume open dialogue: " + message.getChannel());
 	    response = this.openDialogues.get(channel).handle(info);
+
 	} else {
-	    // DialogueManagerGenerator generator = new DialogueManagerGenerator();
-	    // AbstractDialogueManager manager =
-	    // generator.generate(DialogueManagerType.SIMPLE, this);
 	    Dialogue dialogue = new Dialogue(this);
 	    this.openDialogues.put(channel, dialogue);
 	    response = dialogue.handle(info);

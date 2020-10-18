@@ -61,4 +61,12 @@ public class MetaDialogueManager {
 	return new DialogueAct("intent not found");
     }
 
+    public void reset() {
+
+	for (AbstractDialogueManager manager : this.managers) {
+	    manager.reset();
+	}
+
+    }
+
 }
