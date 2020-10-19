@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.SlotSet;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class Slot {

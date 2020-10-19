@@ -9,6 +9,10 @@ import i5.las2peer.services.socialBotManagerService.model.Slot;
 
 public class DialogueActGenerator {
 
+    public DialogueAct getAct() {
+	return new DialogueAct();
+    }
+
     //// Frame Dialogue Acts
 
     public DialogueAct getReqConfAct(RootNode root) {
@@ -131,6 +135,22 @@ public class DialogueActGenerator {
 	input.setIntend(node.getConfirmIntent());
 	input.setType(InputType.Confirmation);
 	act.setExpected(input);
+	return act;
+    }
+
+    public DialogueAct getMainMenuAct(List<Command> operations) {
+
+	assert operations != null : "commands is null";
+	assert !operations.isEmpty() : "commands are empty";
+
+	DialogueAct act = new DialogueAct();
+	act.setIntent("home");
+	act.setIntentType(DialogueActType.HOME);
+	for (Command operation : operations) {
+	    operation.invariant();
+	    System.out.println("command " + operation.getName() + ": " + operation.getDescription());
+	    act.addEntity(operation.getName(), operation.getDescription());
+	}
 	return act;
     }
 

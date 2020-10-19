@@ -214,7 +214,7 @@ public class BotParser {
 	    throw new ParseBotException("Missing VLE User!");
 	} else if (bsfList.isEmpty() && responses.isEmpty()) {
 	    throw new ParseBotException("Missing Bot Action and Chat Response!");
-	} else if (usfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty()) {
+	} else if (usfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty() && frames.isEmpty()) {
 	    throw new ParseBotException("Missing User Action, VLE Routine and Incoming Message!");
 	}
 

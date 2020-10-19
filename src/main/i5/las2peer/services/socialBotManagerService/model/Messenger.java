@@ -21,6 +21,7 @@ import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
@@ -130,6 +131,7 @@ public class Messenger {
     }
 
     public void addFrame(Frame frame) {
+	frame.invariant();
 	this.intentFrames.put(frame.getIntent(), frame);
     }
 
@@ -200,7 +202,13 @@ public class Messenger {
 	// Open Dialogues
 	if (this.openDialogues.containsKey(channel)) {
 	    System.out.println("resume open dialogue: " + message.getChannel());
+	    try {
 	    response = this.openDialogues.get(channel).handle(info);
+	    } catch (Exception e) {
+		e.printStackTrace();
+		response = new ResponseMessage("I am sorry. I had an error.");
+		this.openDialogues.remove(channel);
+	    }
 
 	} else {
 	    Dialogue dialogue = new Dialogue(this);
@@ -577,6 +585,15 @@ public class Messenger {
 	for (Frame frame : frameList) {
 	    this.addFrame(frame);
 	}
+    }
+
+    public List<Command> getCommands() {
+	List<Command> res = new ArrayList<>();
+	for (Frame frame : this.intentFrames.values()) {
+	    frame.getCommand().invariant();
+	    res.add(frame.getCommand());
+	}
+	return res;
     }
 
     public HashMap<String, Dialogue> getOpenDialogues() {

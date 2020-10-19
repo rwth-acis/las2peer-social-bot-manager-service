@@ -2,7 +2,6 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.Collection;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DefaultDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;

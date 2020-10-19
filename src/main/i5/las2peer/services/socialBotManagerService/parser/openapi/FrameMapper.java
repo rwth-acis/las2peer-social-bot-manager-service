@@ -12,9 +12,10 @@ public class FrameMapper {
 
 	System.out.println("parsing parameter information of service action");
 	action = OpenAPIConnector.readFunction(action);
-	System.out.println("number of parameters: " + action.getAttributes().size());
 	frame.setServiceFunction(action);
 	frame = map(action, frame);
+
+	frame.invariant();
 	return frame;
     }
 
@@ -36,6 +37,12 @@ public class FrameMapper {
 	    frame.addSlot(slot);
 	}
 
+	if (frame.getIntent() == null)
+	    frame.setIntent(action.getFunctionName());
+
+	if (frame.getMessage() == null)
+	    frame.setMessage(action.getFunctionDescription());
+
 	return frame;
     }
 
@@ -50,13 +57,16 @@ public class FrameMapper {
 
 	// content type
 	if (attr.getContentType() != null)
-	    switch (attr.getContentType()) {
+	    switch (attr.getContentType().toLowerCase()) {
 	    case "enum":
 		slot.setInputType(InputType.Enum);
 		break;
 	    case "integer":
 		slot.setInputType(InputType.Number);
 		break;
+	    case "string":
+		if (name.contains("Url") || name.contains("URL"))
+		slot.setInputType(InputType.Url);
 	    default:
 		slot.setInputType(InputType.Free);
 	    }

@@ -52,7 +52,10 @@ public class OpenAPIReaderV3 {
 	action.setHttpMethod(httpMethod);
 	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
-
+	if (operation.getDescription() != null)
+	    action.setFunctionDescription(operation.getDescription());
+	else
+	    action.setFunctionDescription(operation.getSummary());
 	return action;
 
     }
@@ -67,6 +70,10 @@ public class OpenAPIReaderV3 {
 	String functionPath = Overlay.of(operation).getPathFromRoot();
 	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
+	if (operation.getDescription() != null) {
+	    action.setFunctionDescription(operation.getDescription());
+	} else
+	    action.setFunctionDescription(operation.getSummary());
 
 	return action;
 

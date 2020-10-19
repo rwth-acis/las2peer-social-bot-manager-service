@@ -68,6 +68,7 @@ public class OpenAPIConnector {
 	    System.out.println("service function not defined");
 	}
 
+	assert action.getFunctionDescription() != null : "service has no description";
 	action.setServiceName(baseUrl);
 	return action;
     }
@@ -113,6 +114,15 @@ public class OpenAPIConnector {
 	    HttpURLConnection huc = (HttpURLConnection) url.openConnection();
 	    huc.setRequestMethod("HEAD");
 	    int responseCode = huc.getResponseCode();
+
+	    if (responseCode == 200)
+		return res;
+
+	    res = baseUrl + "/v2/swagger.json";
+	    url = new URL(res);
+	    huc = (HttpURLConnection) url.openConnection();
+	    huc.setRequestMethod("HEAD");
+	    responseCode = huc.getResponseCode();
 
 	    if (responseCode == 200)
 		return res;

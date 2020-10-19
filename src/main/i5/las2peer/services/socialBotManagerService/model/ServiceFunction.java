@@ -13,6 +13,7 @@ public class ServiceFunction extends TriggerFunction{
 	private HashSet<VLEUser> users;
 	private String functionName;
 	private String functionPath;
+    private String functionDescription;
 	private String httpMethod;
 	private String consumes;
 	private String produces;
@@ -183,6 +184,14 @@ public class ServiceFunction extends TriggerFunction{
 		res.add(attr);
 	}
 	return res;
+    }
+
+    public String getFunctionDescription() {
+	return functionDescription;
+    }
+
+    public void setFunctionDescription(String functionDescription) {
+	this.functionDescription = functionDescription;
     }
 
 }

@@ -111,6 +111,11 @@ public class Intent {
 	    return IntentType.REVERT;
 	if (intent.startsWith("cancel"))
 	    return IntentType.CANCEL;
+	if (intent.contentEquals("start"))
+	    return IntentType.START;
+	if (intent.contentEquals("help"))
+	    return IntentType.HELP;
+
 
 	return IntentType.TALK;
     }

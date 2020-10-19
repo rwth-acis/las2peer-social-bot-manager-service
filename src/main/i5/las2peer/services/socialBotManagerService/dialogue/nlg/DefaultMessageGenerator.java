@@ -2,13 +2,16 @@ package i5.las2peer.services.socialBotManagerService.dialogue.nlg;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 
-public class DefaultMessageGenerator {
+public class DefaultMessageGenerator extends AbstractLanguageGenerator {
 
-    public ResponseMessage get(DialogueAct act) {
+    @Override
+    public ResponseMessage parse(DialogueAct act) {
+
 	assert act != null : "dialogue act parameter is null";
 	assert act.getIntent() != null : "dialogue act has no intent";
 	assert act.getIntentType() != null : "no intent type specified";
@@ -16,6 +19,8 @@ public class DefaultMessageGenerator {
 	System.out.println("get default response for intent " + act.getIntent() + " of type " + act.getIntentType());
 
 	switch (act.getIntentType()) {
+	case HOME:
+	    return getMainMenu(act);
 	case REQUEST_SLOT:
 	    return getRequest(act);
 	case REQCONF_FRAME:
@@ -91,7 +96,6 @@ public class DefaultMessageGenerator {
 		message = message.concat(", " + enu);
 	}
 
-
 	ResponseMessage res = new ResponseMessage(message);
 	return res;
     }
@@ -153,6 +157,28 @@ public class DefaultMessageGenerator {
 	}
 
 	return message;
+    }
+
+    public ResponseMessage getMainMenu(DialogueAct act) {
+
+	assert act != null : "dialogue act parameter is null";
+	assert act.getEntities() != null : "dialogue act has no entities";
+
+	Map<String, String> entities = act.getEntities();
+	String message = "Hi, I am a bot. \n I can perform the following operations: \n ";
+
+	for (Entry<String, String> entity : entities.entrySet()) {
+	    assert entity.getKey() != null : "entity no key";
+	    assert entity.getValue() != null : "entity no value";
+	    System.out.println(entity.toString());
+	    message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+	}
+
+	message = message.concat(
+		"\n During conversation you can use the following commands: \n /cancel Aborts the current operation \n /revert Reverts your last input.");
+
+	ResponseMessage res = new ResponseMessage(message);
+	return res;
     }
 
 }

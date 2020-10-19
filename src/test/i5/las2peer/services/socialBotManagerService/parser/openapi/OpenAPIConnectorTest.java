@@ -26,6 +26,8 @@ public class OpenAPIConnectorTest {
 	assertEquals("post", result.getHttpMethod());
 	assertNotNull(result.getAttributes());
 
+	assertEquals("Add a new pet to the store", result.getFunctionDescription());
+
 	assertEquals(1, result.getAttributes().size());
 	Iterator<ServiceFunctionAttribute> iter = result.getAttributes().iterator();
 	
@@ -103,11 +105,12 @@ public class OpenAPIConnectorTest {
 
 	ServiceFunction action = new ServiceFunction();
 	action.setFunctionName("addPet");
-	action.setServiceName("https://petstore.swagger.io/v2/swagger.json");
+	action.setServiceName("https://petstore.swagger.io");
 	ServiceFunction result = OpenAPIConnector.readFunction(action);
 
 	assertEquals("post", result.getHttpMethod());
 	assertNotNull(result.getAttributes());
+	assertEquals("Add a new pet to the store", result.getFunctionDescription());
 
 	assertEquals(1, result.getAttributes().size());
 	Iterator<ServiceFunctionAttribute> iter = result.getAttributes().iterator();
@@ -154,8 +157,6 @@ public class OpenAPIConnectorTest {
 	assertEquals(ParameterType.CHILD, petName.getParameterType());
 	assertTrue(petName.isRequired());
 	assertFalse(petName.isArray());
-
-
 
 	// photoUrls
 	ServiceFunctionAttribute photoUrls = iter.next();

@@ -48,7 +48,7 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
 			List<String> responses = intentMessageMap.get("default");
 			return new DialogueAct(responses.get(new Random().nextInt(responses.size())));
 		}
-		return new DialogueAct("simple dm default");
+	return null;
 
 	}
 

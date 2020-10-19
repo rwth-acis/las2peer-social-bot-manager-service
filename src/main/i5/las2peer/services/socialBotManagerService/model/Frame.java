@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.Command;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.SlotSet;
 
 public class Frame {
 
@@ -66,18 +67,27 @@ public class Frame {
 	this.serviceFunction = serviceFunction;
     }
 
-    public String getCommand() {
+    public Command getCommand() {
 
 	invariant();
-	
+	// assert !this.intent.contentEquals("") : "frame no intent";
+	// assert !this.message.contentEquals("") : "frame no description";
+
+	Command res = new Command();
+
+	if (this.getIntent() != null)
+	    res.setIntent(this.getIntent());
+
+	if (this.message != null)
+	    res.setDescription(this.message);
+
 	if (this.getName() != null && !this.getName().contentEquals(""))
-	    return this.getName();
+	    res.setName(this.getName());
+	else
+	    res.setName(this.getIntent());
 
-	if (this.getServiceFunction() != null && this.getServiceFunction().getFunctionName() != null)
-	    return this.getServiceFunction().getFunctionName();
-
-	assert this.intent != null : "frame has no intent and no command";
-	return this.getIntent().replace("_", "");
+	res.invariant();
+	return res;
 
     }
 
@@ -154,6 +164,8 @@ public class Frame {
     }
 
     public void setMessage(String value) {
+	assert value != null : "value parameter is null";
+	assert !value.contentEquals("") : "empty description of frame";
 	this.message = value;
     }
 
@@ -161,8 +173,9 @@ public class Frame {
 	return this.message;
     }
 
-    private void invariant() {
+    public void invariant() {
 	assert this.slots != null : "frame has no slots";
+	assert this.intent != null : "frame intent is null";
     }
 
 }

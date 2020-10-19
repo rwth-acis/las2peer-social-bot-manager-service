@@ -3,7 +3,6 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -58,6 +57,7 @@ public class OpenAPIReaderV2 {
 	action.setHttpMethod(httpMethod);
 	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
+	action.setFunctionDescription(operation.getDescription());
 
 	return action;
 
@@ -71,9 +71,12 @@ public class OpenAPIReaderV2 {
 	action.setFunctionName(operation.getOperationId());
 	action.setHttpMethod(getMethodByOperationId(model, operationId));
 	action.setFunctionPath(getPathByOperationId(model, operationId));
-	Iterator<ServiceFunctionAttribute> iter = action.getAttributes().iterator();
-	ServiceFunctionAttribute pet = iter.next();
-	System.out.println(pet.toStringNoChildren());
+	System.out.println("description: " + operation.getDescription());
+	if (operation.getDescription() != null && !operation.getDescription().contentEquals(""))
+	    action.setFunctionDescription(operation.getDescription());
+	else if (operation.getSummary() != null && !operation.getSummary().contentEquals(""))
+	    action.setFunctionDescription(operation.getSummary());
+
 	return action;
 
     }
@@ -131,6 +134,7 @@ public class OpenAPIReaderV2 {
 
     private static String getMethodByOperationId(Swagger openAPI, String operationId) {
 
+	System.out.println("find http method for operationId: " + operationId);
 	for (Path pathItem : openAPI.getPaths().values()) {
 	    if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
 		return "get";

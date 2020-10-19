@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.DefaultDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.userSimulator.RandomUserSimulator;
 import i5.las2peer.services.socialBotManagerService.model.Frame;

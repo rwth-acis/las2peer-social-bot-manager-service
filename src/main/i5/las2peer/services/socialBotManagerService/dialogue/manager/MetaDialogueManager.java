@@ -1,11 +1,9 @@
-package i5.las2peer.services.socialBotManagerService.dialogue;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerType;
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -58,7 +56,7 @@ public class MetaDialogueManager {
 
 	}
 
-	return new DialogueAct("intent not found");
+	return null;
     }
 
     public void reset() {
@@ -66,7 +64,10 @@ public class MetaDialogueManager {
 	for (AbstractDialogueManager manager : this.managers) {
 	    manager.reset();
 	}
+    }
 
+    public void resetActive() {
+	this.active = null;
     }
 
 }

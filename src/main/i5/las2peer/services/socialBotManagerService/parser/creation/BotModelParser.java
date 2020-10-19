@@ -105,7 +105,7 @@ public class BotModelParser {
 		AccessServiceFunction as = (AccessServiceFunction) function;
 
 		BotModelNode frameNode = addNode("Frame");
-		addAttribute(frameNode, "intent", as.getIntent());
+		addAttribute(frameNode, "intent", as.getOperationID());
 
 		BotModelNode actionNode = addNode("Bot Action");
 		addAttribute(actionNode, "Action Type", "Service");

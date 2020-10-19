@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -5,9 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
@@ -19,18 +16,16 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.V
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
-import i5.las2peer.services.socialBotManagerService.model.Slot;
 import io.swagger.util.Json;
 
 public class FrameMapperTest {
 
     @Test
-    public void frameMapPetstoreTest() {
+    public void frameMapPetstoreV3Test() {
 
 	FrameMapper mapper = new FrameMapper();
 	ServiceFunction function = new ServiceFunction();
 	function.setActionType(ActionType.REST);
-	function.setHttpMethod("post");
 	function.setServiceName("https://petstore3.swagger.io");
 	function.setFunctionName("addPet");
 	Frame frame = mapper.create(function, new Frame());
@@ -42,51 +37,32 @@ public class FrameMapperTest {
 	assertEquals(9, frame.getDescendants().size());
 	assertNotNull(frame.getSlot("pet_name"));
 
-	DialogueGoal goal = new DialogueGoal(frame);
+	assertNotNull(frame.getCommand());
+	assertEquals("Add a new pet to the store", frame.getMessage());
+
 
     }
 
-    // @Test
-    public void frameMapMessengerTest() {
+    @Test
+    public void frameMapPetstoreV2Test() {
 
 	FrameMapper mapper = new FrameMapper();
 	ServiceFunction function = new ServiceFunction();
 	function.setActionType(ActionType.REST);
 	function.setHttpMethod("post");
-	function.setServiceName("http://localhost:8080/sbfmanager/swagger.json");
-	function.setFunctionName("createBot");
+	function.setServiceName("https://petstore.swagger.io/");
+	function.setFunctionName("addPet");
 	Frame frame = mapper.create(function, new Frame());
 
 	assertNotNull(frame.getDescendants());
-	assertEquals(1, frame.getDescendants().size());
-	assertNotNull(frame.getSlot("Messenger_type"));
-	assertNotNull(frame.getSlot("Messenger_type_Slack"));
-
 	assertNotNull(frame.getSlots());
 	assertEquals(1, frame.getSlots().size());
-	assertNotNull(frame.getSlot("Messenger"));
-	assertEquals(1, frame.getSlot("Messenger").getChildren().size());
-	assertNotNull(frame.getSlot("Messenger").getChild("Messenger_type"));
-	Slot selection = frame.getSlot("Messenger").getChild("Messenger_type");
-	assertEquals(2, selection.getChildren().size());
-	assertTrue(selection.isSelection());
-	assertNotNull(selection.getChild("Messenger_type_Slack"));
-	assertNotNull(selection.getChild("Messenger_type_Telegram"));
+	assertNotNull(frame.getSlot("Pet"));
+	assertEquals(11, frame.getDescendants().size());
+	assertNotNull(frame.getSlot("Pet_name"));
 
-	Slot slack = selection.getChild("Messenger_type_Slack");
-	assertEquals("Slack", slack.getEntity());
-	assertNotNull(slack.getChild("Messenger_type_Slack_appId"));
-
-	Map<Slot, String> map = new HashMap<Slot, String>();
-	map.put(frame.getSlot("Messenger_type"), "Slack");
-	assertEquals(4, frame.getSlot("Messenger_type").getDescendants(map).size());
-	assertFalse(frame.getSlot("Messenger_type").getDescendants(map)
-		.contains(frame.getSlot("Messenger_type_Telegram_token")));
-
-	assertFalse(frame.getSlot("Messenger").getDescendants(map)
-		.contains(frame.getSlot("Messenger_type_Telegram_token")));
-	assertFalse(frame.getDescendants(map).contains(frame.getSlot("Messenger_type_Telegram_token")));
-	assertEquals(5, frame.getDescendants(map).size());
+	assertNotNull(frame.getCommand());
+	assertEquals("Add a new pet to the store", frame.getMessage());
 
     }
 
@@ -109,6 +85,15 @@ public class FrameMapperTest {
 	assertNotNull(frame.getSlot("Bot_function_type_ChitChat_messages_message"));
 	assertNotNull(frame.getSlot("Bot_function_type_AccessService"));
 	assertNotNull(frame.getSlot("Bot_function_type_AccessService_serviceURL"));
+
+	assertNotNull(frame.getSlot("Bot_messenger_type"));
+	assertNotNull(frame.getSlot("Bot_messenger_type_Slack"));
+	assertNotNull(frame.getSlot("Bot_messenger_type_Telegram"));
+	assertNotNull(frame.getSlot("Bot_messenger_type_Slack_token"));
+	assertNotNull(frame.getSlot("Bot_messenger_type_Telegram_token"));
+
+	assertNotNull(frame.getCommand());
+	assertEquals("creates the bot.", frame.getCommand().getDescription());
 
 	DialogueGoal goal = new DialogueGoal(frame);
 	RootNode root = goal.getRoot();

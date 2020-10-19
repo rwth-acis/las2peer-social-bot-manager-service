@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 import java.util.ArrayList;
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.MetaDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.AbstractLanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
@@ -17,6 +18,7 @@ import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnec
 
 public class Dialogue {
 
+    Messenger messenger;
     MetaDialogueManager manager;
     LanguageUnderstander nlu;
     AbstractLanguageGenerator nlg;
@@ -26,6 +28,7 @@ public class Dialogue {
     List<MessageInfo> inputs;
 
     public Dialogue(Messenger messenger) {
+	this.messenger = messenger;
 	this.manager = new MetaDialogueManager(messenger);
 	this.nlg = new TableLanguageGenerator();
 	this.gen = new DefaultMessageGenerator();
@@ -37,13 +40,16 @@ public class Dialogue {
 
 	Intent semantic = message.getIntent();
 
-	if (semantic.getIntentType() != null && semantic.getIntentType() == IntentType.CANCEL && !inputs.isEmpty()) {
+	if (semantic.getIntentType() != null
+		&& (semantic.getIntentType() == IntentType.CANCEL || semantic.getIntentType() == IntentType.START)) {
 
 	    manager.reset();
+	    manager.resetActive();
 	    System.out.println("cancel: input acts size: " + this.inputs.size());
-	    this.inputs = new ArrayList<>();
 	    this.lastAct = null;
-	    semantic = message.getIntent();
+	    this.inputs.clear();
+	    DialogueActGenerator gen = new DialogueActGenerator();
+	    return this.handle(gen.getMainMenuAct(messenger.getCommands()));
 	}
 
 	if (semantic.getIntentType() != null && semantic.getIntentType() == IntentType.REVERT && !inputs.isEmpty()) {
@@ -64,6 +70,10 @@ public class Dialogue {
 	}
 
 	DialogueAct act = this.handle(semantic, message.getMessage().getText());
+	return this.handle(act);
+    }
+
+    public ResponseMessage handle(DialogueAct act) {
 
 	ResponseMessage res = null;
 
@@ -71,7 +81,7 @@ public class Dialogue {
 	    res = nlg.parse(act);
 
 	if (act.hasIntent() && res == null)
-	    res = gen.get(act);
+	    res = gen.parse(act);
 
 	if (res == null)
 	    res = new ResponseMessage(act.getMessage());
@@ -113,6 +123,11 @@ public class Dialogue {
 	}
 
 	DialogueAct act = manager.handle(semantic);
+	if (act == null) {
+	    DialogueActGenerator gen = new DialogueActGenerator();
+	    return gen.getMainMenuAct(messenger.getCommands());
+	}
+
 	if (act.isFull())
 	    this.lastAct = null;
 	else
@@ -122,7 +137,9 @@ public class Dialogue {
 	    System.out.println("perform action " + act.getAction().getFunction().getServiceName() + " "
 		    + act.getAction().getFunction().getFunctionName());
 
-	    OpenAPIConnector.sendRequest(act.getAction());
+	    String response = OpenAPIConnector.sendRequest(act.getAction());
+	    act.setMessage(response);
+
 	}
 
 	System.out.println(act);
