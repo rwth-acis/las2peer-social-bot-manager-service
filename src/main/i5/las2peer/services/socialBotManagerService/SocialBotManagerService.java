@@ -1086,11 +1086,7 @@ public class SocialBotManagerService extends RESTService {
 			channel = chat.getChannelByEmail(email);
 			} 
         System.out.println(channel);
-		chat.sendMessageToChannel(channel, text+ "1");
-		chat.sendMessageToChannel(channel, text + "2");
-		chat.sendMessageToChannel(channel, text+ "3");
-		chat.sendMessageToChannel(channel, text+ "4");
-		chat.sendMessageToChannel(channel, text+ "5");
+		chat.sendMessageToChannel(channel, text);
 	}
   
 
