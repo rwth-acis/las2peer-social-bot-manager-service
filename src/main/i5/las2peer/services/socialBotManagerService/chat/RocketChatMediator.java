@@ -202,6 +202,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 							});
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
+							sendingMessage.put(channel, false);
 							e.printStackTrace();
 						}
 					} else {
@@ -209,8 +210,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						sendingMessage.put(channel, false);
 					}
 				} catch (Exception e) {
+					sendingMessage.put(channel, false);
 					e.printStackTrace();
 				}
+				sendingMessage.put(channel, false);
 			}
 
 		});

@@ -1022,9 +1022,9 @@ public class SocialBotManagerService extends RESTService {
             // This part is "hardcoded" and will need improvements, but currently makes using the assessment function work
                     MiniClient client = new MiniClient();
                     client.setConnectorEndpoint(vle.getAddress());
-                  //  client.setLogin("alice", "pwalice");   
+                    client.setLogin("alice", "pwalice");   
                     System.out.println(botAgent.getLoginName() + "    pass " +  botPass);
-                   client.setLogin(botAgent.getLoginName(), botPass);
+                  // client.setLogin(botAgent.getLoginName(), botPass);
                     triggeredBody.put("botName", botAgent.getIdentifier());
                     System.out.println("botagent is " +  botAgent.getIdentifier());
                     HashMap<String, String> headers = new HashMap<String, String>();
@@ -1086,7 +1086,11 @@ public class SocialBotManagerService extends RESTService {
 			channel = chat.getChannelByEmail(email);
 			} 
         System.out.println(channel);
-		chat.sendMessageToChannel(channel, text);
+		chat.sendMessageToChannel(channel, text+ "1");
+		chat.sendMessageToChannel(channel, text + "2");
+		chat.sendMessageToChannel(channel, text+ "3");
+		chat.sendMessageToChannel(channel, text+ "4");
+		chat.sendMessageToChannel(channel, text+ "5");
 	}
   
 
