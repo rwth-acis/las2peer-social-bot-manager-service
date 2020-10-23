@@ -155,8 +155,7 @@ public class Messenger {
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
 					// what if you want to start an assessment with a command?
-					System.out
-							.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
+					System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
 					intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
 
 				}
@@ -228,7 +227,38 @@ public class Messenger {
 										state = state.getFollowingMessages().get("any");
 									}
 									stateMap.put(message.getChannel(), state);
-								} else {
+								} else  // tud
+								if ((intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
+										|| intent.getKeyword().equals("will"))
+										&& !this.triggeredFunction.containsKey(message.getChannel())) {
+									if (intent.getEntity("muster") != null) {
+										state = this.knownIntents.get("mustertext");
+									} else if (intent.getEntity("video") != null) {
+										state = this.knownIntents.get("video");
+									} else if (intent.getEntity("help") != null) {
+										state = this.knownIntents.get("help");
+									} else if (intent.getEntity("pause") != null) {
+										state = this.knownIntents.get("pause");
+									} else if (intent.getEntity("upload") != null) {
+										state = this.knownIntents.get("upload");
+									} else if (intent.getEntity("schreibaufgabe") != null) {
+										state = this.knownIntents.get("beschreibung");
+									} else {
+										state = this.knownIntents.get("default");
+									}
+								}
+
+								// ul
+								else if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
+									Collection<Entity> entities = intent.getEntities();
+									System.out.println("try to use entity...");
+									for (Entity e : entities) {
+										System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
+										state = this.knownIntents.get(e.getEntityName());
+										stateMap.put(message.getChannel(), state);
+									}
+								}
+								else{
 									state = this.knownIntents.get("default");
 								}
 							}
@@ -243,37 +273,7 @@ public class Messenger {
 					intent = new Intent("default", "", "");
 				}
 
-				// tud
-				if ((intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
-						|| intent.getKeyword().equals("will"))
-						&& !this.triggeredFunction.containsKey(message.getChannel())) {
-					if (intent.getEntity("muster") != null) {
-						state = this.knownIntents.get("mustertext");
-					} else if (intent.getEntity("video") != null) {
-						state = this.knownIntents.get("video");
-					} else if (intent.getEntity("help") != null) {
-						state = this.knownIntents.get("help");
-					} else if (intent.getEntity("pause") != null) {
-						state = this.knownIntents.get("pause");
-					} else if (intent.getEntity("upload") != null) {
-						state = this.knownIntents.get("upload");
-					} else if (intent.getEntity("schreibaufgabe") != null) {
-						state = this.knownIntents.get("beschreibung");
-					} else {
-						state = this.knownIntents.get("default");
-					}
-				}
-
-				// ul
-				else if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
-					Collection<Entity> entities = intent.getEntities();
-					System.out.println("try to use entity...");
-					for (Entity e : entities) {
-						System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
-						state = this.knownIntents.get(e.getEntityName());
-						stateMap.put(message.getChannel(), state);
-					}
-				}
+				
 
 				Boolean contextOn = false;
 				// No matching intent found, perform default action
