@@ -151,6 +151,15 @@ public class Bot {
 		return null;
 	}
 
+    /**
+     * @return first messenger
+     */
+    public Messenger getMessenger() {
+	for (Messenger messenger : this.messengers.values())
+	    return messenger;
+	return null;
+    }
+
 	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
 		this.messengers.put(messenger.getName(), messenger);
 	}

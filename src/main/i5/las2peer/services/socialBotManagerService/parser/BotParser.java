@@ -70,7 +70,7 @@ public class BotParser {
 	return instance;
     }
 
-    public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
+    public VLE parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
 	    LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
 	    throws ParseBotException, IOException, DeploymentException {
 	HashMap<String, VLE> vles = new HashMap<String, VLE>();
@@ -555,6 +555,7 @@ public class BotParser {
 	j.put("botIds", jarr);
 	Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	System.out.println("bot initiated");
+	return vle;
     }
 
     private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)

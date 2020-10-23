@@ -87,6 +87,17 @@ public class NodeList extends ArrayList<Node> {
 	
     }
 
+    public List<Slotable> Slotable() {
+
+	List<Slotable> res = new ArrayList<>();
+	for (Node node : this) {
+	    if (node instanceof Slotable)
+		res.add((Slotable) node);
+	}
+	return res;
+
+    }
+
     public void print() {
 	for (Node node : this) {
 	    if (node instanceof Fillable)

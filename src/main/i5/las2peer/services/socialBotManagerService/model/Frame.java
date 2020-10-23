@@ -1,6 +1,8 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -67,6 +69,10 @@ public class Frame {
 	this.serviceFunction = serviceFunction;
     }
 
+    /**
+     * @return the command to initiate a conversation for this frame
+     * 
+     */
     public Command getCommand() {
 
 	invariant();
@@ -89,6 +95,27 @@ public class Frame {
 	res.invariant();
 	return res;
 
+    }
+
+    /**
+     * @return all intents related to this frame
+     */
+    public List<String> getIntents() {
+
+	List<String> res = new ArrayList<>();
+
+	// Frame intents
+	res.add(getIntent());
+	res.add(getReqConfIntent());
+	res.add(getReqConfIntent() + "_optional");
+
+	// Slot intents
+	List<Slot> slots = getDescendants();
+	for (Slot slot : slots) {
+	    res.add(slot.getInformIntent());
+	}
+
+	return res;
     }
 
     @Override

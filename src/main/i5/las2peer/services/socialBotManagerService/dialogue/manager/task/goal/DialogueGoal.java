@@ -1,5 +1,8 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
@@ -181,6 +184,48 @@ public class DialogueGoal {
 	res.setQueryParameters(root.getQueryParameters());
 
 	return res;
+    }
+
+    public List<String> getInputIntents() {
+
+	List<String> res = new ArrayList<>();
+
+	// Frame intents
+	res.add(root.getFrame().getIntent());
+	res.add(root.getFrame().getReqConfIntent());
+	res.add(root.getFrame().getReqConfIntent() + "_optional");
+
+	// Slot intents
+	List<Slotable> nodes = root.getAll().Slotable();
+	for (Slotable node : nodes) {
+	    res.add(node.getInformIntent());
+	}
+
+	// control intents
+	res.add("revert");
+	res.add("cancel");
+	res.add("skip");
+
+	return res;
+    }
+
+    public List<String> getOutputIntents() {
+
+	List<String> res = new ArrayList<>();
+
+	// Frame intents
+	res.add(root.getFrame().getIntent());
+	res.add(root.getFrame().getReqConfIntent());
+	res.add(root.getFrame().getReqConfIntent() + "_optional");
+
+	// Slot intents
+	List<Slotable> nodes = root.getAll().Slotable();
+	for (Slotable node : nodes) {
+	    res.add(node.getRequestIntent());
+	}
+
+	return res;
+
     }
 
     public void print() {

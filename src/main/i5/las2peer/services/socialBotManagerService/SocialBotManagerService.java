@@ -86,7 +86,9 @@ import i5.las2peer.services.socialBotManagerService.model.BotModel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
+import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -1566,14 +1568,40 @@ public class SocialBotManagerService extends RESTService {
 		LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
 		LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
 
-		bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
+		VLE vle = bp.parseNodesAndEdges(SocialBotManagerService.getConfig(),
+			SocialBotManagerService.getBotAgents(),
 			nodes, edges, null);
 
 		JSONObject logData = new JSONObject();
 		logData.put("status", "initialized");
 		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 
-		return Response.ok().entity("bot created").build();
+		if (vle.getBots().isEmpty())
+		    return Response.status(400).entity("no bot created").build();
+
+		String message = "bot created \n \n";
+		message = message.concat("The bot knows the following intents:");
+		for (Bot parsedBot : vle.getBots().values()) {
+		    for(Frame frame: parsedBot.getMessenger().getFrames()) {
+			for (String intent : frame.getIntents()) {
+			    message = message.concat(intent + " \n");
+			}
+		    }
+		    for (IncomingMessage m : parsedBot.getMessenger().getIncomingMessages()) {
+			message = message.concat(m.getIntentKeyword());
+		    }
+		}
+
+		message = message.concat("\n and the following commands \n");
+		for (Bot parsedBot : vle.getBots().values()) {
+		    for (Frame frame : parsedBot.getMessenger().getFrames()) {
+			message = message.concat(frame.getCommand().getIntent() + " \n");
+			message = message.concat("revert" + " \n");
+			message = message.concat("cancel" + " \n");
+		    }
+		}
+
+		return Response.ok().entity(message).build();
 
 	    } catch (ParseBotException | IOException | DeploymentException e) {
 		return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
