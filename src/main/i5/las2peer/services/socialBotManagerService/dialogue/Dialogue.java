@@ -92,6 +92,9 @@ public class Dialogue {
 	    }
 	}
 
+	if (act.hasAction())
+	    res.setEnd(true);
+
 	return res;
 
     }
@@ -102,6 +105,7 @@ public class Dialogue {
 	if (this.lastAct != null && this.lastAct.hasExpected()) {
 
 	    ExpectedInput input = this.lastAct.getExpected();
+
 	    switch (input.getType()) {
 	    case Confirmation:
 		if (semantic.getType() == IntentType.CONFIRM || semantic.getType() == IntentType.DENY) {
@@ -110,6 +114,14 @@ public class Dialogue {
 		}
 		break;
 	    default:
+
+		if (!input.validate(semantic, message)) {
+
+		    DialogueAct act = new DialogueAct();
+		    act.setExpected(input);
+		    act.setMessage(gen.getInvalidValue(input));
+		    return act;
+		}
 
 		String intent = input.getIntend();
 		semantic.setKeyword(intent);

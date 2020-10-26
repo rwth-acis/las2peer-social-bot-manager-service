@@ -14,7 +14,7 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "Bot")
 public class Bot {
 
-	@ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
+    @ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
 	private String name;
 
 

@@ -58,6 +58,7 @@ public class Intent {
 	this.intentKeyword = replaceUmlaute(keyword);
 	this.confidence = confidence;
 	this.intentType = getType();
+	this.entities = new HashMap<String, Entity>();
     }
 
 

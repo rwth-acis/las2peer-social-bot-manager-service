@@ -105,7 +105,7 @@ public class Parser {
 	    if (function instanceof AccessServiceFunction) {
 
 		AccessServiceFunction fn = (AccessServiceFunction) function;
-		String serviceURL = fn.getServiceURL();
+		String serviceURL = fn.getServiceURL().toString();
 		String operationID = fn.getOperationID();
 		String intent = fn.getIntent();
 

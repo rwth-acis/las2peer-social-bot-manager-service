@@ -32,6 +32,7 @@ public class ServiceFunctionAttribute {
     private boolean required;
     private boolean array;
     private String discriminator;
+    private String format;
 
     public ServiceFunctionAttribute() {
 	this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
@@ -257,6 +258,14 @@ public class ServiceFunctionAttribute {
 	}
 
 	return list;
+    }
+
+    public String getFormat() {
+	return format;
+    }
+
+    public void setFormat(String format) {
+	this.format = format;
     }
 
 }

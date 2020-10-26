@@ -25,8 +25,11 @@ import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
+import i5.las2peer.services.socialBotManagerService.nlu.DefaultNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
+import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import net.minidev.json.JSONArray;
@@ -189,15 +192,34 @@ public class Messenger {
 	    intent = new Intent(message.getCommand(), 1.0f);
 	} else {
 
+	    try {
 	System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
 	    intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
-	}
+	    } catch (Exception e) {
+		e.printStackTrace();
 
+		// fallback default nlu
+		LanguageUnderstander dnlu = new DefaultNlu();
+		intent = dnlu.getIntent(message.getText());
+
+	    }
+	}
+		
 	String channel = message.getChannel();
 	MessageInfo info = new MessageInfo();
 	info.intent = intent;
 	info.message = message;
 
+	// abort
+	if (info.getIntent().getIntentType() == IntentType.CANCEL
+		|| info.getIntent().getIntentType() == IntentType.START) {
+
+	    if (this.openDialogues.containsKey(channel)) {
+		this.openDialogues.remove(channel);
+	    }
+	}
+	
+	
 	ResponseMessage response = null;
 	// Open Dialogues
 	if (this.openDialogues.containsKey(channel)) {
@@ -216,7 +238,10 @@ public class Messenger {
 	    response = dialogue.handle(info);
 	    System.out.println("start new dialogue: " + message.getChannel());
 	}
-
+	    
+	if (response.isEnd() && openDialogues.containsKey(channel))
+	    this.openDialogues.remove(channel);
+	
 	EventChatMediator medi;
 	if (!response.hasButtons())
 	    this.getChatMediator().sendMessageToChannel(channel, response.getMessage());

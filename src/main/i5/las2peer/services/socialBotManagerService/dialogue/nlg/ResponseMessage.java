@@ -6,6 +6,7 @@ import java.util.List;
 public class ResponseMessage {
 
     String message;
+    boolean end;
     List<String> buttons = new ArrayList<>();
 
     public ResponseMessage(String message) {
@@ -34,6 +35,14 @@ public class ResponseMessage {
 
     public boolean hasButtons() {
 	return (this.buttons != null && !this.buttons.isEmpty());
+    }
+
+    public boolean isEnd() {
+	return end;
+    }
+
+    public void setEnd(boolean end) {
+	this.end = end;
     }
 
 }

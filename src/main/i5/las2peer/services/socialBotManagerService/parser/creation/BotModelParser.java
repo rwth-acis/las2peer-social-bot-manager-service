@@ -110,7 +110,7 @@ public class BotModelParser {
 		BotModelNode actionNode = addNode("Bot Action");
 		addAttribute(actionNode, "Action Type", "Service");
 		addAttribute(actionNode, "Function Name", as.getOperationID());
-		addAttribute(actionNode, "Service Alias", as.getServiceURL());
+		addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
 
 		addEdge(frameNode, actionNode, "triggers");
 		addMessengerEdges(frameNode, "generates");

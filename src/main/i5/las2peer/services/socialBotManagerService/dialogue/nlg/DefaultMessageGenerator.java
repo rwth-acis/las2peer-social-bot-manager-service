@@ -181,4 +181,44 @@ public class DefaultMessageGenerator extends AbstractLanguageGenerator {
 	return res;
     }
 
+    public String getInvalidValue(ExpectedInput input) {
+	
+	assert input != null : "expected input parameter is null";
+	
+	String message = null;
+	switch (input.getType()) {
+
+	case Confirmation:
+	    message = "please clearly state that you agree (yes) or disagree (no)";
+	    break;
+
+	case Enum:
+	    message = "Please choose one of this possible answers: \n";
+	    for (String enu : input.getEnums()) {
+		message = message + enu + "\n";
+	    }
+	    break;
+
+	case Number:
+	    message = "Please answer with a number \n";
+	    break;
+
+	case Url:
+	    message = "Please answer with a valid url \n";
+	    break;
+
+	case Word:
+	    message = "Please answer in one word without spaces \n";
+	    break;
+
+	default:
+	    break;
+
+	}
+	
+	
+
+	return message;
+    }
+
 }

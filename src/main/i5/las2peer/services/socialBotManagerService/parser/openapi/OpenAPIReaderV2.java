@@ -351,6 +351,10 @@ public class OpenAPIReaderV2 {
 	case "string":
 	    StringProperty stringProperty = (StringProperty) property;
 	    attr.setContentType("string");
+	    
+	    if (property.getFormat() != null && property.getFormat().contentEquals("url"))
+		    attr.setContentType("url");
+	    
 	    if (stringProperty.getEnum() != null && stringProperty.getEnum().size() > 0) {
 		attr.setContentType("enum");
 		attr.setEnumList(stringProperty.getEnum());

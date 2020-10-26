@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(parent = Messenger.class, value = "Telegram")
 public class TelegramMessenger extends Messenger {
 
-    @ApiModelProperty(dataType = "string", value = "The authentication token", required = true, example = "1362647206:AAGInsj3CfS3zJ_mj_09K5-GL7ltEq3ARcM")
+    @ApiModelProperty(dataType = "string", value = "Please use https://telegram.me/BotFather to create a Telegram application. After this, please enter the generated token.", required = true, example = "1166163073:AAGd3zglvQ8L3EeGJwLcHV8l_m6HB3wsld0")
     private String token;
 
     public String getToken() {

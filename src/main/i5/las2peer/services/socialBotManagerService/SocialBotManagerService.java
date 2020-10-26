@@ -685,9 +685,13 @@ public class SocialBotManagerService extends RESTService {
 					// Identify bot
 					Collection<VLE> vles = getConfig().getVLEs().values();
 					Bot bot = null;
-					for (VLE vle : vles)
-						bot = vle.getBotbyTelegramToken(token);
-					if (bot == null)
+
+		    for (VLE vle : vles) {
+			Bot teleBot = vle.getBotbyTelegramToken(token);
+			if (teleBot != null)
+			    bot = teleBot;
+		    }
+		    if (bot == null)
 			System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
 

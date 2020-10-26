@@ -1,22 +1,24 @@
 package i5.las2peer.services.socialBotManagerService.parser.creation;
 
+import java.net.URL;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(parent = Function.class, value = "AccessService")
 public class AccessServiceFunction extends Function {
 
-	@ApiModelProperty(dataType = "string", value = "The url of the service you want to access", required = true, example = "https://petstore3.swagger.io/")
-	private String serviceURL;
+    @ApiModelProperty(value = "The url of the service you want to access", required = true, example = "https://petstore3.swagger.io/")
+    private URL serviceURL;
 
 	@ApiModelProperty(dataType = "string", value = "The function that you want to access", required = true, example = "addPet")
 	private String operationID;
 
-	public String getServiceURL() {
+    public URL getServiceURL() {
 		return serviceURL;
 	}
 
-	public void setServiceURL(String serviceURL) {
+    public void setServiceURL(URL serviceURL) {
 		this.serviceURL = serviceURL;
 	}
 

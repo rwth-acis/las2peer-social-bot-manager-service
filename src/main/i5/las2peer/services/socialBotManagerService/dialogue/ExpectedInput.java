@@ -3,6 +3,9 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 import java.util.ArrayList;
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
+import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+
 public class ExpectedInput {
 
     private InputType type;
@@ -20,6 +23,27 @@ public class ExpectedInput {
 
     public ExpectedInput() {
 
+    }
+
+    public boolean validate(Intent semantic, String message) {
+
+	if (this.hasEnums()) {
+
+	    for (String enu : this.enums) {
+
+		if (enu.contentEquals(message))
+		    return true;
+
+		for (Entity entity : semantic.getEntities()) {
+		    if (enu.contentEquals(entity.getValue()))
+			return true;
+		}
+	    }
+
+	    return false;
+	}
+
+	return this.validate(message);
     }
 
     public boolean validate(String input) {
@@ -85,7 +109,5 @@ public class ExpectedInput {
     public String toString() {
 	return "ExpectedInput [type=" + type + ", intend=" + intend + ", entity=" + entity + "]";
     }
-
-
 
 }

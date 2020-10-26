@@ -64,9 +64,9 @@ public class FrameMapper {
 	    case "integer":
 		slot.setInputType(InputType.Number);
 		break;
-	    case "string":
-		if (name.contains("Url") || name.contains("URL"))
+	    case "url":
 		slot.setInputType(InputType.Url);
+		break;
 	    default:
 		slot.setInputType(InputType.Free);
 	    }

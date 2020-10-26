@@ -6,7 +6,7 @@ import java.net.URL;
 
 public enum InputType {
 
-	Free, Word, Number, Decimal, Confirmation, Date, Url, Enum;
+    Free, Word, Number, Decimal, Confirmation, Date, Date_Time, Url, Binary, Enum, Email;
 
 	public boolean validate(String input) {
 
