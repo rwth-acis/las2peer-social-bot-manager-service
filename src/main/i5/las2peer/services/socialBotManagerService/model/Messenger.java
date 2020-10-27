@@ -97,12 +97,12 @@ public class Messenger {
 		if (state != null) {
 			if (state.getFollowingMessages() == null) {
 				System.out.println("Conversation flow ended now");
-			} else {
+			} else	if(state.getFollowingMessages().get("") != null) {
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
 
-			}
+			} else {}
 		}
 	}
 
