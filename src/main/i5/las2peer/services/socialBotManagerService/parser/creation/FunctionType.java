@@ -5,5 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum FunctionType {
     @JsonProperty("AccessService")
     SERVICE_ACCESS, @JsonProperty("ChitChat")
-    CHIT_CHAT
+    CHIT_CHAT, @JsonProperty("Notification")
+    NOTIFICATION,
 }
