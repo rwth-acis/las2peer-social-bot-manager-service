@@ -44,4 +44,9 @@ public class DefaultNlu extends LanguageUnderstander {
 
     }
 
+    @Override
+    public String[] getIntents() {
+	return new String[] { "confirm", "deny" };
+    }
+
 }

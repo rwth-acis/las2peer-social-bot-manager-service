@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 import i5.las2peer.api.p2p.ServiceNameVersion;
 import i5.las2peer.connectors.webConnector.WebConnector;
@@ -70,7 +71,7 @@ public class TrainingDataTest {
 		}
 	}
 	
-    // @Test
+    @Test
 	public void storeData() {
 		String testString = "test";
 		

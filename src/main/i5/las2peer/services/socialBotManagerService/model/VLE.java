@@ -1,10 +1,13 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
+import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import net.minidev.json.JSONObject;
 
 public class VLE {
@@ -146,4 +149,18 @@ public class VLE {
 		}
 		return null;
 	}
+
+    public Collection<LanguageUnderstander> getNLUs() {
+
+	Collection<LanguageUnderstander> res = new HashSet<>();
+	for (Entry<String, Bot> entry : this.bots.entrySet()) {
+	    Bot bot = entry.getValue();
+	    for (Entry<String, LanguageUnderstander> nlu : bot.getNLUs().entrySet()) {
+		res.add(nlu.getValue());
+	    }
+	}
+
+	return res;
+
+    }
 }

@@ -265,7 +265,7 @@ public class BotParser {
 			// NLU Servers
 		    } else if (nluKnowledge.get(target) != null) {
 			NLUKnowledge nlu = nluKnowledge.get(target);
-			b.addRasaServer(nlu.getId(), nlu.getUrl());
+			b.addRasaServer(nlu);
 		    }
 		    // User Function has...
 		} else if (usfList.get(source) != null) {

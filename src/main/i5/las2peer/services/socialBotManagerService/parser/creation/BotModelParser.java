@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import i5.las2peer.services.socialBotManagerService.model.BotModel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
@@ -22,6 +25,20 @@ public class BotModelParser {
     LinkedHashMap<String, BotModelEdge> edgeList = new LinkedHashMap<>();
     LinkedHashMap<String, BotModelNode> nodeList = new LinkedHashMap<>();
 
+    public String toJSON(BotModel botModel) {
+	assert botModel != null;
+
+	ObjectMapper mapper = new ObjectMapper();
+	String jsonString = null;
+	try {
+	    jsonString = mapper.writeValueAsString(botModel);
+	} catch (JsonProcessingException e) {
+	    e.printStackTrace();
+	}
+	System.out.println(jsonString);
+	return jsonString;
+
+    }
 
     public BotModel parse(Bot bot) {
 
@@ -218,5 +235,6 @@ public class BotModelParser {
     public String getID() {
 	return UUID.randomUUID().toString();
     }
+
 
 }
