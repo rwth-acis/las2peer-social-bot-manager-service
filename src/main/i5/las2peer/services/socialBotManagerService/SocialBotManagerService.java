@@ -1449,9 +1449,10 @@ public class SocialBotManagerService extends RESTService {
 							HashMap<String, Boolean> activeBots = b.getActive();
 							HashSet<Trigger> tList = r.getTrigger();
 							for (Trigger t : tList) {
-								for (Entry<String, Boolean> entry : activeBots.entrySet()) {
+						//		for (Entry<String, Boolean> entry : activeBots.entrySet()) {
 									// If bot is active
-									if (entry.getValue()) {
+								//	if (entry.getValue()) {
+										
 										System.out.println(df.format(d1) + ": " + b.getName());
 										MiniClient client = new MiniClient();
 										client.setConnectorEndpoint(vle.getAddress());
@@ -1463,7 +1464,7 @@ public class SocialBotManagerService extends RESTService {
 
 										body.put("function", t.getTriggeredFunction().getId());
 										body.put("bot", b.getName());
-										atts.put(vle.getEnvironmentSeparator(), entry.getKey());
+									//	atts.put(vle.getEnvironmentSeparator(), entry.getKey());
 										body.put("attributes", atts);
 
 										HashMap<String, String> headers = new HashMap<String, String>();
@@ -1478,8 +1479,8 @@ public class SocialBotManagerService extends RESTService {
 										ClientResponse result = client.sendRequest("POST", path, body.toJSONString(),
 												MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 										System.out.println(result.getResponse());
-									}
-								}
+								//	}
+								//}
 							}
 						}
 					}
