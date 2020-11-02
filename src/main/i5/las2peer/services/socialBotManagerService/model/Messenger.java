@@ -242,6 +242,9 @@ public class Messenger {
 	if (response.isEnd() && openDialogues.containsKey(channel))
 	    this.openDialogues.remove(channel);
 	
+	if (response.getFile() != null)
+	    this.getChatMediator().sendFileToChannel(channel, response);
+
 	EventChatMediator medi;
 	if (!response.hasButtons())
 	    this.getChatMediator().sendMessageToChannel(channel, response.getMessage());

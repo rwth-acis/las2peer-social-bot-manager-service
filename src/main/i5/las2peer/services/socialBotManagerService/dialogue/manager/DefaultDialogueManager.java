@@ -181,6 +181,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	return requestNextSlot();
     }
 
+    @Override
     public void reset() {
 	goal.reset();
 	optional = false;
@@ -210,6 +211,8 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	DialogueAct act = new DialogueAct();
 	act.setAction(goal.getOpenAPIAction());
 	act.setMessage("perform action");
+	if (goal.getFrame().getFile() != null)
+	    act.setFile(goal.getFrame().getFile());
 	this.reset();
 	return act;
 

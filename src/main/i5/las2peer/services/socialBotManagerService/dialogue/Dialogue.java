@@ -6,6 +6,7 @@ import java.util.List;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.MetaDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.AbstractLanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
@@ -87,13 +88,22 @@ public class Dialogue {
 	    res = new ResponseMessage(act.getMessage());
 
 	if (act.hasEnums()) {
-	    for (String enu : act.getExpected().getEnums()) {
+	    List<String> enumList = act.getExpected().getEnums();
+	    for (String enu : enumList) {
 		res.addButton(enu);
 	    }
 	}
 
 	if (act.hasAction())
 	    res.setEnd(true);
+
+	if (act.getFile() != null) {
+	    MessageFile file = new MessageFile();
+	    file.setName(act.getFile());
+	    file.setData(act.getMessage());
+	    file.setType(".json");
+	    res.setFile(file);
+	}
 
 	return res;
 

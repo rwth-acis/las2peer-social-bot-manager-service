@@ -17,6 +17,10 @@ public class Frame {
 
     private String message;
 
+    private String response;
+
+    private String file;
+
     private ServiceFunction serviceFunction;
 
     private Map<String, Slot> slots;
@@ -203,6 +207,22 @@ public class Frame {
     public void invariant() {
 	assert this.slots != null : "frame has no slots";
 	assert this.intent != null : "frame intent is null";
+    }
+
+    public String getResponse() {
+	return response;
+    }
+
+    public void setResponse(String response) {
+	this.response = response;
+    }
+
+    public String getFile() {
+	return file;
+    }
+
+    public void setFile(String file) {
+	this.file = file;
     }
 
 }

@@ -1,5 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
+import java.util.Collection;
+
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 
 public abstract class LanguageUnderstander {
@@ -13,7 +15,7 @@ public abstract class LanguageUnderstander {
 
     public abstract Intent getIntent(String message);
 
-    public abstract String[] getIntents();
+    public abstract Collection<String> getIntents();
 
     public String getName() {
 	return this.name;
@@ -30,5 +32,6 @@ public abstract class LanguageUnderstander {
     public void setUrl(String url) {
 	this.url = url;
     }
+
 
 }

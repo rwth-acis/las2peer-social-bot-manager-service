@@ -11,9 +11,11 @@ public class FrameMapper {
     public Frame create(ServiceFunction action, Frame frame) {
 
 	System.out.println("parsing parameter information of service action");
-	action = OpenAPIConnector.readFunction(action);
-	frame.setServiceFunction(action);
-	frame = map(action, frame);
+	ServiceFunction modelAction = action;
+	ServiceFunction swaggerAction = OpenAPIConnector.readFunction(action);
+	ServiceFunction frameAction = map(modelAction, swaggerAction);
+	frame.setServiceFunction(frameAction);
+	frame = map(frameAction, frame);
 
 	frame.invariant();
 	return frame;
@@ -27,6 +29,28 @@ public class FrameMapper {
 	action.setFunctionName(operationID);
 	return this.create(action, frame);
 
+    }
+
+    public ServiceFunction map(ServiceFunction modelFunction, ServiceFunction swaggerFunction) {
+
+	assert modelFunction != null : "model function is null";
+	assert swaggerFunction != null : "swagger function is null";
+
+	for (ServiceFunctionAttribute sattr : swaggerFunction.getAllAttributes()) {
+	    System.out.println("swagger attribute: " + sattr.getIdName());
+	}
+
+	for (ServiceFunctionAttribute modelAttr : modelFunction.getAttributes()) {
+	    System.out.println(" model attribute: " + modelAttr.getName());
+	    if (swaggerFunction.getAttribute(modelAttr.getName()) != null) {
+		System.out.println("attribute identified: " + modelAttr.getIdName());
+		ServiceFunctionAttribute swaggerAttr = swaggerFunction.getAttribute(modelAttr.getIdName());
+		swaggerAttr.setRetrieveFunction(modelAttr.getRetrieveFunction());
+		swaggerAttr.setContentType("enum");
+	    }
+	}
+
+	return swaggerFunction;
     }
 
     public Frame map(ServiceFunction action, Frame frame) {

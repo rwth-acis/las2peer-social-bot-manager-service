@@ -1,6 +1,7 @@
-package i5.las2peer.services.socialBotManagerService.parser.creation;
+package i5.las2peer.services.socialBotManagerService.parser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
 import i5.las2peer.services.socialBotManagerService.model.BotModel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
@@ -16,6 +18,15 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelLabel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
+import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
+import i5.las2peer.services.socialBotManagerService.parser.creation.AccessServiceFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
+import i5.las2peer.services.socialBotManagerService.parser.creation.ChitChatFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Function;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Messenger;
+import i5.las2peer.services.socialBotManagerService.parser.creation.SlackMessenger;
+import i5.las2peer.services.socialBotManagerService.parser.creation.TelegramMessenger;
 
 public class BotModelParser {
 
@@ -40,7 +51,7 @@ public class BotModelParser {
 
     }
 
-    public BotModel parse(Bot bot) {
+    public BotModel parse(Bot bot, BotConfiguration config) {
 
 	BotModel model = new BotModel();
 
@@ -60,9 +71,19 @@ public class BotModelParser {
 	addEdge(vleNode, botNode, "has");
 
 	// NLU Knowledge
-	String nluName = "defaultNLU";
+	String nluName = bot.getNluModule();
 	String nluID = "0";
 	String nluURL = "http://localhost:5005";
+
+	Collection<LanguageUnderstander> nlus = config.getNlus().values();
+
+	for (LanguageUnderstander nlu : nlus) {
+	    if (nlu.getName().contentEquals(nluName)) {
+		System.out.println("found nlu module: " + nlu.getUrl());
+		nluURL = nlu.getUrl();
+	    }
+	}
+	
 	BotModelNode nluNode = addNode("NLU Knowledge");
 	addAttribute(nluNode, "Name", nluName);
 	addAttribute(nluNode, "ID", nluID);
@@ -111,7 +132,7 @@ public class BotModelParser {
 		    addAttribute(inNode, "NLU ID", "0");
 
 		    BotModelNode outNode = addNode("Chat Response");
-		    addAttribute(outNode, "Message", message.getMessage());
+		    addAttribute(outNode, "Message", message.getResponse());
 
 		    addEdge(inNode, outNode, "triggers");
 		    addMessengerEdges(inNode, "generates");

@@ -17,6 +17,14 @@ public class OpenAPIAction {
 
     private Map<String, String> pathParameters;
 
+    public OpenAPIAction() {
+
+    }
+
+    public OpenAPIAction(ServiceFunction sf) {
+	this.function = sf;
+    }
+
     public String getRequestMethod() {
 	invariant();
 	return function.getHttpMethod().toUpperCase();

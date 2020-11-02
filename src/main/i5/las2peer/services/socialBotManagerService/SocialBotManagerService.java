@@ -91,6 +91,7 @@ import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
@@ -99,10 +100,14 @@ import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
+import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
+import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import i5.las2peer.services.socialBotManagerService.parser.creation.BotModelParser;
+import i5.las2peer.services.socialBotManagerService.parser.training.DataGroup;
+import i5.las2peer.services.socialBotManagerService.parser.training.Training;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -1560,7 +1565,7 @@ public class SocialBotManagerService extends RESTService {
 		System.out.println(bot);
 
 		BotModelParser botModelParser = new BotModelParser();
-		botModel = botModelParser.parse(bot);
+		botModel = botModelParser.parse(bot, SocialBotManagerService.getConfig());
 
 	    } catch (Exception e) {
 		e.printStackTrace();
@@ -1621,24 +1626,83 @@ public class SocialBotManagerService extends RESTService {
 	 * @return ok
 	 */
 	@GET
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-	@ApiOperation(value = "Create bot", notes = "creates the bot.")
-	public Response getNLUModels(i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
+	@ApiOperation(value = "getNLUModels", notes = "get NLU models")
+	public Response getNLUModels() {
 
 	    try {
-		Collection<LanguageUnderstander> nlus = new HashSet<>();
-		for (Entry<String, VLE> vleEntry : getConfig().getVLEs().entrySet()) {
-		    VLE vle = vleEntry.getValue();
-		    nlus.addAll(vle.getNLUs());
-		}
-		return Response.ok().entity(nlus).build();
 
+		return Response.ok().entity(getConfig().getNlus().values()).build();
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
 
-	    return Response.serverError().entity("bot creation failed").build();
+	    return Response.serverError().entity("cant retrieve knowledge models").build();
+
+	}
+
+	/**
+	 * @param bot The bot model
+	 * @return ok
+	 */
+	@POST
+	@Path("/nlu")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+	@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
+	public Response createNlu(NLUKnowledge nlu) {
+
+	    try {
+
+		RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
+		getConfig().addNLU(rasa);
+
+		return Response.ok().entity("nlu addes").build();
+
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+	    return Response.serverError().entity("nlu creation failed").build();
+
+	}
+
+	/**
+	 * @param bot The bot model
+	 * @return ok
+	 */
+	@POST
+	@Path("/nlu/train")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+	@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
+	public Response trainNlu(Training training) {
+
+	    try {
+		
+		LanguageUnderstander nlu = getConfig().getNLU(training.getNluName());
+		String url = nlu.getUrl();
+		String config = "";
+		Set<String> intents = new HashSet<>();
+		for(DataGroup g: training.getDataGroup()) {
+		    intents.add(g.getIntent());
+		}
+		
+		if (nlu instanceof RasaNlu) {
+		    RasaNlu rasa = (RasaNlu) nlu;
+		    for (String i : intents) {
+			rasa.addIntent(i);
+		    }
+		}
+		return Response.ok().entity("nlu trained").build();
+
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+	    return Response.serverError().entity("nlu creation failed").build();
 
 	}
     }

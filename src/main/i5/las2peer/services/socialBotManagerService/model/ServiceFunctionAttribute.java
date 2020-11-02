@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class ServiceFunctionAttribute {
@@ -15,6 +16,7 @@ public class ServiceFunctionAttribute {
     private ServiceFunctionAttribute parent;
     private ContentGenerator generator;
     private ServiceFunction function;
+    private ServiceFunction retrieveFunction;
     private IfThenBlock itb;
 
     private boolean staticContent;
@@ -46,6 +48,12 @@ public class ServiceFunctionAttribute {
 	this.name = name;
     }
 
+    public String getIdName() {
+	if (this.parent != null)
+	    return this.parent.getIdName() + "_" + this.name;
+	return this.name;
+    }
+
     public String getContentType() {
 	return contentType;
     }
@@ -56,6 +64,15 @@ public class ServiceFunctionAttribute {
 
     public ArrayList<ServiceFunctionAttribute> getChildAttributes() {
 	return childAttributes;
+    }
+
+    public ArrayList<ServiceFunctionAttribute> getAllAttributes() {
+	ArrayList<ServiceFunctionAttribute> attributes = new ArrayList<>();
+	attributes.add(this);
+	for (ServiceFunctionAttribute attr : this.childAttributes) {
+	    attributes.addAll(attr.getAllAttributes());
+	}
+	return attributes;
     }
 
     /*
@@ -199,6 +216,17 @@ public class ServiceFunctionAttribute {
     }
 
     public List<String> getEnumList() {
+	List<String> res = null;
+
+	if (this.retrieveFunction != null) {
+	    res = (List<String>) OpenAPIConnector.readEnums(this.retrieveFunction);
+	    if (this.enumList == null || this.enumList.isEmpty())
+		this.enumList = res;
+	}
+	
+	if (res != null)
+	    return res;
+
 	return enumList;
     }
 
@@ -266,6 +294,14 @@ public class ServiceFunctionAttribute {
 
     public void setFormat(String format) {
 	this.format = format;
+    }
+
+    public ServiceFunction getRetrieveFunction() {
+	return retrieveFunction;
+    }
+
+    public void setRetrieveFunction(ServiceFunction retrieveFunction) {
+	this.retrieveFunction = retrieveFunction;
     }
 
 }

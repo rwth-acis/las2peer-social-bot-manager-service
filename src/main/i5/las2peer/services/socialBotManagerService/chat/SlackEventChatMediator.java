@@ -212,4 +212,10 @@ public class SlackEventChatMediator extends EventChatMediator {
 
     }
 
+    @Override
+    public void sendFileToChannel(String channel, ResponseMessage response) {
+	// TODO Auto-generated method stub
+
+    }
+
 }

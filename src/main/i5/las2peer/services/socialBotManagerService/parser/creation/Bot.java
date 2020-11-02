@@ -15,44 +15,53 @@ import io.swagger.annotations.ApiModelProperty;
 public class Bot {
 
     @ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
-	private String name;
+    private String name;
 
+    @ApiModelProperty(dataType = "string", value = "To understand user input the bot has to use a language understanding module. Please choose one or create a new /createNLU", required = true)
+    private String nluModule;
 
-	private List<Function> function = new ArrayList<Function>();
+    private List<Function> function = new ArrayList<Function>();
 
+    private List<Messenger> messenger = new ArrayList<Messenger>();
 
-	private List<Messenger> messenger = new ArrayList<Messenger>();
+    @XmlElement(name = "name")
+    public String getName() {
+	return name;
+    }
 
-	@XmlElement(name = "name")
-	public String getName() {
-		return name;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public List<Function> getFunction() {
+	return function;
+    }
 
-	public List<Function> getFunction() {
-		return function;
-	}
+    public void setFunction(List<Function> function) {
+	this.function = function;
+    }
 
-	public void setFunction(List<Function> function) {
-		this.function = function;
-	}
+    @XmlElementWrapper(name = "messengers")
+    @XmlElement(name = "messenger")
+    public List<Messenger> getMessenger() {
+	return messenger;
+    }
 
-	@XmlElementWrapper(name = "messengers")
-	@XmlElement(name = "messenger")
-	public List<Messenger> getMessenger() {
-		return messenger;
-	}
+    public void setMessenger(List<Messenger> messenger) {
+	this.messenger = messenger;
+    }
 
-	public void setMessenger(List<Messenger> messenger) {
-		this.messenger = messenger;
-	}
+    @Override
+    public String toString() {
+	return "Bot [name=" + name + ", function=" + function + ", messenger=" + messenger + "]";
+    }
 
-	@Override
-	public String toString() {
-		return "Bot [name=" + name + ", function=" + function + ", messenger=" + messenger + "]";
-	}
+    public String getNluModule() {
+	return nluModule;
+    }
+
+    public void setNluModule(String nluModule) {
+	this.nluModule = nluModule;
+    }
 
 }

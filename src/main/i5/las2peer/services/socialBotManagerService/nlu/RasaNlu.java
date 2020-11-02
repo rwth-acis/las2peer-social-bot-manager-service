@@ -1,8 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.ws.rs.core.MediaType;
 
@@ -15,20 +17,24 @@ import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
 public class RasaNlu extends LanguageUnderstander {
-    private String[] Intents;
+    private Collection<String> Intents;
 
     public RasaNlu(String url) {
 	this.url = url;
 	this.name = "Rasa";
-	this.Intents = new String[0];
+	this.Intents = new HashSet<String>();
     }
 
-    public void setIntents(String[] Intents) {
+    public void setIntents(Collection<String> Intents) {
 	this.Intents = Intents;
     }
 
+    public void addIntent(String intent) {
+	this.Intents.add(intent);
+    }
+
     @Override
-    public String[] getIntents() {
+    public Collection<String> getIntents() {
 	return this.Intents;
     }
 
@@ -63,4 +69,5 @@ public class RasaNlu extends LanguageUnderstander {
 	    return new JSONObject();
 	}
     }
+
 }

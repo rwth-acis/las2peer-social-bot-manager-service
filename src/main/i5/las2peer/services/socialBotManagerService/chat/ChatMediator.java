@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Vector;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
+
 public abstract class ChatMediator {
 	protected String authToken;
 
@@ -65,5 +67,7 @@ public abstract class ChatMediator {
     public String getAuthToken() {
 	return authToken;
     }
+
+    public abstract void sendFileToChannel(String channel, ResponseMessage response);
 
 }

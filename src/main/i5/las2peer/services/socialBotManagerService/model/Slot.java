@@ -238,6 +238,7 @@ public class Slot {
     }
 
     public List<String> getEnumList() {
+
 	return this.getParameter().getEnumList();
     }
 

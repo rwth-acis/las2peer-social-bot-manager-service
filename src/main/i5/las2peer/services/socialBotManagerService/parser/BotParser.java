@@ -47,6 +47,7 @@ import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.model.VLEUser;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
@@ -441,6 +442,16 @@ public class BotParser {
 		    if (sfaList.containsKey(target)) {
 			ServiceFunctionAttribute attribute = sfaList.get(target);
 			slot.setParameter(attribute);
+		    }
+
+		    // Action generates Parameter
+		} else if (bsfList.containsKey(source)) {
+		    ServiceFunction sf = bsfList.get(source);
+		    // ...BotActionAttribute
+		    if (sfaList.containsKey(target)) {
+			ServiceFunctionAttribute attribute = sfaList.get(target);
+			ServiceFunction function = OpenAPIConnector.readFunction(sf);
+			attribute.setRetrieveFunction(function);
 		    }
 		}
 		// TRIGGERS
@@ -925,6 +936,12 @@ public class BotParser {
 		break;
 	    case "message":
 		frame.setMessage(subVal.getValue());
+		break;
+	    case "response":
+		frame.setResponse(subVal.getValue());
+		break;
+	    case "file":
+		frame.setFile(subVal.getValue());
 		break;
 	    }
 	}

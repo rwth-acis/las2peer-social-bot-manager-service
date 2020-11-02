@@ -56,6 +56,7 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
@@ -621,7 +622,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												String expertLabel = "t" + String.valueOf(taskNumber);
 												if ((role % 2) == (taskNumber % 2)) {
 													room.sendMessage(
-															"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
+							    "Danke fÃ¼r deine Abgabe. Ich leite sie an das Analysesystem â€œT-MITOCARâ€� weiter und gebe dir gleich deine RÃ¼ckmeldung. Das dÃ¼rfte nur ein paar Sekunden dauern.");
 													ending = ".pdf";
 													tempFile = new File(message.getRoomId() + ending);
 													FileWriter writer = new FileWriter(tempFile);
@@ -661,40 +662,31 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 															"Tut mir Leid, deine Abgabe kann ich leider nicht auswerten. Hast du mir die richtige Datei geschickt?");
 												}
 											}
-											/*else if (role == 2) {
-												room.sendMessage(
-														"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
-											
-												ending = ".png";
-												ClientResponse result = c.sendRequest("POST",
-														"tmitocar/" + message.getRoomId(), bodyJSON.toString(),
-														MediaType.APPLICATION_JSON, "text/html", headers);
-
-												System.out.println("Submitted text: " + result.getHttpCode());
-												boolean isActive = true;
-												while (isActive) {
-													result = c.sendRequest("GET",
-															"tmitocar/" + message.getRoomId() + "/status", "");
-													isActive = result.getResponse().toLowerCase().contains("true");
-													// isActive = Boolean.parseBoolean(result.getResponse());
-													System.out.println(isActive);
-													try {
-														Thread.sleep(1000);
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-												}
-												result = c.sendRequest("GET", "tmitocar/" + message.getRoomId(), "",
-														MediaType.TEXT_HTML, "image/png", headers);
-												InputStream in = new ByteArrayInputStream(result.getRawResponse());
-												BufferedImage bImageFromConvert = ImageIO.read(in);
-												tempFile = new File(message.getRoomId() + ending);
-												ImageIO.write(bImageFromConvert, "png", tempFile);
-											} 
-											*/
+											/*
+					     * else if (role == 2) { room.sendMessage(
+					     * "Danke fÃ¼r deine Abgabe. Ich leite sie an das Analysesystem â€œT-MITOCARâ€� weiter und gebe dir gleich deine RÃ¼ckmeldung. Das dÃ¼rfte nur ein paar Sekunden dauern."
+					     * );
+					     * 
+					     * ending = ".png"; ClientResponse result = c.sendRequest("POST",
+					     * "tmitocar/" + message.getRoomId(), bodyJSON.toString(),
+					     * MediaType.APPLICATION_JSON, "text/html", headers);
+					     * 
+					     * System.out.println("Submitted text: " + result.getHttpCode()); boolean
+					     * isActive = true; while (isActive) { result = c.sendRequest("GET",
+					     * "tmitocar/" + message.getRoomId() + "/status", ""); isActive =
+					     * result.getResponse().toLowerCase().contains("true"); // isActive =
+					     * Boolean.parseBoolean(result.getResponse()); System.out.println(isActive);
+					     * try { Thread.sleep(1000); } catch (Exception e) { e.printStackTrace(); }
+					     * } result = c.sendRequest("GET", "tmitocar/" + message.getRoomId(), "",
+					     * MediaType.TEXT_HTML, "image/png", headers); InputStream in = new
+					     * ByteArrayInputStream(result.getRawResponse()); BufferedImage
+					     * bImageFromConvert = ImageIO.read(in); tempFile = new
+					     * File(message.getRoomId() + ending); ImageIO.write(bImageFromConvert,
+					     * "png", tempFile); }
+					     */
 											else if (role == 3) {
 												room.sendMessage(
-														"Danke für deine Abgabe. Ich leite sie an das Analysesystem 'T-MITOCAR' weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
+							"Danke fÃ¼r deine Abgabe. Ich leite sie an das Analysesystem 'T-MITOCAR' weiter und gebe dir gleich deine RÃ¼ckmeldung. Das dÃ¼rfte nur ein paar Minuten dauern.");
 
 												ending = ".pdf";
 												tempFile = new File(message.getRoomId() + ending);
@@ -733,7 +725,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												Files.write(result.getRawResponse(), tempFile);
 											} else {
 												room.sendMessage(
-														"Ich kann dir leider kein Feedback geben. Du erfÃ¼llst nicht die notwendingen Bedingungen. PrÃ¼fe deine Email Adresse oder deine Kursberechtigungen.");
+							"Ich kann dir leider kein Feedback geben. Du erfÃƒÂ¼llst nicht die notwendingen Bedingungen. PrÃƒÂ¼fe deine Email Adresse oder deine Kursberechtigungen.");
 											}
 											if (tempFile != null) {
 												room.uploadFile(tempFile, message.getRoomId() + ending, "",
@@ -745,7 +737,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 																// TODO Auto-generated method stub
 																if (role != 3) {
 																	room.sendMessage(
-																			"Ich würde mich freuen, wenn du mir sagst, wie du damit zurecht gekommen bist. Damit das einfacher geht, habe ich hier 9 Fragen zusammengestellt: https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/595521?lang=de");
+									    "Ich wÃ¼rde mich freuen, wenn du mir sagst, wie du damit zurecht gekommen bist. Damit das einfacher geht, habe ich hier 9 Fragen zusammengestellt: https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/595521?lang=de");
 																}
 															}
 
@@ -776,11 +768,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 																	String arg2, String arg3, String arg4) {
 																if (role != 3) {
 																	room.sendMessage(
-																			"In dieser PDF-Datei ist das Feedback zu deinem Text. Die Datei enthält Graphendarstellungen und auch eine kurze Erklärung dazu."
-																					+ "Dankeschön!");
+									    "In dieser PDF-Datei ist das Feedback zu deinem Text. Die Datei enthÃ¤lt Graphendarstellungen und auch eine kurze ErklÃ¤rung dazu."
+										    + "DankeschÃ¶n!");
 																} else {
 																	room.sendMessage(
-																			"Ich habe deinen Text mit dem Mustertext zum Thema Medienkompetenz verglichen. Deine Auswertung erhältst du in der folgenden Datei.");
+									    "Ich habe deinen Text mit dem Mustertext zum Thema Medienkompetenz verglichen. Deine Auswertung erhÃ¤ltst du in der folgenden Datei.");
 																}
 
 															}
@@ -820,4 +812,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.disconnect();
 		client = null;
 	}
+
+    @Override
+    public void sendFileToChannel(String channel, ResponseMessage response) {
+	// TODO Auto-generated method stub
+
+    }
 }

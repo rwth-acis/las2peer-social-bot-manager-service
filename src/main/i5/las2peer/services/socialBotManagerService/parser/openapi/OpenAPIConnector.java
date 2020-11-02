@@ -4,8 +4,14 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
@@ -79,6 +85,7 @@ public class OpenAPIConnector {
 	assert action.getFunction() != null : "action parameter service function is null";
 
 	ServiceFunction sf = action.getFunction();
+
 	assert sf.getFunctionPath() != null : "no function path";
 	assert sf.getHttpMethod() != null : "no http method";
 	assert sf.getServiceName() != null : "no service name";
@@ -87,14 +94,32 @@ public class OpenAPIConnector {
 
 	MiniClient client = new MiniClient();
 	client.setConnectorEndpoint(action.getBasePath());
-	if (sf.getProduces() == null)
-	    sf.setProduces("text/plain");
 
 	System.out.println("client: " + client);
 
+	String bodyContent = "";
+	if (action.getBodyParameter() != null)
+	    bodyContent = action.getBodyParameter().toJSONString();
+
+	String consumes = sf.getConsumes();
+	if (consumes == null) {
+	    if (sf.getHttpMethod().equalsIgnoreCase("GET"))
+		consumes = "text/plain";
+	    if (sf.getHttpMethod().equalsIgnoreCase("POST"))
+		consumes = "application/json";
+	}
+
+	String produces = sf.getProduces();
+	if (produces == null) {
+	    if (sf.getHttpMethod().equalsIgnoreCase("GET"))
+		produces = "application/json";
+	    if (sf.getHttpMethod().equalsIgnoreCase("POST"))
+		produces = "text/plain";
+	}
+
 	HashMap<String, String> headers = new HashMap<String, String>();
 	ClientResponse response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(),
-		action.getBodyParameter().toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
+		bodyContent, consumes, produces, headers);
 
 	System.out.println("Response: " + response.getHttpCode() + response.getResponse() + response.getRawResponse());
 	return response.getResponse();
@@ -144,6 +169,74 @@ public class OpenAPIConnector {
 
 	return null;
 
+    }
+
+    public static Collection<String> readEnums(ServiceFunction sf) {
+
+	System.out.println("read enums: " + sf.getServiceName() + " " + sf.getFunctionPath());
+	assert sf != null : "service function is null";
+	assert sf.getServiceName() != null : "service has no name";
+
+	if (sf.getHttpMethod() == null) {
+	    sf.setHttpMethod("GET");
+	}
+
+	assert sf.getHttpMethod().equalsIgnoreCase("GET") : "function is not a GET request";
+
+	if (sf.getProduces() == null)
+	    sf.setProduces("application/json");
+
+	if (sf.getConsumes() == null)
+	    sf.setConsumes("text/plain");
+
+	OpenAPIAction request = new OpenAPIAction(sf);
+	String response = sendRequest(request);
+
+	JsonElement jsonElement = JsonParser.parseString(response);
+
+	if (!jsonElement.isJsonArray()) {
+	    System.out.println("response is not an json array");
+	    return null;
+	}
+
+	JsonArray jsonArray = jsonElement.getAsJsonArray();
+	return readEnums(jsonArray);
+    }
+
+    public static Collection<String> readEnums(JsonArray jsonArray) {
+
+	assert jsonArray != null : "jsonArray is null";
+	assert jsonArray.isJsonArray() : "jsonArray is no jsonArray";
+
+	Collection<String> res = new LinkedList<>();
+	for (JsonElement ele : jsonArray) {
+
+	    if (ele.isJsonPrimitive()) {
+		String pri = ele.getAsString();
+		res.add(pri);
+
+	    } else if (ele.isJsonObject()) {
+		JsonObject obj = ele.getAsJsonObject();
+
+		if (obj.keySet().contains("name")) {
+		    JsonElement jel = obj.get("name");
+		    if (jel.isJsonPrimitive()) {
+			String pri = jel.getAsString();
+			res.add(pri);
+		    }
+		}
+
+		else if (obj.keySet().contains("id")) {
+		    JsonElement jel = obj.get("id");
+		    if (jel.isJsonPrimitive()) {
+			String pri = jel.getAsString();
+			res.add(pri);
+		    }
+		}
+	    }
+	}
+
+	return res;
     }
 
 }

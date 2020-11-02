@@ -1,7 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DefaultNlu extends LanguageUnderstander {
 
@@ -45,8 +48,11 @@ public class DefaultNlu extends LanguageUnderstander {
     }
 
     @Override
-    public String[] getIntents() {
-	return new String[] { "confirm", "deny" };
+    public Collection<String> getIntents() {
+	Set<String> intents = new HashSet<>();
+	intents.add("confirm");
+	intents.add("deny");
+	return intents;
     }
 
 }

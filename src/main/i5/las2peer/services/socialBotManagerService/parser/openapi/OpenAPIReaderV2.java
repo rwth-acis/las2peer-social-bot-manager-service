@@ -71,7 +71,6 @@ public class OpenAPIReaderV2 {
 	action.setFunctionName(operation.getOperationId());
 	action.setHttpMethod(getMethodByOperationId(model, operationId));
 	action.setFunctionPath(getPathByOperationId(model, operationId));
-	System.out.println("description: " + operation.getDescription());
 	if (operation.getDescription() != null && !operation.getDescription().contentEquals(""))
 	    action.setFunctionDescription(operation.getDescription());
 	else if (operation.getSummary() != null && !operation.getSummary().contentEquals(""))
@@ -195,8 +194,6 @@ public class OpenAPIReaderV2 {
 		if (parameter.getIn() != null)
 		    attr.setContentType(parameter.getIn());
 
-		System.out.println("parameter.getIn:" + parameter.getIn());
-
 		// Body Parameter
 		if (parameter.getIn().contentEquals("body")) {
 		    String ref = ((BodyParameter) parameter).getSchema().getReference()
@@ -208,17 +205,22 @@ public class OpenAPIReaderV2 {
 		    attr.setParameterType(ParameterType.BODY);
 
 		}
-		System.out.println(attr.toStringNoChildren());
 		action.addAttribute(attr);
 	    }
 
 	}
 
-	if (operation.getConsumes().contains("application/json"))
-	    action.setConsumes("application/json");
+	// consumes
+	if (operation.getConsumes() != null) {
+	    if (operation.getConsumes().contains("application/json"))
+		action.setConsumes("application/json");
+	}
 
-	if (operation.getProduces().contains("application/json"))
-	    action.setProduces("application/json");
+	// produces
+	if (operation.getProduces() != null) {
+	    if (operation.getProduces().contains("application/json"))
+		action.setProduces("application/json");
+	}
 
 	return action;
 
@@ -227,11 +229,6 @@ public class OpenAPIReaderV2 {
     private static ServiceFunctionAttribute addChildrenAttributes(Swagger openAPI, String ref,
 	    ServiceFunctionAttribute bodyAttribute) {
 	return addChildrenAttributes(openAPI, ref, bodyAttribute, null, 0);
-    }
-
-    private static ServiceFunctionAttribute addChildrenAttributes(Swagger openAPI, Model schema,
-	    ServiceFunctionAttribute bodyAttribute, String ref, String dis) {
-	return addChildrenAttributes(openAPI, ref, bodyAttribute, dis, 0);
     }
 
     private static ServiceFunctionAttribute addChildrenAttributes(Swagger swagger, String ref,
@@ -252,11 +249,12 @@ public class OpenAPIReaderV2 {
 	Json.prettyPrint(model.getClass());
 	// Add properties of model to attribute
 	if (model.getProperties() == null) {
-	    System.out.println("schema " + model.getTitle() + "has no properties. Skip");
+	    System.out.println("schema " + model.getTitle() + " has no properties. Skip");
 	} else {
 
 	    Map<String, Property> properties = model.getProperties();
 	    for (Map.Entry<String, Property> pair : properties.entrySet()) {
+		System.out.println("property: " + pair.getKey());
 
 		String name = pair.getKey();
 		Property property = pair.getValue();
@@ -270,10 +268,10 @@ public class OpenAPIReaderV2 {
 		    childAttr.setParameterType(ParameterType.DISCRIMINATOR);
 		    childAttr = processAttribute(property, childAttr);
 		    childAttr.setRequired(true);
+
 		    List<String> modelRefs = getSubModels(swagger, ref);
 		    parentAttr.addChildAttribute(childAttr);
 		    childAttr.setParent(parentAttr);
-		    System.out.println(childAttr.toStringNoChildren());
 		    for (String sm : modelRefs) {
 			parentAttr = addChildrenAttributes(swagger, sm, parentAttr, sm, rec);
 		    }
@@ -301,13 +299,10 @@ public class OpenAPIReaderV2 {
 			    }
 
 			    if (property instanceof ArrayProperty) {
-				System.out.println("array property");
 				ArrayProperty arrayProperty = (ArrayProperty) property;
 				if (arrayProperty.getItems() != null) {
-				    System.out.println("array has items " + arrayProperty.getName());
 				    ref = ((RefProperty) arrayProperty.getItems()).get$ref()
 					    .substring("#/definitions/".length());
-				    System.out.println("ref " + ref);
 				    childAttr = addChildrenAttributes(swagger, ref, childAttr, dis, rec + 1);
 				}
 			    }
@@ -317,7 +312,6 @@ public class OpenAPIReaderV2 {
 		    if (childAttr != null) {
 			parentAttr.addChildAttribute(childAttr);
 			childAttr.setParent(parentAttr);
-			System.out.println(childAttr.toStringNoChildren());
 		    }
 
 		}
@@ -343,7 +337,6 @@ public class OpenAPIReaderV2 {
 	attr.setRequired(property.getRequired());
 
 	// parameter type
-	System.out.println(property.getType());
 	switch (property.getType()) {
 	case "integer":
 	    attr.setContentType("integer");
@@ -351,10 +344,10 @@ public class OpenAPIReaderV2 {
 	case "string":
 	    StringProperty stringProperty = (StringProperty) property;
 	    attr.setContentType("string");
-	    
+
 	    if (property.getFormat() != null && property.getFormat().contentEquals("url"))
-		    attr.setContentType("url");
-	    
+		attr.setContentType("url");
+
 	    if (stringProperty.getEnum() != null && stringProperty.getEnum().size() > 0) {
 		attr.setContentType("enum");
 		attr.setEnumList(stringProperty.getEnum());
@@ -410,7 +403,6 @@ public class OpenAPIReaderV2 {
 		    if (allOfModel instanceof RefModel) {
 			String ref2 = ((RefModel) allOfModel).get$ref();
 			String ref2sub = ref2.substring("#/definitions/".length());
-			System.out.println("ref " + ref);
 			if (ref.contentEquals(ref2sub) || ref.contentEquals(ref2))
 			    result.add(entry.getKey());
 

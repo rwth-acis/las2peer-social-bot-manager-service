@@ -17,10 +17,10 @@ import com.slack.api.methods.response.users.UsersLookupByEmailResponse;
 import com.slack.api.model.Conversation;
 import com.slack.api.model.ConversationType;
 import com.slack.api.rtm.RTMClient;
-import com.slack.api.rtm.RTMMessageHandler;
 import com.slack.api.rtm.message.Message;
 import com.slack.api.rtm.message.Message.MessageBuilder;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
 public class SlackRTMChatMediator extends ChatMediator {
@@ -137,7 +137,7 @@ public class SlackRTMChatMediator extends ChatMediator {
 				this.slack = new Slack();
 				this.rtm = this.slack.rtm(authToken);
 
-				this.rtm.addMessageHandler((RTMMessageHandler) messageCollector);
+				this.rtm.addMessageHandler(messageCollector);
 				this.rtm.connect();
 				this.botUser = rtm.getConnectedBotUser().toString();
 				this.messageCollector.setConnected(true);
@@ -153,5 +153,11 @@ public class SlackRTMChatMediator extends ChatMediator {
 		// TODO Auto-generated method stub
 
 	}
+
+    @Override
+    public void sendFileToChannel(String channel, ResponseMessage response) {
+	// TODO Auto-generated method stub
+
+    }
 
 }

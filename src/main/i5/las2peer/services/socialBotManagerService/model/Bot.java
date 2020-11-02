@@ -10,6 +10,7 @@ import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
+import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 
@@ -83,9 +84,13 @@ public class Bot {
     }
 
     public void addRasaServer(NLUKnowledge nlu) {
-	RasaNlu rasa = new RasaNlu(nlu.getUrl());
-	rasa.setName(nlu.getName());
-	this.nlus.put(nlu.getId(), rasa);
+	RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
+	String id = nlu.getId();
+	if (id == null)
+	    id = String.valueOf(this.nlus.size());
+	if (id.contentEquals("0") && this.nlus.containsKey("0"))
+	    id = String.valueOf(this.nlus.size());
+	this.nlus.put(id, rasa);
     }
 
     public HashMap<String, LanguageUnderstander> getNLUs() {

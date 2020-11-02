@@ -80,7 +80,8 @@ public class DialogueActGenerator {
 	input.setIntend(slot.getInformIntent());
 	input.setEntity(slot.getEntity());
 	if (slot.getInputType() == InputType.Enum) {
-	    for (String enu : slot.getEnumList()) {
+	    List<String> enumList = slot.getEnumList();
+	    for (String enu : enumList) {
 		input.addEnum(enu);
 	    }
 	}

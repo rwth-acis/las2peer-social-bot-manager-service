@@ -1,13 +1,32 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@ApiModel
 public class NLUKnowledge {
+
+    @ApiModelProperty(dataType = "string", value = "The name of the nlu server", required = true, example = "MyRasaServer")
     String name;
+    @ApiModelProperty
     String id;
-    String url;
+    @ApiModelProperty(dataType = "string", value = "The url of the nlu server", required = true, example = "http://localhost:5005")
+    URL url;
+
+    public NLUKnowledge() {
+
+    }
 
     public NLUKnowledge(String name, String id, String url) {
 	this.name = name;
-	this.url = url;
+	try {
+	    this.url = new URL(url);
+	} catch (MalformedURLException e) {
+	    e.printStackTrace();
+	}
 	if (id != "") {
 	    this.id = id;
 	} else
@@ -23,7 +42,7 @@ public class NLUKnowledge {
 	return this.id;
     }
 
-    public String getUrl() {
+    public URL getUrl() {
 	return this.url;
     }
 

@@ -8,6 +8,7 @@ public class ResponseMessage {
     String message;
     boolean end;
     List<String> buttons = new ArrayList<>();
+    MessageFile file;
 
     public ResponseMessage(String message) {
 	this.message = message;
@@ -43,6 +44,14 @@ public class ResponseMessage {
 
     public void setEnd(boolean end) {
 	this.end = end;
+    }
+
+    public MessageFile getFile() {
+	return file;
+    }
+
+    public void setFile(MessageFile file) {
+	this.file = file;
     }
 
 }

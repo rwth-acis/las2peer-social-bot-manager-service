@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.OptionalLong;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
@@ -65,7 +67,7 @@ public class TelegramChatMediator extends EventChatMediator {
      */
     public void settingWebhook() {
 
-	String url = "https://4310e8a18618.ngrok.io";
+	String url = "https://14e66b4494af.ngrok.io";
 	ClientResponse result = client.sendRequest("GET",
 		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());
@@ -125,6 +127,54 @@ public class TelegramChatMediator extends EventChatMediator {
 	System.out.println(result.getResponse());
     }
 
+    public long storeFile(String file) {
+
+	long id = new Random().nextLong();
+	if (id < 0)
+	    id = -id;
+	int parts = 1;
+	String name = "fileName";
+
+	byte[] bytes = file.getBytes();
+
+	int counter = 0;
+	int partSize = 131072;
+	if(bytes.length <= partSize) {
+	    
+	    String file_id = "file_id=" + String.valueOf(id);
+	    String file_part = "&file_part=" + String.valueOf(0);
+	    String file_byte = "&bytes=" + bytes;
+
+	    ClientResponse result = client.sendRequest("POST",
+		    "saveFilePart?" + file_id + file_part + file_byte,
+		    MediaType.TEXT_PLAIN);
+	    System.out.println(result.getResponse());
+	} else {
+	    System.out.println("large file");
+	}
+	return id;
+
+    }
+
+    @Override
+    public void sendFileToChannel(String channel, ResponseMessage response) {
+
+	assert response != null : "resposne is null";
+	assert response.getFile() != null : "response has no file";
+
+	String file = response.getFile().getData();
+	long id = storeFile(file);
+	
+	String uniqueID = UUID.randomUUID().toString();
+	String ft = "&document={\"file_id\":" + String.valueOf(id) + "\",\"file_unique_id\":\"" + uniqueID + "\"";
+	String chat = "&chat_id=" + channel;
+
+	ClientResponse result = client.sendRequest("POST", "sendmessage?text=file" + chat + ft,
+		MediaType.TEXT_PLAIN);
+
+	System.out.println(result.getResponse());
+    }
+
     @Override
     public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
 	// TODO Auto-generated method stub
@@ -134,5 +184,6 @@ public class TelegramChatMediator extends EventChatMediator {
     public boolean hasToken(String token) {
 	return (this.authToken.equals(token));
     }
+
 
 }

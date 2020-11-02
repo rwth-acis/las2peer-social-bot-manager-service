@@ -14,6 +14,7 @@ public class DialogueAct {
     String message;
     ExpectedInput expected;
     OpenAPIAction action;
+    String file;
     boolean full;
 
     public boolean isFull() {
@@ -147,6 +148,14 @@ public class DialogueAct {
 
     public void setIntentType(DialogueActType intentType) {
 	this.intentType = intentType;
+    }
+
+    public String getFile() {
+	return file;
+    }
+
+    public void setFile(String file) {
+	this.file = file;
     }
 
 }
