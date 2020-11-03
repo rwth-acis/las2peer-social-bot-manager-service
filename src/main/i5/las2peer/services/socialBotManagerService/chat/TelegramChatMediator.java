@@ -3,19 +3,27 @@ package i5.las2peer.services.socialBotManagerService.chat;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.OptionalLong;
-import java.util.Random;
-import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.request.SendDocument;
+import com.pengrad.telegrambot.response.BaseResponse;
+
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
 public class TelegramChatMediator extends EventChatMediator {
 
+    /**
+     * URL address of the SBF manager service
+     */
+    private final static String url = "https://a400517105b5.ngrok.io";
     MiniClient client;
 
     public TelegramChatMediator(String authToken) {
@@ -27,6 +35,14 @@ public class TelegramChatMediator extends EventChatMediator {
 	this.settingWebhook();
     }
 
+    /**
+     * Handle incoming telegram event message.
+     * 
+     * @param event telegram event as json object
+     * @see <a href="https://core.telegram.org/bots/api#getting-updates">Getting
+     *      Telegram Updates</a>
+     *
+     */
     @Override
     public ChatMessage handleEvent(JSONObject event) {
 	assert event != null : "jsonobject event parameter is null";
@@ -59,20 +75,31 @@ public class TelegramChatMediator extends EventChatMediator {
 	    e.printStackTrace();
 	    return null;
 	}
-
     }
 
     /**
      * Registers to receive push notifications from telegram
+     * 
+     * @see <a href="https://core.telegram.org/bots/api#setwebhook">Setting Telegram
+     *      Webhook</a>
      */
     public void settingWebhook() {
+	assert url != null : "url not initialized";
+	assert !url.contentEquals("") : "empty url";
 
-	String url = "https://14e66b4494af.ngrok.io";
-	ClientResponse result = client.sendRequest("GET",
-		"setWebhook?url=" + url + "/sbfmanager/bots/events/telegram/" + super.authToken, MediaType.TEXT_PLAIN);
+	String path = "/sbfmanager/bots/events/telegram/";
+	if (url.endsWith("/sbfmanager")) {
+	    path = "/bots/events/telegram/";
+	}
+
+	ClientResponse result = client.sendRequest("GET", "setWebhook?url=" + url + path + super.authToken,
+		MediaType.TEXT_PLAIN);
 	System.out.println(result.getResponse());
     }
 
+    /**
+     * Sends a text message to telegram messenger channel
+     */
     @Override
     public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
@@ -84,9 +111,9 @@ public class TelegramChatMediator extends EventChatMediator {
 	} catch (UnsupportedEncodingException e) {
 	    e.printStackTrace();
 	}
+
 	ClientResponse result = client.sendRequest("POST",
 		"sendmessage?text=" + encoded + "&chat_id=" + channel + "&parse_mode=Markdown", MediaType.TEXT_PLAIN);
-
 	System.out.println(result.getResponse());
 
     }
@@ -127,52 +154,31 @@ public class TelegramChatMediator extends EventChatMediator {
 	System.out.println(result.getResponse());
     }
 
-    public long storeFile(String file) {
-
-	long id = new Random().nextLong();
-	if (id < 0)
-	    id = -id;
-	int parts = 1;
-	String name = "fileName";
-
-	byte[] bytes = file.getBytes();
-
-	int counter = 0;
-	int partSize = 131072;
-	if(bytes.length <= partSize) {
-	    
-	    String file_id = "file_id=" + String.valueOf(id);
-	    String file_part = "&file_part=" + String.valueOf(0);
-	    String file_byte = "&bytes=" + bytes;
-
-	    ClientResponse result = client.sendRequest("POST",
-		    "saveFilePart?" + file_id + file_part + file_byte,
-		    MediaType.TEXT_PLAIN);
-	    System.out.println(result.getResponse());
-	} else {
-	    System.out.println("large file");
-	}
-	return id;
-
-    }
-
+    /**
+     * Sends a file to an telegram channel
+     */
     @Override
     public void sendFileToChannel(String channel, ResponseMessage response) {
 
 	assert response != null : "resposne is null";
 	assert response.getFile() != null : "response has no file";
 
-	String file = response.getFile().getData();
-	long id = storeFile(file);
-	
-	String uniqueID = UUID.randomUUID().toString();
-	String ft = "&document={\"file_id\":" + String.valueOf(id) + "\",\"file_unique_id\":\"" + uniqueID + "\"";
-	String chat = "&chat_id=" + channel;
+	MessageFile file = response.getFile();
+	String data = file.getData();
+	String name = file.getName();
+	String caption = "";
 
-	ClientResponse result = client.sendRequest("POST", "sendmessage?text=file" + chat + ft,
-		MediaType.TEXT_PLAIN);
+	byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+	TelegramBot bot = new TelegramBot(authToken);
+	SendDocument request = new SendDocument(458385566, bytes);
 
-	System.out.println(result.getResponse());
+	if (caption != null)
+	    request.caption(caption);
+	if (name != null)
+	    request.fileName(name);
+
+	BaseResponse res = bot.execute(request);
+	System.out.println(res.description());
     }
 
     @Override
@@ -184,6 +190,5 @@ public class TelegramChatMediator extends EventChatMediator {
     public boolean hasToken(String token) {
 	return (this.authToken.equals(token));
     }
-
 
 }
