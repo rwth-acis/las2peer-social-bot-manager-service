@@ -21,7 +21,7 @@ import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -260,7 +260,7 @@ public class BotParser {
 			b.addMessenger(m);
 			// Slack identifier applicationID + workspace(team)ID
 			if (m.getChatService().toString().equals("Slack")) {
-			    SlackEventChatMediator mediator = ((SlackEventChatMediator) m.getChatMediator());
+			    SlackChatMediator mediator = ((SlackChatMediator) m.getChatMediator());
 			    vle.addBotbySlackID(m.getName(), mediator.getTeamID(), b);
 			}
 			// NLU Servers

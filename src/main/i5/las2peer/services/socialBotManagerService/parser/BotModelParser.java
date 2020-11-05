@@ -176,6 +176,9 @@ public class BotModelParser {
 	nodes.put(node, id);
 	nodeList.put(id, node);
 
+	node.setHeight(48);
+	node.setWidth(48);
+
 	if (node.getType().contentEquals("Messenger"))
 	    messengers.add(node);
 

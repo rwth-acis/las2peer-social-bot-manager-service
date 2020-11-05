@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 
-public class DefaultMessageGenerator extends AbstractLanguageGenerator {
+public class DefaultMessageGenerator extends LanguageGenerator {
 
     @Override
     public ResponseMessage parse(DialogueAct act) {

@@ -36,6 +36,8 @@ public abstract class ChatMediator {
 		sendMessageToChannel(channel, text, OptionalLong.empty());
 	}
 
+    public abstract boolean sendMessageToChannel(ResponseMessage response);
+
 	public abstract void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id);
 
 	public void sendFileMessageToChannel(String channel, File f, String text) {

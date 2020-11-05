@@ -6,6 +6,7 @@ import java.util.List;
 public class ResponseMessage {
 
     String message;
+    String channel;
     boolean end;
     List<String> buttons = new ArrayList<>();
     MessageFile file;
@@ -52,6 +53,14 @@ public class ResponseMessage {
 
     public void setFile(MessageFile file) {
 	this.file = file;
+    }
+
+    public String getChannel() {
+	return channel;
+    }
+
+    public void setChannel(String channel) {
+	this.channel = channel;
     }
 
 }

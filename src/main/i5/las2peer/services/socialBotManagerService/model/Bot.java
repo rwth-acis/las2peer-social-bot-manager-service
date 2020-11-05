@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
@@ -28,7 +29,9 @@ public class Bot {
     private HashSet<Trigger> triggerList;
     private HashMap<String, ContentGenerator> generatorList;
     private HashMap<String, Messenger> messengers;
+
     private HashMap<String, LanguageUnderstander> nlus;
+    private HashMap<String, LanguageGenerator> nlgs;
 
 
     public Bot() {
@@ -208,6 +211,14 @@ public class Bot {
 
     public void setBotAgent(String botAgent) {
 	this.botAgent = botAgent;
+    }
+
+    public HashMap<String, LanguageGenerator> getNLGs() {
+	return nlgs;
+    }
+
+    public void setNLGs(HashMap<String, LanguageGenerator> nlgs) {
+	this.nlgs = nlgs;
     }
 
 }

@@ -12,9 +12,7 @@ public enum ChatService {
     ROCKET_CHAT("Rocket.Chat", RocketChatMediator.class),
 
     @JsonProperty("Slack")
-    SLACK("Slack", SlackEventChatMediator.class),
-
-    SLACK_RTM("Slack RTM", SlackRTMChatMediator.class),
+    SLACK("Slack", SlackChatMediator.class),
 
     @JsonProperty("Telegram")
     TELEGRAM("Telegram", TelegramChatMediator.class),

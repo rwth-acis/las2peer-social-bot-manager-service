@@ -818,4 +818,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	// TODO Auto-generated method stub
 
     }
+
+    @Override
+    public boolean sendMessageToChannel(ResponseMessage response) {
+	return false;
+	// TODO Auto-generated method stub
+
+    }
+
 }

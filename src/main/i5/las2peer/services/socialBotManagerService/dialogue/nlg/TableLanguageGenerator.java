@@ -10,7 +10,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 
-public class TableLanguageGenerator extends AbstractLanguageGenerator {
+public class TableLanguageGenerator extends LanguageGenerator {
 
     private Map<String, List<String>> table;
 

@@ -4,8 +4,8 @@ import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public class MessageInfo {
-	ChatMessage message;
-	Intent intent;
+	private ChatMessage message;
+	private Intent intent;
 	String triggeredFunctionId;
 	String botName;
 	String serviceAlias;
@@ -13,8 +13,8 @@ public class MessageInfo {
 
 	public MessageInfo(ChatMessage message, Intent intent, String triggeredFunctionId, String botName,
 			String serviceAlias, boolean contextWithService) {
-		this.message = message;
-		this.intent = intent;
+		this.setMessage(message);
+		this.setIntent(intent);
 		this.triggeredFunctionId = triggeredFunctionId;
 		this.botName = botName;
 		this.serviceAlias = serviceAlias;
@@ -47,5 +47,13 @@ public class MessageInfo {
 
 	public boolean contextActive() {
 		return this.contextWithService;
+	}
+
+	public void setIntent(Intent intent) {
+	    this.intent = intent;
+	}
+
+	public void setMessage(ChatMessage message) {
+	    this.message = message;
 	}
 }

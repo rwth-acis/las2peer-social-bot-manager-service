@@ -16,20 +16,17 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
-import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.SlackEventChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
-import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.MetaDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
-import i5.las2peer.services.socialBotManagerService.nlu.DefaultNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
-import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
-import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import net.minidev.json.JSONArray;
@@ -54,14 +51,14 @@ public class Messenger {
     private ChatMediator chatMediator;
 
     /**
+     * The dialogue handler
+     */
+    private DialogueHandler handler;
+
+    /**
      * This map contains all domains of this messenger
      */
     private HashMap<String, Domain> domains;
-
-    /**
-     * This map contains all started dialogue. The key is the channel id
-     */
-    private HashMap<String, Dialogue> openDialogues;
 
     /**
      * This map contains all known frames. The key is the intent keyword
@@ -98,7 +95,7 @@ public class Messenger {
 	System.out.println("Messenger: " + chatService.toString());
 	switch (this.chatService) {
 	case SLACK:
-	    this.chatMediator = new SlackEventChatMediator(token);
+	    this.chatMediator = new SlackChatMediator(token);
 	    break;
 	case TELEGRAM:
 	    this.chatMediator = new TelegramChatMediator(token);
@@ -122,7 +119,9 @@ public class Messenger {
 	// Dialogue Manager
 	DialogueManagerGenerator generator = new DialogueManagerGenerator();
 	this.intentFrames = new HashMap<String, Frame>();
-	this.openDialogues = new HashMap<String, Dialogue>();
+	MetaDialogueManager manager = new MetaDialogueManager(this);
+	this.handler = new DialogueHandler(this, manager);
+
     }
 
     public String getName() {
@@ -174,88 +173,17 @@ public class Messenger {
 	return this.triggeredFunction.get(channel);
     }
 
-    public MessageInfo handleMessage(ChatMessage message, Bot bot) {
+    public void handleMessage(ChatMessage message, Bot bot) {
 
-	if (message == null || message.getText() == null)
-	    return null;
-
-	if (this.currentNluModel.get(message.getChannel()) == null) {
-	    this.currentNluModel.put(message.getChannel(), "0");
-	}
-
-	System.out.println("Message Text  : " + message.getText());
-	System.out.println("Message Channel  : " + message.getChannel());
-
-	Intent intent = null;
-	if (message.hasCommand()) {
-	    System.out.println("treat command as intent: " + message.getCommand());
-	    intent = new Intent(message.getCommand(), 1.0f);
-	} else {
-
-	    try {
-	System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
-	    intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
-	    } catch (Exception e) {
-		e.printStackTrace();
-
-		// fallback default nlu
-		LanguageUnderstander dnlu = new DefaultNlu();
-		intent = dnlu.getIntent(message.getText());
-
-	    }
-	}
+	assert message != null : "message parameter is null";
+	assert bot != null : "bot parameter is null";
+	assert handler != null : "dialogue handler is null";
+	assert this.chatMediator != null : "chat mediator is null";
 		
-	String channel = message.getChannel();
-	MessageInfo info = new MessageInfo();
-	info.intent = intent;
-	info.message = message;
+	ResponseMessage response = handler.handleMessage(message, bot);
+	this.chatMediator.sendMessageToChannel(response);
 
-	// abort
-	if (info.getIntent().getIntentType() == IntentType.CANCEL
-		|| info.getIntent().getIntentType() == IntentType.START) {
-
-	    if (this.openDialogues.containsKey(channel)) {
-		this.openDialogues.remove(channel);
-	    }
-	}
-	
-	
-	ResponseMessage response = null;
-	// Open Dialogues
-	if (this.openDialogues.containsKey(channel)) {
-	    System.out.println("resume open dialogue: " + message.getChannel());
-	    try {
-	    response = this.openDialogues.get(channel).handle(info);
-	    } catch (Exception e) {
-		e.printStackTrace();
-		response = new ResponseMessage("I am sorry. I had an error.");
-		this.openDialogues.remove(channel);
-	    }
-
-	} else {
-	    Dialogue dialogue = new Dialogue(this);
-	    this.openDialogues.put(channel, dialogue);
-	    response = dialogue.handle(info);
-	    System.out.println("start new dialogue: " + message.getChannel());
-	}
-	    
-	if (response.isEnd() && openDialogues.containsKey(channel))
-	    this.openDialogues.remove(channel);
-	
-	if (response.getFile() != null)
-	    this.getChatMediator().sendFileToChannel(channel, response);
-
-	EventChatMediator medi;
-	if (!response.hasButtons())
-	    this.getChatMediator().sendMessageToChannel(channel, response.getMessage());
-	else {
-	    medi = (EventChatMediator) this.getChatMediator();
-	    medi.sendMessageToChannel(channel, response);
-	}
-
-	MessageInfo messageInfo = new MessageInfo();
-
-	return messageInfo;
+	return;
     }
 
     // Handles simple responses ("Chat Response") directly, logs all messages and
@@ -622,14 +550,6 @@ public class Messenger {
 	    res.add(frame.getCommand());
 	}
 	return res;
-    }
-
-    public HashMap<String, Dialogue> getOpenDialogues() {
-	return this.openDialogues;
-    }
-
-    public void setOpenDialogues(HashMap<String, Dialogue> openDialogues) {
-	this.openDialogues = openDialogues;
     }
 
 }

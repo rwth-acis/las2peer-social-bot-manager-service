@@ -14,7 +14,7 @@ import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
-public class SlackEventChatMediator extends EventChatMediator {
+public class SlackChatMediator extends EventChatMediator {
 
 	/**
 	 * Main object of the Slack API Java library
@@ -34,7 +34,7 @@ public class SlackEventChatMediator extends EventChatMediator {
 	/**
 	 * @param authToken used to authenticate the bot when accessing the slack API
 	 */
-	public SlackEventChatMediator(String authToken) {
+	public SlackChatMediator(String authToken) {
 		super(authToken);
 		this.slack = Slack.getInstance();
 		this.requestAuthTest();
@@ -206,15 +206,16 @@ public class SlackEventChatMediator extends EventChatMediator {
 		this.appID = appID;
 	}
 
+
     @Override
-    public void sendMessageToChannel(String channel, ResponseMessage response) {
+    public void sendFileToChannel(String channel, ResponseMessage response) {
 	// TODO Auto-generated method stub
 
     }
 
     @Override
-    public void sendFileToChannel(String channel, ResponseMessage response) {
-	// TODO Auto-generated method stub
+    public boolean sendMessageToChannel(ResponseMessage response) {
+	return false;
 
     }
 

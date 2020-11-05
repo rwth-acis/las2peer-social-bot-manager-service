@@ -23,7 +23,7 @@ public class TelegramChatMediator extends EventChatMediator {
     /**
      * URL address of the SBF manager service
      */
-    private final static String url = "https://a400517105b5.ngrok.io";
+    private final static String url = "https://2e638066b111.ngrok.io";
     MiniClient client;
 
     public TelegramChatMediator(String authToken) {
@@ -119,11 +119,18 @@ public class TelegramChatMediator extends EventChatMediator {
     }
 
     @Override
-    public void sendMessageToChannel(String channel, ResponseMessage response) {
+    public boolean sendMessageToChannel(ResponseMessage response) {
+
+	assert response != null : "response parameter is null";
+	assert response.getChannel() != null : "response has no channel";
+
+	String channel = response.getChannel();
+	if (response.getFile() != null)
+	    sendFileToChannel(channel, response);
 
 	if (response.getButtons() == null || response.getButtons().isEmpty()) {
 	    sendMessageToChannel(channel, response.getMessage());
-	    return;
+	    return true;
 	}
 
 	String text = response.getMessage();
@@ -152,6 +159,10 @@ public class TelegramChatMediator extends EventChatMediator {
 		MediaType.TEXT_PLAIN);
 
 	System.out.println(result.getResponse());
+
+	if (result.getHttpCode() == 200)
+	    return true;
+	return false;
     }
 
     /**

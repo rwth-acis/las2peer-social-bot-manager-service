@@ -3,7 +3,9 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -68,6 +70,11 @@ public class MetaDialogueManager {
 
     public void resetActive() {
 	this.active = null;
+    }
+
+    public ResponseMessage handle(Dialogue dialogue) {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

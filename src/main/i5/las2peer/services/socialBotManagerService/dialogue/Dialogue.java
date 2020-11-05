@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.MetaDialogueManager;
-import i5.las2peer.services.socialBotManagerService.dialogue.nlg.AbstractLanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
@@ -22,7 +22,7 @@ public class Dialogue {
     Messenger messenger;
     MetaDialogueManager manager;
     LanguageUnderstander nlu;
-    AbstractLanguageGenerator nlg;
+    LanguageGenerator nlg;
     DialogueAct lastAct;
     DefaultMessageGenerator gen;
 
@@ -185,11 +185,11 @@ public class Dialogue {
 	this.nlu = nlu;
     }
 
-    public AbstractLanguageGenerator getNlg() {
+    public LanguageGenerator getNlg() {
 	return nlg;
     }
 
-    public void setNlg(AbstractLanguageGenerator nlg) {
+    public void setNlg(LanguageGenerator nlg) {
 	this.nlg = nlg;
     }
 
