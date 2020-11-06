@@ -17,11 +17,14 @@ public class OpenAPIAction {
 
     private Map<String, String> pathParameters;
 
-    public OpenAPIAction() {
+    private ResponseParseMode responseParseMode;
 
+    public OpenAPIAction() {
+	this.responseParseMode = ResponseParseMode.TEXT;
     }
 
     public OpenAPIAction(ServiceFunction sf) {
+	super();
 	this.function = sf;
     }
 
@@ -132,6 +135,14 @@ public class OpenAPIAction {
 	return "OpenAPIAction [bodyParameter=" + bodyParameter + ", queryParameters=" + queryParameters
 		+ ", pathParameters=" + pathParameters + ", getRequestMethod()=" + getRequestMethod()
 		+ ", getBasePath()=" + getBasePath() + ", getFunctionPath()=" + getFunctionPath() + "]";
+    }
+
+    public ResponseParseMode getResponseParseMode() {
+	return responseParseMode;
+    }
+
+    public void setResponseParseMode(ResponseParseMode responseParseMode) {
+	this.responseParseMode = responseParseMode;
     }
 
 }

@@ -7,6 +7,7 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ResponseParseMode;
 
 public class DialogueGoal {
 
@@ -182,6 +183,9 @@ public class DialogueGoal {
 	res.setBodyParameter(root.toJSON());
 	res.setPathParameters(root.getPathParameters());
 	res.setQueryParameters(root.getQueryParameters());
+
+	if (getFrame().getFile() != null)
+	    res.setResponseParseMode(ResponseParseMode.FILE);
 
 	return res;
     }

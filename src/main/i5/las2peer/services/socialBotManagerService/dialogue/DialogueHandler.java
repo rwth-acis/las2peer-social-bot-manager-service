@@ -9,9 +9,6 @@ import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerat
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
-import i5.las2peer.services.socialBotManagerService.nlu.DefaultNlu;
-import i5.las2peer.services.socialBotManagerService.nlu.Intent;
-import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 /**
@@ -66,43 +63,9 @@ public class DialogueHandler {
 	Map<String, LanguageUnderstander> nlus = bot.getNLUs();
 	Map<String, LanguageGenerator> nlgs = bot.getNLGs();
 
-	Intent intent = null;
-
-	// message command
-	if (message.hasCommand()) {
-	    System.out.println("treat command as intent: " + message.getCommand());
-	    intent = new Intent(message.getCommand(), 1.0f);
-	} else {
-
-	    // NLU Module
-	    try {
-		System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
-		intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
-	    } catch (Exception e) {
-		e.printStackTrace();
-
-		// fallback default nlu
-		LanguageUnderstander dnlu = new DefaultNlu();
-		intent = dnlu.getIntent(message.getText());
-
-	    }
-	}
-
-	String channel = message.getChannel();
-
-	// Cancel dialogue, Start new dialogue
-	if (intent.getIntentType() == IntentType.CANCEL || intent.getIntentType() == IntentType.START) {
-
-	    if (this.openDialogues.containsKey(channel)) {
-		this.openDialogues.remove(channel);
-	    }
-	}
-
-	ResponseMessage response = null;
-
-	Dialogue dialogue = null;
-
 	// get dialogue
+	Dialogue dialogue = null;
+	String channel = message.getChannel();
 	if (this.openDialogues.containsKey(channel)) {
 	    dialogue = this.openDialogues.get(channel);
 	    System.out.println("resume open dialogue: " + message.getChannel());
@@ -115,6 +78,7 @@ public class DialogueHandler {
 	}
 
 	// handle dialogue
+	ResponseMessage response = null;
 	try {
 	    response = this.manager.handle(dialogue);
 
@@ -123,7 +87,10 @@ public class DialogueHandler {
 	    response = new ResponseMessage("I am sorry. I had an error.");
 	    this.openDialogues.remove(channel);
 	}
-	
+
+	// end dialogue
+	if (response.isEnd())
+	    this.openDialogues.remove(channel);
 
 	return handleResponse(response);
     }

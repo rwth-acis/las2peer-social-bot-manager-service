@@ -12,9 +12,11 @@ public class DialogueAct {
     DialogueActType intentType;
     Map<String, String> entities;
     String message;
+
     ExpectedInput expected;
     OpenAPIAction action;
     String file;
+
     boolean full;
 
     public boolean isFull() {

@@ -42,7 +42,6 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
 		return this.intentMessageMap.containsKey(intent);
 	}
 
-	@Override
 	public DialogueAct handleDefault() {
 		if (intentMessageMap.get("default") != null) {
 			List<String> responses = intentMessageMap.get("default");

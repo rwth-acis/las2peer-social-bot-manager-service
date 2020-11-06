@@ -54,7 +54,7 @@ public class MetaDialogueManager {
 	if (active != null) {
 	    if (semantic.getType() == IntentType.CONFIRM || semantic.getType() == IntentType.DENY)
 		active.handle(semantic);
-	    return active.handleDefault();
+	    return null;
 
 	}
 

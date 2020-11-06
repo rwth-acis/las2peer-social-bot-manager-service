@@ -5,6 +5,7 @@ import java.util.List;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
 public class DialogueActGenerator {
@@ -137,6 +138,15 @@ public class DialogueActGenerator {
 	input.setType(InputType.Confirmation);
 	act.setExpected(input);
 	return act;
+    }
+
+    public DialogueAct getInvalidValueAct(ExpectedInput input) {
+
+	DialogueAct act = new DialogueAct();
+	act.setExpected(input);
+	act.setMessage(new DefaultMessageGenerator().getInvalidValue(input));
+	return act;
+
     }
 
     public DialogueAct getMainMenuAct(List<Command> operations) {

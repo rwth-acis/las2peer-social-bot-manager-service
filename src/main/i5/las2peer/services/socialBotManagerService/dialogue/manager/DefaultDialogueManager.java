@@ -19,7 +19,6 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
     DialogueGoal goal;
     DialogueActGenerator gen;
-    String start_intent;
     boolean optional;
 
     public DefaultDialogueManager(DialogueGoal goal) {
@@ -36,7 +35,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 	// first call
 	String intent = semantic.getKeyword();
-	if (intent.equals(start_intent))
+	if (intent.equals(getStartIntent()))
 	    return requestNextSlot();
 
 	// get corresponding slot
@@ -124,7 +123,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 		return gen.getRequestAct(node);
 
 	    // user confirm but bot dont know why
-	    return this.handleDefault();
+	    return requestNextSlot();
 
 	case DENY:
 
@@ -166,19 +165,14 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
     @Override
     public boolean hasIntent(String intent) {
 	assert intent != null : "intent parameter is null";
-	assert this.start_intent != null : "no start intent defined";
+	assert getStartIntent() != null : "no start intent defined";
 
-	if (intent.contentEquals(this.start_intent))
+	if (intent.contentEquals(getStartIntent()))
 	    return true;
 	if (intent.contentEquals(goal.getFrame().getConfirmIntent())
 		|| intent.contentEquals(goal.getFrame().getConfirmIntent() + "_optional"))
 	    return true;
 	return goal.contains(intent);
-    }
-
-    @Override
-    public DialogueAct handleDefault() {
-	return requestNextSlot();
     }
 
     @Override
@@ -226,10 +220,6 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
     }
 
-    public void setStartIntent(String intent) {
-	this.start_intent = intent;
-    }
-
     @Override
     public Collection<String> getIntents() {
 	Collection<String> intents = new ArrayList<String>();
@@ -241,7 +231,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	    intents.add(slot.getDenyIntent());
 	}
 
-	intents.add(start_intent);
+	intents.add(getStartIntent());
 	intents.add(goal.getFrame().getConfirmIntent());
 	intents.add(goal.getFrame().getConfirmIntent() + "_optional");
 	return intents;
