@@ -184,7 +184,7 @@ public class DialogueGoal {
 	res.setPathParameters(root.getPathParameters());
 	res.setQueryParameters(root.getQueryParameters());
 
-	if (getFrame().getFile() != null)
+	if (getFrame().getFile() != null && !getFrame().getFile().contentEquals(""))
 	    res.setResponseParseMode(ResponseParseMode.FILE);
 
 	return res;

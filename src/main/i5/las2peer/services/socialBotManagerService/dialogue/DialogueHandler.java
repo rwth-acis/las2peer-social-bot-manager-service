@@ -5,11 +5,9 @@ import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.MetaDialogueManager;
-import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.PipelineManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
-import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
-import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 /**
  * The DialogueHandler maintains all open dialogues.
@@ -36,10 +34,16 @@ public class DialogueHandler {
      * @param messenger
      * @param manager
      */
-    public DialogueHandler(Messenger messenger, MetaDialogueManager manager) {
+    public DialogueHandler(Messenger messenger) {
+
+	assert messenger != null : "messenger is null";
+	System.out.println("create dialogue handler");
+
 	this.messenger = messenger;
-	this.manager = manager;
 	this.openDialogues = new HashMap<>();
+
+	this.manager = new PipelineManager(messenger);
+
 	invariant();
     }
 
@@ -48,20 +52,16 @@ public class DialogueHandler {
      * @param bot
      * @return
      */
-    public ResponseMessage handleMessage(ChatMessage message, Bot bot) {
+    public ResponseMessage handleMessage(ChatMessage message) {
 
 	assert message != null : "message parameter is null";
 	assert message.getText() != null : "message has no text";
 	assert message.getChannel() != null : "message has no channel";
-	assert bot != null : "bot parameter is null";
 	invariant();
 
 	System.out.println("Handle message \"" + message.getText() + "\" in channel " + message.getChannel());
 	if (message == null || message.getText() == null || message.getChannel() == null)
 	    return null;
-
-	Map<String, LanguageUnderstander> nlus = bot.getNLUs();
-	Map<String, LanguageGenerator> nlgs = bot.getNLGs();
 
 	// get dialogue
 	Dialogue dialogue = null;
@@ -80,7 +80,7 @@ public class DialogueHandler {
 	// handle dialogue
 	ResponseMessage response = null;
 	try {
-	    response = this.manager.handle(dialogue);
+	    response = this.manager.handle(messenger, message, dialogue);
 
 	} catch (Exception e) {
 	    e.printStackTrace();

@@ -3,18 +3,22 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
-import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
-import i5.las2peer.services.socialBotManagerService.nlu.Intent;
-import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
-public class MetaDialogueManager {
+public abstract class MetaDialogueManager {
 
     Collection<AbstractDialogueManager> managers;
     AbstractDialogueManager active;
+
+    public MetaDialogueManager() {
+
+    }
+
+    public abstract ResponseMessage handle(Messenger messenger, ChatMessage message, Dialogue dialogue);
 
     public MetaDialogueManager(Messenger messenger) {
 
@@ -30,51 +34,7 @@ public class MetaDialogueManager {
 
     }
 
-    public DialogueAct handle(Intent semantic) {
 
-	assert semantic != null : "semantic is null";
-	assert managers != null : "managers is null";
-	assert !managers.isEmpty() : "no dialogue manager defined";
-	assert semantic.getKeyword() != null : "semantic has no intent";
 
-	String intent = semantic.getKeyword();
-
-	for (AbstractDialogueManager manager : this.managers) {
-	    System.out.println("handle intent: " + intent);
-	    if (manager.hasIntent(intent)) {
-		active = manager;
-		DialogueAct response = manager.handle(semantic);
-		if (response.isFull()) {
-		    active = null;
-		}
-		return response;
-	    }
-	}
-
-	if (active != null) {
-	    if (semantic.getType() == IntentType.CONFIRM || semantic.getType() == IntentType.DENY)
-		active.handle(semantic);
-	    return null;
-
-	}
-
-	return null;
-    }
-
-    public void reset() {
-
-	for (AbstractDialogueManager manager : this.managers) {
-	    manager.reset();
-	}
-    }
-
-    public void resetActive() {
-	this.active = null;
-    }
-
-    public ResponseMessage handle(Dialogue dialogue) {
-	// TODO Auto-generated method stub
-	return null;
-    }
 
 }

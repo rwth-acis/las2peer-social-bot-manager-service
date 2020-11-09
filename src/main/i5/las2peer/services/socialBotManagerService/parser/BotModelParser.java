@@ -54,7 +54,7 @@ public class BotModelParser {
     public BotModel parse(Bot bot, BotConfiguration config) {
 
 	BotModel model = new BotModel();
-
+	model.setAttributes(addBotModelAttributes());
 
 	// VLE Instance
 	String vleName = "vleName";
@@ -83,7 +83,7 @@ public class BotModelParser {
 		nluURL = nlu.getUrl();
 	    }
 	}
-	
+
 	BotModelNode nluNode = addNode("NLU Knowledge");
 	addAttribute(nluNode, "Name", nluName);
 	addAttribute(nluNode, "ID", nluID);
@@ -229,7 +229,7 @@ public class BotModelParser {
 	label.setId(id);
 	label.setName(name);
 	label.setValue(getValue(id, name, value));
-	
+
 	return label;
     }
 
@@ -247,6 +247,20 @@ public class BotModelParser {
 
     }
 
+    public BotModelAttribute addBotModelAttributes() {
+
+	BotModelAttribute res = new BotModelAttribute();
+	res.setHeight(0);
+	res.setWidth(0);
+	res.setLeft(0);
+	res.setTop(0);
+	res.setzIndex(0);
+	res.setType("ModelAttributesNode");
+	res.setLabel(getLabel("modelAttributes[label]", "Label", "Model Attributes"));
+	return res;
+
+    }
+
     public void addMessengerEdges(BotModelNode target, String type) {
 
 	for (BotModelNode messenger : this.messengers) {
@@ -260,5 +274,25 @@ public class BotModelParser {
 	return UUID.randomUUID().toString();
     }
 
+    public BotModel order(BotModel model) {
+
+	int z = 16000;
+	int i = 100;
+	int j = 100;
+
+	for (BotModelNode node : model.getNodes().values()) {
+
+	    node.setzIndex(z);
+	    node.setLeft(i);
+	    node.setTop(j);
+
+	    z++;
+	    i = i + 80;
+	    j = j + 80;
+
+	}
+
+	return model;
+    }
 
 }

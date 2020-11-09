@@ -24,7 +24,7 @@ public class OpenAPIAction {
     }
 
     public OpenAPIAction(ServiceFunction sf) {
-	super();
+	this();
 	this.function = sf;
     }
 

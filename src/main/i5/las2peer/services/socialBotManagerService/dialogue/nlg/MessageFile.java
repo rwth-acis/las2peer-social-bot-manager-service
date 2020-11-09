@@ -30,4 +30,5 @@ public class MessageFile {
 	this.type = type;
     }
 
+
 }

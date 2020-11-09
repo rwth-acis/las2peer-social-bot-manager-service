@@ -48,6 +48,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -660,7 +661,7 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println(message.getText());
 
 				if (message != null)
-				    messenger.handleMessage(message, bot);
+				    messenger.handleMessage(message);
 
 			    }
 			}
@@ -708,7 +709,7 @@ public class SocialBotManagerService extends RESTService {
 			parsedBody = (JSONObject) jsonParser.parse(body);
 			ChatMessage message = mediator.handleEvent(parsedBody);
 			if (message != null)
-			    messenger.handleMessage(message, bot);
+			    messenger.handleMessage(message);
 		    } catch (ParseException e) {
 			e.printStackTrace();
 		    }
@@ -1564,6 +1565,7 @@ public class SocialBotManagerService extends RESTService {
 
 		BotModelParser botModelParser = new BotModelParser();
 		botModel = botModelParser.parse(bot, SocialBotManagerService.getConfig());
+		botModel = botModelParser.order(botModel);
 
 	    } catch (Exception e) {
 		e.printStackTrace();
@@ -1571,7 +1573,7 @@ public class SocialBotManagerService extends RESTService {
 	    }
 
 	    try {
-	    Gson gson = new Gson();
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String res = gson.toJson(botModel);
 		return Response.ok().entity(res).build();
 
@@ -1614,8 +1616,8 @@ public class SocialBotManagerService extends RESTService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-	@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
-	public Response createNlu(NLUKnowledge nlu) {
+	@ApiOperation(value = "Creates NLU model", notes = "creates the nlu model.")
+	public Response createNLU(NLUKnowledge nlu) {
 
 	    try {
 

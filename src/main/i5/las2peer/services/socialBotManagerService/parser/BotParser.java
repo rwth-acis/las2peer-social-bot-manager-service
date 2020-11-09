@@ -258,6 +258,7 @@ public class BotParser {
 		    if (messengers.get(target) != null) {
 			Messenger m = messengers.get(target);
 			b.addMessenger(m);
+			m.setBot(b);
 			// Slack identifier applicationID + workspace(team)ID
 			if (m.getChatService().toString().equals("Slack")) {
 			    SlackChatMediator mediator = ((SlackChatMediator) m.getChatMediator());

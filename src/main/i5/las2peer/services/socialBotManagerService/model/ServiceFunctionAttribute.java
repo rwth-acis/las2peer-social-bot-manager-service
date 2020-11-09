@@ -216,6 +216,14 @@ public class ServiceFunctionAttribute {
     }
 
     public List<String> getEnumList() {
+
+	if (this.enumList != null)
+	    return this.enumList;
+	return getUpdatedEnumList();
+
+    }
+
+    public List<String> getUpdatedEnumList() {
 	List<String> res = null;
 
 	if (this.retrieveFunction != null) {

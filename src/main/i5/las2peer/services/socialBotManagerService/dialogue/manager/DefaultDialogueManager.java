@@ -35,7 +35,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 
 	// first call
 	String intent = semantic.getKeyword();
-	if (intent.equals(getStartIntent()))
+	if (intent.equalsIgnoreCase(getStartIntent()))
 	    return requestNextSlot();
 
 	// get corresponding slot
@@ -167,7 +167,7 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 	assert intent != null : "intent parameter is null";
 	assert getStartIntent() != null : "no start intent defined";
 
-	if (intent.contentEquals(getStartIntent()))
+	if (intent.equalsIgnoreCase(getStartIntent()))
 	    return true;
 	if (intent.contentEquals(goal.getFrame().getConfirmIntent())
 		|| intent.contentEquals(goal.getFrame().getConfirmIntent() + "_optional"))
@@ -204,18 +204,9 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
     private DialogueAct perform() {
 	DialogueAct act = new DialogueAct();
 	act.setAction(goal.getOpenAPIAction());
-	act.setMessage("perform action");
 	if (goal.getFrame().getFile() != null)
 	    act.setFile(goal.getFrame().getFile());
 	this.reset();
-	return act;
-
-    }
-
-    private DialogueAct repeat() {
-
-	DialogueAct act = new DialogueAct();
-//
 	return act;
 
     }

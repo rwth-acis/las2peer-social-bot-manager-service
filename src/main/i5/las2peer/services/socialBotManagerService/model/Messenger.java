@@ -22,8 +22,6 @@ import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.MetaDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -54,6 +52,11 @@ public class Messenger {
      * The dialogue handler
      */
     private DialogueHandler handler;
+
+    /**
+     * The bot this messenger corresponds to
+     */
+    private Bot bot;
 
     /**
      * This map contains all domains of this messenger
@@ -117,11 +120,13 @@ public class Messenger {
 	this.triggeredFunction = new HashMap<String, String>();
 
 	// Dialogue Manager
-	DialogueManagerGenerator generator = new DialogueManagerGenerator();
 	this.intentFrames = new HashMap<String, Frame>();
-	MetaDialogueManager manager = new MetaDialogueManager(this);
-	this.handler = new DialogueHandler(this, manager);
-
+	try {
+	    this.handler = new DialogueHandler(this);
+	} catch (Error e) {
+	    e.printStackTrace();
+	    throw e;
+	}
     }
 
     public String getName() {
@@ -173,15 +178,20 @@ public class Messenger {
 	return this.triggeredFunction.get(channel);
     }
 
-    public void handleMessage(ChatMessage message, Bot bot) {
+    public void handleMessage(ChatMessage message) {
 
 	assert message != null : "message parameter is null";
-	assert bot != null : "bot parameter is null";
 	assert handler != null : "dialogue handler is null";
 	assert this.chatMediator != null : "chat mediator is null";
-		
-	ResponseMessage response = handler.handleMessage(message, bot);
-	this.chatMediator.sendMessageToChannel(response);
+
+	try {
+
+	    ResponseMessage response = handler.handleMessage(message);
+	    this.chatMediator.sendMessageToChannel(response);
+
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
 
 	return;
     }
@@ -550,6 +560,14 @@ public class Messenger {
 	    res.add(frame.getCommand());
 	}
 	return res;
+    }
+
+    public Bot getBot() {
+	return bot;
+    }
+
+    public void setBot(Bot bot) {
+	this.bot = bot;
     }
 
 }

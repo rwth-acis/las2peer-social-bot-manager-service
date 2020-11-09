@@ -41,4 +41,9 @@ public class Entity {
 	public String getValue() {
 		return value;
 	}
+
+    @Override
+    public String toString() {
+	return "Entity [entityName=" + entityName + ", value=" + value + "]";
+    }
 }

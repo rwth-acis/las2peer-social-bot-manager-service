@@ -8,5 +8,7 @@ public enum IntentType {
     REQCONF,
     REVERT, CANCEL,
     HELP, START,
+    COMMAND,
+    UNKOWN,
     TALK;
 }

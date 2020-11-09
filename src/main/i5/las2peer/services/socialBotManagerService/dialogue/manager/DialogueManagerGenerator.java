@@ -10,47 +10,51 @@ import i5.las2peer.services.socialBotManagerService.model.Messenger;
 
 public class DialogueManagerGenerator {
 
-	public AbstractDialogueManager generate(DialogueManagerType type, Messenger messenger) {
-		return this.generate(type, messenger, null);
+    public AbstractDialogueManager generate(DialogueManagerType type, Messenger messenger) {
+	return this.generate(type, messenger, null);
+    }
+
+    public AbstractDialogueManager generate(DialogueManagerType type, Messenger messenger, Frame frame) {
+
+	System.out.println("generate Dialogue Manager " + type);
+
+	AbstractDialogueManager manager;
+	switch (type) {
+	case NAIVE:
+	    manager = generateNaiveDialogueManager(frame);
+	    break;
+	case SIMPLE:
+	    manager = generateSimpleDialogueManager(messenger);
+	    break;
+	default:
+	    manager = null;
 	}
 
-	public AbstractDialogueManager generate(DialogueManagerType type, Messenger messenger, Frame frame) {
+	if (frame != null)
+	    manager.setStartIntent(frame.getIntent());
 
-		System.out.println("generate Dialogue Manager " + type);
-		AbstractDialogueManager manager;
-		switch (type) {
-		case NAIVE:
-			manager = generateNaiveDialogueManager(frame);
-			break;
-		case SIMPLE:
-			manager = generateSimpleDialogueManager(messenger);
-			break;
-		default:
-			manager = null;
-		}
-		return manager;
-	}
+	return manager;
+    }
 
-	private AbstractDialogueManager generateNaiveDialogueManager(Frame frame) {
+    private AbstractDialogueManager generateNaiveDialogueManager(Frame frame) {
 
-		DialogueGoal goal = new DialogueGoal(frame);
-		DefaultDialogueManager manager = new DefaultDialogueManager(goal);
-		manager.setStartIntent(frame.getIntent());
+	DialogueGoal goal = new DialogueGoal(frame);
+	DefaultDialogueManager manager = new DefaultDialogueManager(goal);
+	manager.setStartIntent(frame.getIntent());
 
-		return manager;
-	}
+	return manager;
+    }
 
-	private AbstractDialogueManager generateSimpleDialogueManager(Messenger messenger) {
+    private AbstractDialogueManager generateSimpleDialogueManager(Messenger messenger) {
 
-		SimpleDialogueManager manager = new SimpleDialogueManager();
+	SimpleDialogueManager manager = new SimpleDialogueManager();
 
-		Collection<IncomingMessage> messages = messenger.getIncomingMessages();
-		for (IncomingMessage message : messages)
-			if (message.getResponseArray() != null)
-				for (ChatResponse response : message.getResponseArray())
-					manager.addIntent(message.getIntentKeyword(), response.getResponse());
-		return manager;
-	}
-
+	Collection<IncomingMessage> messages = messenger.getIncomingMessages();
+	for (IncomingMessage message : messages)
+	    if (message.getResponseArray() != null)
+		for (ChatResponse response : message.getResponseArray())
+		    manager.addIntent(message.getIntentKeyword(), response.getResponse());
+	return manager;
+    }
 
 }

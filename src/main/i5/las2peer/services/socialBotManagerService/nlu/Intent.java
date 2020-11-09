@@ -41,7 +41,7 @@ public class Intent {
 	    entitiesMap.put(entity.getEntityName(), entity);
 	});
 	this.entities = entitiesMap;
-	this.intentType = getType();
+	this.intentType = getIntentType();
     }
 
     // Constructor for bypassing intent extraction. Used for '!'-commands, for
@@ -51,13 +51,13 @@ public class Intent {
 	this.confidence = 1.0f;
 	this.entities = new HashMap<String, Entity>();
 	this.entities.put(entityName, new Entity(entityName, entityValue));
-	this.intentType = getType();
+	this.intentType = getIntentType();
     }
 
     public Intent(String keyword, float confidence) {
 	this.intentKeyword = replaceUmlaute(keyword);
 	this.confidence = confidence;
-	this.intentType = getType();
+	this.intentType = getIntentType();
 	this.entities = new HashMap<String, Entity>();
     }
 
@@ -97,7 +97,9 @@ public class Intent {
 	return new ArrayList<Entity>();
     }
 
-    public IntentType getType() {
+    public IntentType deriveType() {
+
+	assert this.intentKeyword != null : "no intent keyword set";
 
 	String intent = this.getKeyword();
 	if (intent.startsWith("info"))
@@ -117,16 +119,23 @@ public class Intent {
 	if (intent.contentEquals("help"))
 	    return IntentType.HELP;
 
-
 	return IntentType.TALK;
     }
 
     public IntentType getIntentType() {
-	return intentType;
+
+	return this.intentType;
     }
+
 
     public void setIntentType(IntentType intentType) {
 	this.intentType = intentType;
+    }
+
+    @Override
+    public String toString() {
+	return "Intent [intentKeyword=" + intentKeyword + ", intentType=" + intentType + ", entities=" + entities
+		+ "]";
     }
 
 }

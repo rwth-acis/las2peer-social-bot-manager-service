@@ -56,4 +56,9 @@ public class MessageInfo {
 	public void setMessage(ChatMessage message) {
 	    this.message = message;
 	}
+
+    @Override
+    public String toString() {
+	return "MessageInfo: [" + this.message.toString() + ", " + this.intent.toString() + "]";
+    }
 }
