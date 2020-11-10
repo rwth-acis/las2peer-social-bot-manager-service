@@ -210,6 +210,12 @@ public class PipelineManager extends MetaDialogueManager {
 		semantic.addEntity(expected.getEntity(), entity);
 		message.setIntent(semantic);
 
+		if (dialogue.getActiveManager() != null) {
+		    DialogueAct res = dialogue.handle(dialogue.getActiveManager(), message);
+		    if (res != null)
+			return res;
+		}
+
 	    } else {
 
 		DialogueActGenerator gen = new DialogueActGenerator();

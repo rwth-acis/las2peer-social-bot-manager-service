@@ -62,7 +62,6 @@ public class BotModelParser {
 	BotModelNode vleNode = addNode("Instance");
 	addAttribute(vleNode, "Name", vleName);
 	addAttribute(vleNode, "Address", vleAddress);
-	vleNode.setLabel(getLabel("expand", "expand", "TRUE"));
 
 	// Bot
 	BotModelNode botNode = addNode("Bot");
@@ -178,6 +177,7 @@ public class BotModelParser {
 
 	node.setHeight(48);
 	node.setWidth(48);
+	node.setLabel(getLabel(id + "[label]", "Label", ""));
 
 	if (node.getType().contentEquals("Messenger"))
 	    messengers.add(node);
@@ -190,9 +190,10 @@ public class BotModelParser {
 	if (node.getAttributes() == null)
 	    node.setAttributes(new LinkedHashMap<String, BotModelNodeAttribute>());
 
+	String nodeId = nodes.get(node);
 	LinkedHashMap<String, BotModelNodeAttribute> attributes = node.getAttributes();
-	BotModelNodeAttribute attr = getNodeAttribute(name, value);
-	attributes.put(attr.getId(), attr);
+	BotModelNodeAttribute attr = getNodeAttribute(nodeId, name, value);
+	attributes.put(getID(), attr);
 	node.setAttributes(attributes);
 
     }
@@ -205,13 +206,13 @@ public class BotModelParser {
 	return attribute;
     }
 
-    public BotModelNodeAttribute getNodeAttribute(String name, String value) {
+    public BotModelNodeAttribute getNodeAttribute(String nodeId, String name, String value) {
 
 	BotModelNodeAttribute res = new BotModelNodeAttribute();
 	res.setName(name);
-	String id = getID();
-	res.setId(id + "[" + name.toLowerCase() + "]");
-	res.setValue(getValue(id, name, value));
+	nodeId = nodeId + "[" + name.toLowerCase() + "]";
+	res.setId(nodeId);
+	res.setValue(getValue(nodeId, name, value));
 	return res;
     }
 
@@ -238,6 +239,7 @@ public class BotModelParser {
 	BotModelEdge edge = new BotModelEdge();
 	edge.setSource(nodes.get(source));
 	edge.setTarget(nodes.get(target));
+	edge.setAttributes(new LinkedHashMap<>());
 	edge.setType(type);
 	String id = getID();
 	edge.setLabel(getLabel(id + "[" + "value" + "]", "Label", ""));
@@ -257,6 +259,7 @@ public class BotModelParser {
 	res.setzIndex(0);
 	res.setType("ModelAttributesNode");
 	res.setLabel(getLabel("modelAttributes[label]", "Label", "Model Attributes"));
+	res.setAttributes(new LinkedHashMap<>());
 	return res;
 
     }
@@ -271,14 +274,14 @@ public class BotModelParser {
     }
 
     public String getID() {
-	return UUID.randomUUID().toString();
+	return UUID.randomUUID().toString().replace("-", "");
     }
 
     public BotModel order(BotModel model) {
 
-	int z = 16000;
-	int i = 100;
-	int j = 100;
+	int z = 16001;
+	int i = 4200;
+	int j = 4200;
 
 	for (BotModelNode node : model.getNodes().values()) {
 

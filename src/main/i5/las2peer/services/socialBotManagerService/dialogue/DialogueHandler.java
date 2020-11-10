@@ -84,15 +84,24 @@ public class DialogueHandler {
 
 	} catch (Exception e) {
 	    e.printStackTrace();
-	    response = new ResponseMessage("I am sorry. I had an error.");
-	    this.openDialogues.remove(channel);
+	    response = handleError(channel);
 	}
+
+	// null as error
+	if (response == null)
+	    response = handleError(channel);
 
 	// end dialogue
 	if (response.isEnd())
 	    this.openDialogues.remove(channel);
 
 	return handleResponse(response);
+    }
+
+    private ResponseMessage handleError(String channel) {
+	ResponseMessage response = new ResponseMessage("I am sorry. I had an error. Restart conversation.");
+	this.openDialogues.remove(channel);
+	return response;
     }
 
     private ResponseMessage handleResponse(ResponseMessage response) {

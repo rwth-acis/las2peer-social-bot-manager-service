@@ -127,7 +127,7 @@ public class BotParser {
 		vle = setVLEInstance(elem);
 		System.out.println("VLE Instance");
 		// Remember old bots
-		if (elem.getLabel().getId().contentEquals("expand")) {
+		if (config.getServiceConfiguration(vle.getName()) != null) {
 		    System.out.println("expand");
 		    VLE vleOld = config.getServiceConfiguration(vle.getName());
 		    if (vleOld != null) {

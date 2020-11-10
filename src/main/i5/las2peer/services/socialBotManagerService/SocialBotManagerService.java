@@ -1573,6 +1573,25 @@ public class SocialBotManagerService extends RESTService {
 	    }
 
 	    try {
+		
+		BotModelResource bmr = new BotModelResource();
+		bmr.putModel("botName", botModel);
+
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+
+	    try {
+
+		BotResource br = new BotResource();
+		br.init(botModel);
+
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+
+	    try {
+		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String res = gson.toJson(botModel);
 		return Response.ok().entity(res).build();
