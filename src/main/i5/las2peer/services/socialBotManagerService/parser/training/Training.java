@@ -8,6 +8,7 @@ public class Training {
 
     @ApiModelProperty(dataType = "string", value = "The name of the nlu module", required = true)
     String nluName;
+
     List<DataGroup> dataGroup;
 
     public String getNluName() {

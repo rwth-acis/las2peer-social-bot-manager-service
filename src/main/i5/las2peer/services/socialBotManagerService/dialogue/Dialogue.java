@@ -68,14 +68,13 @@ public class Dialogue {
 
     public void cancel() {
 
-	System.out.println("cancel: " + this.activeManager);
-
 	this.lastAct = null;
-	if (this.activeManager != null)
-	    this.inputs.get(activeManager).clear();
-	else
-	    this.inputs.clear();
+	if (activeManager == null)
+	    return;
 
+	System.out.println("cancel: " + this.activeManager);
+	if (this.inputs.get(activeManager) != null)
+	    this.inputs.get(activeManager).clear();
 	this.activeManager.reset();
 
     }
@@ -87,9 +86,8 @@ public class Dialogue {
 	if (this.activeManager != null) {
 	    List<MessageInfo> infos = this.inputs.get(activeManager);
 	    if (this.activeManager.getStartIntent() != null)
-		System.out.println(
-			"revert: " + infos.get(infos.size() - 1) + " on " + this.activeManager.getStartIntent());
-	    infos.remove(infos.size() - 1);
+		if (!infos.isEmpty())
+		    infos.remove(infos.size() - 1);
 	    replay(activeManager);
 
 	}
@@ -108,7 +106,6 @@ public class Dialogue {
 	for (MessageInfo info : list) {
 	    this.lastAct = this.handle(manager, info);
 	}
-
 
     }
 

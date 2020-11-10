@@ -33,5 +33,9 @@ public abstract class LanguageUnderstander {
 	this.url = url;
     }
 
+    @Override
+    public String toString() {
+	return "LanguageUnderstander [name=" + name + ", url=" + url + "]";
+    }
 
 }

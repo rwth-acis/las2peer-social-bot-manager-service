@@ -70,4 +70,9 @@ public class RasaNlu extends LanguageUnderstander {
 	}
     }
 
+    @Override
+    public String toString() {
+	return super.toString();
+    }
+
 }

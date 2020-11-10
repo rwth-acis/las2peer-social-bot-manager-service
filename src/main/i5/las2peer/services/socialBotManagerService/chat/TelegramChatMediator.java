@@ -9,7 +9,10 @@ import java.util.OptionalLong;
 import javax.ws.rs.core.MediaType;
 
 import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.model.request.ReplyKeyboardRemove;
 import com.pengrad.telegrambot.request.SendDocument;
+import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
@@ -23,7 +26,7 @@ public class TelegramChatMediator extends EventChatMediator {
     /**
      * URL address of the SBF manager service
      */
-    private final static String url = "https://9ba1c9d244da.ngrok.io";
+    private final static String url = "https://tech4comp.dbis.rwth-aachen.de:31024";
     MiniClient client;
 
     public TelegramChatMediator(String authToken) {
@@ -104,17 +107,14 @@ public class TelegramChatMediator extends EventChatMediator {
     public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
 	System.out.println("send telegram message: " + text);
-	String encoded = "";
-	try {
-	    text = text.replace("_", "\\_");
-	    encoded = URLEncoder.encode(text, "UTF-8");
-	} catch (UnsupportedEncodingException e) {
-	    e.printStackTrace();
-	}
-
-	ClientResponse result = client.sendRequest("POST",
-		"sendmessage?text=" + encoded + "&chat_id=" + channel + "&parse_mode=Markdown", MediaType.TEXT_PLAIN);
-	System.out.println(result.getResponse());
+	
+	TelegramBot bot = new TelegramBot(authToken);
+	SendMessage request = new SendMessage(channel, text);
+	request.parseMode(ParseMode.Markdown);
+	request.replyMarkup(new ReplyKeyboardRemove());
+	
+	BaseResponse res = bot.execute(request);
+	System.out.println(res);
 
     }
 

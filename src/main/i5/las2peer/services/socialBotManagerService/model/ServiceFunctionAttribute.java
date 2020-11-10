@@ -223,19 +223,23 @@ public class ServiceFunctionAttribute {
 
     }
 
-    public List<String> getUpdatedEnumList() {
-	List<String> res = null;
-
+    public void update() {
+	
 	if (this.retrieveFunction != null) {
-	    res = (List<String>) OpenAPIConnector.readEnums(this.retrieveFunction);
-	    if (this.enumList == null || this.enumList.isEmpty())
-		this.enumList = res;
+	    List<String> retrievedEnums = (List<String>) OpenAPIConnector.readEnums(this.retrieveFunction);
+	    if (retrievedEnums != null && !retrievedEnums.isEmpty())
+		this.enumList = retrievedEnums;
 	}
 	
-	if (res != null)
-	    return res;
+    }
 
-	return enumList;
+    public List<String> getUpdatedEnumList() {
+	
+	if (this.enumList != null && !this.enumList.isEmpty())
+	    return this.enumList;
+
+	update();
+	return this.enumList;
     }
 
     public void setEnumList(List<String> list) {

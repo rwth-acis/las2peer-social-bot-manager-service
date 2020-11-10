@@ -353,4 +353,8 @@ public class Slot {
 	return this.parameter.getParameterType();
     }
 
+    public void update() {
+	this.parameter.update();
+    }
+
 }

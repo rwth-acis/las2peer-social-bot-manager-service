@@ -15,6 +15,11 @@ public class ResponseMessage {
 	this.message = message;
     }
 
+    public ResponseMessage(String message, String channel) {
+	this.message = message;
+	this.channel = channel;
+    }
+
     public String getMessage() {
 	return message;
     }

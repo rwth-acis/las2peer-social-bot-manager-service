@@ -97,21 +97,26 @@ public class PipelineManager extends MetaDialogueManager {
 
 	semantic.setIntentType(semantic.deriveType());
 
-	// build-in command intents
-	switch (semantic.getIntentType()) {
+	if (dialogue.getActiveManager() != null) {
+	    // build-in command intents
+	    switch (semantic.getIntentType()) {
 
-	case REVERT:
-	    dialogue.revert();
-	    if (dialogue.getLastAct() != null)
-		return dialogue.getLastAct();
-	case CANCEL:
-	    dialogue.cancel();
-	    // return main menu
-	    DialogueActGenerator gen = new DialogueActGenerator();
-	    List<Command> operations = messenger.getCommands();
-	    return gen.getMainMenuAct(operations);
-	default:
-	    break;
+	    case REVERT:
+		dialogue.revert();
+		if (dialogue.getLastAct() != null)
+		    return dialogue.getLastAct();
+	    case CANCEL:
+		dialogue.cancel();
+		// return main menu
+		DialogueActGenerator gen = new DialogueActGenerator();
+		List<Command> operations = messenger.getCommands();
+		return gen.getMainMenuAct(operations);
+	    case START:
+		gen = new DialogueActGenerator();
+		return gen.getMainMenuAct(messenger.getCommands());
+	    default:
+		break;
+	    }
 	}
 
 	// priority intents (e.g start new frame)
@@ -122,14 +127,17 @@ public class PipelineManager extends MetaDialogueManager {
 	    }
 	}
 
+	DialogueActGenerator gen = new DialogueActGenerator();
 	if (dialogue.isEmpty()) {
+
 	    // return main menu
-	    DialogueActGenerator gen = new DialogueActGenerator();
 	    List<Command> operations = messenger.getCommands();
 	    return gen.getMainMenuAct(operations);
 	}
 
-	return null;
+	// not recognized command
+	return gen.getUnknownCommandAct();
+
     }
 
     public MessageInfo handleUnderstanding(ChatMessage message, Map<String, LanguageUnderstander> nlus) {

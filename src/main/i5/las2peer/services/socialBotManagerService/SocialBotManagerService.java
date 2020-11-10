@@ -1643,7 +1643,11 @@ public class SocialBotManagerService extends RESTService {
 		RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
 		getConfig().addNLU(rasa);
 
-		return Response.ok().entity("nlu addes").build();
+		if(getConfig().getNLU(nlu.getName()) == null)
+		    return Response.serverError().entity("nlu creation failed").build();
+		
+		String message = "The NLU Knowledge was created: " + rasa.toString();
+		return Response.ok().entity(message).build();
 
 	    } catch (Exception e) {
 		e.printStackTrace();
@@ -1662,7 +1666,7 @@ public class SocialBotManagerService extends RESTService {
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 	@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
-	public Response trainNlu(Training training) {
+	public Response trainNLU(Training training) {
 
 	    try {
 		

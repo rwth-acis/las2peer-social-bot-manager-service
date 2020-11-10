@@ -81,6 +81,7 @@ public class DialogueActGenerator {
 	input.setIntend(slot.getInformIntent());
 	input.setEntity(slot.getEntity());
 	if (slot.getInputType() == InputType.Enum) {
+	    slot.update();
 	    List<String> enumList = slot.getEnumList();
 	    for (String enu : enumList) {
 		input.addEnum(enu);
@@ -162,6 +163,16 @@ public class DialogueActGenerator {
 	    System.out.println("command " + operation.getName() + ": " + operation.getDescription());
 	    act.addEntity(operation.getName(), operation.getDescription());
 	}
+	return act;
+    }
+
+    public DialogueAct getUnknownCommandAct() {
+
+	DialogueAct act = new DialogueAct();
+	act.setIntent("error_command_unknown");
+	act.setIntentType(DialogueActType.ERROR);
+	act.setMessage("Sorry, I dont know this command.");
+
 	return act;
     }
 

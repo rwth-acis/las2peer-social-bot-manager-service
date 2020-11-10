@@ -80,11 +80,13 @@ public class DialogueHandler {
 	// handle dialogue
 	ResponseMessage response = null;
 	try {
+
 	    response = this.manager.handle(messenger, message, dialogue);
 
-	} catch (Exception e) {
-	    e.printStackTrace();
+	} catch (Error e) {
+	    System.out.println("error in dialogue management");
 	    response = handleError(channel);
+	    e.printStackTrace();
 	}
 
 	// null as error
@@ -99,7 +101,8 @@ public class DialogueHandler {
     }
 
     private ResponseMessage handleError(String channel) {
-	ResponseMessage response = new ResponseMessage("I am sorry. I had an error. Restart conversation.");
+	System.out.println("handle error in channel: " + channel);
+	ResponseMessage response = new ResponseMessage("I am sorry. I had an error. Restart conversation.", channel);
 	this.openDialogues.remove(channel);
 	return response;
     }
