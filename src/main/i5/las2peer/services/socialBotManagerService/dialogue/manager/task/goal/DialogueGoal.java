@@ -43,7 +43,6 @@ public class DialogueGoal {
     }
 
     /**
-     * @param slot
      * @param value
      * @return true if slot was filled. false if value does not match the slot.
      */
@@ -59,7 +58,6 @@ public class DialogueGoal {
     }
 
     /**
-     * @param slot
      * @return true if slot was deleted. false if slot was not filled.
      */
     public boolean delete(Fillable node) {
@@ -73,7 +71,7 @@ public class DialogueGoal {
     }
 
     /**
-     * @param slot
+     * @param node
      * @return true if slot is part of this goal.
      */
     public boolean contains(Node node) {
@@ -103,7 +101,7 @@ public class DialogueGoal {
     }
 
     /**
-     * @param slot
+     * @param node
      * @return true if slot is filled.
      */
     public boolean isFilled(Fillable node) {

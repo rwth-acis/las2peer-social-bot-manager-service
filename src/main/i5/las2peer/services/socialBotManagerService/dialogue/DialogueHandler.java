@@ -32,7 +32,6 @@ public class DialogueHandler {
 
     /**
      * @param messenger
-     * @param manager
      */
     public DialogueHandler(Messenger messenger) {
 
@@ -49,7 +48,6 @@ public class DialogueHandler {
 
     /**
      * @param message
-     * @param bot
      * @return
      */
     public ResponseMessage handleMessage(ChatMessage message) {

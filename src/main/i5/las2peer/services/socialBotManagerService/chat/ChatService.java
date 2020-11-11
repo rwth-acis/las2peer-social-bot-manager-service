@@ -46,7 +46,7 @@ public enum ChatService {
     /**
      * 
      * 
-     * @ @return TRUE if string represents the chat service
+     * @return TRUE if string represents the chat service
      */
     public final boolean isEquals(String string) {
 	return (this.string.equals(string));

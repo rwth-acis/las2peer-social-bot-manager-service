@@ -115,10 +115,10 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	/**
-	 * Adds a message to the message collection
-	 * 
-	 * @param message The Slack message event in JSON format
-	 */
+     * Adds a message to the message collection
+     * 
+     * @param parsedMessage The Slack message event in JSON format
+     */
 	public ChatMessage addMessage(JSONObject parsedMessage) {
 
 		try {

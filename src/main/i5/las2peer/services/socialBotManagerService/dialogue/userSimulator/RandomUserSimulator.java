@@ -39,6 +39,7 @@ public class RandomUserSimulator {
 	    res.addEntity(entity.getEntityName(), entity);
 	}
 
+	res.setIntentType(res.deriveType());
 	return res;
     }
 

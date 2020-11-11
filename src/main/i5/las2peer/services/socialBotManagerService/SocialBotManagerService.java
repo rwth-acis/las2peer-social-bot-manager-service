@@ -1605,7 +1605,6 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	/**
-	 * @param bot The bot model
 	 * @return ok
 	 */
 	@GET
@@ -1627,7 +1626,6 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	/**
-	 * @param bot The bot model
 	 * @return ok
 	 */
 	@POST
@@ -1657,7 +1655,6 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	/**
-	 * @param bot The bot model
 	 * @return ok
 	 */
 	@POST
