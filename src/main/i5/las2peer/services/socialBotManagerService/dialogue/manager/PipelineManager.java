@@ -162,7 +162,9 @@ public class PipelineManager extends MetaDialogueManager {
 	    }
 	    i++;
 	}
-	intent.setIntentType(intent.deriveType());
+
+	if (intent != null)
+	    intent.setIntentType(intent.deriveType());
 
 	MessageInfo res = new MessageInfo();
 	res.setIntent(intent);

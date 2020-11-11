@@ -78,14 +78,14 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 	System.out.println(entities.entrySet());
 
 	String name = entities.get("name");
-	message = message.concat("What is the *").concat(name).concat("* \n\n");
+	message = message.concat("What is the *").concat(escape(name)).concat("* \n\n");
 	System.out.println(message);
 
 	if (entities.containsKey("description"))
-	    message = message.concat("Description:\t" + entities.get("description") + "\n");
+	    message = message.concat("Description:\t" + escape(entities.get("description")) + "\n");
 
 	if (entities.containsKey("example"))
-	    message = message.concat("Example:    \t" + entities.get("example") + "\n");
+	    message = message.concat("Example:    \t" + escape(entities.get("example")) + "\n");
 
 	if (act.hasExpected() && act.getExpected().getType() != null)
 	    message = message.concat("\n" + this.InputTypeMessage(act.getExpected()) + "\n");
@@ -93,7 +93,7 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 	    List<String> enums = act.getExpected().getEnums();
 	    message = message.concat(enums.get(0));
 	    for (String enu : enums.subList(1, enums.size()))
-		message = message.concat(", " + enu);
+		message = message.concat(", " + escape(enu));
 	}
 
 	ResponseMessage res = new ResponseMessage(message);
@@ -182,9 +182,9 @@ public class DefaultMessageGenerator extends LanguageGenerator {
     }
 
     public String getInvalidValue(ExpectedInput input) {
-	
+
 	assert input != null : "expected input parameter is null";
-	
+
 	String message = null;
 	switch (input.getType()) {
 
@@ -215,10 +215,15 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 	    break;
 
 	}
-	
-	
 
 	return message;
+    }
+
+    public String escape(String text) {
+
+	String res = text.replaceAll("\\*", "\\\\*").replace("\\", "\\\\").replace("_", "\\_");
+	res = res.replaceAll("#", "\\#").replaceAll("\\+", "\\\\+").replaceAll("-", "\\-");
+	return res;
     }
 
 }

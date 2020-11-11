@@ -26,7 +26,7 @@ public class TelegramChatMediator extends EventChatMediator {
     /**
      * URL address of the SBF manager service
      */
-    private final static String url = "https://tech4comp.dbis.rwth-aachen.de:31024";
+    private final static String url = "https://5363679c294f.ngrok.io";
     MiniClient client;
 
     public TelegramChatMediator(String authToken) {
@@ -114,6 +114,13 @@ public class TelegramChatMediator extends EventChatMediator {
 	request.replyMarkup(new ReplyKeyboardRemove());
 	
 	BaseResponse res = bot.execute(request);
+	if (res.isOk())
+	    return;
+
+	System.out.println("Response[ errorCode: " + res.errorCode() + ", description: " + res.description());
+
+	request = new SendMessage(channel, text);
+	res = bot.execute(request);
 	System.out.println(res);
 
     }
