@@ -27,6 +27,8 @@ import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Messenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.TelegramMessenger;
+import i5.las2peer.services.socialBotManagerService.parser.drawing.DrawingAlgorithm;
+import i5.las2peer.services.socialBotManagerService.parser.drawing.SpringEmbedders;
 
 public class BotModelParser {
 
@@ -59,9 +61,11 @@ public class BotModelParser {
 	// VLE Instance
 	String vleName = "vleName";
 	String vleAddress = "http://127.0.0.1:8070/";
+	String seperator = "";
 	BotModelNode vleNode = addNode("Instance");
 	addAttribute(vleNode, "Name", vleName);
 	addAttribute(vleNode, "Address", vleAddress);
+	addAttribute(vleNode, "Environment Separator", seperator);
 
 	// Bot
 	BotModelNode botNode = addNode("Bot");
@@ -160,6 +164,7 @@ public class BotModelParser {
 	    }
 	}
 
+	processNodes();
 	model.setEdges(edgeList);
 	model.setNodes(nodeList);
 	return model;
@@ -242,7 +247,7 @@ public class BotModelParser {
 	edge.setAttributes(new LinkedHashMap<>());
 	edge.setType(type);
 	String id = getID();
-	edge.setLabel(getLabel(id + "[" + "value" + "]", "Label", ""));
+	edge.setLabel(getLabel(id + "[" + "label" + "]", "Label", ""));
 
 	edgeList.put(id, edge);
 	return edge;
@@ -273,27 +278,41 @@ public class BotModelParser {
 	}
     }
 
+    public void processNodes() {
+
+	for (BotModelNode node : this.nodeList.values()) {
+	    for (BotModelNodeAttribute attr : node.getAttributes().values()) {
+		if (attr.getName().equalsIgnoreCase("Name")) {
+		    String id = this.nodes.get(node) + "[name]";
+		    String name = "Name";
+		    String value = attr.getValue().getValue();
+		    node.setLabel(getLabel(id, name, value));
+		}
+	    }
+	}
+
+    }
+
     public String getID() {
-	return UUID.randomUUID().toString().replace("-", "");
+	return UUID.randomUUID().toString().replace("-", "").substring(0, 24);
     }
 
     public BotModel order(BotModel model) {
 
-	int z = 16001;
-	int i = 4200;
-	int j = 4200;
+	/*
+	 * int z = 16001; int i = 4200; int j = 4200;
+	 * 
+	 * for (BotModelNode node : model.getNodes().values()) {
+	 * 
+	 * node.setzIndex(z); node.setLeft(i); node.setTop(j);
+	 * 
+	 * z++; i = i + 80; j = j + 80;
+	 * 
+	 * }
+	 */
 
-	for (BotModelNode node : model.getNodes().values()) {
-
-	    node.setzIndex(z);
-	    node.setLeft(i);
-	    node.setTop(j);
-
-	    z++;
-	    i = i + 80;
-	    j = j + 80;
-
-	}
+	DrawingAlgorithm algorithm = new SpringEmbedders(model);
+	algorithm.execute();
 
 	return model;
     }
