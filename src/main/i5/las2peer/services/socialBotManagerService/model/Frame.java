@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 
 public class Frame {
 

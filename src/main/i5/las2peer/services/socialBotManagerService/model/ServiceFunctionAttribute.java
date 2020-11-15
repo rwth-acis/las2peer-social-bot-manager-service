@@ -27,6 +27,7 @@ public class ServiceFunctionAttribute {
     // content attribute
     private String nluQuizContent;
 
+    private boolean file;
     // retrieved by swagger
     private String description;
     private String example;
@@ -315,5 +316,13 @@ public class ServiceFunctionAttribute {
     public void setRetrieveFunction(ServiceFunction retrieveFunction) {
 	this.retrieveFunction = retrieveFunction;
     }
+
+	public boolean isFile() {
+		return file;
+	}
+
+	public void setFile(boolean file) {
+		this.file = file;
+	}
 
 }
