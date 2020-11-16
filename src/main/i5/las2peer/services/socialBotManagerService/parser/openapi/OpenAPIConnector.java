@@ -16,6 +16,9 @@ import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.security.BotAgent;
+import i5.las2peer.services.socialBotManagerService.SocialBotManagerService;
+import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
@@ -23,220 +26,248 @@ import io.swagger.parser.util.SwaggerDeserializationResult;
 
 public class OpenAPIConnector {
 
-    public static ServiceFunction readFunction(ServiceFunction action) {
+	public static ServiceFunction readFunction(ServiceFunction action) {
 
-	assert action != null : "read open api function: action parameter is null";
-	assert action.getServiceName() != null : "read open api function: action has no service url specified";
-	assert (action.getFunctionName() != null || (action.getFunctionPath() != null
-		&& action.getHttpMethod() != null)) : "read open api function: no function specified";
+		assert action != null : "read open api function: action parameter is null";
+		assert action.getServiceName() != null : "read open api function: action has no service url specified";
+		assert (action.getFunctionName() != null || (action.getFunctionPath() != null
+				&& action.getHttpMethod() != null)) : "read open api function: no function specified";
 
-	// base url
-	String baseUrl = action.getServiceName();
-	String last = baseUrl.substring(baseUrl.length() - 1);
-	if (last.contentEquals("/"))
-	    baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+		// base url
+		String baseUrl = action.getServiceName();
+		String last = baseUrl.substring(baseUrl.length() - 1);
+		if (last.contentEquals("/"))
+			baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
 
-	// retrieve path of model definition
-	String modelUrl = getSwaggerDocument(baseUrl);
-	if (modelUrl == null) {
-	    System.out.println("swagger definition not found");
-	    return null;
-	}
-
-	// read model definition
-	OpenApi3 model = OpenAPIReaderV3.readModel(modelUrl);
-	if (model == null) {
-	    System.out.println("open api model not found: " + modelUrl);
-	    return null;
-	}
-
-	// read function V2
-	if (!model.isValid()) {
-	    SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUrl, null, true);
-	    Swagger swagger = swaggerParseResult.getSwagger();
-	    if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
-		action = OpenAPIReaderV2.readAction(swagger, action.getFunctionPath(), action.getHttpMethod());
-	    } else if (action.getFunctionName() != null) {
-		action = OpenAPIReaderV2.readAction(swagger, action.getFunctionName());
-	    } else {
-		System.out.println("service function not defined");
-	    }
-	    action.setServiceName(baseUrl);
-	    return action;
-	}
-
-	// read function V3
-	if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
-	    action = OpenAPIReaderV3.readAction(model, action.getFunctionPath(), action.getHttpMethod());
-	} else if (action.getFunctionName() != null) {
-	    action = OpenAPIReaderV3.readAction(model, action.getFunctionName());
-	} else {
-	    System.out.println("service function not defined");
-	}
-
-	assert action.getFunctionDescription() != null : "service has no description";
-	action.setServiceName(baseUrl);
-	return action;
-    }
-
-    public static String sendRequest(OpenAPIAction action) {
-
-	assert action != null : "action parameter is null";
-	assert action.getFunction() != null : "action parameter service function is null";
-
-	ServiceFunction sf = action.getFunction();
-
-	assert sf.getFunctionPath() != null : "no function path";
-	assert sf.getHttpMethod() != null : "no http method";
-	assert sf.getServiceName() != null : "no service name";
-
-	System.out.println("perform REST action: " + action.toString());
-
-	MiniClient client = new MiniClient();
-	client.setConnectorEndpoint(action.getBasePath());
-
-	System.out.println("client: " + client);
-
-	String bodyContent = "";
-	if (action.getBodyParameter() != null)
-	    bodyContent = action.getBodyParameter().toJSONString();
-
-	String consumes = sf.getConsumes();
-	if (consumes == null) {
-	    if (sf.getHttpMethod().equalsIgnoreCase("GET"))
-		consumes = "text/plain";
-	    if (sf.getHttpMethod().equalsIgnoreCase("POST"))
-		consumes = "application/json";
-	}
-
-	String produces = sf.getProduces();
-	if (produces == null) {
-	    if (sf.getHttpMethod().equalsIgnoreCase("GET"))
-		produces = "application/json";
-	    if (sf.getHttpMethod().equalsIgnoreCase("POST"))
-		produces = "text/plain";
-	}
-
-	HashMap<String, String> headers = new HashMap<String, String>();
-	ClientResponse response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(),
-		bodyContent, consumes, produces, headers);
-
-	System.out.println("Response: " + response.getHttpCode() + response.getResponse() + response.getRawResponse());
-	return response.getResponse();
-
-    }
-
-    private static String getSwaggerDocument(String baseUrl) {
-
-	if (baseUrl.contains(".json"))
-	    return baseUrl;
-
-	URL url;
-	try {
-	    String res = baseUrl + "/swagger.json";
-	    url = new URL(res);
-
-	    HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-	    huc.setRequestMethod("HEAD");
-	    int responseCode = huc.getResponseCode();
-
-	    if (responseCode == 200)
-		return res;
-
-	    res = baseUrl + "/v2/swagger.json";
-	    url = new URL(res);
-	    huc = (HttpURLConnection) url.openConnection();
-	    huc.setRequestMethod("HEAD");
-	    responseCode = huc.getResponseCode();
-
-	    if (responseCode == 200)
-		return res;
-
-	    res = baseUrl + "/api/v3/openapi.json";
-	    url = new URL(res);
-	    huc = (HttpURLConnection) url.openConnection();
-	    huc.setRequestMethod("HEAD");
-	    responseCode = huc.getResponseCode();
-
-	    if (responseCode == 200)
-		return res;
-
-	} catch (MalformedURLException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
-
-	}
-
-	return null;
-
-    }
-
-    public static Collection<String> readEnums(ServiceFunction sf) {
-
-	System.out.println("read enums: " + sf.getServiceName() + " " + sf.getFunctionPath());
-	assert sf != null : "service function is null";
-	assert sf.getServiceName() != null : "service has no name";
-
-	if (sf.getHttpMethod() == null) {
-	    sf.setHttpMethod("GET");
-	}
-
-	assert sf.getHttpMethod().equalsIgnoreCase("GET") : "function is not a GET request";
-
-	if (sf.getProduces() == null)
-	    sf.setProduces("application/json");
-
-	if (sf.getConsumes() == null)
-	    sf.setConsumes("text/plain");
-
-	OpenAPIAction request = new OpenAPIAction(sf);
-	String response = sendRequest(request);
-
-	JsonElement jsonElement = JsonParser.parseString(response);
-
-	if (!jsonElement.isJsonArray()) {
-	    System.out.println("response is not an json array");
-	    return null;
-	}
-
-	JsonArray jsonArray = jsonElement.getAsJsonArray();
-	return readEnums(jsonArray);
-    }
-
-    public static Collection<String> readEnums(JsonArray jsonArray) {
-
-	assert jsonArray != null : "jsonArray is null";
-	assert jsonArray.isJsonArray() : "jsonArray is no jsonArray";
-
-	Collection<String> res = new LinkedList<>();
-	for (JsonElement ele : jsonArray) {
-
-	    if (ele.isJsonPrimitive()) {
-		String pri = ele.getAsString();
-		res.add(pri);
-
-	    } else if (ele.isJsonObject()) {
-		JsonObject obj = ele.getAsJsonObject();
-
-		if (obj.keySet().contains("name")) {
-		    JsonElement jel = obj.get("name");
-		    if (jel.isJsonPrimitive()) {
-			String pri = jel.getAsString();
-			res.add(pri);
-		    }
+		// retrieve path of model definition
+		String modelUrl = getSwaggerDocument(baseUrl);
+		if (modelUrl == null) {
+			System.out.println("swagger definition not found");
+			return null;
 		}
 
-		else if (obj.keySet().contains("id")) {
-		    JsonElement jel = obj.get("id");
-		    if (jel.isJsonPrimitive()) {
-			String pri = jel.getAsString();
-			res.add(pri);
-		    }
+		// read model definition
+		OpenApi3 model = OpenAPIReaderV3.readModel(modelUrl);
+		if (model == null) {
+			System.out.println("open api model not found: " + modelUrl);
+			return null;
 		}
-	    }
+
+		// read function V2
+		if (!model.isValid()) {
+			SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUrl, null, true);
+			Swagger swagger = swaggerParseResult.getSwagger();
+			if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
+				action = OpenAPIReaderV2.readAction(swagger, action.getFunctionPath(), action.getHttpMethod());
+			} else if (action.getFunctionName() != null) {
+				action = OpenAPIReaderV2.readAction(swagger, action.getFunctionName());
+			} else {
+				System.out.println("service function not defined");
+			}
+			action.setServiceName(baseUrl);
+			return action;
+		}
+
+		// read function V3
+		if (action.getFunctionPath() != null && action.getHttpMethod() != null) {
+			action = OpenAPIReaderV3.readAction(model, action.getFunctionPath(), action.getHttpMethod());
+		} else if (action.getFunctionName() != null) {
+			action = OpenAPIReaderV3.readAction(model, action.getFunctionName());
+		} else {
+			System.out.println("service function not defined");
+		}
+
+		assert action.getFunctionDescription() != null : "service has no description";
+		action.setServiceName(baseUrl);
+		return action;
 	}
 
-	return res;
-    }
+	public static String sendRequest(MiniClient client, OpenAPIAction action) {
+
+		assert client != null : "client is null";
+		assert action != null : "action is null";
+		assert action.getFunction() != null : "open api action has no service function";
+
+		System.out.println("client: " + client);
+		ServiceFunction sf = action.getFunction();
+
+		assert sf.getFunctionPath() != null : "no function path";
+		assert sf.getHttpMethod() != null : "no http method";
+		assert sf.getServiceName() != null : "no service name";
+
+		String bodyContent = "";
+		if (action.getBodyParameter() != null)
+			bodyContent = action.getBodyParameter().toJSONString();
+
+		String consumes = sf.getConsumes();
+		if (consumes == null) {
+			if (sf.getHttpMethod().equalsIgnoreCase("GET"))
+				consumes = "text/plain";
+			if (sf.getHttpMethod().equalsIgnoreCase("POST"))
+				consumes = "application/json";
+		}
+
+		String produces = sf.getProduces();
+		if (produces == null) {
+			if (sf.getHttpMethod().equalsIgnoreCase("GET"))
+				produces = "application/json";
+			if (sf.getHttpMethod().equalsIgnoreCase("POST"))
+				produces = "text/plain";
+		}
+
+		HashMap<String, String> headers = new HashMap<String, String>();
+		ClientResponse response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(), bodyContent,
+				consumes, produces, headers);
+
+		System.out.println("Response: " + response.getHttpCode() + response.getResponse() + response.getRawResponse());
+		return response.getResponse();
+
+	}
+
+	public static String sendSignedRequest(Bot bot, OpenAPIAction action) {
+
+		assert bot != null : "bot is null";
+		assert bot.getName() != null : "bot has no name";
+		assert action != null : "action is null";
+
+		String botName = bot.getName();
+		BotAgent botAgent = SocialBotManagerService.getBotAgents().get(botName);
+		if (botAgent == null)
+			System.out.println("no bot agent found for " + botName);
+
+		System.out.println("perform las2peer Service action: " + action.toString());
+
+		MiniClient client = new MiniClient();
+		client.setConnectorEndpoint(action.getBasePath());
+		client.setLogin(botAgent.getLoginName(), "actingAgent");
+
+		return sendRequest(client, action);
+	}
+
+	public static String sendRequest(OpenAPIAction action) {
+
+		assert action != null : "action parameter is null";
+		assert action.getFunction() != null : "action parameter service function is null";
+
+		System.out.println("perform REST action: " + action.toString());
+
+		MiniClient client = new MiniClient();
+		client.setConnectorEndpoint(action.getBasePath());
+
+		return sendRequest(client, action);
+	}
+
+	private static String getSwaggerDocument(String baseUrl) {
+
+		if (baseUrl.contains(".json"))
+			return baseUrl;
+
+		URL url;
+		try {
+			String res = baseUrl + "/swagger.json";
+			url = new URL(res);
+
+			HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+			huc.setRequestMethod("HEAD");
+			int responseCode = huc.getResponseCode();
+
+			if (responseCode == 200)
+				return res;
+
+			res = baseUrl + "/v2/swagger.json";
+			url = new URL(res);
+			huc = (HttpURLConnection) url.openConnection();
+			huc.setRequestMethod("HEAD");
+			responseCode = huc.getResponseCode();
+
+			if (responseCode == 200)
+				return res;
+
+			res = baseUrl + "/api/v3/openapi.json";
+			url = new URL(res);
+			huc = (HttpURLConnection) url.openConnection();
+			huc.setRequestMethod("HEAD");
+			responseCode = huc.getResponseCode();
+
+			if (responseCode == 200)
+				return res;
+
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+
+		}
+
+		return null;
+
+	}
+
+	public static Collection<String> readEnums(ServiceFunction sf) {
+
+		System.out.println("read enums: " + sf.getServiceName() + " " + sf.getFunctionPath());
+		assert sf != null : "service function is null";
+		assert sf.getServiceName() != null : "service has no name";
+
+		if (sf.getHttpMethod() == null) {
+			sf.setHttpMethod("GET");
+		}
+
+		assert sf.getHttpMethod().equalsIgnoreCase("GET") : "function is not a GET request";
+
+		if (sf.getProduces() == null)
+			sf.setProduces("application/json");
+
+		if (sf.getConsumes() == null)
+			sf.setConsumes("text/plain");
+
+		OpenAPIAction request = new OpenAPIAction(sf);
+		String response = sendRequest(request);
+
+		JsonElement jsonElement = JsonParser.parseString(response);
+
+		if (!jsonElement.isJsonArray()) {
+			System.out.println("response is not an json array");
+			return null;
+		}
+
+		JsonArray jsonArray = jsonElement.getAsJsonArray();
+		return readEnums(jsonArray);
+	}
+
+	public static Collection<String> readEnums(JsonArray jsonArray) {
+
+		assert jsonArray != null : "jsonArray is null";
+		assert jsonArray.isJsonArray() : "jsonArray is no jsonArray";
+
+		Collection<String> res = new LinkedList<>();
+		for (JsonElement ele : jsonArray) {
+
+			if (ele.isJsonPrimitive()) {
+				String pri = ele.getAsString();
+				res.add(pri);
+
+			} else if (ele.isJsonObject()) {
+				JsonObject obj = ele.getAsJsonObject();
+
+				if (obj.keySet().contains("name")) {
+					JsonElement jel = obj.get("name");
+					if (jel.isJsonPrimitive()) {
+						String pri = jel.getAsString();
+						res.add(pri);
+					}
+				}
+
+				else if (obj.keySet().contains("id")) {
+					JsonElement jel = obj.get("id");
+					if (jel.isJsonPrimitive()) {
+						String pri = jel.getAsString();
+						res.add(pri);
+					}
+				}
+			}
+		}
+
+		return res;
+	}
 
 }

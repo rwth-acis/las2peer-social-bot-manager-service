@@ -520,9 +520,9 @@ public class SocialBotManagerService extends RESTService {
 
 		for (BotAgent botAgent : getBotAgents().values())
 		    try {
-			this.sbfservice.checkTriggerBot(vle, parsedBody, botAgent, triggerUID, triggerFunctionName);
+		    	this.sbfservice.checkTriggerBot(vle, parsedBody, botAgent, triggerUID, triggerFunctionName);
 		    } catch (Exception e) {
-			e.printStackTrace();
+		    	e.printStackTrace();
 		    }
 	    } catch (Exception e) {
 		e.printStackTrace();
@@ -1266,12 +1266,12 @@ public class SocialBotManagerService extends RESTService {
     }
 
     public boolean getMessages(ArrayList<BotMessage> messages) {
-	System.out.println("Bot: Got " + messages.size() + " bot messages!");
-	for (BotMessage m : messages) {
-	    BotResource br = new BotResource();
-	    br.trigger(m.getRemarks(), "");
-	}
-	return true;
+		System.out.println("Bot: Got " + messages.size() + " bot messages!");
+		for (BotMessage m : messages) {
+			BotResource br = new BotResource();
+			br.trigger(m.getRemarks(), "");
+		}
+		return true;
     }
 
     private boolean checkIfCondition(IfThenBlock itb, String text) {
@@ -1746,7 +1746,21 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 
-				String config = "language: en\npipeline: supervised_embeddings\npolicies:\n  - name: MemoizationPolicy\n  - name: TEDPolicy";
+				String config = "language: en\n" + 
+						"pipeline:\n" + 
+						"  - name: WhitespaceTokenizer\n" + 
+						"  - name: RegexFeaturizer\n" + 
+						"  - name: LexicalSyntacticFeaturizer\n" + 
+						"  - name: CountVectorsFeaturizer\n" + 
+						"  - name: CountVectorsFeaturizer\n" + 
+						"    analyzer: \"char_wb\"\n" + 
+						"    min_ngram: 1\n" + 
+						"    max_ngram: 4\n" + 
+						"  - name: DIETClassifier\n" + 
+						"    epochs: 100\n" + 
+						"  - name: EntitySynonymMapper\n" + 
+						"  - name: ResponseSelector\n" + 
+						"    epochs: 100";
 				Collection<String> intents = training.intents();
 				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
 

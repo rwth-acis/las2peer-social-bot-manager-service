@@ -48,7 +48,7 @@ public class OpenAPIReaderV3 {
 
 	Operation operation = getOperationByPath(model, functionPath, httpMethod);
 	ServiceFunction action = parseAction(model, operation);
-	action.setActionType(ActionType.REST);
+	action.setActionType(ActionType.OPENAPI);
 	action.setHttpMethod(httpMethod);
 	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
@@ -64,7 +64,7 @@ public class OpenAPIReaderV3 {
 
 	Operation operation = getOperationByOperationId(model, operationId);
 	ServiceFunction action = parseAction(model, operation);
-	action.setActionType(ActionType.REST);
+	action.setActionType(ActionType.OPENAPI);
 	String httpMethod = Overlay.of(operation).getPathInParent();
 	action.setHttpMethod(httpMethod);
 	String functionPath = Overlay.of(operation).getPathFromRoot();

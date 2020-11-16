@@ -53,7 +53,7 @@ public class OpenAPIReaderV2 {
 
 	Operation operation = getOperationByPath(model, functionPath, httpMethod);
 	ServiceFunction action = parseAction(model, operation);
-	action.setActionType(ActionType.REST);
+	action.setActionType(ActionType.OPENAPI);
 	action.setHttpMethod(httpMethod);
 	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
@@ -67,7 +67,7 @@ public class OpenAPIReaderV2 {
 
 	Operation operation = getOperationByOperationId(model, operationId);
 	ServiceFunction action = parseAction(model, operation);
-	action.setActionType(ActionType.REST);
+	action.setActionType(ActionType.OPENAPI);
 	action.setFunctionName(operation.getOperationId());
 	action.setHttpMethod(getMethodByOperationId(model, operationId));
 	action.setFunctionPath(getPathByOperationId(model, operationId));

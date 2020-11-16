@@ -886,6 +886,10 @@ public class BotParser {
 			sf.setMessengerName(messengerID);
 			sf.setServiceName(service);
 			sf.setFunctionName(sfName);
+		} else if(actionType.contentEquals("OpenAPI")) {
+			sf.setActionType(ActionType.OPENAPI);
+			sf.setFunctionName(sfName);
+			sf.setServiceName(service);
 		} else {
 			// default case
 			sf.setFunctionName(sfName);

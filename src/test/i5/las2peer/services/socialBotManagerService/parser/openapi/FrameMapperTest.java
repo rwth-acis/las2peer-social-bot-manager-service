@@ -25,7 +25,7 @@ public class FrameMapperTest {
 
 	FrameMapper mapper = new FrameMapper();
 	ServiceFunction function = new ServiceFunction();
-	function.setActionType(ActionType.REST);
+	function.setActionType(ActionType.OPENAPI);
 	function.setServiceName("https://petstore3.swagger.io");
 	function.setFunctionName("addPet");
 	Frame frame = mapper.create(function, new Frame());
@@ -48,7 +48,7 @@ public class FrameMapperTest {
 
 	FrameMapper mapper = new FrameMapper();
 	ServiceFunction function = new ServiceFunction();
-	function.setActionType(ActionType.REST);
+	function.setActionType(ActionType.OPENAPI);
 	function.setHttpMethod("post");
 	function.setServiceName("https://petstore.swagger.io/");
 	function.setFunctionName("addPet");
@@ -71,7 +71,7 @@ public class FrameMapperTest {
 
 	FrameMapper mapper = new FrameMapper();
 	ServiceFunction function = new ServiceFunction();
-	function.setActionType(ActionType.REST);
+	function.setActionType(ActionType.OPENAPI);
 	function.setHttpMethod("post");
 	function.setServiceName("http://localhost:8080/sbfmanager/swagger.json");
 	function.setFunctionName("createBot");
