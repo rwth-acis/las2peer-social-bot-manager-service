@@ -554,7 +554,11 @@ public class BotParser {
 						if (frame.getSlots().isEmpty()) {
 							FrameMapper mapper = new FrameMapper();
 							System.out.println("automatic frame mapping");
-							frame = mapper.create(botFunction, frame);
+							try {
+								frame = mapper.create(botFunction, frame);
+							} catch (Error e) {
+								e.printStackTrace();
+							}
 						}
 					}
 				}

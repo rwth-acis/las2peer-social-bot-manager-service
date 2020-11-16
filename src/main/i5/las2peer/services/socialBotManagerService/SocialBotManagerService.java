@@ -106,7 +106,7 @@ import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.training.DataGroup;
-import i5.las2peer.services.socialBotManagerService.parser.training.Training;
+import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -223,37 +223,59 @@ public class SocialBotManagerService extends RESTService {
     @Path("/trainAndLoad")
     @Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "")
-    // TODO: Just an adapter, since the Rasa server doesn't support
-    // "Access-Control-Expose-Headers"
-    // and the model file name is returned as a response header... Remove and just
-    // use Rasa's
-    // API directly once that's fixed. The whole `TrainingHelper` class can be
-    // deleted then as well.
-    public Response trainAndLoad(String body) {
-	JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-	if (this.nluTrainThread != null && this.nluTrainThread.isAlive())
-	    return Response.status(Status.SERVICE_UNAVAILABLE).entity("Training still in progress.").build();
-	try {
-	    JSONObject bodyJson = (JSONObject) p.parse(body);
-	    String url = bodyJson.getAsString("url");
-	    String config = bodyJson.getAsString("config");
-	    String markdownTrainingData = bodyJson.getAsString("markdownTrainingData");
-	    String intents = bodyJson.getAsString("intents");
-	    // added to have a way to access the intents of the rasa server
-	    this.rasaIntents.put(url.split("://")[1], intents);
-	    this.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
-	    this.nluTrainThread = new Thread(this.nluTrain);
-	    this.nluTrainThread.start();
-	    // TODO: Create a member for this thread, make another REST method to check
-	    // whether
-	    // training was successful.
-	} catch (ParseException e) {
-	    e.printStackTrace();
-	}
+	// TODO: Just an adapter, since the Rasa server doesn't support
+	// "Access-Control-Expose-Headers"
+	// and the model file name is returned as a response header... Remove and just
+	// use Rasa's
+	// API directly once that's fixed. The whole `TrainingHelper` class can be
+	// deleted then as well.
+	public Response trainAndLoad(String body) {
+		System.out.println("train and load");
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		
+		if (this.nluTrainThread != null && this.nluTrainThread.isAlive())
+			return Response.status(Status.SERVICE_UNAVAILABLE).entity("Training still in progress.").build();
+	
+		try {
+			System.out.println(body);
+			JSONObject bodyJson = (JSONObject) p.parse(body);
+			String url = bodyJson.getAsString("url");
+			String config = bodyJson.getAsString("config");
+			String markdownTrainingData = bodyJson.getAsString("markdownTrainingData");
 
-	// Doesn't signal that training and loading was successful, but that it was
-	// started.
-	return Response.ok("Training started.").build();
+			// added to have a way to access the intents of the rasa server
+			// this.rasaIntents.put(url.split("://")[1], intents);
+			this.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
+			this.nluTrainThread = new Thread(this.nluTrain);
+			this.nluTrainThread.start();
+			// TODO: Create a member for this thread, make another REST method to check
+			// whether
+			// training was successful.
+			
+			TrainingData td = new TrainingData();
+			td.fromMarkdown(markdownTrainingData);
+			System.out.println("NLU module " + url + " add intents: " + td.intents().size());
+			
+			LanguageUnderstander lu = getConfig().getNlus().get(url);
+			
+			if (lu != null) 
+				lu.addIntents(td.intents());
+			else {
+				LanguageUnderstander nlu = new RasaNlu(url);
+				nlu.addIntents(td.intents());
+				getConfig().addNLU(nlu);
+			}
+
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// Doesn't signal that training and loading was successful, but that it was
+		// started.
+		return Response.ok("Training started.").build();
     }
 
     @GET
@@ -1605,9 +1627,66 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	/**
+	 * Retrieve the names of all datasets in the database.
+	 * 
+	 * 
+	 * @return Returns an HTTP response with plain text string content.
+	 */
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "List of datasets") })
+	@ApiOperation(
+			value = "Retrieve datasets",
+			notes = "Get all stored datasets.")
+	public Response getDatasets() {
+		Connection con = null;
+		PreparedStatement ps = null;
+		Response resp = null;
+		
+		try {
+			// Open database connection
+			con = service.database.getDataSource().getConnection();
+			
+			ps = con.prepareStatement("SELECT name FROM training");
+			ResultSet rs = ps.executeQuery();
+			
+			// Fetch all model names in the database
+			JSONArray models = new JSONArray();
+			while(rs.next()) {
+				models.add(rs.getString("name"));
+			}
+			
+			resp = Response.ok().entity(models.toJSONString()).build();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+			;
+		}
+		
+		return resp;
+	}
+
+	
+	/**
 	 * @return ok
 	 */
 	@GET
+	@Path("/nlu")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
@@ -1654,40 +1733,39 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
-	/**
-	 * @return ok
-	 */
-	@POST
-	@Path("/nlu/train")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-	@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
-	public Response trainNLU(Training training) {
+		/**
+		 * @return ok
+		 */
+		@POST
+		@Path("/nlu/train")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
+		public Response trainNLU(TrainingData training) {
 
-	    try {
-		
-		LanguageUnderstander nlu = getConfig().getNLU(training.getNluName());
-		String url = nlu.getUrl();
-		String config = "";
-		Set<String> intents = new HashSet<>();
-		for(DataGroup g: training.getDataGroup()) {
-		    intents.add(g.getIntent());
+			try {
+
+				String config = "language: en\npipeline: supervised_embeddings\npolicies:\n  - name: MemoizationPolicy\n  - name: TEDPolicy";
+				Collection<String> intents = training.intents();
+				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
+
+				if (lu == null)
+					return Response.serverError().entity("nlu module not found").build();
+
+				lu.addIntents(intents);
+				System.out.println(training.toMarkdown());
+				TrainingHelper nluTrain = new TrainingHelper(lu.getUrl(), config, training.toMarkdown());
+				Thread nluThread= new Thread(nluTrain);
+				nluThread.start();
+
+				return Response.ok().entity("nlu training started").build();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return Response.serverError().entity("nlu creation failed").build();
+
 		}
-		
-		if (nlu instanceof RasaNlu) {
-		    RasaNlu rasa = (RasaNlu) nlu;
-		    for (String i : intents) {
-			rasa.addIntent(i);
-		    }
-		}
-		return Response.ok().entity("nlu trained").build();
-
-	    } catch (Exception e) {
-		e.printStackTrace();
-	    }
-	    return Response.serverError().entity("nlu creation failed").build();
-
-	}
     }
 }

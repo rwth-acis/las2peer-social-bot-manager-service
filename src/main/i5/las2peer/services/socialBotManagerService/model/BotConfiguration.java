@@ -1,63 +1,64 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 public class BotConfiguration {
-    private HashMap<String, VLE> vles;
 
-    private HashMap<String, LanguageUnderstander> nlus;
+	private Map<String, VLE> vles;
+	private Map<String, LanguageUnderstander> nlus;
 
-    public BotConfiguration() {
-	vles = new HashMap<String, VLE>();
-	nlus = new HashMap<String, LanguageUnderstander>();
-    }
-
-    public HashMap<String, VLE> getVLEs() {
-	return this.vles;
-    }
-
-    public void setServiceConfiguration(HashMap<String, VLE> vles) {
-	this.vles = vles;
-    }
-
-    public void addServiceConfiguration(String key, VLE vle) {
-	this.vles.put(key, vle);
-    }
-
-    public VLE getServiceConfiguration(String key) {
-	return this.vles.get(key);
-    }
-
-    public LanguageUnderstander getNLU(String name) {
-	
-	for (LanguageUnderstander lu : this.getNlus().values()) {
-	    if (lu.getName().contentEquals(name))
-		return lu;
+	public BotConfiguration() {
+		vles = new HashMap<>();
+		nlus = new HashMap<>();
 	}
-	
-	return null;
-    }
 
-    public HashMap<String, LanguageUnderstander> getNlus() {
+	public Map<String, VLE> getVLEs() {
+		return this.vles;
+	}
 
-	for (Entry<String, VLE> vleEntry : this.getVLEs().entrySet()) {
-	    VLE vle = vleEntry.getValue();
-	    for (LanguageUnderstander nlu : vle.getNLUs()) {
+	public void setServiceConfiguration(Map<String, VLE> vles) {
+		this.vles = vles;
+	}
+
+	public void addServiceConfiguration(String key, VLE vle) {
+		this.vles.put(key, vle);
+	}
+
+	public VLE getServiceConfiguration(String key) {
+		return this.vles.get(key);
+	}
+
+	public LanguageUnderstander getNLU(String name) {
+
+		for (LanguageUnderstander lu : this.getNlus().values()) {
+			if (lu.getName().contentEquals(name))
+				return lu;
+		}
+			
+		return null;
+	}
+
+	public Map<String, LanguageUnderstander> getNlus() {
+
+		for (Entry<String, VLE> vleEntry : this.getVLEs().entrySet()) {
+			VLE vle = vleEntry.getValue();
+			for (LanguageUnderstander nlu : vle.getNLUs()) {
+				this.nlus.put(nlu.getUrl(), nlu);
+			}
+		}
+
+		return nlus;
+	}
+
+	public void setNlus(Map<String, LanguageUnderstander> nlus) {
+		this.nlus = nlus;
+	}
+
+	public void addNLU(LanguageUnderstander nlu) {
 		this.nlus.put(nlu.getUrl(), nlu);
-	    }
 	}
-
-	return nlus;
-    }
-
-    public void setNlus(HashMap<String, LanguageUnderstander> nlus) {
-	this.nlus = nlus;
-    }
-
-    public void addNLU(LanguageUnderstander nlu) {
-	this.nlus.put(nlu.getUrl(), nlu);
-    }
 }

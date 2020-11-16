@@ -55,4 +55,10 @@ public class DefaultNlu extends LanguageUnderstander {
 	return intents;
     }
 
+	@Override
+	public void addIntents(Collection<String> intents) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
