@@ -285,12 +285,11 @@ public class PipelineManager extends MetaDialogueManager {
 				+ action.getFunction().getFunctionName());
 
 		String response = null;
-		if (action.getFunction().getActionType() == ActionType.OPENAPI)
+		//if (action.getFunction().getActionType() == ActionType.OPENAPI)
 			response = OpenAPIConnector.sendRequest(action);
 
-		if (action.getFunction().getActionType() == ActionType.SERVICE)
-			;
-		response = OpenAPIConnector.sendSignedRequest(messenger.getBot(), action);
+		//if (action.getFunction().getActionType() == ActionType.SERVICE)
+		//	response = OpenAPIConnector.sendSignedRequest(messenger.getBot(), action);
 
 		return response;
 

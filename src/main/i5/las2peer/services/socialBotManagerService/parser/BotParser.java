@@ -866,6 +866,7 @@ public class BotParser {
 		String messengerID = "";
 		String service = "";
 		String sfName = "";
+		String swaggerUrl = "";
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
@@ -876,6 +877,8 @@ public class BotParser {
 				service = subVal.getValue();
 			} else if (name.equals("Action Type")) {
 				actionType = subVal.getValue();
+			} else if (name.contentEquals("Swagger")) {
+				swaggerUrl = subVal.getValue();
 			} else if (name.equals("Messenger Name")) {
 				messengerID = subVal.getValue();
 			}
@@ -890,10 +893,13 @@ public class BotParser {
 			sf.setActionType(ActionType.OPENAPI);
 			sf.setFunctionName(sfName);
 			sf.setServiceName(service);
+			sf.setSwaggerUrl(swaggerUrl);
+		
 		} else {
 			// default case
 			sf.setFunctionName(sfName);
 			sf.setServiceName(service);
+			sf.setSwaggerUrl(swaggerUrl);
 		}
 		return sf;
 	}

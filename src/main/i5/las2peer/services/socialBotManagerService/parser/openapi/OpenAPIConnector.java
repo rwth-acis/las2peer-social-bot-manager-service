@@ -40,8 +40,14 @@ public class OpenAPIConnector {
 			baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
 
 		// retrieve path of model definition
-		String modelUrl = getSwaggerDocument(baseUrl);
-		if (modelUrl == null) {
+		String modelUrl = null;
+		if (action.getSwaggerUrl() != null && action.getSwaggerUrl().startsWith("http"))
+			modelUrl = action.getSwaggerUrl();
+
+		if (modelUrl == null)
+			modelUrl = getSwaggerDocument(baseUrl);
+
+		if (modelUrl == null || modelUrl.contentEquals("")) {
 			System.out.println("swagger definition not found");
 			return null;
 		}
@@ -115,11 +121,20 @@ public class OpenAPIConnector {
 				produces = "text/plain";
 		}
 
-		HashMap<String, String> headers = new HashMap<String, String>();
-		ClientResponse response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(), bodyContent,
-				consumes, produces, headers);
+		ClientResponse response = null;
+		try {
+
+			HashMap<String, String> headers = new HashMap<String, String>();
+			response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(), bodyContent, consumes,
+					produces, headers);
+			System.out.println(response.getHttpCode());
+		} catch (Exception e) {
+			return null;
+		}
 
 		System.out.println("Response: " + response.getHttpCode() + response.getResponse() + response.getRawResponse());
+		if (response.getHttpCode() == 500)
+			return null;
 		return response.getResponse();
 
 	}
@@ -129,7 +144,7 @@ public class OpenAPIConnector {
 		assert bot != null : "bot is null";
 		assert bot.getName() != null : "bot has no name";
 		assert action != null : "action is null";
-
+		
 		String botName = bot.getName();
 		BotAgent botAgent = SocialBotManagerService.getBotAgents().get(botName);
 		if (botAgent == null)
@@ -141,7 +156,10 @@ public class OpenAPIConnector {
 		client.setConnectorEndpoint(action.getBasePath());
 		client.setLogin(botAgent.getLoginName(), "actingAgent");
 
-		return sendRequest(client, action);
+		String res = sendRequest(client, action);
+		if (res == null)
+			res = sendRequest(action);
+		return res;
 	}
 
 	public static String sendRequest(OpenAPIAction action) {
@@ -216,8 +234,7 @@ public class OpenAPIConnector {
 
 		if (sf.getProduces() == null)
 			sf.setProduces("application/json");
-
-		if (sf.getConsumes() == null)
+	
 			sf.setConsumes("text/plain");
 
 		OpenAPIAction request = new OpenAPIAction(sf);
