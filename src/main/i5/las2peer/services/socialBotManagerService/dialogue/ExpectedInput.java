@@ -5,109 +5,119 @@ import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
 public class ExpectedInput {
 
-    private InputType type;
-    private String intend;
-    private String entity;
-    private List<String> enums;
-    private boolean array;
+	private InputType type;
+	private String intend;
+	private String entity;
+	private List<String> enums;
+	private boolean array;
 
-    public ExpectedInput(InputType type, String intend) {
-	super();
-	this.type = type;
-	this.intend = intend;
-	this.setArray(false);
-    }
-
-    public ExpectedInput() {
-
-    }
-
-    public boolean validate(Intent semantic, String message) {
-
-	if (this.hasEnums()) {
-
-	    for (String enu : this.enums) {
-
-		if (enu.contentEquals(message))
-		    return true;
-
-		for (Entity entity : semantic.getEntities()) {
-		    if (enu.contentEquals(entity.getValue()))
-			return true;
-		}
-	    }
-
-	    return false;
+	public ExpectedInput(InputType type, String intend) {
+		super();
+		this.type = type;
+		this.intend = intend;
+		this.setArray(false);
 	}
 
-	return this.validate(message);
-    }
+	public ExpectedInput() {
 
-    public boolean validate(String input) {
+	}
 
-	return this.type.validate(input);
-    }
+	public boolean validate(Intent semantic, String message) {
 
-    public String getEntity() {
-	return entity;
-    }
+		// confirmation
+		if (this.type == InputType.Confirmation) {
 
-    public String getIntend() {
-	return intend;
-    }
+			if (semantic.getIntentType().isConfirmation())
+				return true;
+		}
 
-    public InputType getType() {
-	return type;
-    }
+		// enumeration
+		if (this.hasEnums()) {
 
-    public void setEntity(String entity) {
-	this.entity = entity;
-    }
+			for (String enu : this.enums) {
 
-    public void setIntend(String intend) {
-	this.intend = intend;
-    }
+				if (enu.contentEquals(message))
+					return true;
 
-    public void setType(InputType type) {
-	this.type = type;
-    }
+				for (Entity entity : semantic.getEntities()) {
+					if (enu.contentEquals(entity.getValue()))
+						return true;
+				}
+			}
 
-    public boolean isArray() {
-	return array;
-    }
+			return false;
+		}
 
-    public void setArray(boolean array) {
-	this.array = array;
-    }
+		// other
+		return this.validate(message);
+	}
 
-    public void addEnum(String enu) {
-	if (this.enums == null)
-	    this.enums = new ArrayList<>();
+	public boolean validate(String input) {
 
-	this.enums.add(enu);
-    }
+		return this.type.validate(input);
+	}
 
-    public boolean hasEnums() {
-	return (this.enums != null && !this.enums.isEmpty());
-    }
+	public String getEntity() {
+		return entity;
+	}
 
-    public List<String> getEnums() {
-	return this.enums;
-    }
+	public String getIntend() {
+		return intend;
+	}
 
-    public boolean invariant() {
-	if (this.type != null)
-	    return true;
+	public InputType getType() {
+		return type;
+	}
 
-	return false;
-    }
+	public void setEntity(String entity) {
+		this.entity = entity;
+	}
 
-    @Override
-    public String toString() {
-	return "ExpectedInput [type=" + type + ", intend=" + intend + ", entity=" + entity + "]";
-    }
+	public void setIntend(String intend) {
+		this.intend = intend;
+	}
+
+	public void setType(InputType type) {
+		this.type = type;
+	}
+
+	public boolean isArray() {
+		return array;
+	}
+
+	public void setArray(boolean array) {
+		this.array = array;
+	}
+
+	public void addEnum(String enu) {
+		if (this.enums == null)
+			this.enums = new ArrayList<>();
+
+		this.enums.add(enu);
+	}
+
+	public boolean hasEnums() {
+		return (this.enums != null && !this.enums.isEmpty());
+	}
+
+	public List<String> getEnums() {
+		return this.enums;
+	}
+
+	public boolean invariant() {
+		if (this.type != null)
+			return true;
+
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return "ExpectedInput [type=" + type + ", intend=" + intend + ", entity=" + entity + "]";
+	}
 
 }

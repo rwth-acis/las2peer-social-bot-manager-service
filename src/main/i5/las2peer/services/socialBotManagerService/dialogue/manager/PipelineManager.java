@@ -15,9 +15,9 @@ import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageG
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
-import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.nlu.FallbackNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
@@ -53,13 +53,13 @@ public class PipelineManager extends MetaDialogueManager {
 			info = handleCommandUnderstanding(message);
 		else
 			info = handleUnderstanding(message, nlus);
-		assert info != null : "info is null";
-
+		assert info != null;
+		
 		// Management
 		DialogueAct act = null;
 		if (message.hasCommand())
 			act = handleCommandManagement(info, dialogue, messenger);
-		if (act == null)
+		else
 			act = handleManagement(info, dialogue, messenger);
 		assert act != null : "act is null";
 
@@ -169,6 +169,11 @@ public class PipelineManager extends MetaDialogueManager {
 			i++;
 		}
 
+		if (intent == null) {
+			LanguageUnderstander fallbackNLU = new FallbackNlu();
+			intent = fallbackNLU.parse(message);
+		}
+
 		if (intent != null)
 			intent.setIntentType(intent.deriveType());
 
@@ -179,67 +184,84 @@ public class PipelineManager extends MetaDialogueManager {
 		return res;
 	}
 
-	public DialogueAct handleManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
+	public DialogueAct handleDirectInput(MessageInfo message, Dialogue dialogue) {
 
-		assert message != null : "message is null";
-		assert message.getIntent() != null : "message has no intent";
-		assert message.getIntent().getKeyword() != null : "no intent keyword";
-		assert dialogue != null : "dialogue is null";
+		assert dialogue != null;
+		assert message != null;
+		assert message.getMessage() != null;
 
+		String text = message.getMessage().getText();
+		
+		if (!dialogue.hasExpected())
+			return null;
+		
+		ExpectedInput expected = dialogue.getExpected();
+		InputType expectedType = expected.getType();
+		System.out.println("dialogue has exptected input: " + expectedType);
+			
+		if (message.getIntent() == null) 
+			message.setIntent(new Intent("", 0));
+				
 		Intent semantic = message.getIntent();
-		String intent = semantic.getKeyword();
+		IntentType intentType = semantic.getIntentType();
+		
+		if (expectedType == InputType.Confirmation) {
 
-		semantic.setIntentType(semantic.deriveType());
-		if (semantic.getIntentType() == null)
-			semantic.setIntentType(IntentType.UNKOWN);
-
-		// handle direct input
-		if (dialogue.hasExpected()) {
-			ExpectedInput expected = dialogue.getExpected();
-			InputType expectedType = expected.getType();
-			IntentType intentType = semantic.getIntentType();
-			String text = message.getMessage().getText();
-			System.out.println("dialogue has exptected input: " + expected.getType());
-
-			if (expectedType == InputType.Confirmation) {
-
-				System.out.println("IntentType: " + intentType);
-				if (intentType == IntentType.CONFIRM || intentType == IntentType.DENY) {
-					semantic.setKeyword(expected.getIntend());
-					semantic.setIntentType(intentType);
-					message.setIntent(semantic);
-
-				} else {
-
-					DialogueActGenerator gen = new DialogueActGenerator();
-					DialogueAct act = gen.getInvalidValueAct(expected);
-					return act;
-
-				}
-
-			} else if (expected.validate(semantic, text)) {
-
-				System.out.println("expected input is valid");
+			System.out.println("IntentType: " + intentType);
+			if (intentType == IntentType.CONFIRM || intentType == IntentType.DENY) {
 				semantic.setKeyword(expected.getIntend());
-				semantic.setIntentType(semantic.deriveType());
-				Entity entity = new Entity(expected.getEntity(), text);
-				semantic.addEntity(expected.getEntity(), entity);
+				semantic.setIntentType(intentType);
 				message.setIntent(semantic);
 
-				if (dialogue.getActiveManager() != null) {
-					DialogueAct res = dialogue.handle(dialogue.getActiveManager(), message);
-					if (res != null)
-						return res;
-				}
+				if (dialogue.getActiveManager() != null)
+					return dialogue.handle(dialogue.getActiveManager(), message);
 
-			} else {
+			} else
+				return DialogueActGenerator.getInvalidValueAct(expected);
 
-				DialogueActGenerator gen = new DialogueActGenerator();
-				DialogueAct act = gen.getInvalidValueAct(expected);
-				return act;
-			}
+		} else if (expected.validate(semantic, text))
+
+		{
+			System.out.println("expected input is valid");
+			semantic.setKeyword(expected.getIntend());
+			semantic.setIntentType(semantic.deriveType());
+			Entity entity = new Entity(expected.getEntity(), text);
+			semantic.addEntity(expected.getEntity(), entity);
+			message.setIntent(semantic);
+
+			if (dialogue.getActiveManager() != null)
+				return dialogue.handle(dialogue.getActiveManager(), message);
+
+		} else
+			return DialogueActGenerator.getInvalidValueAct(expected);
+		
+		return null;
+	}
+
+	public DialogueAct handleManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
+
+		assert dialogue != null : "dialogue is null";
+		assert message != null : "message is null";
+		
+		// handle direct input
+		if (dialogue.hasExpected()) {
+			DialogueAct res = handleDirectInput(message, dialogue);
+			if (res != null)
+				return res;
 		}
 
+		// handle invalid messageInfo intent
+		if (message.getIntent() == null)
+			return DialogueActGenerator.getNLUErrorAct();
+		
+		assert message.getIntent() != null : "message has no intent";
+		assert message.getIntent().getKeyword() != null : "no intent keyword";
+		
+		Intent semantic = message.getIntent();
+		String intent = semantic.getKeyword();
+		if(semantic.getIntentType() == null)
+			semantic.setIntentType(semantic.deriveType());
+		
 		// use the active manager if it knows the intent
 		if (dialogue.getActiveManager() != null) {
 			AbstractDialogueManager activeManager = dialogue.getActiveManager();
@@ -247,7 +269,7 @@ public class PipelineManager extends MetaDialogueManager {
 				return dialogue.handle(activeManager, message);
 		}
 
-		// find new manager that knows the intent
+		// find new manager that knows the intent		
 		for (AbstractDialogueManager manager : dialogue.getManagers()) {
 			if (manager.hasIntent(intent)) {
 				dialogue.setActiveManager(manager);
@@ -285,11 +307,11 @@ public class PipelineManager extends MetaDialogueManager {
 				+ action.getFunction().getFunctionName());
 
 		String response = null;
-		//if (action.getFunction().getActionType() == ActionType.OPENAPI)
-			response = OpenAPIConnector.sendRequest(action);
+		// if (action.getFunction().getActionType() == ActionType.OPENAPI)
+		response = OpenAPIConnector.sendRequest(action);
 
-		//if (action.getFunction().getActionType() == ActionType.SERVICE)
-		//	response = OpenAPIConnector.sendSignedRequest(messenger.getBot(), action);
+		// if (action.getFunction().getActionType() == ActionType.SERVICE)
+		// response = OpenAPIConnector.sendSignedRequest(messenger.getBot(), action);
 
 		return response;
 

@@ -34,7 +34,7 @@ public abstract class LanguageUnderstander {
 	}
 
 	public abstract void addIntents(Collection<String> intents);
-	
+
 	@Override
 	public String toString() {
 		return "LanguageUnderstander [name=" + name + ", url=" + url + "]";

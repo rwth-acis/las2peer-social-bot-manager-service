@@ -174,27 +174,27 @@ public class Messenger {
 	}
     }
 
-    public String getContext(String channel) {
+	public String getContext(String channel) {
 	return this.triggeredFunction.get(channel);
-    }
-
-    public void handleMessage(ChatMessage message) {
-
-	assert message != null : "message parameter is null";
-	assert handler != null : "dialogue handler is null";
-	assert this.chatMediator != null : "chat mediator is null";
-
-	try {
-
-	    ResponseMessage response = handler.handleMessage(message);
-	    this.chatMediator.sendMessageToChannel(response);
-
-	} catch (Exception e) {
-	    e.printStackTrace();
 	}
 
-	return;
-    }
+	public void handleMessage(ChatMessage message) {
+
+		assert message != null : "message parameter is null";
+		assert handler != null : "dialogue handler is null";
+		assert this.chatMediator != null : "chat mediator is null";
+
+		try {
+
+			ResponseMessage response = handler.handleMessage(message);
+			this.chatMediator.sendMessageToChannel(response);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return;
+	}
 
     // Handles simple responses ("Chat Response") directly, logs all messages and
     // extracted intents into `messageInfos` for further processing later on.
