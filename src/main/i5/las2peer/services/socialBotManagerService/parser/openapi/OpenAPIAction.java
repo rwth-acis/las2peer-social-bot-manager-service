@@ -1,9 +1,11 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import net.minidev.json.JSONObject;
@@ -53,14 +55,25 @@ public class OpenAPIAction {
 			methodURL = methodURL.substring(1);
 		}
 
-		System.out.println("path parameters");
 		if (getPathParameters() != null) {
-			for (Entry<String, String> para : getPathParameters().entrySet()) {
-				System.out.println(para.getKey() + " - " + para.getValue());
+			for (Entry<String, String> para : getPathParameters().entrySet())
 				methodURL = methodURL.replace("{" + para.getKey() + "}", para.getValue());
-				System.out.println(methodURL);
+		}
+
+		if (getQueryParameters() != null) {
+			
+			Iterator<Entry<String, String>> entries = getQueryParameters().entrySet().iterator();
+			if (entries.hasNext()) {
+				Entry<String, String> entry = entries.next();
+				methodURL = methodURL.concat("?").concat(entry.getKey()).concat("=").concat(entry.getValue());
+			}
+			
+			for (; entries.hasNext();) {
+				Entry<String, String> entry = entries.next();
+				methodURL = methodURL.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
 			}
 		}
+
 		return methodURL;
 	}
 
