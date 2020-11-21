@@ -87,10 +87,16 @@ public class DialogueHandler {
 			e.printStackTrace();
 		}
 
-		// null as error
+		// invalid response message
 		if (response == null)
-			response = handleError(channel);
-
+			return handleError(channel);
+		
+		if (response.getChannel() == null)
+			response.setChannel(channel);
+		
+		if (!response.invariant())
+			return handleError(channel);
+		
 		// end dialogue
 		if (response.isEnd())
 			this.openDialogues.remove(channel);
