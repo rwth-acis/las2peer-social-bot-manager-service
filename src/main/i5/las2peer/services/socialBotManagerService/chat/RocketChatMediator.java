@@ -811,19 +811,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		System.out.println("Thread stopped");
 		client.disconnect();
 		client = null;
-	}
-
-    @Override
-    public void sendFileToChannel(String channel, ResponseMessage response) {
-	// TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean sendMessageToChannel(ResponseMessage response) {
-	return false;
-	// TODO Auto-generated method stub
-
-    }
+	}  
 
 }

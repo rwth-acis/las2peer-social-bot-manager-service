@@ -106,7 +106,7 @@ public class DialogueHandler {
 	}
 
 	private ResponseMessage handleResponse(ResponseMessage response) {
-
+		
 		assert response != null : "response parameter is null";
 		assert response.getChannel() != null : "response has no channel";
 		invariant();

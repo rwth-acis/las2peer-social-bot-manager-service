@@ -153,7 +153,6 @@ public class DialogueActGenerator {
 		act.setIntentType(DialogueActType.HOME);
 		for (Command operation : operations) {
 			operation.invariant();
-			System.out.println("command " + operation.getName() + ": " + operation.getDescription());
 			act.addEntity(operation.getName(), operation.getDescription());
 		}
 		return act;

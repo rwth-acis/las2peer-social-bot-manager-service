@@ -2,14 +2,19 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.OptionalLong;
 
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.request.files.FilesUploadRequest;
+import com.slack.api.methods.request.files.FilesUploadRequest.FilesUploadRequestBuilder;
 import com.slack.api.methods.response.auth.AuthTestResponse;
 import com.slack.api.methods.response.bots.BotsInfoResponse;
 import com.slack.api.methods.response.bots.BotsInfoResponse.Bot;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.files.FilesUploadResponse;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
@@ -42,16 +47,16 @@ public class SlackChatMediator extends EventChatMediator {
 
 	@Override
 	public ChatMessage handleEvent(JSONObject event) {
-	    	
-	    	ChatMessage message = new ChatMessage();
-	    
+
+		ChatMessage message = new ChatMessage();
+
 		String type = (String) event.get("type");
 		switch (type) {
 		case "message":
 			System.out.println("slack event: message");
 			if (event.get("bot_id") != null)
 				break;
-			message = this.addMessage(event);
+			message = this.parseMessage(event);
 			break;
 		case "app_mention":
 			System.out.println("slack event: app mention");
@@ -115,11 +120,11 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	/**
-     * Adds a message to the message collection
-     * 
-     * @param parsedMessage The Slack message event in JSON format
-     */
-	public ChatMessage addMessage(JSONObject parsedMessage) {
+	 * Parses a message event
+	 * 
+	 * @param parsedMessage of the slack message event in JSON format
+	 */
+	public ChatMessage parseMessage(JSONObject parsedMessage) {
 
 		try {
 			String type = parsedMessage.getAsString("type");
@@ -136,18 +141,38 @@ public class SlackChatMediator extends EventChatMediator {
 			}
 
 			ChatMessage message = new ChatMessage(channel, user, text, timestamp);
-			//this.addMessage(message);
+			// this.addMessage(message);
 			return message;
 
 		} catch (InvalidChatMessageException e) {
 			e.printStackTrace();
 			return null;
 		}
-		
+
 	}
 
-    @Override
-    public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+	@Override
+	public void sendMessageToChannel(ResponseMessage response) {
+
+		assert response != null;
+		assert response.getChannel() != null;
+
+		if (response.getFile() != null)
+			sendFileMessageToChannel(response);
+		
+		String channel = response.getChannel();
+		String text = response.getMessage();
+
+		sendMessageToChannel(channel, text);
+
+	}
+
+	@Override
+	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+
+		System.out.println("send message to slack channel " + channel);
+		assert channel != null;
+		assert text != null;
 
 		try {
 			ChatPostMessageResponse response = slack.methods(authToken)
@@ -184,10 +209,44 @@ public class SlackChatMediator extends EventChatMediator {
 
 	}
 
-	@Override
-	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
-		// TODO Auto-generated method stub
+	public void sendFileMessageToChannel(ResponseMessage responseMessage) {
 
+		assert responseMessage != null;
+		assert responseMessage.getChannel() != null;
+		assert responseMessage.getFile() != null;
+
+		String channel = responseMessage.getChannel();
+		String fileData = responseMessage.getFile().getDataString();
+		String fileName = responseMessage.getFile().getName();
+		String fileType = responseMessage.getFile().getType();
+
+		System.out.println("send file to slack channel" + channel);
+
+		FilesUploadRequestBuilder builder = FilesUploadRequest.builder();
+		List<String> channels = new ArrayList<>();
+		channels.add(channel);
+		builder.channels(channels);
+		builder.content(fileData);		
+		if (fileName != null)
+			builder.filename(fileName);
+		if (fileType != null)
+			builder.filetype(fileType);
+
+		FilesUploadRequest request = builder.build();
+
+		try {
+
+			FilesUploadResponse response = slack.methods(authToken).filesUpload(request);
+			if (response.isOk()) {
+				System.out.println("Message sent: " + response.isOk());
+			} else {
+				System.out.println(response.getError());
+			}
+		} catch (SlackApiException requestFailure) {
+			System.out.println("Slack API responded with unsuccessful status code");
+		} catch (IOException connectivityIssue) {
+			System.out.println("Failed to connect to Slack API");
+		}
 	}
 
 	public String getTeamID() {
@@ -205,18 +264,4 @@ public class SlackChatMediator extends EventChatMediator {
 	public void setAppID(String appID) {
 		this.appID = appID;
 	}
-
-
-    @Override
-    public void sendFileToChannel(String channel, ResponseMessage response) {
-	// TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean sendMessageToChannel(ResponseMessage response) {
-	return false;
-
-    }
-
 }

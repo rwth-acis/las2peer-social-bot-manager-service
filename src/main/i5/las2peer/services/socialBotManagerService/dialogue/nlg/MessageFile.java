@@ -1,34 +1,39 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.nlg;
 
+import java.nio.charset.StandardCharsets;
+
 public class MessageFile {
 
-    String name;
-    String data;
-    String type;
+	String name;
+	String data;
+	String type;
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getData() {
-	return data;
-    }
+	public String getDataString() {
+		return data;
+	}
 
-    public void setData(String data) {
-	this.data = data;
-    }
+	public byte[] getDataBytes() {
+		return data.getBytes(StandardCharsets.UTF_8);
+	}
 
-    public String getType() {
-	return type;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
-    public void setType(String type) {
-	this.type = type;
-    }
+	public String getType() {
+		return type;
+	}
 
+	public void setType(String type) {
+		this.type = type;
+	}
 
 }
