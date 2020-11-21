@@ -142,7 +142,7 @@ public class TelegramChatMediator extends EventChatMediator {
 		String channel = response.getChannel();
 		
 		if (response.getFile() != null) {
-			sendFileToChannel(channel, response);
+			sendFileToChannel(response);
 			return;
 		}
 
@@ -184,19 +184,20 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * Sends a file to an telegram channel
 	 */
-	public void sendFileToChannel(String channel, ResponseMessage response) {
+	public void sendFileToChannel(ResponseMessage response) {
 
 		assert response != null : "resposne is null";
 		assert response.getFile() != null : "response has no file";
-
-		MessageFile file = response.getFile();
-		String data = file.getDataString();
-		String name = file.getName();
+		assert response.getChannel() != null;
+		
+		String channel = response.getChannel();
+		String data = response.getFile().getDataString();
+		String name = response.getFile().getName();
 		String caption = "";
 
 		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
 		TelegramBot bot = new TelegramBot(authToken);
-		SendDocument request = new SendDocument(458385566, bytes);
+		SendDocument request = new SendDocument(channel, bytes);
 
 		if (caption != null)
 			request.caption(caption);
