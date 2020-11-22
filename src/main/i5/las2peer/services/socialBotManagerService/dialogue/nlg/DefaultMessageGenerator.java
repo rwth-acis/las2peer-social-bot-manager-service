@@ -82,10 +82,10 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 		System.out.println(message);
 
 		if (entities.containsKey("description"))
-			message = message.concat("Description:\t" + escape(entities.get("description")) + "\n");
+			message = message + "Description:\t" + entities.get("description") + "\n";
 
 		if (entities.containsKey("example"))
-			message = message.concat("Example:    \t" + escape(entities.get("example")) + "\n");
+			message = message + "Example:    \t" + entities.get("example") + "\n";
 
 		if (act.hasExpected() && act.getExpected().getType() != null)
 			message = message.concat("\n" + this.InputTypeMessage(act.getExpected()) + "\n");
