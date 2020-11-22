@@ -134,7 +134,7 @@ public class ValueNode extends Node implements Fillable {
 	}
 
 	@Override
-	public Object toJSON() {
+	public JSONObject toJSON() {
 		invariant();
 
 		JSONObject res = new JSONObject();

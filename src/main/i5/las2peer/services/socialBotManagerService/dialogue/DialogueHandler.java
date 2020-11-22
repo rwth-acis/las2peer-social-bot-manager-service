@@ -41,7 +41,7 @@ public class DialogueHandler {
 		this.messenger = messenger;
 		this.openDialogues = new HashMap<>();
 
-		this.manager = new PipelineManager(messenger);
+		this.manager = new PipelineManager();
 
 		invariant();
 	}

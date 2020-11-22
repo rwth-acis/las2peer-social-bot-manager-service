@@ -60,5 +60,6 @@
 	<classpathentry kind="lib" path="servicebundle/tyrus-standalone-client-1.17.jar"/>
 	<classpathentry kind="lib" path="servicebundle/validation-api-1.1.0.Final.jar"/>
 	<classpathentry kind="lib" path="servicebundle/java-telegram-bot-api-4.9.0.jar"/>
+	<classpathentry kind="lib" path="/REST-OCD-Services/lib/mockito-all-1.9.5.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>

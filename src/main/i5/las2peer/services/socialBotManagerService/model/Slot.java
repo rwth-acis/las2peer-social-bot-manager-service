@@ -176,7 +176,6 @@ public class Slot {
 	}
 
 	public void addChild(Slot slot) {
-		System.out.println("slot " + this.getName() + " add child " + slot.getName());
 		this.children.add(slot);
 	}
 

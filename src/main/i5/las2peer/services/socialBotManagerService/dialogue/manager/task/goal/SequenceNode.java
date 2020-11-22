@@ -116,8 +116,9 @@ public class SequenceNode extends Node {
 
 		JSONObject res = new JSONObject();
 		for (Node node : this.children) {
-			if (node.toJSON() != null)
+			if (node.toJSON() != null) {
 				res.merge(node.toJSON());
+			}
 		}
 
 		return res;

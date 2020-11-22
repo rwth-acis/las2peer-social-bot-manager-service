@@ -5,7 +5,6 @@ import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
-import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
 public class ExpectedInput {
 

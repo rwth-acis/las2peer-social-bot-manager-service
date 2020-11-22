@@ -16,151 +16,151 @@ import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
 public class Dialogue {
 
-    DialogueAct lastAct;
-    Map<AbstractDialogueManager, ArrayList<MessageInfo>> inputs;
+	DialogueAct lastAct;
+	Map<AbstractDialogueManager, ArrayList<MessageInfo>> inputs;
 
-    AbstractDialogueManager activeManager;
-    List<AbstractDialogueManager> managers;
+	AbstractDialogueManager activeManager;
+	List<AbstractDialogueManager> managers;
 
-    public Dialogue(Messenger messenger) {
-	assert messenger != null : "messenger is null";
+	public Dialogue(Messenger messenger) {
+		assert messenger != null : "messenger is null";
 
-	this.inputs = new HashMap<>();
-	init(messenger);
-    }
-
-    public DialogueAct handle(AbstractDialogueManager manager, MessageInfo info) {
-
-	assert manager != null : "manager is null";
-	assert this.managers.contains(manager) : "dialogue do not know manager";
-	assert info != null : "message info is null";
-	assert info.getIntent() != null : "intent is null";
-
-	System.out.println("handle: " + info.toString());
-
-	Intent intent = info.getIntent();
-
-	if (!this.inputs.containsKey(manager)) {
-	    this.inputs.put(manager, new ArrayList<>());
+		this.inputs = new HashMap<>();
+		init(messenger);
 	}
 
-	if (info.getIntent().getIntentType() != IntentType.REVERT)
-	    this.inputs.get(manager).add(info);
+	public DialogueAct handle(AbstractDialogueManager manager, MessageInfo info) {
 
-	DialogueAct res = manager.handle(intent);
-	this.lastAct = res;
+		assert manager != null : "manager is null";
+		assert this.managers.contains(manager) : "dialogue do not know manager";
+		assert info != null : "message info is null";
+		assert info.getIntent() != null : "intent is null";
 
-	return res;
-    }
+		System.out.println("handle: " + info.toString());
 
-    public void init(Messenger messenger) {
+		Intent intent = info.getIntent();
 
-	this.managers = new ArrayList<AbstractDialogueManager>();
-	DialogueManagerGenerator generator = new DialogueManagerGenerator();
-	if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
-	    managers.add(generator.generate(DialogueManagerType.SIMPLE, messenger));
-	if (messenger.getFrames() != null && !messenger.getFrames().isEmpty()) {
-	    for (Frame frame : messenger.getFrames()) {
-		managers.add(generator.generate(DialogueManagerType.NAIVE, messenger, frame));
-	    }
-	}
-    }
+		if (!this.inputs.containsKey(manager)) {
+			this.inputs.put(manager, new ArrayList<>());
+		}
 
-    public void cancel() {
+		if (info.getIntent().getIntentType() != IntentType.REVERT)
+			this.inputs.get(manager).add(info);
 
-	this.lastAct = null;
-	if (activeManager == null)
-	    return;
+		DialogueAct res = manager.handle(intent);
+		this.lastAct = res;
 
-	System.out.println("cancel: " + this.activeManager);
-	if (this.inputs.get(activeManager) != null)
-	    this.inputs.get(activeManager).clear();
-	this.activeManager.reset();
-
-    }
-
-    public DialogueAct revert() {
-
-	assert this.activeManager != null : "active manager is null";
-
-	if (this.activeManager != null) {
-	    List<MessageInfo> infos = this.inputs.get(activeManager);
-	    if (this.activeManager.getStartIntent() != null)
-		if (!infos.isEmpty())
-		    infos.remove(infos.size() - 1);
-	    replay(activeManager);
-
-	}
-	return this.lastAct;
-
-    }
-
-    public void replay(AbstractDialogueManager manager) {
-
-	assert manager != null : "manager is null";
-	assert this.inputs.containsKey(manager) : "key manager not contained";
-
-	List<MessageInfo> list = new ArrayList<>(this.inputs.get(manager));
-	this.inputs.get(manager).clear();
-	manager.reset();
-	for (MessageInfo info : list) {
-	    this.lastAct = this.handle(manager, info);
+		return res;
 	}
 
-    }
+	public void init(Messenger messenger) {
 
-    public boolean isEmpty() {
-	return this.inputs.isEmpty();
-    }
+		this.managers = new ArrayList<AbstractDialogueManager>();
+		DialogueManagerGenerator generator = new DialogueManagerGenerator();
+		if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
+			managers.add(generator.generate(DialogueManagerType.SIMPLE, messenger));
+		if (messenger.getFrames() != null && !messenger.getFrames().isEmpty()) {
+			for (Frame frame : messenger.getFrames()) {
+				managers.add(generator.generate(DialogueManagerType.NAIVE, messenger, frame));
+			}
+		}
+	}
 
-    public DialogueAct getLastOutput() {
-	return this.lastAct;
-    }
+	public void cancel() {
 
-    public boolean hasExpected() {
+		this.lastAct = null;
+		if (activeManager == null)
+			return;
 
-	if (this.lastAct == null)
-	    return false;
+		System.out.println("cancel: " + this.activeManager);
+		if (this.inputs.get(activeManager) != null)
+			this.inputs.get(activeManager).clear();
+		this.activeManager.reset();
 
-	if (this.lastAct.getExpected() == null)
-	    return false;
+	}
 
-	return true;
-    }
+	public DialogueAct revert() {
 
-    public ExpectedInput getExpected() {
+		assert this.activeManager != null : "active manager is null";
 
-	if (this.lastAct == null)
-	    return null;
+		if (this.activeManager != null) {
+			List<MessageInfo> infos = this.inputs.get(activeManager);
+			if (this.activeManager.getStartIntent() != null)
+				if (!infos.isEmpty())
+					infos.remove(infos.size() - 1);
+			replay(activeManager);
 
-	if (this.lastAct.getExpected() == null)
-	    return null;
+		}
+		return this.lastAct;
 
-	return this.lastAct.getExpected();
-    }
+	}
 
-    public DialogueAct getLastAct() {
-	return lastAct;
-    }
+	public void replay(AbstractDialogueManager manager) {
 
-    public void setLastAct(DialogueAct lastAct) {
-	this.lastAct = lastAct;
-    }
+		assert manager != null : "manager is null";
+		assert this.inputs.containsKey(manager) : "key manager not contained";
 
-    public AbstractDialogueManager getActiveManager() {
-	return activeManager;
-    }
+		List<MessageInfo> list = new ArrayList<>(this.inputs.get(manager));
+		this.inputs.get(manager).clear();
+		manager.reset();
+		for (MessageInfo info : list) {
+			this.lastAct = this.handle(manager, info);
+		}
 
-    public void setActiveManager(AbstractDialogueManager activeManager) {
-	this.activeManager = activeManager;
-    }
+	}
 
-    public List<AbstractDialogueManager> getManagers() {
-	return managers;
-    }
+	public boolean isEmpty() {
+		return this.inputs.isEmpty();
+	}
 
-    public void setManagers(List<AbstractDialogueManager> managers) {
-	this.managers = managers;
-    }
+	public DialogueAct getLastOutput() {
+		return this.lastAct;
+	}
+
+	public boolean hasExpected() {
+
+		if (this.lastAct == null)
+			return false;
+
+		if (this.lastAct.getExpected() == null)
+			return false;
+
+		return true;
+	}
+
+	public ExpectedInput getExpected() {
+
+		if (this.lastAct == null)
+			return null;
+
+		if (this.lastAct.getExpected() == null)
+			return null;
+
+		return this.lastAct.getExpected();
+	}
+
+	public DialogueAct getLastAct() {
+		return lastAct;
+	}
+
+	public void setLastAct(DialogueAct lastAct) {
+		this.lastAct = lastAct;
+	}
+
+	public AbstractDialogueManager getActiveManager() {
+		return activeManager;
+	}
+
+	public void setActiveManager(AbstractDialogueManager activeManager) {
+		this.activeManager = activeManager;
+	}
+
+	public List<AbstractDialogueManager> getManagers() {
+		return managers;
+	}
+
+	public void setManagers(List<AbstractDialogueManager> managers) {
+		this.managers = managers;
+	}
 
 }

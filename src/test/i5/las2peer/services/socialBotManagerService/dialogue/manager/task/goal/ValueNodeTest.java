@@ -9,49 +9,56 @@ import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
+import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class ValueNodeTest {
 
-    Slot slot;
-    ArrayList<String> enums;
+	Slot slot;
+	ServiceFunctionAttribute attr;
+	ArrayList<String> enums;
 
-    @Before
-    public void setUp() {
+	@Before
+	public void setUp() {
 
-	slot = new Slot("name");
-	slot.setInputType(InputType.Free);
+		slot = new Slot("name");
+		slot.setInputType(InputType.Free);
+		
+		attr = new ServiceFunctionAttribute();
+		slot.setParameter(attr);
 
-	enums = new ArrayList<String>();
-	enums.add("A");
-	enums.add("B");
+		enums = new ArrayList<String>();
+		enums.add("A");
+		enums.add("B");
 
-    }
+	}
 
-    @Test
-    public void CreationTest() {
+	@Test
+	public void CreationTest() {
 
-	ValueNode node = new ValueNode(slot);
-	assertEquals(slot, node.getSlot());
+		ValueNode node = new ValueNode(slot);
+		assertEquals(slot, node.getSlot());
 
-    }
+	}
 
-    @Test
-    public void FillTest() {
+	@Test
+	public void FillTest() {
 
-	ValueNode node = new ValueNode(slot);
+		ValueNode node = new ValueNode(slot);
 
-	node.fill("test");
-	assertEquals("test", node.getValue());
+		node.fill("test");
+		assertEquals("test", node.getValue());
 
-    }
+	}
 
-    @Test
-    public void toJSONTest() {
+	@Test
+	public void toJSONTest() {
 
-	ValueNode node = new ValueNode(slot);
-	assertNotNull(node.toJSON());
+		attr.setParameterType(ParameterType.CHILD);
+		ValueNode node = new ValueNode(slot);
+		assertNotNull(node.toJSON());
 
-    }
+	}
 
 }

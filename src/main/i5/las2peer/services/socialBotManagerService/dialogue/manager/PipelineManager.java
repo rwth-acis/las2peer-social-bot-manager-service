@@ -29,7 +29,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 	Messenger messenger;
 
-	public PipelineManager(Messenger messenger) {
+	public PipelineManager() {
 		super();
 	}
 
@@ -72,7 +72,7 @@ public class PipelineManager extends MetaDialogueManager {
 		return res;
 	}
 
-	public MessageInfo handleCommandUnderstanding(ChatMessage message) {
+	protected MessageInfo handleCommandUnderstanding(ChatMessage message) {
 
 		assert message != null : "message is null";
 		assert message.getChannel() != null : "message has no channel";
@@ -91,7 +91,7 @@ public class PipelineManager extends MetaDialogueManager {
 		return res;
 	}
 
-	public DialogueAct handleCommandManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
+	protected DialogueAct handleCommandManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
 
 		assert message != null : "message is null";
 		assert message.getIntent() != null : "message has no intent";
@@ -146,7 +146,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 	}
 
-	public MessageInfo handleUnderstanding(ChatMessage message, Map<String, LanguageUnderstander> nlus) {
+	protected MessageInfo handleUnderstanding(ChatMessage message, Map<String, LanguageUnderstander> nlus) {
 
 		assert message != null : "message is null";
 		assert message.getChannel() != null : "message has no channel";
@@ -184,7 +184,7 @@ public class PipelineManager extends MetaDialogueManager {
 		return res;
 	}
 
-	public DialogueAct handleDirectInput(MessageInfo message, Dialogue dialogue) {
+	protected DialogueAct handleDirectInput(MessageInfo message, Dialogue dialogue) {
 
 		assert dialogue != null;
 		assert message != null;
@@ -238,7 +238,7 @@ public class PipelineManager extends MetaDialogueManager {
 		return null;
 	}
 
-	public DialogueAct handleManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
+	protected DialogueAct handleManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
 
 		assert dialogue != null : "dialogue is null";
 		assert message != null : "message is null";
@@ -298,7 +298,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 	}
 
-	public String handleAction(Messenger messenger, OpenAPIAction action) {
+	protected String handleAction(Messenger messenger, OpenAPIAction action) {
 
 		assert action != null : "action is null";
 		assert action.getFunction() != null : "openapi action has no service function";
@@ -317,7 +317,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 	}
 
-	public ResponseMessage handleGeneration(DialogueAct act, Map<String, LanguageGenerator> nlgs) {
+	protected ResponseMessage handleGeneration(DialogueAct act, Map<String, LanguageGenerator> nlgs) {
 
 		assert act != null : "dialogue act parameter is null";
 		invariant();

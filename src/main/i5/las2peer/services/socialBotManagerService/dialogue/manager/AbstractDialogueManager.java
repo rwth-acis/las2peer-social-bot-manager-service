@@ -7,26 +7,26 @@ import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public abstract class AbstractDialogueManager {
 
-    private String startIntent;
+	private String startIntent;
 
-    public abstract DialogueAct handle(Intent inputSemantic);
+	public abstract DialogueAct handle(Intent inputSemantic);
 
-    public abstract boolean hasIntent(String intent);
+	public abstract boolean hasIntent(String intent);
 
-    public boolean hasIntent(Intent intent) {
-	return this.hasIntent(intent.getKeyword());
-    }
+	public boolean hasIntent(Intent intent) {
+		return this.hasIntent(intent.getKeyword());
+	}
 
-    public abstract Collection<String> getIntents();
+	public abstract Collection<String> getIntents();
 
-    public abstract void reset();
+	public abstract void reset();
 
-    public String getStartIntent() {
-	return startIntent;
-    }
+	public String getStartIntent() {
+		return startIntent;
+	}
 
-    public void setStartIntent(String startIntent) {
-	this.startIntent = startIntent;
-    }
+	public void setStartIntent(String startIntent) {
+		this.startIntent = startIntent;
+	}
 
 }

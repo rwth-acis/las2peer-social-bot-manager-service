@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
@@ -22,9 +23,11 @@ import i5.las2peer.services.socialBotManagerService.chat.TelegramChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueHandler;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import net.minidev.json.JSONArray;
@@ -87,7 +90,7 @@ public class Messenger {
 	// private HashMap<String, Bool> contextWithService;
 
 	private Random random;
-
+	
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
@@ -565,9 +568,16 @@ public class Messenger {
 	public Bot getBot() {
 		return bot;
 	}
-
+	
 	public void setBot(Bot bot) {
 		this.bot = bot;
 	}
-
+	
+	public Map<String, LanguageUnderstander> getNLUS() {
+		return this.bot.getNLUs();
+	}
+	
+	public Map<String, LanguageGenerator> getNLGS() {
+		return this.bot.getNLGs();
+	}
 }

@@ -1406,7 +1406,7 @@ public class SocialBotManagerService extends RESTService {
 
 					if (trigger)
 						for (Bot b : vle.getBots().values()) {
-							HashMap<String, Boolean> activeBots = b.getActive();
+							Map<String, Boolean> activeBots = b.getActive();
 							HashSet<Trigger> tList = r.getTrigger();
 							for (Trigger t : tList)
 								for (Entry<String, Boolean> entry : activeBots.entrySet())
