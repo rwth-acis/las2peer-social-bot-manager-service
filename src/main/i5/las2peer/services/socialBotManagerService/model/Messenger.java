@@ -91,6 +91,26 @@ public class Messenger {
 
 	private Random random;
 	
+	public Messenger() {
+		
+		this.knownIntents = new HashMap<String, IncomingMessage>();
+		this.stateMap = new HashMap<String, IncomingMessage>();
+		this.random = new Random();
+
+		// Initialize the assessment setup
+		this.currentNluModel = new HashMap<String, String>();
+		this.triggeredFunction = new HashMap<String, String>();
+
+		// Dialogue Manager
+		this.intentFrames = new HashMap<String, Frame>();
+		try {
+			this.handler = new DialogueHandler(this);
+		} catch (Error e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 

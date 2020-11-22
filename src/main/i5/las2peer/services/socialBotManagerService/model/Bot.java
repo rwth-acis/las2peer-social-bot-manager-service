@@ -220,5 +220,9 @@ public class Bot {
 	public void setNLGs(Map<String, LanguageGenerator> nlgs) {
 		this.nlgs = nlgs;
 	}
+	
+	public void setNLUs(Map<String, LanguageUnderstander> nlus) {
+		this.nlus = nlus;
+	}
 
 }

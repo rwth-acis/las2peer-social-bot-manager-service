@@ -93,7 +93,7 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 			List<String> enums = act.getExpected().getEnums();
 			message = message.concat(enums.get(0));
 			for (String enu : enums.subList(1, enums.size()))
-				message = message.concat(", " + escape(enu));
+				message = message + ", " + enu;
 		}
 
 		ResponseMessage res = new ResponseMessage(message);
@@ -169,7 +169,7 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 
 		for (Entry<String, String> entity : entities.entrySet()) {
 			assert entity.getKey() != null : "entity no key";
-			assert entity.getValue() != null : "entity no value";			
+			assert entity.getValue() != null : "entity no value";
 			message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
 		}
 
