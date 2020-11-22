@@ -65,4 +65,8 @@ public class TrainingHelper implements Runnable {
 	public boolean getSuccess() {
 		return this.success;
 	}
+
+	public void setDefaultConfig() {
+		this.config = "language: \"en\"\npipeline:\n - name: WhitespaceTokenizer\n - name: RegexFeaturizer\n - name: CRFEntityExtractor\n - name: EntitySynonymMapper\n - name: CountVectorsFeaturizer\n - name: DIETClassifier\npolicies:\n - name: MemoizationPolicy\n - name: KerasPolicy\n - name: MappingPolicy\n - name: FormPolicy\n";
+	}
 }

@@ -45,9 +45,9 @@ public class TrainingData {
 	public String toMarkdown() {
 		String res = "";
 		for(DataGroup dg :this.dataGroup) {
-			res = res + "##intent: " + dg.getIntent();
+			res = res + "## intent: " + dg.getIntent() + "\n\n";
 			for(String example :dg.getExamples()) {
-				res = res + " - " + example;
+				res = res + "-" + example + "\n\n";
 			}
 		}
 		return res;

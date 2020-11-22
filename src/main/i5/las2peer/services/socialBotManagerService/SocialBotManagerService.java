@@ -1743,12 +1743,6 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 
-				String config = "language: en\n" + "pipeline:\n" + "  - name: WhitespaceTokenizer\n"
-						+ "  - name: RegexFeaturizer\n" + "  - name: LexicalSyntacticFeaturizer\n"
-						+ "  - name: CountVectorsFeaturizer\n" + "  - name: CountVectorsFeaturizer\n"
-						+ "    analyzer: \"char_wb\"\n" + "    min_ngram: 1\n" + "    max_ngram: 4\n"
-						+ "  - name: DIETClassifier\n" + "    epochs: 100\n" + "  - name: EntitySynonymMapper\n"
-						+ "  - name: ResponseSelector\n" + "    epochs: 100";
 				Collection<String> intents = training.intents();
 				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
 
@@ -1757,7 +1751,8 @@ public class SocialBotManagerService extends RESTService {
 
 				lu.addIntents(intents);
 				System.out.println(training.toMarkdown());
-				TrainingHelper nluTrain = new TrainingHelper(lu.getUrl(), config, training.toMarkdown());
+				TrainingHelper nluTrain = new TrainingHelper(lu.getUrl(), null, training.toMarkdown());
+				nluTrain.setDefaultConfig();
 				Thread nluThread = new Thread(nluTrain);
 				nluThread.start();
 
