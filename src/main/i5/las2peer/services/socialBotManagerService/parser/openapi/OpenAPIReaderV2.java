@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import i5.las2peer.services.socialBotManagerService.model.ActionType;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import io.swagger.models.ComposedModel;
@@ -53,7 +53,6 @@ public class OpenAPIReaderV2 {
 
 		Operation operation = getOperationByPath(model, functionPath, httpMethod);
 		ServiceFunction action = parseAction(model, operation);
-		action.setActionType(ActionType.OPENAPI);
 		action.setHttpMethod(httpMethod);
 		action.setFunctionPath(functionPath);
 		action.setFunctionName(operation.getOperationId());
@@ -67,7 +66,6 @@ public class OpenAPIReaderV2 {
 
 		Operation operation = getOperationByOperationId(model, operationId);
 		ServiceFunction action = parseAction(model, operation);
-		action.setActionType(ActionType.OPENAPI);
 		action.setFunctionName(operation.getOperationId());
 		action.setHttpMethod(getMethodByOperationId(model, operationId));
 		action.setFunctionPath(getPathByOperationId(model, operationId));

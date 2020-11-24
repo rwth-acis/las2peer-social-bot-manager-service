@@ -17,7 +17,7 @@ import com.reprezen.kaizen.oasparser.model3.Path;
 import com.reprezen.kaizen.oasparser.model3.Schema;
 import com.reprezen.kaizen.oasparser.val.ValidationResults.ValidationItem;
 
-import i5.las2peer.services.socialBotManagerService.model.ActionType;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 
@@ -48,7 +48,6 @@ public class OpenAPIReaderV3 {
 
 	Operation operation = getOperationByPath(model, functionPath, httpMethod);
 	ServiceFunction action = parseAction(model, operation);
-	action.setActionType(ActionType.OPENAPI);
 	action.setHttpMethod(httpMethod);
 	action.setFunctionPath(functionPath);
 	action.setFunctionName(operation.getOperationId());
@@ -64,7 +63,6 @@ public class OpenAPIReaderV3 {
 
 	Operation operation = getOperationByOperationId(model, operationId);
 	ServiceFunction action = parseAction(model, operation);
-	action.setActionType(ActionType.OPENAPI);
 	String httpMethod = Overlay.of(operation).getPathInParent();
 	action.setHttpMethod(httpMethod);
 	String functionPath = Overlay.of(operation).getPathFromRoot();

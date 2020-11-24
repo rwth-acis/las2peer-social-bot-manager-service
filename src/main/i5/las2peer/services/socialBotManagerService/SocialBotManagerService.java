@@ -80,6 +80,7 @@ import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -506,12 +507,16 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject parsedBody = (JSONObject) p.parse(body);
 				String service = (String) parsedBody.get("serviceAlias");
 				VLE vle = getConfig().getServiceConfiguration(service);
-
-				if (!vle.getEnvironmentSeparator().equals("singleEnvironment"))
-					if (vle == null || vle.getEnvironmentSeparator() == null
-							|| ((JSONObject) parsedBody.get("attributes")).get(vle.getEnvironmentSeparator()) == null
-							|| botIsActive.get(((JSONObject) parsedBody.get("attributes"))
-									.get(vle.getEnvironmentSeparator())) != true)
+				
+				if (vle == null)
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity("VLE does not exist").build();
+				
+				String seperator = vle.getEnvironmentSeparator();
+				JSONObject attributes = ((JSONObject) parsedBody.get("attributes"));
+				
+				if (!seperator.equals("singleEnvironment"))
+					if (seperator == null || attributes == null || attributes.get(seperator) == null
+							|| botIsActive.get(attributes.get(seperator)) == false)
 						return Response.status(Status.FORBIDDEN).entity("Bot is not active").build();
 
 				String triggerFunctionName = parsedBody.getAsString("functionName");
@@ -789,7 +794,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(botFunctionId);
 			String functionPath = "";
-			if (botFunction.getActionType().equals(ActionType.SERVICE))
+			if (botFunction.getActionType().equals(ServiceType.SERVICE))
 				functionPath = botFunction.getFunctionPath();
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -814,7 +819,7 @@ public class SocialBotManagerService extends RESTService {
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 			String functionPath = "";
 			System.out.println("bot function: " + botFunction.toString());
-			if (botFunction.getActionType().equals(ActionType.SERVICE))
+			if (botFunction.getActionType().equals(ServiceType.SERVICE))
 				functionPath = botFunction.getFunctionPath();
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -853,6 +858,7 @@ public class SocialBotManagerService extends RESTService {
 			Set<Trigger> tlist = bot.getTriggerList();
 			for (Trigger trigger : tlist) {
 				TriggerFunction tf = trigger.getTriggerFunction();
+				
 				// in this function we only handle service functions
 				if (tf instanceof ServiceFunction) {
 					ServiceFunction sf = (ServiceFunction) tf;
@@ -862,7 +868,7 @@ public class SocialBotManagerService extends RESTService {
 
 						String functionPath = "";
 						// add path if the triggered function is a service function
-						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
+						if (triggeredFunction.getActionType().equals(ServiceType.SERVICE))
 							functionPath = triggeredFunction.getFunctionPath();
 						JSONObject triggeredBody = new JSONObject();
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -1061,7 +1067,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private void performTrigger(VLE vle, ServiceFunction sf, BotAgent botAgent, String functionPath, String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
-		if (sf.getActionType().equals(ActionType.SERVICE)) {
+		if (sf.getActionType().equals(ServiceType.SERVICE)) {
 			System.out.println(sf.getFunctionName());
 			// This part is "hardcoded" and will need improvements, but currently makes
 			// using the assessment function work

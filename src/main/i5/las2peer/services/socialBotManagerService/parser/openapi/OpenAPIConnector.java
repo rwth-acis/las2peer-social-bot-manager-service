@@ -133,8 +133,10 @@ public class OpenAPIConnector {
 		}
 
 		System.out.println("Response: " + response.getHttpCode() + response.getResponse() + response.getRawResponse());
-		if (response.getHttpCode() == 500)
+		
+		if (response.getHttpCode() >= 400)
 			return null;
+		
 		return response.getResponse();
 
 	}

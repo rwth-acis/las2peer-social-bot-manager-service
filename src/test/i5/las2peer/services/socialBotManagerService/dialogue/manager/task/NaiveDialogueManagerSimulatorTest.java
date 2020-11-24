@@ -16,7 +16,8 @@ import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
 
 public class NaiveDialogueManagerSimulatorTest {
 
-    @Test
+    @SuppressWarnings("deprecation")
+	@Test
     public void RandomTest() {
 
 	ServiceFunction action = new ServiceFunction();

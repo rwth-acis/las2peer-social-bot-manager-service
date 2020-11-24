@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
@@ -14,16 +15,16 @@ public class VLE {
 	private String name;
 	private String address;
 
-	private HashMap<String, VLEUser> users;
-	private HashMap<String, Bot> bots;
-	private HashMap<String, Bot> slackBots;
-	
+	private Map<String, VLEUser> users;
+	private Map<String, Bot> bots;
+	private Map<String, Bot> slackBots;
+
 	private String environmentSeparator = "";
 
-	private HashMap<String, JSONObject> serviceInformation;
+	private Map<String, JSONObject> serviceInformation;
 
-	private HashMap<Trigger, HashSet<String>> triggerList;
-	private HashMap<String, VLERoutine> routines;
+	private Map<Trigger, HashSet<String>> triggerList;
+	private Map<String, VLERoutine> routines;
 
 	public VLE() {
 		setBots(new HashMap<String, Bot>());
@@ -42,7 +43,7 @@ public class VLE {
 		this.address = address;
 	}
 
-	public HashMap<String, VLEUser> getUsers() {
+	public Map<String, VLEUser> getUsers() {
 		return this.users;
 	}
 
@@ -70,7 +71,7 @@ public class VLE {
 		this.environmentSeparator = environmentSeparator;
 	}
 
-	public HashMap<String, JSONObject> getServiceInformation() {
+	public Map<String, JSONObject> getServiceInformation() {
 		return serviceInformation;
 	}
 
@@ -82,7 +83,7 @@ public class VLE {
 		this.serviceInformation.put(name, info);
 	}
 
-	public HashMap<String, Bot> getBots() {
+	public Map<String, Bot> getBots() {
 		return bots;
 	}
 
@@ -94,7 +95,7 @@ public class VLE {
 		this.bots.put(id, bot);
 	}
 
-	public HashMap<Trigger, HashSet<String>> getTriggerList() {
+	public Map<Trigger, HashSet<String>> getTriggerList() {
 		return triggerList;
 	}
 
@@ -113,54 +114,55 @@ public class VLE {
 		}
 	}
 
-	public HashMap<String, VLERoutine> getRoutines() {
+	public Map<String, VLERoutine> getRoutines() {
 		return routines;
 	}
 
-	public void setRoutines(HashMap<String, VLERoutine> routines) {
-		this.routines = routines;
+	public void setRoutines(Map<String, VLERoutine> rlist) {
+		this.routines = rlist;
 	}
 
 	public void addRoutine(String name, VLERoutine routine) {
 		this.routines.put(name, routine);
 	}
-	
+
 	public void addBotbySlackID(String appID, String teamID, Bot bot) {
 		this.slackBots.put(teamID.concat(appID), bot);
 	}
-	
+
 	public Bot getBotbySlackID(String appID, String teamID) {
-		return this.slackBots.get(teamID.concat(appID));		
+		return this.slackBots.get(teamID.concat(appID));
 	}
-	
-	public HashMap<String, Bot> getSlackBotMap() {
+
+	public Map<String, Bot> getSlackBotMap() {
 		return this.slackBots;
 	}
-	
+
 	private void setSlackBots(HashMap<String, Bot> hashMap) {
-		this.slackBots = hashMap;		
+		this.slackBots = hashMap;
 	}
-	
+
 	public Bot getBotbyTelegramToken(String token) {
-		for(Bot bot: bots.values()) {
-			TelegramChatMediator mediator = (TelegramChatMediator) bot.getMessenger(ChatService.TELEGRAM).getChatMediator();
-			if(mediator.hasToken(token))
+		for (Bot bot : bots.values()) {
+			TelegramChatMediator mediator = (TelegramChatMediator) bot.getMessenger(ChatService.TELEGRAM)
+					.getChatMediator();
+			if (mediator.hasToken(token))
 				return bot;
 		}
 		return null;
 	}
 
-    public Collection<LanguageUnderstander> getNLUs() {
+	public Collection<LanguageUnderstander> getNLUs() {
 
-	Collection<LanguageUnderstander> res = new HashSet<>();
-	for (Entry<String, Bot> entry : this.bots.entrySet()) {
-	    Bot bot = entry.getValue();
-	    for (Entry<String, LanguageUnderstander> nlu : bot.getNLUs().entrySet()) {
-		res.add(nlu.getValue());
-	    }
+		Collection<LanguageUnderstander> res = new HashSet<>();
+		for (Entry<String, Bot> entry : this.bots.entrySet()) {
+			Bot bot = entry.getValue();
+			for (Entry<String, LanguageUnderstander> nlu : bot.getNLUs().entrySet()) {
+				res.add(nlu.getValue());
+			}
+		}
+
+		return res;
+
 	}
-
-	return res;
-
-    }
 }
