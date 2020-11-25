@@ -11,26 +11,39 @@ import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 
+
 public class Bot {
 
+	/**
+	 * Corresponds to BotAgent identifier
+	 */
 	private String id;
+	/**
+	 * Corresponds to BotAgent LoginName
+	 */
 	private String name;
 	private String version = "1.0.0";
 	private String service;
 	private String botAgent;
 	private VLE vle;
 
+	/**
+	 * Indicates if this bot is active (value) on a VLE environment (key)
+	 */
 	private Map<String, Boolean> active;
 	private Map<String, ServiceFunction> botServiceFunctions;
-	private Set<Trigger> triggerList;
+	private Set<Trigger> triggerList;	
 	private Map<String, ContentGenerator> generatorList;
 	private Map<String, Messenger> messengers;
-
+	
+	
+	private Map<String, EventToMessageTrigger> activeTriggers;
 	private Map<String, LanguageUnderstander> nlus;
 	private Map<String, LanguageGenerator> nlgs;
 
@@ -224,5 +237,27 @@ public class Bot {
 	public void setNLUs(Map<String, LanguageUnderstander> nlus) {
 		this.nlus = nlus;
 	}
-
+	
+	public boolean hasActiveTrigger(String triggerId) {
+		if(this.activeTriggers == null)
+			return false;
+		return this.activeTriggers.containsKey(triggerId);
+	}
+	
+	public void addActiveTrigger(EventToMessageTrigger trigger) {
+		if(this.activeTriggers == null)
+			this.activeTriggers = new HashMap<>();
+		this.activeTriggers.put(trigger.getId(), trigger);
+	}
+	
+	public EventToMessageTrigger getActiveTrigger(String triggerId) {
+		if(this.activeTriggers.containsKey(triggerId))
+			return this.activeTriggers.get(triggerId);
+		return null;
+	}
+	
+	public void removeActiveTrigger(String triggerId) {
+		this.activeTriggers.remove(triggerId);
+	}
+	
 }

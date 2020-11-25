@@ -306,12 +306,8 @@ public class PipelineManager extends MetaDialogueManager {
 		System.out.println("perform action " + action.getFunction().getServiceName() + " "
 				+ action.getFunction().getFunctionName());
 
-		String response = null;
-		// if (action.getFunction().getActionType() == ActionType.OPENAPI)
+		String response = null;		
 		response = OpenAPIConnector.sendRequest(action);
-
-		// if (action.getFunction().getActionType() == ActionType.SERVICE)
-		// response = OpenAPIConnector.sendSignedRequest(messenger.getBot(), action);
 
 		return response;
 

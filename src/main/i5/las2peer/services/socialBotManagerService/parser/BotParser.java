@@ -509,6 +509,10 @@ public class BotParser {
 						MessageFile file = files.get(target);
 						frame.setFile(file.getName() + "." + file.getType());
 					}
+					if (events.containsKey(target)) {
+						ServiceEvent event = events.get(target);
+						frame.addServiceEvent(event);
+					}
 
 					// Slot generates
 				} else if (slots.containsKey(source)) {
@@ -882,7 +886,7 @@ public class BotParser {
 	}
 
 	private Bot addBot(BotModelNode elem, Map<String, BotAgent> botAgents) {
-		Bot b = new Bot();
+		Bot bot = new Bot();
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
@@ -906,16 +910,17 @@ public class BotParser {
 					// TODO Errorhandling
 					e2.printStackTrace();
 				}
+
 				// runningAt = botAgent.getRunningAtNode();
 				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
-				b.setId(botAgent.getIdentifier());
-				b.setName(botAgent.getLoginName());
+				bot.setId(botAgent.getIdentifier());
+				bot.setName(botAgent.getLoginName());
 				botAgents.put(botName, botAgent);
 			}
 		}
-		return b;
+		return bot;
 	}
 
 	private VLEUser addUser(BotModelNode elem) {

@@ -1,14 +1,18 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 public class BotConfiguration {
 
 	private Map<String, VLE> vles;
+
 	private Map<String, LanguageUnderstander> nlus;
 
 	public BotConfiguration() {
@@ -38,7 +42,7 @@ public class BotConfiguration {
 			if (lu.getName().contentEquals(name))
 				return lu;
 		}
-			
+
 		return null;
 	}
 
@@ -61,4 +65,16 @@ public class BotConfiguration {
 	public void addNLU(LanguageUnderstander nlu) {
 		this.nlus.put(nlu.getUrl(), nlu);
 	}
+
+	public Collection<Bot> getActiveBots() {
+
+		Collection<Bot> bots = new HashSet<>();
+		for (VLE vle : this.vles.values()) {
+			bots.addAll(vle.getBots().values());
+		}
+
+		return bots;
+
+	}
+
 }

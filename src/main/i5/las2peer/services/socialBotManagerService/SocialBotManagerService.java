@@ -80,6 +80,8 @@ import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
+import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventMessage;
+import i5.las2peer.services.socialBotManagerService.dialogue.notification.TriggerHandler;
 import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -507,13 +509,13 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject parsedBody = (JSONObject) p.parse(body);
 				String service = (String) parsedBody.get("serviceAlias");
 				VLE vle = getConfig().getServiceConfiguration(service);
-				
+
 				if (vle == null)
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity("VLE does not exist").build();
-				
+
 				String seperator = vle.getEnvironmentSeparator();
 				JSONObject attributes = ((JSONObject) parsedBody.get("attributes"));
-				
+
 				if (!seperator.equals("singleEnvironment"))
 					if (seperator == null || attributes == null || attributes.get(seperator) == null
 							|| botIsActive.get(attributes.get(seperator)) == false)
@@ -858,7 +860,7 @@ public class SocialBotManagerService extends RESTService {
 			Set<Trigger> tlist = bot.getTriggerList();
 			for (Trigger trigger : tlist) {
 				TriggerFunction tf = trigger.getTriggerFunction();
-				
+
 				// in this function we only handle service functions
 				if (tf instanceof ServiceFunction) {
 					ServiceFunction sf = (ServiceFunction) tf;
@@ -1270,11 +1272,29 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
+	/**
+	 * Incoming MobSOS events
+	 * 
+	 * @param messages
+	 * @return
+	 */
 	public boolean getMessages(ArrayList<BotMessage> messages) {
 		System.out.println("Bot: Got " + messages.size() + " bot messages!");
 		for (BotMessage m : messages) {
-			BotResource br = new BotResource();
-			br.trigger(m.getRemarks(), "");
+			
+			EventMessage event = new EventMessage(m.getRemarks());		
+			if(!(event.invariant())) {
+				System.out.println("received invalid event message");
+				return false;
+			}
+			
+			if (event.getEventId() != null) {
+				TriggerHandler handler = new TriggerHandler();
+				handler.trigger(event, getConfig().getActiveBots());
+			} else {
+				BotResource br = new BotResource();
+				br.trigger(m.getRemarks(), "");
+			}
 		}
 		return true;
 	}
@@ -1695,7 +1715,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "getNLUModels", notes = "get NLU models")
 		public Response getNLUModels() {
-			
+
 			System.out.println("getNLUModels()");
 			try {
 				return Response.ok().entity(getConfig().getNlus().values()).build();

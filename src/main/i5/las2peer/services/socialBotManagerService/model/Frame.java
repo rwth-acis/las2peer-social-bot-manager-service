@@ -1,7 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,9 +26,12 @@ public class Frame {
 	private ServiceFunction serviceFunction;
 
 	private Map<String, Slot> slots;
+	
+	private Collection<ServiceEvent> events;
 
 	public Frame() {
 		this.slots = new HashMap<String, Slot>();
+		this.events = new HashSet<ServiceEvent>();
 	}
 
 	public Frame(String name, String intent, String message, ServiceFunction serviceFunction, Map<String, Slot> slots) {
@@ -223,6 +228,18 @@ public class Frame {
 
 	public void setFile(String file) {
 		this.file = file;
+	}
+		
+	public Collection<ServiceEvent> getEvents() {
+		return events;
+	}
+
+	public void addServiceEvent(ServiceEvent event) {
+		this.events.add(event);
+	}
+	
+	public void setEvents(Collection<ServiceEvent> events) {
+		this.events = events;
 	}
 
 }
