@@ -130,6 +130,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		});
 
 	}
+	
+	@Override
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, OptionalLong id) {
+		// TODO Auto-generated method stub
+	}
 
 	@Override
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {

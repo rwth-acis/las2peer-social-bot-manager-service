@@ -13,7 +13,7 @@ public class Entity {
 		this.value = o.getAsString("value");
         if(o.getAsNumber("confidence") == null){
             // added this because there was a nullpointerexception when extracting entities, may need to further search what caused the problem
-            System.out.println("No Confidence Available");
+         //   System.out.println("No Confidence Available");
             this.confidence = 1;
         } else{ 
           if(o.getAsNumber("confidence_entity") != null){

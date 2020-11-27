@@ -20,7 +20,10 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 					ChatMessage message;
 					message = SlackChatMediator.parseSlackMessage(messageJson);
 					message.setEmail(SlackChatMediator.usersByChannel.get(message.getChannel()));
-					this.addMessage(message);
+					// If bot sent file to user, don't add message
+					if(!SlackChatMediator.botIDs.contains(messageJson.get("user"))) {
+						this.addMessage(message);
+					}
 				} else if(type.equals("goodbye")) {
 					System.out.println("Slack client disconnected");
 					this.setConnected(false);

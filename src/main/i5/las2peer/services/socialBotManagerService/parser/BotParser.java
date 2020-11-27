@@ -550,6 +550,7 @@ public class BotParser {
 			throws ParseBotException {
 		String intentKeyword = null;
         String NluID = null;
+        Boolean containsFile = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -560,6 +561,8 @@ public class BotParser {
 				intentKeyword = subVal.getValue();
 			} else if (name.contentEquals("NLU ID")){
                 NluID = subVal.getValue();
+            } else if (name.contentEquals("IsFile")){
+                containsFile = Boolean.valueOf(subVal.getValue());
             }
 		}
 
@@ -569,8 +572,11 @@ public class BotParser {
 			throw new ParseBotException("Incoming Message is missing NluID");
 		} 
 
-
-		return new IncomingMessage(intentKeyword, NluID);
+		if(intentKeyword.equals("")) {
+			intentKeyword = "0";
+		}
+		
+		return new IncomingMessage(intentKeyword, NluID, containsFile);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
