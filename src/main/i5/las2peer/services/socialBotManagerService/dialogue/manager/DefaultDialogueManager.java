@@ -10,12 +10,13 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.F
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Node;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RepetitionNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
+import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
-public class DefaultDialogueManager extends AbstractDialogueManager {
+public class DefaultDialogueManager extends TaskOrientedManager {
 
 	DialogueGoal goal;
 	DialogueActGenerator gen;
@@ -231,6 +232,11 @@ public class DefaultDialogueManager extends AbstractDialogueManager {
 		intents.add(goal.getFrame().getConfirmIntent());
 		intents.add(goal.getFrame().getConfirmIntent() + "_optional");
 		return intents;
+	}
+	
+	@Override
+	public Frame getFrame() {
+		return this.goal.getFrame();
 	}
 
 }

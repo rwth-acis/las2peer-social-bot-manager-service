@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class Bot {
 	private String version = "1.0.0";
 	private String service;
 	private String botAgent;
+	private String description;
 	private VLE vle;
 
 	/**
@@ -43,7 +45,7 @@ public class Bot {
 	private Map<String, Messenger> messengers;
 	
 	
-	private Map<String, EventToMessageTrigger> activeTriggers;
+	private Map<String, Collection<EventToMessageTrigger>> activeTriggers;
 	private Map<String, LanguageUnderstander> nlus;
 	private Map<String, LanguageGenerator> nlgs;
 
@@ -245,19 +247,40 @@ public class Bot {
 	}
 	
 	public void addActiveTrigger(EventToMessageTrigger trigger) {
+		
 		if(this.activeTriggers == null)
 			this.activeTriggers = new HashMap<>();
-		this.activeTriggers.put(trigger.getId(), trigger);
+		
+		if(!this.activeTriggers.containsKey(trigger.getId()))
+			this.activeTriggers.put(trigger.getId(), new ArrayList<>());
+			
+		this.activeTriggers.get(trigger.getId()).add(trigger);
 	}
 	
-	public EventToMessageTrigger getActiveTrigger(String triggerId) {
-		if(this.activeTriggers.containsKey(triggerId))
-			return this.activeTriggers.get(triggerId);
+	public EventToMessageTrigger getActiveTrigger(String triggerId, String eventName) {
+		
+		if(this.activeTriggers.containsKey(triggerId)) {
+			System.out.println("event name: " + eventName + ", getActiveTrigger, size: " + this.activeTriggers.get(triggerId).size());
+			for(EventToMessageTrigger event :this.activeTriggers.get(triggerId)) {
+				System.out.println("event: " + event.getEvent().getName());
+				if(event.getEvent().getName().equalsIgnoreCase(eventName));
+					return event;
+			}
+		}
+			
 		return null;
 	}
 	
 	public void removeActiveTrigger(String triggerId) {
 		this.activeTriggers.remove(triggerId);
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	
 }

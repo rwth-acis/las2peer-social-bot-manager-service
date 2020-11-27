@@ -6,6 +6,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.F
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
+import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
 public class DialogueActGenerator {
@@ -28,7 +29,7 @@ public class DialogueActGenerator {
 		act.setIntentType(DialogueActType.REQCONF_FRAME);
 		List<Fillable> values = root.getAll().getFilledValues();
 		for (Fillable node : values)
-			act.addEntity(node.getSlot().getName(), node.getValue());
+			act.addEntity(node.getSlot().getDisplayName(), node.getValue());
 
 		// expected input
 		ExpectedInput input = new ExpectedInput();
@@ -143,7 +144,7 @@ public class DialogueActGenerator {
 
 	// System acts
 	
-	public DialogueAct getMainMenuAct(List<Command> operations) {
+	public DialogueAct getMainMenuAct(Bot bot, List<Command> operations) {
 
 		assert operations != null : "commands is null";
 		assert !operations.isEmpty() : "commands are empty";
@@ -155,6 +156,12 @@ public class DialogueActGenerator {
 			operation.invariant();
 			act.addEntity(operation.getName(), operation.getDescription());
 		}
+		
+		if(bot != null) {
+			act.addEntity("botName", bot.getName());
+			act.addEntity("botDescription", bot.getDescription());
+		}
+		
 		return act;
 	}
 	

@@ -43,6 +43,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -82,7 +83,6 @@ import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.TriggerHandler;
-import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -96,6 +96,7 @@ import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
@@ -108,10 +109,10 @@ import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import i5.las2peer.services.socialBotManagerService.parser.training.DataGroup;
 import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Contact;
@@ -293,12 +294,11 @@ public class SocialBotManagerService extends RESTService {
 	public Response trainAndLoadStatus(String body) {
 		if (this.nluTrainThread == null)
 			return Response.ok("No training process was started yet.").build();
-		else if (this.nluTrainThread.isAlive())
+		if (this.nluTrainThread.isAlive())
 			return Response.ok("Training still in progress.").build();
-		else if (this.nluTrain.getSuccess())
+		if (this.nluTrain.getSuccess())
 			return Response.ok("Training was successful.").build();
-		else
-			return Response.ok("Training failed.").build();
+		return Response.ok("Training failed.").build();
 	}
 
 	@GET
@@ -1281,13 +1281,14 @@ public class SocialBotManagerService extends RESTService {
 	public boolean getMessages(ArrayList<BotMessage> messages) {
 		System.out.println("Bot: Got " + messages.size() + " bot messages!");
 		for (BotMessage m : messages) {
-			
-			EventMessage event = new EventMessage(m.getRemarks());		
-			if(!(event.invariant())) {
+
+			EventMessage event = new EventMessage(m.getRemarks());
+			System.out.println("message: " + event.toString());
+			if (!(event.invariant())) {
 				System.out.println("received invalid event message");
 				return false;
 			}
-			
+
 			if (event.getEventId() != null) {
 				TriggerHandler handler = new TriggerHandler();
 				handler.trigger(event, getConfig().getActiveBots());
@@ -1739,7 +1740,10 @@ public class SocialBotManagerService extends RESTService {
 		public Response createNLU(NLUKnowledge nlu) {
 
 			try {
-
+				
+				if(getConfig().getNlus().containsKey(nlu.getUrl().toString()))
+					return Response.ok().entity("I did not create a new NLU module, because a module with the URL " + nlu.getUrl() + " already exists 😉").build();
+				
 				RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
 				getConfig().addNLU(rasa);
 
@@ -1752,6 +1756,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
 			return Response.serverError().entity("nlu creation failed").build();
 
 		}
@@ -1765,10 +1770,11 @@ public class SocialBotManagerService extends RESTService {
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
-		public Response trainNLU(TrainingData training) {
+		public Response trainNLU(TrainingData training,
+				@ApiParam(hidden = true) @QueryParam("botEventId") String botEventId) {
 
 			try {
-
+				System.out.println("received event id: " + botEventId);
 				Collection<String> intents = training.intents();
 				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
 
@@ -1777,18 +1783,18 @@ public class SocialBotManagerService extends RESTService {
 
 				lu.addIntents(intents);
 				System.out.println(training.toMarkdown());
-				TrainingHelper nluTrain = new TrainingHelper(lu.getUrl(), null, training.toMarkdown());
+				TrainingHelper nluTrain = new TrainingHelper(Context.get(), botEventId, lu.getUrl(), null, training.toMarkdown());
 				nluTrain.setDefaultConfig();
 				Thread nluThread = new Thread(nluTrain);
 				nluThread.start();
 
-				return Response.ok().entity("nlu training started").build();
+				return Response.ok().entity("I started the NLU training for you 😄 \n I will notify you as soon as the training is finished").build();
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			return Response.serverError().entity("nlu creation failed").build();
-
+			
 		}
 	}
 }

@@ -13,7 +13,7 @@ public class NLUKnowledge {
     String name;
     @ApiModelProperty
     String id;
-    @ApiModelProperty(dataType = "string", value = "The url of the nlu server", required = true, example = "http://localhost:5005")
+    @ApiModelProperty(value = "The url of the nlu server", required = true, example = "http://localhost:5005")
     URL url;
 
     public NLUKnowledge() {

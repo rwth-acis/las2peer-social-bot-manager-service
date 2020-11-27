@@ -8,22 +8,23 @@ import java.util.Set;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class ServiceFunction extends TriggerFunction {
-	
+
 	private String id;
 	private Service service;
 
 	private Set<Bot> bots;
 	private Set<VLEUser> users;
-	
+
 	private String name;
 	private String method;
-	private String path;		
+	private String path;
 	private String consumes;
 	private String produces;
 	private String description;
 	private Set<ServiceFunctionAttribute> attributes;
 	private Set<Trigger> trigger;
-	
+	private String serviceName;
+
 	private ActionType actionType = ActionType.SERVICE;
 	private String messengerName;
 
@@ -43,9 +44,11 @@ public class ServiceFunction extends TriggerFunction {
 	}
 
 	public String getServiceName() {
-		return this.service.getServiceAlias();
+		if (this.service != null)
+			return this.service.getServiceAlias();
+		return this.serviceName;
 	}
-	
+
 	public ServiceType getServiceType() {
 		return this.service.getServiceType();
 	}
@@ -88,6 +91,16 @@ public class ServiceFunction extends TriggerFunction {
 
 	public void setFunctionPath(String functionPath) {
 		this.path = functionPath;
+	}
+
+	public String getBasePath() {
+		
+		System.out.println("service is " + this.service);
+		
+		if (this.service == null)
+			return this.serviceName;
+
+		return service.getServiceURL();
 	}
 
 	public String getConsumes() {
@@ -138,17 +151,16 @@ public class ServiceFunction extends TriggerFunction {
 		this.trigger.add(t);
 	}
 
-    public String getSwaggerUrl() {
-    	if(this.service == null || this.service.getSwaggerURL() == null)
-    		return null;
-		return this.service.getSwaggerURL().toString();
+	public String getSwaggerUrl() {
+		if (this.service == null || this.service.getSwaggerURL() == null)
+			return null;
+		return this.service.getSwaggerURL();
 	}
-	
+
 	@Override
 	public String toString() {
-		return "ServiceFunction [id=" + id + "functionName=" + name
-				+ ", functionPath=" + path + ", httpMethod=" + method + ", consumes=" + consumes
-				+ ", produces=" + produces + " service=" + service + "]";
+		return "ServiceFunction [id=" + id + "functionName=" + name + ", functionPath=" + path + ", httpMethod="
+				+ method + ", consumes=" + consumes + ", produces=" + produces + " service=" + service + "]";
 	}
 
 	public boolean hasAttributes() {
@@ -212,18 +224,16 @@ public class ServiceFunction extends TriggerFunction {
 	}
 
 	public void setService(Service service) {
+		System.out.println("ACTION SET SERVICE");
 		this.service = service;
 	}
-	
+
 	/**
-	 * @deprecated
 	 * 
 	 * @param serviceName
 	 */
 	public void setServiceName(String serviceName) {
-		if(this.service == null)
-			this.service = new Service();
-		this.service.setServiceAlias(serviceName);
+		this.serviceName = serviceName;
 	}
 
 	public String getMessengerName() {
@@ -237,7 +247,7 @@ public class ServiceFunction extends TriggerFunction {
 	public ActionType getActionType() {
 		return this.actionType;
 	}
-	
+
 	public void setActionType(ActionType actionType) {
 		this.actionType = actionType;
 	}

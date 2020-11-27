@@ -4,14 +4,21 @@ import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
 
+import i5.las2peer.api.Context;
+import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.parser.training.BotMonitorEventBodyGenerator;
 import net.minidev.json.JSONObject;
 
 public class TrainingHelper implements Runnable {
+
 	String url;
 	String config;
 	String markdownTrainingData;
+
+	String botEventId;
+	Context context;
 
 	boolean success = false;
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
@@ -28,6 +35,14 @@ public class TrainingHelper implements Runnable {
 		return result;
 	}
 
+	public TrainingHelper(Context context, String botEventId, String url, String config, String markdownTrainingData) {
+		this.context = context;
+		this.botEventId = botEventId;
+		this.url = url;
+		this.config = config;
+		this.markdownTrainingData = replaceUmlaute(markdownTrainingData);
+	}
+
 	public TrainingHelper(String url, String config, String markdownTrainingData) {
 		this.url = url;
 		this.config = config;
@@ -37,6 +52,7 @@ public class TrainingHelper implements Runnable {
 	@Override
 	// Trains and loads the model trained with the data given in the constructor.
 	public void run() {
+				
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(url);
 
@@ -44,22 +60,42 @@ public class TrainingHelper implements Runnable {
 		json.put("config", config);
 		json.put("nlu", markdownTrainingData);
 
+		String filename = null;
 		HashMap<String, String> headers = new HashMap<String, String>();
-		ClientResponse response = client.sendRequest("POST", "model/train", json.toJSONString(),
-				MediaType.APPLICATION_JSON + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
+		try {	
+			
+			ClientResponse response = client.sendRequest("POST", "model/train", json.toJSONString(),
+					MediaType.APPLICATION_JSON + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
+			
+			if(response != null)
+				filename = response.getHeader("filename");
 
-		String filename = response.getHeader("filename");
-		if (filename == null) {
-			this.success = false;
-			return;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
+		if(this.botEventId != null) {
+			
+			BotMonitorEventBodyGenerator gen = new BotMonitorEventBodyGenerator("sbfmanager");
+			String body = null;
+			if(filename != null)
+				body = gen.eventBody(botEventId, "trainsuccess", null);
+			else
+				body = gen.eventBody(botEventId, "trainerror", null);
+			context.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_82, body);
+		
+		}
+		
+		if(filename == null)
+			return;
+		
 		json = new JSONObject();
 		json.put("model_file", "models/" + filename);
 
-		response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
+		ClientResponse response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
 				MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
 		this.success = response.getHttpCode() == 204;
+	
 	}
 
 	public boolean getSuccess() {

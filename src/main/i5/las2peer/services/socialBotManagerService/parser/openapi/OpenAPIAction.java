@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import net.minidev.json.JSONObject;
@@ -39,7 +38,7 @@ public class OpenAPIAction {
 	public String getBasePath() {
 		invariant();
 
-		String baseURL = this.function.getServiceName();
+		String baseURL = this.function.getBasePath();
 		while (baseURL.substring(baseURL.length() - 1).contentEquals("/")) {
 			baseURL = baseURL.substring(0, baseURL.length() - 1);
 		}
@@ -54,7 +53,7 @@ public class OpenAPIAction {
 		while (methodURL.charAt(0) == '/') {
 			methodURL = methodURL.substring(1);
 		}
-
+		
 		if (getPathParameters() != null) {
 			for (Entry<String, String> para : getPathParameters().entrySet())
 				methodURL = methodURL.replace("{" + para.getKey() + "}", para.getValue());

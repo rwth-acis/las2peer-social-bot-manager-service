@@ -5,30 +5,36 @@ import java.util.UUID;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.model.ServiceEvent;
-import i5.las2peer.services.socialBotManagerService.model.Trigger;
 
 public class EventToMessageTrigger {
 
 	/**
 	 * Identifier of this trigger
 	 */
-	String id;
+	final String id;
 
 	/**
 	 * Event that activates the trigger
 	 */
-	ServiceEvent event;
+	final ServiceEvent event;
 
 	/**
 	 * Message that is send after trigger is activated
 	 */
-	ResponseMessage message;
+	final ResponseMessage message;
 
 	/**
 	 * Mediator that sends this message
 	 */
-	ChatMediator mediator;
+	final ChatMediator mediator;
 
+	public EventToMessageTrigger(String id, ServiceEvent event, ResponseMessage message, ChatMediator mediator) {
+		this.id = id;
+		this.event = event;
+		this.message = message;
+		this.mediator = mediator;
+	}
+	
 	public EventToMessageTrigger(ServiceEvent event, ResponseMessage message, ChatMediator mediator) {
 		this.id = UUID.randomUUID().toString();
 		this.event = event;

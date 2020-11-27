@@ -230,16 +230,16 @@ public class Frame {
 		this.file = file;
 	}
 		
-	public Collection<ServiceEvent> getEvents() {
+	public boolean hasServiceEvents() {
+		return (events != null && !events.isEmpty());
+	}
+	
+	public Collection<ServiceEvent> getServiceEvents() {
 		return events;
 	}
 
 	public void addServiceEvent(ServiceEvent event) {
-		this.events.add(event);
-	}
-	
-	public void setEvents(Collection<ServiceEvent> events) {
-		this.events = events;
+		events.add(event);
 	}
 
 }

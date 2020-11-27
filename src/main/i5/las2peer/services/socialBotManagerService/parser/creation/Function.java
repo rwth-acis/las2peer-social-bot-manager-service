@@ -13,7 +13,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(discriminator = "type", subTypes = { ChitChatFunction.class, AccessServiceFunction.class,
 	Notification.class })
 public abstract class Function {
-    @ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat, Notification", required = true, value = "Which function should the bot do? \n*AccessService*: The bot lets the user access a web service. \n"
+    @ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat, Notification", required = true, value = "Which function should your bot do? \n*AccessService*: The bot lets the user access a web service. \n"
 	    + "*ChitChat*: The bot has a casual conversation with the user."
 	    + "*Notification*: The bot sends a notification when a service was accessed.")
     private FunctionType type;

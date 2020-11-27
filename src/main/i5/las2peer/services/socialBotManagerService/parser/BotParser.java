@@ -9,7 +9,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -26,7 +25,6 @@ import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
-import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
@@ -47,6 +45,7 @@ import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceEvent;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
@@ -166,6 +165,7 @@ public class BotParser {
 			case "Service":
 				Service service = addService(entry.getKey(), elem, config);
 				services.put(entry.getKey(), service);
+				break;
 
 			case "Incoming Message":
 				IncomingMessage im = addIncomingMessage(entry.getKey(), elem, config);
@@ -363,7 +363,7 @@ public class BotParser {
 						Slot slot = slots.get(target);
 						frame.addSlot(slot);
 					}
-					
+
 					// Service has..
 				} else if (services.get(source) != null) {
 					Service service = services.get(source);
@@ -371,13 +371,15 @@ public class BotParser {
 					if (bsfList.get(target) != null) {
 						ServiceFunction sf = bsfList.get(target);
 						sf.setService(service);
+						System.out.println("set service " + service.getServiceAlias() + " to function " + sf.getFunctionName());
+						assert sf.getService() == service;
 					}
 					// Event
 					if (events.get(target) != null) {
 						ServiceEvent event = events.get(target);
 						event.setService(service);
-					}					
-					
+					}
+
 					// Domain has ..
 				} else if (domains.get(source) != null) {
 					Domain domain = domains.get(source);
@@ -624,6 +626,17 @@ public class BotParser {
 							}
 						}
 					}
+
+					// event triggers
+				} else if (events.get(source) != null) {
+					System.out.println("Eventtriggers chat response");
+					ServiceEvent event = events.get(source);
+					// .. chat response
+					if (responses.get(target) != null) {
+						ChatResponse response = responses.get(target);
+						event.addResponse(response);
+
+					}
 				}
 			}
 		}
@@ -648,6 +661,10 @@ public class BotParser {
 		JSONObject j = new JSONObject();
 
 		JSONArray jaf = swaggerHelperFunction(config);
+		for(ServiceEvent event : events.values()) {
+			jaf.add(event.getName());
+		}
+		
 		j.put("triggerFunctions", jaf);
 		System.out.println(jaf.toJSONString());
 
@@ -663,38 +680,40 @@ public class BotParser {
 	}
 
 	private Service addService(String key, BotModelNode elem, BotConfiguration config) throws MalformedURLException {
-
-		Service service = new Service();
+	
+		System.out.println("ADD SERVICE");
+		String type = null;
+		String alias = null;
+		String path = null;
+		String swagger = null;
+		
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
 			String value = subVal.getValue();
-
+			System.out.println(value);
 			switch (subVal.getName()) {
 			case "Type":
 			case "Service Type":
-				service.setServiceType(ServiceType.fromString(value));
+				type = value;				
 				break;
 			case "Service Alias":
 			case "Service Name":
-				service.setServiceAlias(value);
+				alias = value;
 				break;
 			case "Service URL":
-				if (value.startsWith("http")) {
-					URL serviceURL = new URL(value);
-					service.setServiceURL(serviceURL);
-				}
+				path = value;
 				break;
 			case "Swagger URL":
 			case "Swagger":
-				if (value.startsWith("http")) {
-					URL swaggerURL = new URL(value);
-					service.setSwaggerURL(swaggerURL);
-				}
+				swagger = value;
 				break;
 			}
 		}
-
+		
+		ServiceType serviceType = ServiceType.fromString(type);		
+		Service service = new Service(serviceType, alias, path);
+		service.setSwaggerURL(swagger);
 		return service;
 	}
 
@@ -714,7 +733,7 @@ public class BotParser {
 			}
 
 		}
-		
+
 		return event;
 	}
 
@@ -919,6 +938,8 @@ public class BotParser {
 				bot.setName(botAgent.getLoginName());
 				botAgents.put(botName, botAgent);
 			}
+			if (subVal.getName().contentEquals("Description"))
+				bot.setDescription(subVal.getValue());			
 		}
 		return bot;
 	}
@@ -1001,7 +1022,7 @@ public class BotParser {
 			} else if (name.equals("Action Type")) {
 				actionType = subVal.getValue();
 			} else if (name.equals("Messenger Name")) {
-				messengerID = subVal.getValue();      
+				messengerID = subVal.getValue();
 			} else if (name.contentEquals("Swagger")) {
 				swaggerUrl = subVal.getValue();
 			}
@@ -1009,18 +1030,18 @@ public class BotParser {
 
 		sf.setFunctionName(sfName);
 		sf.setServiceName(service);
-		
+
 		if (actionType.equals("SendMessage")) {
 			sf.setActionType(ActionType.SENDMESSAGE);
 			sf.setMessengerName(messengerID);
 			sf.setServiceName(service);
-            sf.setFunctionName(sfName);
+			sf.setFunctionName(sfName);
 		} else {
 			// default case
 			sf.setFunctionName(sfName);
 			sf.setServiceName(service);
-		}		
-		
+		}
+
 		return sf;
 	}
 
@@ -1188,7 +1209,6 @@ public class BotParser {
 						ServiceFunction sf = (ServiceFunction) t.getTriggerFunction();
 						jaf.add(sf.getFunctionName());
 					}
-
 				}
 
 				allFunctions.putAll(b.getBotServiceFunctions());

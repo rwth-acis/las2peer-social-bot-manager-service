@@ -46,11 +46,11 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 	public ResponseMessage getReqConf(DialogueAct act) {
 		assert act != null : "dialogue act parameter is null";
 
-		String message = "We have all necessary data \n";
+		String message = "We have all necessary data \n\n";
 		for (Map.Entry<String, String> entry : act.getEntities().entrySet())
 			message = message.concat(entry.getKey()).replaceAll("_", " ").concat(": \t ").concat(entry.getValue())
 					.concat(" \n");
-		message = message.concat("is this right? \n");
+		message = message.concat("\nis this right? \n");
 
 		ResponseMessage res = new ResponseMessage(message);
 		return (res);
@@ -78,11 +78,11 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 		System.out.println(entities.entrySet());
 
 		String name = entities.get("name");
-		message = message.concat("What is the *").concat(escape(name)).concat("* \n\n");
+		message = message + "What is the *" + name + "*? \n\n";
 		System.out.println(message);
 
 		if (entities.containsKey("description"))
-			message = message + "Description:\t" + entities.get("description") + "\n";
+			message = message + entities.get("description") + "\n";
 
 		if (entities.containsKey("example"))
 			message = message + "Example:    \t" + entities.get("example") + "\n";
@@ -163,14 +163,26 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 
 		assert act != null : "dialogue act parameter is null";
 		assert act.getEntities() != null : "dialogue act has no entities";
-
+		
+		String message = "";
 		Map<String, String> entities = act.getEntities();
-		String message = "Hi, I am a bot. \n I can perform the following operations: \n ";
-
+		String botName = entities.get("botName");
+		String botDesc = entities.get("botDescription");
+		if(botName != null)
+			message = message + "Hi, I am " + botName + " 🤖 \n";
+		else
+			message = message + "Hi, I am a bot 🤖 \n";
+		
+		if(botDesc != null)
+			message = message + botDesc + "\n";
+		
+		message = message + "\nI can perform the following operations: \n";
+		
 		for (Entry<String, String> entity : entities.entrySet()) {
 			assert entity.getKey() != null : "entity no key";
 			assert entity.getValue() != null : "entity no value";
-			message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+			if(!entity.getKey().contentEquals("botName") && !entity.getKey().contentEquals("botDescription"))
+				message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
 		}
 
 		message = message.concat(

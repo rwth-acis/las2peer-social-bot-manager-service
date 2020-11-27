@@ -19,6 +19,7 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.SocialBotManagerService;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
+import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
@@ -32,7 +33,8 @@ public class OpenAPIConnector {
 		assert action.getServiceName() != null : "read open api function: action has no service url specified";
 		assert (action.getFunctionName() != null || (action.getFunctionPath() != null
 				&& action.getHttpMethod() != null)) : "read open api function: no function specified";
-
+		
+		Service service = action.getService();
 		// base url
 		String baseUrl = action.getServiceName();
 		String last = baseUrl.substring(baseUrl.length() - 1);
@@ -70,6 +72,7 @@ public class OpenAPIConnector {
 			} else {
 				System.out.println("service function not defined");
 			}
+			action.setService(service);	
 			action.setServiceName(baseUrl);
 			return action;
 		}
@@ -83,7 +86,9 @@ public class OpenAPIConnector {
 			System.out.println("service function not defined");
 		}
 
-		assert action.getFunctionDescription() != null : "service has no description";
+		assert action.getFunctionDescription() != null : "service has no description";		
+		
+		action.setService(service);	
 		action.setServiceName(baseUrl);
 		return action;
 	}
@@ -121,9 +126,10 @@ public class OpenAPIConnector {
 				produces = "text/plain";
 		}
 
+		System.out.println("base url"+ action.getBasePath() + " function path " + action.getFunctionPath());
 		ClientResponse response = null;
 		try {
-
+									
 			HashMap<String, String> headers = new HashMap<String, String>();
 			response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(), bodyContent, consumes,
 					produces, headers);

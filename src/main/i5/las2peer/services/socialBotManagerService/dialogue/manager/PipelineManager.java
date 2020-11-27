@@ -1,9 +1,12 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
@@ -15,10 +18,14 @@ import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageG
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
+import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
+import i5.las2peer.services.socialBotManagerService.model.Bot;
+import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
-import i5.las2peer.services.socialBotManagerService.nlu.FallbackNlu;
+import i5.las2peer.services.socialBotManagerService.model.ServiceEvent;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
+import i5.las2peer.services.socialBotManagerService.nlu.FallbackNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
@@ -54,7 +61,7 @@ public class PipelineManager extends MetaDialogueManager {
 		else
 			info = handleUnderstanding(message, nlus);
 		assert info != null;
-		
+
 		// Management
 		DialogueAct act = null;
 		if (message.hasCommand())
@@ -65,7 +72,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 		// Generation
 		Map<String, LanguageGenerator> nlgs = messenger.getBot().getNLGs();
-		ResponseMessage res = handleGeneration(act, nlgs);
+		ResponseMessage res = handleGeneration(act, dialogue, message, nlgs);
 		assert res != null : "res is null";
 		res.setChannel(message.getChannel());
 
@@ -116,10 +123,10 @@ public class PipelineManager extends MetaDialogueManager {
 				// return main menu
 				DialogueActGenerator gen = new DialogueActGenerator();
 				List<Command> operations = messenger.getCommands();
-				return gen.getMainMenuAct(operations);
+				return gen.getMainMenuAct(messenger.getBot(), operations);
 			case START:
 				gen = new DialogueActGenerator();
-				return gen.getMainMenuAct(messenger.getCommands());
+				return gen.getMainMenuAct(messenger.getBot(), messenger.getCommands());
 			default:
 				break;
 			}
@@ -138,7 +145,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 			// return main menu
 			List<Command> operations = messenger.getCommands();
-			return gen.getMainMenuAct(operations);
+			return gen.getMainMenuAct(messenger.getBot(), operations);
 		}
 
 		// not recognized command
@@ -191,20 +198,20 @@ public class PipelineManager extends MetaDialogueManager {
 		assert message.getMessage() != null;
 
 		String text = message.getMessage().getText();
-		
+
 		if (!dialogue.hasExpected())
 			return null;
-		
+
 		ExpectedInput expected = dialogue.getExpected();
 		InputType expectedType = expected.getType();
 		System.out.println("dialogue has exptected input: " + expectedType);
-			
-		if (message.getIntent() == null) 
+
+		if (message.getIntent() == null)
 			message.setIntent(new Intent("", 0));
-				
+
 		Intent semantic = message.getIntent();
 		IntentType intentType = semantic.getIntentType();
-		
+
 		if (expectedType == InputType.Confirmation) {
 
 			System.out.println("IntentType: " + intentType);
@@ -234,7 +241,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 		} else
 			return DialogueActGenerator.getInvalidValueAct(expected);
-		
+
 		return null;
 	}
 
@@ -242,7 +249,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 		assert dialogue != null : "dialogue is null";
 		assert message != null : "message is null";
-		
+
 		// handle direct input
 		if (dialogue.hasExpected()) {
 			DialogueAct res = handleDirectInput(message, dialogue);
@@ -253,15 +260,15 @@ public class PipelineManager extends MetaDialogueManager {
 		// handle invalid messageInfo intent
 		if (message.getIntent() == null)
 			return DialogueActGenerator.getNLUErrorAct();
-		
+
 		assert message.getIntent() != null : "message has no intent";
 		assert message.getIntent().getKeyword() != null : "no intent keyword";
-		
+
 		Intent semantic = message.getIntent();
 		String intent = semantic.getKeyword();
-		if(semantic.getIntentType() == null)
+		if (semantic.getIntentType() == null)
 			semantic.setIntentType(semantic.deriveType());
-		
+
 		// use the active manager if it knows the intent
 		if (dialogue.getActiveManager() != null) {
 			AbstractDialogueManager activeManager = dialogue.getActiveManager();
@@ -269,7 +276,7 @@ public class PipelineManager extends MetaDialogueManager {
 				return dialogue.handle(activeManager, message);
 		}
 
-		// find new manager that knows the intent		
+		// find new manager that knows the intent
 		for (AbstractDialogueManager manager : dialogue.getManagers()) {
 			if (manager.hasIntent(intent)) {
 				dialogue.setActiveManager(manager);
@@ -294,26 +301,62 @@ public class PipelineManager extends MetaDialogueManager {
 		dialogue.setActiveManager(null);
 		if (operations == null)
 			operations = new ArrayList<>();
-		return gen.getMainMenuAct(operations);
+		return gen.getMainMenuAct(messenger.getBot(), operations);
 
 	}
 
-	protected String handleAction(Messenger messenger, OpenAPIAction action) {
+	protected String handleAction(OpenAPIAction action, ChatMessage message, Dialogue dialogue) {
 
 		assert action != null : "action is null";
 		assert action.getFunction() != null : "openapi action has no service function";
 
+		String eventId = handleEvents(message, dialogue);
+		if (eventId != null)
+			action.addQueryParameter("botEventId", eventId);
+
 		System.out.println("perform action " + action.getFunction().getServiceName() + " "
 				+ action.getFunction().getFunctionName());
 
-		String response = null;		
+		String response = null;
 		response = OpenAPIConnector.sendRequest(action);
 
 		return response;
 
 	}
 
-	protected ResponseMessage handleGeneration(DialogueAct act, Map<String, LanguageGenerator> nlgs) {
+	protected String handleEvents(ChatMessage message, Dialogue dialogue) {
+
+		assert messenger != null;
+		assert dialogue != null;
+
+		if (!dialogue.hasActiveFrame())
+			return null;
+
+		Frame frame = dialogue.getActiveFrame();
+		if (!frame.hasServiceEvents())
+			return null;
+
+		System.out.println("activate events " + frame.getServiceEvents().size());
+		Bot bot = messenger.getBot();
+		ChatMediator mediator = messenger.getChatMediator();
+
+		String eventId = UUID.randomUUID().toString();
+		Collection<ServiceEvent> triggers = frame.getServiceEvents();
+		for (ServiceEvent event : triggers) {
+			String response = event.getResponse().getResponse();
+			String channel = message.getChannel();
+			ResponseMessage responseMessage = new ResponseMessage(response, channel);
+			EventToMessageTrigger trigger = new EventToMessageTrigger(eventId, event, responseMessage, mediator);
+			bot.addActiveTrigger(trigger);
+
+			System.out.println("activate event trigger " + event.getName() + " on bot " + bot.getName());
+		}
+		return eventId;
+
+	}
+
+	protected ResponseMessage handleGeneration(DialogueAct act, Dialogue dialogue, ChatMessage message,
+			Map<String, LanguageGenerator> nlgs) {
 
 		assert act != null : "dialogue act parameter is null";
 		invariant();
@@ -324,7 +367,7 @@ public class PipelineManager extends MetaDialogueManager {
 		// act includes action
 		if (act.hasAction()) {
 			OpenAPIAction action = act.getAction();
-			String response = handleAction(messenger, action);
+			String response = handleAction(action, message, dialogue);
 			if (response != null) {
 				System.out.println("response parsemode: " + action.getResponseParseMode());
 				switch (action.getResponseParseMode()) {

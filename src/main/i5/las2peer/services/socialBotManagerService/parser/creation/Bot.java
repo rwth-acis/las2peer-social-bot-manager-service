@@ -14,10 +14,10 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "Bot")
 public class Bot {
 
-    @ApiModelProperty(dataType = "string", value = "The name of your bot", required = true, example = "Botter")
+    @ApiModelProperty(dataType = "string", value = "A name gives your bot personality. It should make him recognizable as a bot.", required = true, example = "Botter")
     private String name;
 
-    @ApiModelProperty(dataType = "string", value = "To understand user input the bot has to use a language understanding module. Please choose one or create a new /createNLU", required = true)
+    @ApiModelProperty(dataType = "string", value = "The NLU module allows us bots to understand your human language. Please choose one or create a new /createnlu", required = true)
     private String nluModule;
 
     private List<Function> function = new ArrayList<Function>();

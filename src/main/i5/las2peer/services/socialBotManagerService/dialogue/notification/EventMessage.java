@@ -2,15 +2,16 @@ package i5.las2peer.services.socialBotManagerService.dialogue.notification;
 
 import java.util.Map;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.model.VLE;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 
 public class EventMessage {
+
+	@Override
+    public String toString() {
+	return "EventMessage [eventId=" + eventId + ", eventName=" + eventName + ", serviceAlias=" + serviceAlias
+		+ ", functionName=" + functionName + ", attributes=" + attributes + "]";
+    }
 
 	String eventId;
 	String eventName;
@@ -35,7 +36,7 @@ public class EventMessage {
 			if(parsedBody.containsKey("eventId"))
 				this.eventId = parsedBody.getAsString("eventId");
 			if(parsedBody.containsKey("eventName"))
-				this.eventId = parsedBody.getAsString("eventName");
+				this.eventName = parsedBody.getAsString("eventName");
 			
 			if(parsedBody.containsKey("serviceAlias"))
 				this.serviceAlias = parsedBody.getAsString("serviceAlias");			

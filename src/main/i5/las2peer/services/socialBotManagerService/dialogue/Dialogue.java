@@ -8,6 +8,7 @@ import java.util.Map;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerType;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.TaskOrientedManager;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
@@ -149,6 +150,22 @@ public class Dialogue {
 
 	public AbstractDialogueManager getActiveManager() {
 		return activeManager;
+	}
+	
+	public boolean hasActiveFrame() {
+		if(this.activeManager == null)
+			return false;
+		if(this.activeManager instanceof TaskOrientedManager) 
+			return true;
+		return false;
+			
+	}
+	
+	public Frame getActiveFrame() {		
+		if(!hasActiveFrame())
+			return null;		
+		TaskOrientedManager manager = (TaskOrientedManager) this.activeManager;
+		return manager.getFrame();		
 	}
 
 	public void setActiveManager(AbstractDialogueManager activeManager) {
