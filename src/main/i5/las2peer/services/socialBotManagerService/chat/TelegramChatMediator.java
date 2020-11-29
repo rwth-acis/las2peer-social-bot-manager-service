@@ -1,23 +1,22 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.OptionalLong;
 
 import javax.ws.rs.core.MediaType;
 
 import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.request.ChatAction;
 import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardRemove;
+import com.pengrad.telegrambot.request.SendChatAction;
 import com.pengrad.telegrambot.request.SendDocument;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
-import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
@@ -29,6 +28,8 @@ import net.minidev.json.JSONObject;
  */
 public class TelegramChatMediator extends EventChatMediator {
 
+	TelegramBot bot;
+
 	/**
 	 * URL address of the SBF manager service
 	 */
@@ -38,6 +39,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	public TelegramChatMediator(String authToken) {
 		super(authToken);
 
+		this.bot = new TelegramBot(authToken);
 		this.client = new MiniClient();
 		client.setConnectorEndpoint("https://api.telegram.org/bot" + authToken);
 
@@ -69,6 +71,7 @@ public class TelegramChatMediator extends EventChatMediator {
 			if (channel == null || user == null || text == null || timestamp == null)
 				throw new InvalidChatMessageException("missing message fields");
 
+			this.showAction(channel, ChatAction.typing);
 			ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
 
 			// check command
@@ -105,79 +108,81 @@ public class TelegramChatMediator extends EventChatMediator {
 				MediaType.TEXT_PLAIN);
 		System.out.println(result.getResponse());
 	}
-
+		
 	/**
 	 * Sends a plain text message to telegram messenger channel
 	 */
 	@Override
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
-		System.out.println("send message to telegram channel " + channel + ", size: " + text.length());
+		System.out.println("send plain message to telegram channel " + channel + ", size: " + text.length());
 		assert channel != null;
 		assert text != null;
-		
-		TelegramBot bot = new TelegramBot(authToken);
+
 		SendMessage request = new SendMessage(channel, text);
-		request.parseMode(ParseMode.Markdown);
-		request.replyMarkup(new ReplyKeyboardRemove());
-
 		BaseResponse res = bot.execute(request);
-		if (res.isOk())
-			return;
-
-		System.out.println("Response[ errorCode: " + res.errorCode() + ", description: " + res.description());
-
-		request = new SendMessage(channel, text);
-		res = bot.execute(request);
-		System.out.println(res);
 
 	}
 
+	/**
+	 * Sends a message to the specified telegram messenger channel
+	 */
 	@Override
 	public void sendMessageToChannel(ResponseMessage response) {
 
 		assert response != null : "response parameter is null";
 		assert response.getChannel() != null : "response has no channel";
 
-		String channel = response.getChannel();
-		
+		if (response.getMessage() != null) {
+			boolean isOK = this.sendFormattedMessageToChannel(response);
+			if(!isOK)
+				sendMessageToChannel(response.getChannel(), response.getMessage());
+		}
+
 		if (response.getFile() != null) {
 			sendFileToChannel(response);
-			return;
 		}
 
+	}
+	
+	/**
+	 * Sends a message to telegram messenger channel with Markdown formatting and
+	 * optional UI elements.
+	 */
+	public boolean sendFormattedMessageToChannel(ResponseMessage response) {
 
-		if (response.getButtons() == null || response.getButtons().isEmpty()) {
-			sendMessageToChannel(channel, response.getMessage());
-			return;
-		}
+		assert response != null : "response parameter is null";
+		assert response.getChannel() != null : "response has no channel";
+		assert response.getMessage() != null : "response has no text message";		
 
+		String channel = response.getChannel();
 		String text = response.getMessage();
-		System.out.println("send telegram message: " + text);
 
-		String button = "";
+		System.out.println("send formatted message to telegram channel " + channel + ", size: " + text.length());
+		SendMessage request = new SendMessage(channel, text);
+		request.parseMode(ParseMode.Markdown);
+
 		if (response.hasButtons()) {
-			button = button.concat("&reply_markup={\"keyboard\":[[");
-			for (String val : response.getButtons()) {
-				button = button.concat("\"" + val + "\",");
+
+			String[] buttons = new String[response.getButtons().size()];
+			int i = 0;
+			for (String value : response.getButtons()) {
+				buttons[i] = value;
+				i++;
 			}
-			button = button.substring(0, button.length() - 1);
-			button = button.concat("]],\"one_time_keyboard\":true}");
-		}
 
-		try {
-			text = URLEncoder.encode(text, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+			ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
+			keyboard.oneTimeKeyboard(true);
+			keyboard.selective(true);
+			request.replyMarkup(keyboard);
 
-		String markdown = "&parse_mode=Markdown";
-		String chat = "&chat_id=" + channel;
+		} else
+			request.replyMarkup(new ReplyKeyboardRemove());
 
-		ClientResponse result = client.sendRequest("POST", "sendmessage?text=" + text + chat + markdown + button,
-				MediaType.TEXT_PLAIN);
-
-		System.out.println(result.getResponse());
+		BaseResponse res = bot.execute(request);
+		if(!res.isOk())
+			System.out.println("failed telegram request: " + res.errorCode() + " " + res.description());
+		return res.isOk();
 
 	}
 
@@ -189,7 +194,7 @@ public class TelegramChatMediator extends EventChatMediator {
 		assert response != null : "resposne is null";
 		assert response.getFile() != null : "response has no file";
 		assert response.getChannel() != null;
-		
+
 		String channel = response.getChannel();
 		String data = response.getFile().getDataString();
 		String name = response.getFile().getName();
@@ -206,6 +211,19 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		BaseResponse res = bot.execute(request);
 		System.out.println(res.description());
+	}
+
+	/**
+	 * Shows an indication to the user about what the next bots action is
+	 * 
+	 * @param channel id of channel indication should be shown
+	 * @return request was successful (true) or failed (false)
+	 */
+	public boolean showAction(String channel, ChatAction action) {
+
+		SendChatAction typingAction = new SendChatAction(channel, action);
+		BaseResponse response = this.bot.execute(typingAction);
+		return response.isOk();
 	}
 
 }
