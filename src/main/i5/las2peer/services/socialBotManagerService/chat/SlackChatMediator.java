@@ -1,10 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalLong;
+import java.util.UUID;
 
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
@@ -15,8 +15,16 @@ import com.slack.api.methods.response.bots.BotsInfoResponse;
 import com.slack.api.methods.response.bots.BotsInfoResponse.Bot;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.files.FilesUploadResponse;
+import com.slack.api.model.block.ActionsBlock;
+import com.slack.api.model.block.LayoutBlock;
+import com.slack.api.model.block.SectionBlock;
+import com.slack.api.model.block.composition.PlainTextObject;
+import com.slack.api.model.block.element.BlockElement;
+import com.slack.api.model.block.element.ButtonElement;
+import com.slack.api.model.block.element.ButtonElement.ButtonElementBuilder;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 public class SlackChatMediator extends EventChatMediator {
@@ -47,31 +55,55 @@ public class SlackChatMediator extends EventChatMediator {
 
 	@Override
 	public ChatMessage handleEvent(JSONObject event) {
-
+		assert event != null;
+				
 		ChatMessage message = new ChatMessage();
-
+		
 		String type = (String) event.get("type");
+		System.out.println("slack event: " + type);
 		switch (type) {
-		case "message":
-			System.out.println("slack event: message");
+		
+		case "message":	
+			
 			if (event.get("bot_id") != null)
 				break;
 			message = this.parseMessage(event);
 			break;
+		
 		case "app_mention":
-			System.out.println("slack event: app mention");
+			
 			String channel = (String) event.get("channel");
 			String user = (String) event.get("user");
 			this.sendMessageToChannel(channel, "hello " + user);
 			break;
+			
 		case "team_join":
-			System.out.println("slack event: team_join");
-			this.sendMessageToChannel("C01880R2NPQ", "hello");
+			
+			channel = (String) event.get("channel");
+			this.sendMessageToChannel(channel, "hello");
 			break;
+			
 		default:
 			System.out.println("unknown slack event received");
 		}
 		return message;
+	}
+	
+	public ChatMessage handleAction(JSONArray parsedActions, String channel) {
+		assert parsedActions != null;
+		assert channel != null;
+				
+		for(Object element: parsedActions) {
+			JSONObject action = (JSONObject) element;
+			String type = action.getAsString("type");
+			if(type.contentEquals("button")) {
+				String value = action.getAsString("value");
+				ChatMessage message = new ChatMessage(channel, "", value);
+				return message;			
+			}
+		}
+		
+		return null;
 	}
 
 	/**
@@ -126,9 +158,11 @@ public class SlackChatMediator extends EventChatMediator {
 	 */
 	public ChatMessage parseMessage(JSONObject parsedMessage) {
 
+		System.out.println("parsed message:" + parsedMessage);
+		
 		try {
 			String type = parsedMessage.getAsString("type");
-			if (type == null || !type.equals("message"))
+			if (type == null || !type.contentEquals("message"))
 				throw new InvalidChatMessageException("not a message type");
 
 			String channel = parsedMessage.getAsString("channel");
@@ -157,20 +191,18 @@ public class SlackChatMediator extends EventChatMediator {
 		assert response != null;
 		assert response.getChannel() != null;
 
+		if (response.getMessage() != null)
+			sendFormattedMessageToChannel(response);
+
 		if (response.getFile() != null)
 			sendFileMessageToChannel(response);
-		
-		String channel = response.getChannel();
-		String text = response.getMessage();
-
-		sendMessageToChannel(channel, text);
 
 	}
 
 	@Override
 	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
 
-		System.out.println("send message to slack channel " + channel);
+		System.out.println("send a plain message to slack channel " + channel);
 		assert channel != null;
 		assert text != null;
 
@@ -190,18 +222,51 @@ public class SlackChatMediator extends EventChatMediator {
 
 	}
 
-	public void sendBlockToChannel(String channel, String text) {
+	public void sendFormattedMessageToChannel(ResponseMessage responseMessage) {
+
+		assert responseMessage != null;
+		assert responseMessage.getChannel() != null;
+		assert responseMessage.getMessage() != null;
+
+		String channel = responseMessage.getChannel();
+		String text = responseMessage.getMessage();
+		ChatPostMessageResponse response = null;
 
 		try {
-			ChatPostMessageResponse response = slack.methods(authToken)
-					.chatPostMessage(req -> req.channel(channel).blocksAsString(text));
-			if (response.isOk()) {
-				System.out.println("Message sent: " + response.isOk());
+			
+			if (responseMessage.hasButtons()) {
+				List<BlockElement> elements = new ArrayList<>();
+				for (String value : responseMessage.getButtons()) {
+					ButtonElementBuilder builder = ButtonElement.builder();
+					PlainTextObject plainText = new PlainTextObject(value, true);
+					builder.text(plainText);
+					builder.value(value);
+					ButtonElement button = builder.build();
+					elements.add(button);
+				}
+
+				List<LayoutBlock> blocks = new ArrayList<LayoutBlock>();
+				SectionBlock sblock = new SectionBlock();
+				PlainTextObject plainText = new PlainTextObject(text, true);
+				sblock.setText(plainText);
+				blocks.add(sblock);
+				
+				ActionsBlock ablock = new ActionsBlock(elements, UUID.randomUUID().toString());
+				blocks.add(ablock);
+
+				response = slack.methods(authToken)
+						.chatPostMessage(req -> req.channel(channel).text(text).mrkdwn(true).blocks(blocks));
 			} else {
-				System.out.println(response.getError()); // e.g., "invalid_auth", "channel_not_found"
+				
+				response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel).text(text).mrkdwn(true));
 			}
+			
+			if (response.isOk())
+				System.out.println("Slack message sent: " + response.isOk());
+			else
+				System.out.println(response.getError());
+
 		} catch (SlackApiException requestFailure) {
-			// Slack API responded with unsuccessful status code (= not 20x)
 			System.out.println("Slack API responded with unsuccessful status code");
 		} catch (IOException connectivityIssue) {
 			System.out.println("Failed to connect to Slack API");
@@ -226,7 +291,7 @@ public class SlackChatMediator extends EventChatMediator {
 		List<String> channels = new ArrayList<>();
 		channels.add(channel);
 		builder.channels(channels);
-		builder.content(fileData);		
+		builder.content(fileData);
 		if (fileName != null)
 			builder.filename(fileName);
 		if (fileType != null)
@@ -264,4 +329,5 @@ public class SlackChatMediator extends EventChatMediator {
 	public void setAppID(String appID) {
 		this.appID = appID;
 	}
+	
 }

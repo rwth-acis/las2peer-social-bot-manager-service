@@ -94,13 +94,17 @@ public class ServiceFunction extends TriggerFunction {
 	}
 
 	public String getBasePath() {
-		
+
 		System.out.println("service is " + this.service);
-		
+
 		if (this.service == null)
 			return this.serviceName;
 
 		return service.getServiceURL();
+	}
+	
+	public void setBasePath(String path) {
+		this.serviceName = path;
 	}
 
 	public String getConsumes() {
@@ -224,7 +228,6 @@ public class ServiceFunction extends TriggerFunction {
 	}
 
 	public void setService(Service service) {
-		System.out.println("ACTION SET SERVICE");
 		this.service = service;
 	}
 

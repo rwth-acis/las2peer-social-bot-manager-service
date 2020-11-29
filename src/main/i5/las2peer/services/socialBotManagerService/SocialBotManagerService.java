@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService;
 
 import java.io.BufferedReader;
+import java.io.CharConversionException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
@@ -48,6 +49,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.grizzly.http.util.URLDecoder;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -79,6 +82,7 @@ import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventMessage;
@@ -645,12 +649,14 @@ public class SocialBotManagerService extends RESTService {
 
 			JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			JSONObject parsedBody;
+
 			try {
 				parsedBody = (JSONObject) jsonParser.parse(body);
-				String token = (String) parsedBody.get("token"); // deprecated verification token
 				String type = (String) parsedBody.get("type"); // event type (e.g event_callback, url_verification)
 				String teamID = (String) parsedBody.get("team_id"); // workspace/team where this event occurred
 				String appID = (String) parsedBody.get("api_app_id"); // application this event is intended for
+
+				System.out.println("slack event: " + parsedBody);
 
 				// TODO Verifying requests from Slack
 				// https://api.slack.com/authentication/verifying-requests-from-slack
@@ -664,7 +670,6 @@ public class SocialBotManagerService extends RESTService {
 
 				// Handle the received event
 				if (type.contentEquals("event_callback")) {
-					SocialBotManagerService sbf = this.sbfservice;
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
@@ -699,6 +704,72 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 				return Response.status(Response.Status.BAD_REQUEST).build();
 			}
+
+			return Response.status(200).build();
+		}
+
+		@POST
+		@Path("/events/slack/interactive")
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiOperation(value = "Receive an Slack event by interactive elements")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+		public Response slackActionInteractive(String body) {
+
+			// Handle the received event
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+
+					String decoded = null;
+					try {
+						decoded = URLDecoder.decode(body);
+					} catch (CharConversionException e) {
+						e.printStackTrace();
+					}
+					
+					decoded = decoded.substring("payload=".length());
+					System.out.println("slack event: " + decoded);
+					JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					JSONObject parsedBody = null;
+
+					try {
+						parsedBody = (JSONObject) jsonParser.parse(decoded);
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				
+					String teamID = ((JSONObject) parsedBody.get("team")).getAsString("id");
+					String appID = (String) parsedBody.get("api_app_id");
+					String type = (String) parsedBody.get("type");
+					String channel = ((JSONObject) parsedBody.get("channel")).getAsString("id");
+					if(!type.contentEquals("block_actions"))
+						return;
+
+					// Identify bot
+					Collection<VLE> vles = getConfig().getVLEs().values();
+					Bot bot = null;
+					for (VLE vle : vles) {
+						bot = vle.getBotbySlackID(appID, teamID);
+						System.out.println("appId:" + appID + " teamID:" + teamID);
+					}
+
+					if (bot == null)
+						System.out.println("cannot relate event to a bot");
+					else {
+						System.out.println("slack event: bot identified: " + bot.getName());
+
+						// Handle event
+						JSONArray parsedActions = (JSONArray) parsedBody.get("actions");
+						Messenger messenger = bot.getMessenger(appID);
+						SlackChatMediator mediator = (SlackChatMediator) messenger.getChatMediator();
+						ChatMessage message = mediator.handleAction(parsedActions, channel);
+
+						if (message != null)
+							messenger.handleMessage(message);
+					}
+				}
+			}).start();
 
 			return Response.status(200).build();
 		}
@@ -1740,10 +1811,11 @@ public class SocialBotManagerService extends RESTService {
 		public Response createNLU(NLUKnowledge nlu) {
 
 			try {
-				
-				if(getConfig().getNlus().containsKey(nlu.getUrl().toString()))
-					return Response.ok().entity("I did not create a new NLU module, because a module with the URL " + nlu.getUrl() + " already exists 😉").build();
-				
+
+				if (getConfig().getNlus().containsKey(nlu.getUrl().toString()))
+					return Response.ok().entity("I did not create a new NLU module, because a module with the URL "
+							+ nlu.getUrl() + " already exists 😉").build();
+
 				RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
 				getConfig().addNLU(rasa);
 
@@ -1756,7 +1828,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 			return Response.serverError().entity("nlu creation failed").build();
 
 		}
@@ -1783,18 +1855,21 @@ public class SocialBotManagerService extends RESTService {
 
 				lu.addIntents(intents);
 				System.out.println(training.toMarkdown());
-				TrainingHelper nluTrain = new TrainingHelper(Context.get(), botEventId, lu.getUrl(), null, training.toMarkdown());
+				TrainingHelper nluTrain = new TrainingHelper(Context.get(), botEventId, lu.getUrl(), null,
+						training.toMarkdown());
 				nluTrain.setDefaultConfig();
 				Thread nluThread = new Thread(nluTrain);
 				nluThread.start();
 
-				return Response.ok().entity("I started the NLU training for you 😄 \n I will notify you as soon as the training is finished").build();
+				return Response.ok().entity(
+						"I started the NLU training for you 😄 \n I will notify you as soon as the training is finished")
+						.build();
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			return Response.serverError().entity("nlu creation failed").build();
-			
+
 		}
 	}
 }

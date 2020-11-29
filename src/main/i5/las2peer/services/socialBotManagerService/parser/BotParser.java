@@ -542,6 +542,8 @@ public class BotParser {
 						ServiceFunctionAttribute attribute = sfaList.get(target);
 						ServiceFunction function = OpenAPIConnector.readFunction(sf);
 						attribute.setRetrieveFunction(function);
+						if(value != null)
+							attribute.setRetrieveFunctionKey(value);
 					}
 				}
 				// TRIGGERS
@@ -1066,6 +1068,8 @@ public class BotParser {
 				sfa.setContent(subVal.getValue());
 			} else if (name.equals("URL")) {
 				sfa.setContentURL(subVal.getValue());
+			}else if (name.contentEquals("URL Key")) {
+				sfa.setContentURLKey(subVal.getValue());
 			} else if (name.equals("Parameter Type")) {
 				String pType = subVal.getValue();
 				sfa.setParameterType(ParameterType.fromString(pType));

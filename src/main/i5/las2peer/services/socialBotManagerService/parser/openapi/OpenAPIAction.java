@@ -50,7 +50,7 @@ public class OpenAPIAction {
 		invariant();
 
 		String methodURL = this.function.getFunctionPath();
-		while (methodURL.charAt(0) == '/') {
+		while (methodURL.length() > 0 && methodURL.charAt(0) == '/') {
 			methodURL = methodURL.substring(1);
 		}
 		

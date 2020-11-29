@@ -1,0 +1,6 @@
+databaseUser = root
+databasePassword = password
+databaseName = LAS2PEERMON
+databaseHost = 127.0.0.1
+databasePort = 3306
+

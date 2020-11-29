@@ -16,12 +16,15 @@ public class ServiceFunctionAttribute {
 	private ServiceFunctionAttribute parent;
 	private ContentGenerator generator;
 	private ServiceFunction function;
-	private ServiceFunction retrieveFunction;
 	private IfThenBlock itb;
+
+	private ServiceFunction retrieveFunction;
+	private String retrieveFunctionKey;
 
 	private boolean staticContent;
 	private String content;
 	private String contentURL;
+	private String contentURLKey;
 	private String contentType;
 	// this attribute will dissapear as everything will be done with a single
 	// content attribute
@@ -226,11 +229,28 @@ public class ServiceFunctionAttribute {
 
 	public void update() {
 
-		if (this.retrieveFunction != null) {
-			List<String> retrievedEnums = (List<String>) OpenAPIConnector.readEnums(this.retrieveFunction);
-			if (retrievedEnums != null && !retrievedEnums.isEmpty())
-				this.enumList = retrievedEnums;
+		System.out.println("update");
+		System.out.println("content url: " + this.contentURL);
+
+		if (this.retrieveFunction == null && this.contentURL == null)
+			return;
+
+		List<String> retrievedEnums = null;
+
+		if (this.contentURL != null) {
+			ServiceFunction action = new ServiceFunction();
+			action.setHttpMethod("GET");
+			action.setBasePath(contentURL);
+			action.setFunctionPath("");
+			action.setActionType(ActionType.FUNCTION);
+			retrievedEnums = (List<String>) OpenAPIConnector.readEnums(action, contentURLKey);
+
+		} else if (this.retrieveFunction != null) {
+			retrievedEnums = (List<String>) OpenAPIConnector.readEnums(this.retrieveFunction, this.retrieveFunctionKey);
 		}
+
+		if (retrievedEnums != null && !retrievedEnums.isEmpty())
+			this.enumList = retrievedEnums;
 
 	}
 
@@ -317,12 +337,46 @@ public class ServiceFunctionAttribute {
 		this.retrieveFunction = retrieveFunction;
 	}
 
+	public void setRetrieveFunctionKey(String key) {
+		this.retrieveFunctionKey = key;
+	}
+
+	public String getRetrieveFunctionKey() {
+		return this.retrieveFunctionKey;
+	}
+
 	public boolean isFile() {
 		return file;
 	}
 
 	public void setFile(boolean file) {
 		this.file = file;
+	}
+
+	public String getContentURLKey() {
+		return contentURLKey;
+	}
+
+	public void setContentURLKey(String contentURLKey) {
+		this.contentURLKey = contentURLKey;
+	}
+
+	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
+		assert attr != null;
+
+		if (attr.getContentURL() != null)
+			this.setContentURL(attr.getContentURL());
+		if (attr.getContentURLKey() != null)
+			this.setContentURLKey(attr.getContentURLKey());
+		if (attr.getContent() != null)
+			this.setContent(attr.getContent());
+		if (attr.getRetrieveFunction() != null)
+			this.setRetrieveFunction(attr.getRetrieveFunction());
+		if (attr.getRetrieveFunctionKey() != null)
+			this.setRetrieveFunctionKey(attr.getRetrieveFunctionKey());
+		
+		return attr;
+
 	}
 
 }

@@ -44,9 +44,9 @@ public class FrameMapper {
 			System.out.println(" model attribute: " + modelAttr.getName());
 			if (swaggerFunction.getAttribute(modelAttr.getName()) != null) {
 				System.out.println("attribute identified: " + modelAttr.getIdName());
-				ServiceFunctionAttribute swaggerAttr = swaggerFunction.getAttribute(modelAttr.getIdName());
-				swaggerAttr.setRetrieveFunction(modelAttr.getRetrieveFunction());
+				ServiceFunctionAttribute swaggerAttr = swaggerFunction.getAttribute(modelAttr.getIdName());				
 				swaggerAttr.setContentType("enum");
+				swaggerAttr.merge(modelAttr);		
 			}
 		}
 
