@@ -10,7 +10,6 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 	public void handle(String messageJsonString) {
 		System.out.println("Received message: " + messageJsonString);
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-
 		JSONObject messageJson;
 		try {
 			messageJson = (JSONObject) p.parse(messageJsonString);
@@ -20,6 +19,7 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 				if(type.equals("message")) {
 					ChatMessage message;
 					message = SlackChatMediator.parseSlackMessage(messageJson);
+					message.setEmail(SlackChatMediator.usersByChannel.get(message.getChannel()));
 					this.addMessage(message);
 				} else if(type.equals("goodbye")) {
 					System.out.println("Slack client disconnected");

@@ -11,7 +11,16 @@ public class Entity {
 	public Entity(JSONObject o) {
 		this.entityName = o.getAsString("entity");
 		this.value = o.getAsString("value");
-		this.confidence = o.getAsNumber("confidence").floatValue();
+        if(o.getAsNumber("confidence") == null){
+            // added this because there was a nullpointerexception when extracting entities, may need to further search what caused the problem
+            System.out.println("No Confidence Available");
+            this.confidence = 1;
+        } else{ 
+          if(o.getAsNumber("confidence_entity") != null){
+          this.confidence = o.getAsNumber("confidence_entity").floatValue();
+          } else this.confidence = o.getAsNumber("confidence").floatValue();
+        }
+
 	}
 
 	// Constructor for bypassing entity extraction. Used for '!'-commands, for example.

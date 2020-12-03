@@ -8,6 +8,7 @@ import java.util.HashSet;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class Bot {
 	private String name;
@@ -15,7 +16,7 @@ public class Bot {
 	private String version = "1.0.0";
 	private String service;
 	private VLE vle;
-	private HashMap<String,Boolean> active;
+	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
 	private HashSet<Trigger> triggerList;
@@ -24,6 +25,9 @@ public class Bot {
 	private HashMap<String, Messenger> messengers;
 
 	private String botAgent;
+    
+    private HashMap<String, RasaNlu> rasaServers; 
+    
 
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
@@ -31,6 +35,7 @@ public class Bot {
 		generatorList = new HashMap<String, ContentGenerator>();
 		active = new HashMap<String, Boolean>();
 		this.messengers = new HashMap<String, Messenger>();
+        this.rasaServers = new HashMap<String, RasaNlu>();
 	}
 
 	public String getName() {
@@ -68,6 +73,14 @@ public class Bot {
 	public void addBotServiceFunction(String name, ServiceFunction serviceFunction) {
 		this.botServiceFunctions.put(name, serviceFunction);
 	}
+    
+	public RasaNlu getRasaServer(String id) {
+		return this.rasaServers.get(id);
+	}    
+    
+	public void addRasaServer(String id, String Url) {
+		this.rasaServers.put(id, new RasaNlu(Url));
+	}    
 
 	public HashSet<Trigger> getTriggerList() {
 		return triggerList;
@@ -84,7 +97,7 @@ public class Bot {
 	public HashMap<String, ContentGenerator> getGeneratorList() {
 		return generatorList;
 	}
-
+    
 	public void setGeneratorList(HashMap<String, ContentGenerator> generatorList) {
 		this.generatorList = generatorList;
 	}
@@ -109,11 +122,11 @@ public class Bot {
 		this.version = version;
 	}
 
-	public HashMap<String,Boolean> getActive() {
+	public HashMap<String, Boolean> getActive() {
 		return active;
 	}
 
-	public void setActive(HashMap<String,Boolean> active) {
+	public void setActive(HashMap<String, Boolean> active) {
 		this.active = active;
 	}
 
@@ -123,19 +136,19 @@ public class Bot {
 
 	public Messenger getMessenger(String name) {
 		// TODO: I'm not too sure about thread safety when calling
-		//       something on this. Might need to make ChatMediator
-		//       methods synchronized?
+		// something on this. Might need to make ChatMediator
+		// methods synchronized?
 		return this.messengers.get(name);
 	}
 
-	public void addMessenger(Messenger messenger)
-			throws IOException, DeploymentException, ParseBotException
-	{
+	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
 		this.messengers.put(messenger.getName(), messenger);
 	}
 
-
 	public void deactivateAll() {
+		for (Messenger m : this.messengers.values()) {
+			m.close();
+		}
 		for (String k : this.active.keySet()) {
 			this.active.put(k, false);
 		}
@@ -143,15 +156,15 @@ public class Bot {
 
 	public int countActive() {
 		int trueCount = 0;
-		for(boolean b:active.values()) {
-			if(b)
+		for (boolean b : active.values()) {
+			if (b)
 				trueCount++;
 		}
 		return trueCount;
 	}
 
 	public void handleMessages(ArrayList<MessageInfo> messageInfos) {
-		for (Messenger m: this.messengers.values()) {
+		for (Messenger m : this.messengers.values()) {
 			m.handleMessages(messageInfos, this);
 		}
 	}

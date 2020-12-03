@@ -16,11 +16,20 @@ import net.minidev.json.parser.ParseException;
 
 public class RasaNlu {
 	private String url;
-
+    private String[] Intents; 
 	public RasaNlu(String url) {
 		this.url = url;
+        this.Intents = new String[0];
 	}
 
+    public void setIntents(String[] Intents){
+        this.Intents = Intents;
+    }
+
+    public String[] getIntents(){
+        return this.Intents;
+    }
+    
 	public Intent getIntent(String input) {
 		JSONObject intentJSON;
 		try {
