@@ -96,7 +96,8 @@ public class ServiceFunction extends TriggerFunction {
 	public String getBasePath() {
 
 		System.out.println("service is " + this.service);
-
+		System.out.println("serviceName is " + this.serviceName);
+		
 		if (this.service == null)
 			return this.serviceName;
 
@@ -253,6 +254,22 @@ public class ServiceFunction extends TriggerFunction {
 
 	public void setActionType(ActionType actionType) {
 		this.actionType = actionType;
+	}
+	
+	public void merge(ServiceFunction function) {
+		
+		if(this.serviceName == null && function.serviceName != null)
+			this.serviceName = function.serviceName;
+		
+		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {			
+			if (this.getAttribute(mergeAttr.getIdName()) != null) {				
+				System.out.println("attribute identified: " + mergeAttr.getIdName());
+				
+				ServiceFunctionAttribute myAttr = this.getAttribute(mergeAttr.getIdName());				
+				myAttr.setContentType("enum");
+				myAttr.merge(mergeAttr);		
+			}
+		}
 	}
 
 }

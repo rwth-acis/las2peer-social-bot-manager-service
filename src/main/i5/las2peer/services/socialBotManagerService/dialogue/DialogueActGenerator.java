@@ -5,9 +5,9 @@ import java.util.List;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
-import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
 public class DialogueActGenerator {
 
@@ -48,7 +48,7 @@ public class DialogueActGenerator {
 		// intent and entities
 		DialogueAct act = new DialogueAct();
 		act.setIntent(root.getFrame().getReqConfIntent() + "_optional");
-		act.setIntentType(DialogueActType.REQCONF_OPTIONAL);
+		act.setIntentType(DialogueActType.REQCONF_FRAME_OPTIONAL);
 
 		// expected input
 		ExpectedInput input = new ExpectedInput();
@@ -133,10 +133,12 @@ public class DialogueActGenerator {
 		if (name.charAt(name.length() - 1) == 's') {
 			name = name.substring(0, name.length() - 1);
 		}
-		act.setMessage("Do you want to add another *" + name + "*");
+		act.addEntity(new Entity("name", name));
+		act.setIntentType(DialogueActType.REQCONF_SLOT_PROCEED);
+		act.setIntent(node.getReqConfProceed());
 
 		ExpectedInput input = new ExpectedInput();
-		input.setIntend(node.getConfirmIntent());
+		input.setIntend(node.getReqConfProceed());
 		input.setType(InputType.Confirmation);
 		act.setExpected(input);
 		return act;
@@ -150,8 +152,8 @@ public class DialogueActGenerator {
 		assert !operations.isEmpty() : "commands are empty";
 
 		DialogueAct act = new DialogueAct();
-		act.setIntent("home");
-		act.setIntentType(DialogueActType.HOME);
+		act.setIntent("start");
+		act.setIntentType(DialogueActType.SYSTEM_HOME);
 		for (Command operation : operations) {
 			operation.invariant();
 			act.addEntity(operation.getName(), operation.getDescription());
@@ -171,7 +173,7 @@ public class DialogueActGenerator {
 
 		DialogueAct act = new DialogueAct();
 		act.setExpected(input);
-		act.setMessage(new DefaultMessageGenerator().getInvalidValue(input));
+		act.setIntentType(DialogueActType.ERROR_INVALID_INPUT);
 		return act;
 
 	}
@@ -179,10 +181,7 @@ public class DialogueActGenerator {
 	public DialogueAct getUnknownCommandAct() {
 
 		DialogueAct act = new DialogueAct();
-		act.setIntent("error_command_unknown");
-		act.setIntentType(DialogueActType.ERROR);
-		act.setMessage("Sorry, I dont know this command.");
-
+		act.setIntentType(DialogueActType.ERROR_COMMAND_UNKNOWN);
 		return act;
 	}
 	
@@ -191,10 +190,15 @@ public class DialogueActGenerator {
 	public static DialogueAct getNLUErrorAct() {
 		
 		DialogueAct act = new DialogueAct();
-		act.setIntent("error_nlu");
-		act.setIntentType(DialogueActType.ERROR);
-		act.setMessage("I am sorry. Currently my language understanding is not working. Please use explicit commands ;)");
+		act.setIntentType(DialogueActType.ERROR_NLU);		
+		return act;		
+	}
+	
+	
+	public static DialogueAct getSystemErrorAct() {
 		
+		DialogueAct act = new DialogueAct();
+		act.setIntentType(DialogueActType.ERROR_SYSTEM);	
 		return act;		
 	}
 	

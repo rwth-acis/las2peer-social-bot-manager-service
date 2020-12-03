@@ -15,7 +15,7 @@ public class RandomUserSimulator {
 
     public RandomUserSimulator(AbstractDialogueManager manager) {
 
-	intents = manager.getIntents();
+	intents = manager.getNLUIntents();
 	intents.add("quarky");
 	intents.add("inform_quarky");
 	intents.add("request_quarky");

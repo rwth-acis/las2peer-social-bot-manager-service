@@ -41,11 +41,11 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 
 		// get corresponding slot
 		Slotable slo = null;
-		if (goal.contains(intent)) {
+		if (goal.contains(intent))
 			slo = goal.getNode(intent);
-			if (slo == null)
-				System.out.println("naive dm handle: slot not found for intent: " + intent);
-		}
+		else
+			System.out.println("naive dm handle: slot not found for intent: " + intent);
+		
 
 		// Repetition Node
 		if (slo instanceof RepetitionNode) {
@@ -64,7 +64,7 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 
 		// Value Nodes
 		Fillable node = (Fillable) slo;
-		DialogueAct act = new DialogueAct();
+		DialogueAct act = new DialogueAct();		
 		switch (semantic.getIntentType()) {
 		case INFORM:
 
@@ -125,7 +125,7 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 				return requestNextSlot();
 
 			// user wants to fill more values for same slot
-			if (node != null && semantic.getKeyword().contentEquals(node.getConfirmIntent()))
+			if (node != null && semantic.getKeyword().contentEquals(node.getReqConfProceed()))
 				return gen.getRequestAct(node);
 
 			// user confirm but bot dont know why
@@ -146,7 +146,7 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 				return perform();
 
 			// deny array slot
-			if (node != null && semantic.getKeyword().contentEquals(node.getConfirmIntent())) {
+			if (node != null && semantic.getKeyword().contentEquals(node.getReqConfProceed())) {
 
 				// check if ready
 				if (!optional && goal.isReady())
@@ -218,7 +218,7 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 	}
 
 	@Override
-	public Collection<String> getIntents() {
+	public Collection<String> getNLUIntents() {
 		Collection<String> intents = new ArrayList<String>();
 		Collection<Slot> slots = goal.getFrame().getSlots().values();
 		for (Slot slot : slots) {
@@ -233,10 +233,10 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 		intents.add(goal.getFrame().getConfirmIntent() + "_optional");
 		return intents;
 	}
-	
+
 	@Override
 	public Frame getFrame() {
 		return this.goal.getFrame();
 	}
-
+	
 }

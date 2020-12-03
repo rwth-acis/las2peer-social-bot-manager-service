@@ -252,7 +252,7 @@ public class OpenAPIConnector {
 
 		JsonElement jsonElement = JsonParser.parseString(response);
 
-		if (key != null)
+		if (key != null && !key.contentEquals(""))
 			return searchValuesByKey(jsonElement, key);
 
 		if (!jsonElement.isJsonArray()) {

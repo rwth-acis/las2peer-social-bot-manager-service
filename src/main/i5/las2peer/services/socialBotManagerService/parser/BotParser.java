@@ -941,7 +941,9 @@ public class BotParser {
 				botAgents.put(botName, botAgent);
 			}
 			if (subVal.getName().contentEquals("Description"))
-				bot.setDescription(subVal.getValue());			
+				bot.setDescription(subVal.getValue());
+			if (subVal.getName().contentEquals("Language"))
+				bot.setLanguage(subVal.getValue());		
 		}
 		return bot;
 	}

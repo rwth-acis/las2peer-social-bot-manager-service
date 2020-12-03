@@ -110,12 +110,7 @@ public class DialogueAct {
 			this.expected = act.getExpected();
 		return this;
 	}
-
-	@Override
-	public String toString() {
-		return "DialogueAct [intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
-	}
-
+	
 	public OpenAPIAction getAction() {
 		return action;
 	}
@@ -159,5 +154,11 @@ public class DialogueAct {
 	public void setFile(String file) {
 		this.file = file;
 	}
-
+	
+	@Override
+	public String toString() {
+		return "DialogueAct [intentType=" + this.intentType + " intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
+	}
+	
+	
 }

@@ -1,14 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.nlg;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
-import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 
-public class DefaultMessageGenerator extends LanguageGenerator {
-
+public abstract class DefaultMessageGenerator extends LanguageGenerator {
+	
 	@Override
 	public ResponseMessage parse(DialogueAct act) {
 
@@ -19,18 +14,28 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 		System.out.println("get default response for intent " + act.getIntent() + " of type " + act.getIntentType());
 
 		switch (act.getIntentType()) {
-		case HOME:
-			return getMainMenu(act);
-		case REQUEST_SLOT:
-			return getRequest(act);
+		case SYSTEM_HOME:
+			return getMainMenu(act);		
 		case REQCONF_FRAME:
 			return getReqConf(act);
-		case REQCONF_OPTIONAL:
+		case REQCONF_FRAME_OPTIONAL:
 			return getReqOptional(act);
+		case REQUEST_SLOT:
+			return getRequest(act);	
 		case REQCONF_SLOT:
 			break;
+		case REQCONF_SLOT_PROCEED:
+			return getReqConfSlotProceed(act);
 		case INFORM_SLOT:
 			return getInform(act);
+		case ERROR_COMMAND_UNKNOWN:
+			return getErrorCommandUnknown(act);
+		case ERROR_INVALID_INPUT:
+			return getErrorInvalidInput(act);
+		case ERROR_NLU:
+			return getErrorNLU(act);
+		case ERROR_SYSTEM:
+			return getErrorSystem(act);		
 		case TALK:
 			break;
 		default:
@@ -41,200 +46,30 @@ public class DefaultMessageGenerator extends LanguageGenerator {
 
 	}
 
-	// Frame Intents
+	protected abstract ResponseMessage getErrorSystem(DialogueAct act);
 
-	public ResponseMessage getReqConf(DialogueAct act) {
-		assert act != null : "dialogue act parameter is null";
+	protected abstract ResponseMessage getErrorNLU(DialogueAct act);
 
-		String message = "We have all necessary data \n\n";
-		for (Map.Entry<String, String> entry : act.getEntities().entrySet())
-			message = message.concat(entry.getKey()).replaceAll("_", " ").concat(": \t ").concat(entry.getValue())
-					.concat(" \n");
-		message = message.concat("\nis this right? \n");
+	protected abstract ResponseMessage getErrorInvalidInput(DialogueAct act);
 
-		ResponseMessage res = new ResponseMessage(message);
-		return (res);
-	}
+	protected abstract ResponseMessage getErrorCommandUnknown(DialogueAct act);
 
-	public ResponseMessage getReqOptional(DialogueAct act) {
-		assert act != null : "dialogue act parameter is null";
+	protected abstract ResponseMessage getInform(DialogueAct act);
 
-		String message = "There are more optional parameters. \n Do you want to fill them?";
+	protected abstract ResponseMessage getReqConfSlotProceed(DialogueAct act);
 
-		ResponseMessage res = new ResponseMessage(message);
-		return (res);
-	}
+	protected abstract ResponseMessage getRequest(DialogueAct act);
 
-	// Slot Intents
+	protected abstract ResponseMessage getReqOptional(DialogueAct act);
 
-	public ResponseMessage getRequest(DialogueAct act) {
+	protected abstract ResponseMessage getReqConf(DialogueAct act);
 
-		assert act != null : "dialogue act parameter is null";
-		assert act.getEntities() != null : "dialogue act has no entities";
-		assert act.getEntities().containsKey("name") : "dialogue act has no name entitiy";
-
-		String message = "";
-		Map<String, String> entities = act.getEntities();
-		System.out.println(entities.entrySet());
-
-		String name = entities.get("name");
-		message = message + "What is the *" + name + "*? \n\n";
-		System.out.println(message);
-
-		if (entities.containsKey("description"))
-			message = message + entities.get("description") + "\n";
-
-		if (entities.containsKey("example"))
-			message = message + "Example:    \t" + entities.get("example") + "\n";
-
-		if (act.hasExpected() && act.getExpected().getType() != null)
-			message = message.concat("\n" + this.InputTypeMessage(act.getExpected()) + "\n");
-		if (act.getExpected().hasEnums()) {
-			List<String> enums = act.getExpected().getEnums();
-			message = message.concat(enums.get(0));
-			for (String enu : enums.subList(1, enums.size()))
-				message = message + ", " + enu;
-		}
-
-		ResponseMessage res = new ResponseMessage(message);
-		return res;
-	}
-
-	public ResponseMessage getInform(DialogueAct act) {
-
-		assert act != null : "dialogue act parameter is null";
-		assert act.getEntities() != null : "dialogue act has no entities";
-		assert act.getEntities().containsKey("name") : "dialogue act has no name entitiy";
-
-		String message = "";
-		Map<String, String> entities = act.getEntities();
-
-		String name = entities.get("name");
-		message = "*" + name + "*";
-
-		if (entities.containsKey("description"))
-			message = message.concat("description:\t" + entities.get("description") + "\n");
-
-		if (entities.containsKey("value"))
-			message = message.concat("current value:\t" + entities.get("value") + "\n");
-
-		ResponseMessage res = new ResponseMessage(message);
-		return res;
-	}
-
-	public String InputTypeMessage(ExpectedInput inputType) {
-		assert inputType != null : "inputType parameter is null";
-		assert inputType.getType() != null : "inputType has no type";
-
-		String message = "";
-		switch (inputType.getType()) {
-
-		case Confirmation:
-			message = "Please confirm or deny";
-			break;
-		case Date:
-			message = "Please give a date in the format \"yyyy-MM-dd\" ";
-			break;
-		case Decimal:
-		case Number:
-			message = "Please give a number";
-			break;
-		case Enum:
-			message = "Please choose one of this possibilites: ";
-			break;
-		case Free:
-			message = "Please answer with a free text message";
-			break;
-		case Url:
-			message = "Please answer with a valid url";
-			break;
-		case Word:
-			message = "Please answer with one word";
-			break;
-		default:
-			break;
-
-		}
-
-		return message;
-	}
-
-	public ResponseMessage getMainMenu(DialogueAct act) {
-
-		assert act != null : "dialogue act parameter is null";
-		assert act.getEntities() != null : "dialogue act has no entities";
+	protected abstract ResponseMessage getMainMenu(DialogueAct act);
 		
-		String message = "";
-		Map<String, String> entities = act.getEntities();
-		String botName = entities.get("botName");
-		String botDesc = entities.get("botDescription");
-		if(botName != null)
-			message = message + "Hi, I am " + botName + " 🤖 \n";
-		else
-			message = message + "Hi, I am a bot 🤖 \n";
-		
-		if(botDesc != null)
-			message = message + botDesc + "\n";
-		
-		message = message + "\nI can perform the following operations: \n";
-		
-		for (Entry<String, String> entity : entities.entrySet()) {
-			assert entity.getKey() != null : "entity no key";
-			assert entity.getValue() != null : "entity no value";
-			if(!entity.getKey().contentEquals("botName") && !entity.getKey().contentEquals("botDescription"))
-				message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
-		}
-
-		message = message.concat(
-				"\n During conversation you can use the following commands: \n /cancel Aborts the current operation \n /revert Reverts your last input.");
-
-		ResponseMessage res = new ResponseMessage(message);
-		return res;
-	}
-
-	public String getInvalidValue(ExpectedInput input) {
-
-		assert input != null : "expected input parameter is null";
-
-		String message = null;
-		switch (input.getType()) {
-
-		case Confirmation:
-			message = "please clearly state that you agree (yes) or disagree (no)";
-			break;
-
-		case Enum:
-			message = "Please choose one of this possible answers: \n";
-			for (String enu : input.getEnums()) {
-				message = message + enu + "\n";
-			}
-			break;
-
-		case Number:
-			message = "Please answer with a number \n";
-			break;
-
-		case Url:
-			message = "Please answer with a valid url \n";
-			break;
-
-		case Word:
-			message = "Please answer in one word without spaces \n";
-			break;
-
-		default:
-			break;
-
-		}
-
-		return message;
-	}
-
-	public String escape(String text) {
+	protected String escape(String text) {
 
 		String res = text.replaceAll("\\*", "\\\\*").replace("\\", "\\\\").replace("_", "\\_");
 		res = res.replaceAll("#", "\\#").replaceAll("\\+", "\\\\+").replaceAll("-", "\\-");
 		return res;
 	}
-
 }

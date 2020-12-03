@@ -15,6 +15,9 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActGenerato
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.EnglishMessageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.GermanMessageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.Language;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
@@ -69,13 +72,15 @@ public class PipelineManager extends MetaDialogueManager {
 		else
 			act = handleManagement(info, dialogue, messenger);
 		assert act != null : "act is null";
-
+		System.out.println(act);
+		
 		// Generation
 		Map<String, LanguageGenerator> nlgs = messenger.getBot().getNLGs();
 		ResponseMessage res = handleGeneration(act, dialogue, message, nlgs);
 		assert res != null : "res is null";
 		res.setChannel(message.getChannel());
-
+		System.out.println(res);
+		
 		return res;
 	}
 
@@ -294,7 +299,6 @@ public class PipelineManager extends MetaDialogueManager {
 		}
 
 		// return main menu
-		System.out.println("return main menu");
 		assert messenger != null : "messenger is null";
 		DialogueActGenerator gen = new DialogueActGenerator();
 		List<Command> operations = messenger.getCommands();
@@ -398,8 +402,13 @@ public class PipelineManager extends MetaDialogueManager {
 		}
 
 		// default nlg
-		if (act.hasIntent() && res == null) {
-			DefaultMessageGenerator gen = new DefaultMessageGenerator();
+		if (res == null && act.getIntentType() != null) {
+			DefaultMessageGenerator gen = null;
+			if(messenger.getBot() == null || messenger.getBot().getLanguage() == Language.ENGLISH)
+				gen = new EnglishMessageGenerator();
+			else
+				gen = new GermanMessageGenerator(); 
+			
 			res = gen.parse(act);
 		}
 

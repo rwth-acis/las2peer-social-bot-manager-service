@@ -8,105 +8,101 @@ import i5.las2peer.services.socialBotManagerService.model.Slot;
 
 public class NodeList extends ArrayList<Node> {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public NodeList(Node node) {
-	this.add(node);
-    }
-
-    public NodeList() {
-	// TODO Auto-generated constructor stub
-    }
-
-    public List<Fillable> getFilledValues() {
-	List<Fillable> res = new ArrayList<Fillable>();
-	for (Node node : this) {
-	    if (node instanceof Fillable)
-		if (((Fillable) node).isFilled())
-		    res.add((Fillable) node);
+	public NodeList(Node node) {
+		this.add(node);
 	}
-	return res;
-    }
 
-    List<Fillable> getFillableNodes() {
-	List<Fillable> res = new ArrayList<Fillable>();
-	for (Node node : this) {
-	    if (node instanceof Fillable)
-		res.add((Fillable) node);
+	public NodeList() {
+		// TODO Auto-generated constructor stub
 	}
-	return res;
-    }
 
-    public boolean contains(String name) {
-	for (Fillable node : getFillableNodes()) {
-	    Slot slot = node.getSlot();
-	    if (slot.getName().equals(name) || slot.getInformIntent().equals(name)
-		    || slot.getRequestIntent().equals(name) || slot.getConfirmIntent().equals(name)
-		    || slot.getDenyIntent().equals(name))
-		return true;
+	public List<Fillable> getFilledValues() {
+		List<Fillable> res = new ArrayList<Fillable>();
+		for (Node node : this) {
+			if (node instanceof Fillable)
+				if (((Fillable) node).isFilled())
+					res.add((Fillable) node);
+		}
+		return res;
 	}
-	return false;
-    }
 
-    public Collection<String> getIntents() {
-	Collection<String> intents = new ArrayList<String>();
-	for (Fillable node : getFillableNodes()) {
-	    Slot slot = node.getSlot();
-	    intents.add(slot.getInformIntent());
-	    intents.add(slot.getRequestIntent());
-	    intents.add(slot.getConfirmIntent());
-	    intents.add(slot.getDenyIntent());
+	List<Fillable> getFillableNodes() {
+		List<Fillable> res = new ArrayList<Fillable>();
+		for (Node node : this) {
+			if (node instanceof Fillable)
+				res.add((Fillable) node);
+		}
+		return res;
 	}
-	return intents;
-    }
 
-    public Slotable get(String name) {
-	for (Node nos : this) {
-	    if (nos instanceof Slotable) {
-		Slotable node = (Slotable) nos;
-		Slot slot = node.getSlot();
-		if (name.contentEquals(slot.getName()) || name.contentEquals(slot.getInformIntent())
-			|| name.contentEquals(slot.getRequestIntent()) || name.contentEquals(slot.getConfirmIntent())
-			|| name.contentEquals(slot.getDenyIntent()))
-		    return node;
+	public boolean contains(String name) {
+		for (Fillable node : getFillableNodes()) {
+			Slot slot = node.getSlot();
+			if (name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
+				return true;
+		}
+		return false;
+	}
 
-	    }
+	public Collection<String> getIntents() {
+		Collection<String> intents = new ArrayList<String>();
+		for (Fillable node : getFillableNodes()) {
+			Slot slot = node.getSlot();
+			intents.add(slot.getInformIntent());
+			intents.add(slot.getRequestIntent());
+			intents.add(slot.getConfirmIntent());
+			intents.add(slot.getDenyIntent());
+		}
+		return intents;
+	}
+
+	public Slotable get(String name) {
+		for (Node nos : this) {
+			if (nos instanceof Slotable) {
+				Slotable node = (Slotable) nos;
+				Slot slot = node.getSlot();
+				if (name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
+					return node;
+
+			}
+
+		}
+		return null;
+	}
+
+	public NodeList Fillables() {
+
+		NodeList res = new NodeList();
+		for (Node node : this) {
+			if (node instanceof Fillable)
+				res.add(node);
+		}
+		return res;
 
 	}
-	return null;
-    }
 
-    public NodeList Fillables() {
-	
-	NodeList res = new NodeList();
-	for (Node node : this) {
-	    if (node instanceof Fillable)
-		res.add(node);
+	public List<Slotable> Slotable() {
+
+		List<Slotable> res = new ArrayList<>();
+		for (Node node : this) {
+			if (node instanceof Slotable)
+				res.add((Slotable) node);
+		}
+		return res;
+
 	}
-	return res;
-	
-    }
 
-    public List<Slotable> Slotable() {
-
-	List<Slotable> res = new ArrayList<>();
-	for (Node node : this) {
-	    if (node instanceof Slotable)
-		res.add((Slotable) node);
+	public void print() {
+		for (Node node : this) {
+			if (node instanceof Fillable)
+				System.out.println(node.getClass() + ": " + ((Fillable) node).getSlot().getName());
+			else if (node instanceof RepetitionNode)
+				System.out.println(node.getClass() + ": " + ((RepetitionNode) node).getSlot().getName());
+			else
+				System.out.println(node.getClass());
+		}
 	}
-	return res;
-
-    }
-
-    public void print() {
-	for (Node node : this) {
-	    if (node instanceof Fillable)
-		System.out.println(node.getClass() + ": " + ((Fillable) node).getSlot().getName());
-	    else if (node instanceof RepetitionNode)
-		System.out.println(node.getClass() + ": " + ((RepetitionNode) node).getSlot().getName());
-	    else
-		System.out.println(node.getClass());
-	}
-    }
 
 }

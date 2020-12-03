@@ -237,7 +237,7 @@ public class ServiceFunctionAttribute {
 
 		List<String> retrievedEnums = null;
 
-		if (this.contentURL != null) {
+		if (this.contentURL != null && this.contentURL.startsWith("http")) {
 			ServiceFunction action = new ServiceFunction();
 			action.setHttpMethod("GET");
 			action.setBasePath(contentURL);

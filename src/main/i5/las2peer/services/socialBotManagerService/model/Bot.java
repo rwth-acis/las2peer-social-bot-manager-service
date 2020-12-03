@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.Language;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
@@ -48,6 +49,7 @@ public class Bot {
 	private Map<String, Collection<EventToMessageTrigger>> activeTriggers;
 	private Map<String, LanguageUnderstander> nlus;
 	private Map<String, LanguageGenerator> nlgs;
+	private Language language = Language.ENGLISH;
 
 	public Bot() {
 
@@ -281,6 +283,14 @@ public class Bot {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public void setLanguage(String value) {
+		this.language = Language.fromString(value);	
+	}
+	
+	public Language getLanguage() {
+		return this.language;
 	}
 	
 }

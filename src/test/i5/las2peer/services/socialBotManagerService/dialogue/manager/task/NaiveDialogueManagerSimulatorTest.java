@@ -33,7 +33,7 @@ public class NaiveDialogueManagerSimulatorTest {
 	manager.setStartIntent("start_intent");
 
 	RandomUserSimulator simulator = new RandomUserSimulator(manager);
-	System.out.println(manager.getIntents());
+	System.out.println(manager.getNLUIntents());
 	int maxSteps = 200;
 	Intent intent = new Intent("greet", 1.0f);
 	intent.setIntentType(IntentType.START);

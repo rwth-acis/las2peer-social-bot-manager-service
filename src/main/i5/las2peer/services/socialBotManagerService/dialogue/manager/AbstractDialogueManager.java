@@ -17,7 +17,7 @@ public abstract class AbstractDialogueManager {
 		return this.hasIntent(intent.getKeyword());
 	}
 
-	public abstract Collection<String> getIntents();
+	public abstract Collection<String> getNLUIntents();
 
 	public abstract void reset();
 

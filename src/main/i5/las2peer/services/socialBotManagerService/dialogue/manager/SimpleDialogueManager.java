@@ -45,7 +45,7 @@ public class SimpleDialogueManager extends AbstractDialogueManager {
     }
 
     @Override
-    public Collection<String> getIntents() {
+    public Collection<String> getNLUIntents() {
 	return this.intentMessageMap.keySet();
     }
 

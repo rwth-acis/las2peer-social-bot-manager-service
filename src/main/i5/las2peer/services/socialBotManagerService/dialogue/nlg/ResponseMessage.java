@@ -68,6 +68,12 @@ public class ResponseMessage {
 		this.channel = channel;
 	}
 
+	@Override
+	public String toString() {
+		return "ResponseMessage [message=" + message + ", channel=" + channel + ", end=" + end + ", buttons=" + buttons
+				+ ", file=" + file + "]";
+	}
+	
 	public boolean invariant() {
 
 		if (this.channel == null)

@@ -7,47 +7,40 @@ import i5.las2peer.services.socialBotManagerService.model.Slot;
 
 public class SlotSet extends ArrayList<Slot> {
 
-    private static final long serialVersionUID = 2835382998066194672L;
+	private static final long serialVersionUID = 2835382998066194672L;
 
-    public boolean contains(String name) {
-	for (Slot slot : this) {
-	    if (slot.getName().equals(name) || slot.getInformIntent().equals(name)
-		    || slot.getRequestIntent().equals(name) || slot.getConfirmIntent().equals(name)
-		    || slot.getDenyIntent().equals(name))
-		return true;
+	public boolean contains(String name) {
+		for (Slot slot : this) {
+			if (slot.getName().equals(name) || slot.getIntents().contains(name))
+				return true;
+		}
+		return false;
 	}
-	return false;
-    }
 
-    public Collection<String> getIntents() {
-	Collection<String> intents = new ArrayList<String>();
-	for (Slot slot : this) {
-	    intents.add(slot.getInformIntent());
-	    intents.add(slot.getRequestIntent());
-	    intents.add(slot.getConfirmIntent());
-	    intents.add(slot.getDenyIntent());
+	public Collection<String> getIntents() {
+		Collection<String> intents = new ArrayList<String>();
+		for (Slot slot : this) {
+			intents.addAll(slot.getIntents());
+		}
+		return intents;
 	}
-	return intents;
-    }
 
-    public Slot get(String name) {
-	for (Slot slot : this) {
-	    if (name.contentEquals(slot.getName()) || name.contentEquals(slot.getInformIntent())
-		    || name.contentEquals(slot.getRequestIntent()) || name.contentEquals(slot.getConfirmIntent())
-		    || name.contentEquals(slot.getDenyIntent()))
-		return slot;
+	public Slot get(String name) {
+		for (Slot slot : this) {
+			if (slot.getName().equals(name) || slot.getIntents().contains(name))
+				return slot;
+		}
+		return null;
 	}
-	return null;
-    }
 
-    @Override
-    public String toString() {
-	String res = "SlotSet ["; 
-	for(Slot slot: this) {
-	    res = res.concat(slot.toString());
-	}
-	res = res.concat("]");
+	@Override
+	public String toString() {
+		String res = "SlotSet [";
+		for (Slot slot : this) {
+			res = res.concat(slot.toString());
+		}
+		res = res.concat("]");
 		return res;
-    }
+	}
 
 }
