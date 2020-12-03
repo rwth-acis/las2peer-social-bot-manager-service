@@ -1,6 +1,6 @@
 databaseUser = root
-databasePassword = password
+databasePassword = 
 databaseName = LAS2PEERMON
-databaseHost = mobsos-mysql.sbf-dev
+databaseHost = 127.0.0.1
 databasePort = 3306
 
