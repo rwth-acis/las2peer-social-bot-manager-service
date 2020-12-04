@@ -23,6 +23,10 @@ import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
 
+/**
+ * Handles the interaction with OpenAPI specifications
+ *
+ */
 public class OpenAPIConnector {
 
 	/**
@@ -149,7 +153,7 @@ public class OpenAPIConnector {
 				produces = "text/plain";
 		}
 
-		System.out.println("base url" + action.getBasePath() + " function path " + action.getFunctionPath());
+		System.out.println("base url " + action.getBasePath() + " function path " + action.getFunctionPath());
 		ClientResponse response = null;
 		try {
 
@@ -171,7 +175,7 @@ public class OpenAPIConnector {
 	}
 
 	/**
-	 * Retrieve the JSON swagger documentation URL for a web service.
+	 * Retrieve the JSON swagger documentation URL of a web service.
 	 * 
 	 * @param Base URL of the web service
 	 * @return Swagger document location URL as String

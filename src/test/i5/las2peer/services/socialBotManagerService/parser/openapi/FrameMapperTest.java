@@ -13,7 +13,6 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.R
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.SelectionNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.SequenceNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.ValueNode;
-import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import io.swagger.util.Json;
@@ -27,7 +26,7 @@ public class FrameMapperTest {
 	ServiceFunction function = new ServiceFunction();
 	function.setServiceName("https://petstore3.swagger.io");
 	function.setFunctionName("addPet");
-	Frame frame = mapper.create(function, new Frame());
+	Frame frame = mapper.map(function, new Frame());
 
 	assertNotNull(frame.getDescendants());
 	assertNotNull(frame.getSlots());
@@ -50,7 +49,7 @@ public class FrameMapperTest {
 	function.setHttpMethod("post");
 	function.setServiceName("https://petstore.swagger.io/");
 	function.setFunctionName("addPet");
-	Frame frame = mapper.create(function, new Frame());
+	Frame frame = mapper.map(function, new Frame());
 
 	assertNotNull(frame.getDescendants());
 	assertNotNull(frame.getSlots());
@@ -72,7 +71,7 @@ public class FrameMapperTest {
 	function.setHttpMethod("post");
 	function.setServiceName("http://localhost:8080/sbfmanager/swagger.json");
 	function.setFunctionName("createBot");
-	Frame frame = mapper.create(function, new Frame());
+	Frame frame = mapper.map(function, new Frame());
 
 	assertNotNull(frame.getDescendants());
 	assertEquals(18, frame.getDescendants().size());

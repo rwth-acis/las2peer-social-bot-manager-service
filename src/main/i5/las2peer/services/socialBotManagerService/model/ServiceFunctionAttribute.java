@@ -29,8 +29,9 @@ public class ServiceFunctionAttribute {
 	// this attribute will dissapear as everything will be done with a single
 	// content attribute
 	private String nluQuizContent;
-
 	private boolean file;
+	private String entityKeyword;
+	
 	// retrieved by swagger
 	private String description;
 	private String example;
@@ -352,6 +353,14 @@ public class ServiceFunctionAttribute {
 	public void setFile(boolean file) {
 		this.file = file;
 	}
+	
+	public void setEntity(IntentEntity entity) {
+		this.entityKeyword = entity.getEntityKeyword();		
+	}
+	
+	public String getEntity() {
+		return this.entityKeyword;
+	}
 
 	public String getContentURLKey() {
 		return contentURLKey;
@@ -361,6 +370,14 @@ public class ServiceFunctionAttribute {
 		this.contentURLKey = contentURLKey;
 	}
 
+	public boolean hasDynamicEnums() {
+		if(this.contentURL != null && !this.contentURL.contentEquals(""))
+			return true;
+		if(this.retrieveFunction != null)
+			return true;
+		return false;
+	}
+	
 	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
 		assert attr != null;
 
@@ -374,6 +391,15 @@ public class ServiceFunctionAttribute {
 			this.setRetrieveFunction(attr.getRetrieveFunction());
 		if (attr.getRetrieveFunctionKey() != null)
 			this.setRetrieveFunctionKey(attr.getRetrieveFunctionKey());
+		
+		if (attr.getContentType() != null)
+			this.setContentType(attr.getContentType());
+		if (attr.getEntity() != null)
+			this.setEntity(new IntentEntity(attr.getEntity()));
+		
+		if(attr.hasDynamicEnums())
+			this.setContentType("enum");
+				
 		
 		return attr;
 

@@ -1,11 +1,13 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ResponseParseMode;
 
@@ -139,6 +141,28 @@ public class DialogueGoal {
 		assert this.contains(name) : "node is not contained in frame";
 
 		return (Fillable) this.root.getAll().Fillables().get(name);
+
+	}
+
+	public Fillable getNodeByEntity(Entity entity) {
+
+		assert entity != null;
+		assert entity.getEntityName() != null;
+		invariant();
+		
+		System.out.println("get node by entity " + entity.getEntityName());
+		System.out.println("number of nodes in goal " + root.getAll().size());
+		Collection<Fillable> nodes = root.getAll().getByEntity(entity.getEntityName());
+		System.out.println("number of nodes with entity: " + nodes.size());
+		Fillable res = null;
+		int prio = -1;
+		for (Fillable node : nodes) {
+			if (node.getSlot().getPriority() > prio) {
+				res = node;
+				prio = node.getSlot().getPriority();
+			}
+		}
+		return res;
 
 	}
 

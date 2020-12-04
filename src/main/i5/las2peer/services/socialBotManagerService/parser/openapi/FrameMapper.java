@@ -6,62 +6,73 @@ import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
+/**
+ * Handles the integration of service functions and frames.
+ *
+ */
 public class FrameMapper {
 
-	public Frame create(ServiceFunction action, Frame frame) {
+	/**
+	 * Creates a new frame consistent with a service function
+	 * 
+	 * @param serviceURL
+	 * @param operationID
+	 * @return new frame
+	 */
+	public Frame create(String serviceURL, String operationID) {
 
-		System.out.println("parsing parameter information of service action");
-		ServiceFunction modelAction = action;
-		ServiceFunction swaggerAction = OpenAPIConnector.readFunction(action);
-		ServiceFunction frameAction = map(modelAction, swaggerAction);
+		Frame frame = new Frame();
+		ServiceFunction action = new ServiceFunction();
+		action.setServiceName(serviceURL);
+		action.setFunctionName(operationID);
+		return this.map(action, frame);
+
+	}
+
+	/**
+	 * Matches a frame with a service function. Generates missing slots for the
+	 * frame consistent with the service function attributes.
+	 * 
+	 * @param modelAction modeled service action
+	 * @param frame modeled frame
+	 * @return matched frame
+	 */
+	public Frame map(ServiceFunction modelAction, Frame frame) {
+
+		assert modelAction != null;
+		assert frame != null;
+		
+		System.out.println("Mapping service action " + modelAction.getFunctionName() + " into frame " + frame.getName());
+		
+		// Merge model function definition and swagger received definition
+		ServiceFunction swaggerAction = OpenAPIConnector.readFunction(modelAction);
+		ServiceFunction frameAction = swaggerAction.merge(modelAction);
 		frame.setServiceFunction(frameAction);
-		frame = map(frameAction, frame);
+
+		// Generating slots
+		for (ServiceFunctionAttribute attr : frameAction.getAttributes()) {
+			Slot slot = map(attr, attr.getName());
+			frame.addSlot(slot);
+		}
+		
+		// Fill missing frame definitions
+		if (frame.getIntent() == null)
+			frame.setIntent(frameAction.getFunctionName());
+
+		if (frame.getMessage() == null)
+			frame.setMessage(frameAction.getFunctionDescription());
 
 		frame.invariant();
 		return frame;
 	}
 
-	public Frame create(String serviceURL, String operationID) {
-		
-		Frame frame = new Frame();
-		ServiceFunction action = new ServiceFunction();
-		action.setServiceName(serviceURL);
-		action.setFunctionName(operationID);
-		return this.create(action, frame);
-
-	}
-
-	public ServiceFunction map(ServiceFunction modelFunction, ServiceFunction swaggerFunction) {
-
-		assert modelFunction != null : "model function is null";
-		assert swaggerFunction != null : "swagger function is null";
-
-		for (ServiceFunctionAttribute sattr : swaggerFunction.getAllAttributes()) {
-			System.out.println("swagger attribute: " + sattr.getIdName());
-		}
-		
-		swaggerFunction.merge(modelFunction);
-
-		return swaggerFunction;
-	}
-
-	public Frame map(ServiceFunction action, Frame frame) {
-
-		System.out.println("mapping service action into frame");
-		for (ServiceFunctionAttribute attr : action.getAttributes()) {
-			Slot slot = map(attr, attr.getName());
-			frame.addSlot(slot);
-		}
-
-		if (frame.getIntent() == null)
-			frame.setIntent(action.getFunctionName());
-
-		if (frame.getMessage() == null)
-			frame.setMessage(action.getFunctionDescription());
-
-		return frame;
-	}
-
+	/**
+	 * Maps a service function attribute into a new slot.
+	 * 
+	 * @param attr of service function
+	 * @param name of new slot
+	 * @return generated slot
+	 */
 	public Slot map(ServiceFunctionAttribute attr, String name) {
 
 		assert attr != null : "map attr with slot: attr is null";
@@ -89,6 +100,9 @@ public class FrameMapper {
 		else
 			slot.setInputType(InputType.Free);
 
+		if(attr.getEntity() != null)
+			slot.setEntity(attr.getEntity());
+		
 		// selection
 		if (attr.hasDiscriminator()) {
 			slot.setSelection(false);

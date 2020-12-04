@@ -180,6 +180,7 @@ public class BotParser {
 			case "Intent Entity":
 				IntentEntity entity = addIntentEntity(entry.getKey(), elem, config);
 				intentEntities.put(entry.getKey(), entity);
+				System.out.println("add intent entity " + entity.getEntityKeyword());
 				break;
 
 			case "NLU Knowledge":
@@ -278,8 +279,8 @@ public class BotParser {
 
 		int checkGeneratorIns = 0;
 		int checkGeneratorOuts = 0;
-		// EDGES
-		System.out.println("EDGES");
+		// EDGES first pass
+		System.out.println("EDGES first pass");
 		for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 			BotModelEdge elem = entry.getValue();
 			String type = elem.getType();
@@ -455,6 +456,15 @@ public class BotParser {
 						ServiceFunctionAttribute sAtt = sfaList.get(target);
 						itb.setSourceAttribute(sAtt);
 					}
+					// Action Parameter uses IntentEntity
+				} else if (sfaList.containsKey(source)) {
+					ServiceFunctionAttribute sfa = sfaList.get(source);
+					System.out.println("paramter uses something " + sfa.getName());
+					if (intentEntities.containsKey(target)) {						
+						IntentEntity entity = intentEntities.get(target);
+						System.out.println("paramter has entity " + entity.getEntityKeyword());
+						sfa.setEntity(entity);
+					}
 					// Bot Action uses Messenger
 				} else if (bsfList.containsKey(source)) {
 					ServiceFunction sf = bsfList.get(source);
@@ -563,7 +573,8 @@ public class BotParser {
 			}
 		}
 
-		// EDGES
+		// EDGES second pass
+		System.out.println("EDGES second pass");
 		for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 			BotModelEdge elem = entry.getValue();
 			String type = elem.getType();
@@ -622,7 +633,7 @@ public class BotParser {
 							FrameMapper mapper = new FrameMapper();
 							System.out.println("automatic frame mapping");
 							try {
-								frame = mapper.create(botFunction, frame);
+								frame = mapper.map(botFunction, frame);
 							} catch (Error e) {
 								e.printStackTrace();
 							}

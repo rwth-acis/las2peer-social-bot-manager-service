@@ -9,6 +9,7 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 public class Intent {
+	
 	private String intentKeyword;
 	private float confidence;
 	private IntentType intentType;
@@ -27,7 +28,25 @@ public class Intent {
 		return result;
 	}
 
-	// Constructor for intent extraction through Rasa NLU.
+	/**
+	 * Constructor
+	 * 
+	 * @param keyword    of intent corresponding to NLU module
+	 * @param confidence of intent keyword
+	 */
+	public Intent(String keyword, float confidence) {
+
+		this.intentKeyword = replaceUmlaute(keyword);
+		this.confidence = confidence;
+		this.intentType = getIntentType();
+		this.entities = new HashMap<String, Entity>();
+	}
+
+	/**
+	 * Constructor for intent extraction through Rasa NLU.
+	 * 
+	 * @param json representation of Rasa NLU results
+	 */
 	public Intent(JSONObject json) {
 		JSONObject intentInner = (JSONObject) json.get("intent");
 		float confidence = intentInner.getAsNumber("confidence").floatValue();
@@ -44,21 +63,20 @@ public class Intent {
 		this.intentType = getIntentType();
 	}
 
-	// Constructor for bypassing intent extraction. Used for '!'-commands, for
-	// example.
+	/**
+	 * Constructor for bypassing intent extraction. Used for '!'-commands, for
+	 * example.
+	 * 
+	 * @param intentKeyword
+	 * @param entityName
+	 * @param entityValue
+	 */
 	public Intent(String intentKeyword, String entityName, String entityValue) {
 		this.intentKeyword = replaceUmlaute(intentKeyword);
 		this.confidence = 1.0f;
 		this.entities = new HashMap<String, Entity>();
 		this.entities.put(entityName, new Entity(entityName, entityValue));
 		this.intentType = getIntentType();
-	}
-
-	public Intent(String keyword, float confidence) {
-		this.intentKeyword = replaceUmlaute(keyword);
-		this.confidence = confidence;
-		this.intentType = getIntentType();
-		this.entities = new HashMap<String, Entity>();
 	}
 
 	public String getKeyword() {
@@ -79,6 +97,10 @@ public class Intent {
 
 	public void addEntity(String key, Entity entity) {
 		this.entities.put(key, entity);
+	}
+	
+	public boolean hasEntity() {
+		return (this.entities != null && !this.entities.isEmpty());
 	}
 
 	public ArrayList<String> getEntitieValues() {

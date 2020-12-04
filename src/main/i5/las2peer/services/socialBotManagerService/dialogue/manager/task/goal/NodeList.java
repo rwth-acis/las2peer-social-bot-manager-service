@@ -10,52 +10,62 @@ public class NodeList extends ArrayList<Node> {
 
 	private static final long serialVersionUID = 1L;
 
+	public NodeList() {
+
+	}
+
 	public NodeList(Node node) {
 		this.add(node);
 	}
 
-	public NodeList() {
-		// TODO Auto-generated constructor stub
+	/**
+	 * Get nodes that are fillable
+	 * 
+	 * @return list of nodes that can be filled with a value
+	 */
+	List<Fillable> getFillableNodes() {
+
+		List<Fillable> res = new ArrayList<Fillable>();
+		for (Node node : this) {
+			if (node instanceof Fillable)
+				res.add((Fillable) node);
+		}
+
+		return res;
 	}
 
+	/**
+	 * Get nodes with filled values
+	 * 
+	 * @return list of nodes that have a filled value (non-empty nodes)
+	 */
 	public List<Fillable> getFilledValues() {
+
 		List<Fillable> res = new ArrayList<Fillable>();
 		for (Node node : this) {
 			if (node instanceof Fillable)
 				if (((Fillable) node).isFilled())
 					res.add((Fillable) node);
 		}
+
 		return res;
 	}
 
-	List<Fillable> getFillableNodes() {
-		List<Fillable> res = new ArrayList<Fillable>();
-		for (Node node : this) {
-			if (node instanceof Fillable)
-				res.add((Fillable) node);
-		}
-		return res;
-	}
-
+	/**
+	 * Returns if list contains a node
+	 * 
+	 * @param name of the slot of the node
+	 * @return list contains a node (true) or not (false)
+	 */
 	public boolean contains(String name) {
+
 		for (Fillable node : getFillableNodes()) {
 			Slot slot = node.getSlot();
 			if (name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
 				return true;
 		}
-		return false;
-	}
 
-	public Collection<String> getIntents() {
-		Collection<String> intents = new ArrayList<String>();
-		for (Fillable node : getFillableNodes()) {
-			Slot slot = node.getSlot();
-			intents.add(slot.getInformIntent());
-			intents.add(slot.getRequestIntent());
-			intents.add(slot.getConfirmIntent());
-			intents.add(slot.getDenyIntent());
-		}
-		return intents;
+		return false;
 	}
 
 	public Slotable get(String name) {
@@ -70,6 +80,36 @@ public class NodeList extends ArrayList<Node> {
 
 		}
 		return null;
+	}
+
+	public Collection<Fillable> getByEntity(String entityName) {
+		
+		Collection<Fillable> res = new ArrayList<>();		
+		for (Node node : this) {
+			if (node instanceof Fillable) {
+				Fillable fillable = (Fillable) node;
+				if(fillable.hasEntity(entityName))
+					res.add(fillable);
+			}
+		}
+		
+		return res;		
+	}
+	
+	/**
+	 * Get list of intents
+	 * 
+	 * @return list of intents of nodes
+	 */
+	public Collection<String> getIntents() {
+
+		Collection<String> intents = new ArrayList<String>();
+		for (Fillable node : getFillableNodes()) {
+			Slot slot = node.getSlot();
+			intents.addAll(slot.getIntents());
+		}
+
+		return intents;
 	}
 
 	public NodeList Fillables() {

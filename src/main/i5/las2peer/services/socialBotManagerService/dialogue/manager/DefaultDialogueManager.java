@@ -36,8 +36,12 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 
 		// first call
 		String intent = semantic.getKeyword();
-		if (intent.equalsIgnoreCase(getStartIntent()))
-			return requestNextSlot();
+		if (intent.equalsIgnoreCase(getStartIntent())) {
+			handleEntities(semantic);
+			if (!goal.isReady())
+				return requestNextSlot();
+			return perform();
+		}
 
 		// get corresponding slot
 		Slotable slo = null;
@@ -45,7 +49,6 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 			slo = goal.getNode(intent);
 		else
 			System.out.println("naive dm handle: slot not found for intent: " + intent);
-		
 
 		// Repetition Node
 		if (slo instanceof RepetitionNode) {
@@ -64,7 +67,7 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 
 		// Value Nodes
 		Fillable node = (Fillable) slo;
-		DialogueAct act = new DialogueAct();		
+		DialogueAct act = new DialogueAct();
 		switch (semantic.getIntentType()) {
 		case INFORM:
 
@@ -217,6 +220,22 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 
 	}
 
+	private void handleEntities(Intent semantic) {
+		assert semantic != null;
+
+		if (semantic.hasEntity()) {
+			for (Entity entity : semantic.getEntities()) {
+				Fillable node = goal.getNodeByEntity(entity);
+				if (node != null) {
+					goal.fill(node, entity.getValue());
+					System.out.println("entity " + entity.getEntityName() + " of node " + node.getName()
+							+ " filled with " + entity.getValue());
+				}
+			}
+		}
+
+	}
+
 	@Override
 	public Collection<String> getNLUIntents() {
 		Collection<String> intents = new ArrayList<String>();
@@ -238,5 +257,5 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 	public Frame getFrame() {
 		return this.goal.getFrame();
 	}
-	
+
 }

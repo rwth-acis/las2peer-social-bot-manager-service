@@ -256,20 +256,27 @@ public class ServiceFunction extends TriggerFunction {
 		this.actionType = actionType;
 	}
 	
-	public void merge(ServiceFunction function) {
+	/**
+	 * Merges two service functions. (e.g a swagger generated function with a modeled function)
+	 * 
+	 * @param function with higher priority
+	 * @return merged function
+	 */
+	public ServiceFunction merge(ServiceFunction function) {
 		
 		if(this.serviceName == null && function.serviceName != null)
 			this.serviceName = function.serviceName;
 		
 		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {			
-			if (this.getAttribute(mergeAttr.getIdName()) != null) {				
-				System.out.println("attribute identified: " + mergeAttr.getIdName());
-				
+			if (this.getAttribute(mergeAttr.getIdName()) != null) {					
+				System.out.println("attribute identified: " + mergeAttr.getIdName());				
 				ServiceFunctionAttribute myAttr = this.getAttribute(mergeAttr.getIdName());				
-				myAttr.setContentType("enum");
 				myAttr.merge(mergeAttr);		
+			} else {
+				System.out.println("cant merge attribute: " + mergeAttr.getIdName());
 			}
-		}
+		}		
+		return this;
 	}
 
 }

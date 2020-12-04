@@ -26,7 +26,7 @@ public class NaiveDialogueManagerSimulatorTest {
 	Frame frame = new Frame();
 	frame.setName("testFrame");
 	frame.setIntent("testFrameIntent");
-	frame = new FrameMapper().create(action, frame);
+	frame = new FrameMapper().map(action, frame);
 
 	DialogueGoal goal = new DialogueGoal(frame);
 	DefaultDialogueManager manager = new DefaultDialogueManager(goal);

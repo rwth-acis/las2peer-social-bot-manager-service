@@ -70,6 +70,7 @@ public class Slot {
 	public Slot(String name) {
 		this.name = name;
 		this.children = new SlotSet();
+		this.priority = 0;
 
 	}
 
@@ -92,7 +93,8 @@ public class Slot {
 	}
 
 	/**
-	 *  Name for unique identification inside frame
+	 * Name for unique identification inside frame
+	 * 
 	 * @return
 	 */
 	public String getName() {
@@ -126,10 +128,13 @@ public class Slot {
 		return (parts[l - 2] + " " + parts[l - 1]);
 	}
 
-	public String getEntity() {
-		return entity;
+	public String getEntity() {		
+		if(entity != null)
+			return entity;		
+		if(this.getParameter() != null)
+			return this.getParameter().getEntity();				
+		return null;
 	}
-
 	public void setEntity(String entity) {
 		this.entity = entity;
 	}
@@ -241,11 +246,11 @@ public class Slot {
 		res.add(this.getReqConfIntent());
 		return res;
 	}
-	
+
 	public String getReqConfIntent() {
 		return "reqconf_" + name + "_proceed";
 	}
-	
+
 	public String getInformIntent() {
 		return "inform_" + name;
 	}
