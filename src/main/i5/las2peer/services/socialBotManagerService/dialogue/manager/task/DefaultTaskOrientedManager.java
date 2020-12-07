@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.manager;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,19 +10,18 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.F
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Node;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RepetitionNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
-import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
-public class DefaultDialogueManager extends TaskOrientedManager {
+public class DefaultTaskOrientedManager extends TaskOrientedManager {
 
 	DialogueGoal goal;
 	DialogueActGenerator gen;
 	boolean optional;
 
-	public DefaultDialogueManager(DialogueGoal goal) {
+	public DefaultTaskOrientedManager(DialogueGoal goal) {
 		this.goal = goal;
 		this.gen = new DialogueActGenerator();
 	}
@@ -254,8 +253,8 @@ public class DefaultDialogueManager extends TaskOrientedManager {
 	}
 
 	@Override
-	public Frame getFrame() {
-		return this.goal.getFrame();
+	public DialogueGoal getDialogueGoal() {
+		return goal;
 	}
 
 }

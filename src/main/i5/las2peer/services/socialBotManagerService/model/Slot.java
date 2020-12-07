@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class Slot {
@@ -69,7 +69,7 @@ public class Slot {
 
 	public Slot(String name) {
 		this.name = name;
-		this.children = new SlotSet();
+		this.children = new SlotList();
 		this.priority = 0;
 
 	}
@@ -128,12 +128,18 @@ public class Slot {
 		return (parts[l - 2] + " " + parts[l - 1]);
 	}
 
-	public String getEntity() {		
+	public String getEntity() {	
+		
 		if(entity != null)
-			return entity;		
-		if(this.getParameter() != null)
-			return this.getParameter().getEntity();				
-		return null;
+			return entity;	
+		
+		if(this.getParameter() != null && this.getParameter().getEntity() != null)
+			return this.getParameter().getEntity();	
+		
+		if(this.getEnumList() != null)
+			return this.getName();
+		
+		return null;	
 	}
 	public void setEntity(String entity) {
 		this.entity = entity;
@@ -200,7 +206,7 @@ public class Slot {
 	}
 
 	public Collection<? extends Slot> getDescendants() {
-		Collection<Slot> desc = new SlotSet();
+		Collection<Slot> desc = new SlotList();
 		desc.add(this);
 		if (this.hasChildren())
 			for (Slot slot : this.getChildren())
@@ -274,10 +280,14 @@ public class Slot {
 	public void setSelection(boolean selection) {
 		this.selection = selection;
 	}
-
+	
 	public List<String> getEnumList() {
-
 		return this.getParameter().getEnumList();
+	}
+	
+	public boolean hasEnumList() {
+		List<String> enumList = this.getParameter().getEnumList();
+		return (enumList != null && !enumList.isEmpty());
 	}
 
 	public void setEnumList(List<String> enums) {
@@ -302,8 +312,8 @@ public class Slot {
 		}
 	}
 
-	public SlotSet getRequired() {
-		SlotSet slots = new SlotSet();
+	public SlotList getRequired() {
+		SlotList slots = new SlotList();
 		if (this.isSelection()) {
 			slots.add(this);
 			return slots;
@@ -320,8 +330,8 @@ public class Slot {
 		return slots;
 	}
 
-	public SlotSet getRequired(String branch) {
-		SlotSet slots = new SlotSet();
+	public SlotList getRequired(String branch) {
+		SlotList slots = new SlotList();
 		if (!this.isSelection())
 			return getRequired();
 
@@ -366,7 +376,7 @@ public class Slot {
 
 		assert values != null : "values are null";
 
-		Collection<Slot> desc = new SlotSet();
+		Collection<Slot> desc = new SlotList();
 		desc.add(this);
 
 		if (this.isSelection() && this.hasChildren())

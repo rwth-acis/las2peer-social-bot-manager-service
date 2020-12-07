@@ -33,7 +33,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "http://tech4comp.dbis.rwth-aachen.de:31024";
+	private final static String url = "https://bcf40f104e84.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -108,7 +108,7 @@ public class TelegramChatMediator extends EventChatMediator {
 				MediaType.TEXT_PLAIN);
 		System.out.println(result.getResponse());
 	}
-		
+
 	/**
 	 * Sends a plain text message to telegram messenger channel
 	 */
@@ -135,7 +135,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		if (response.getMessage() != null) {
 			boolean isOK = this.sendFormattedMessageToChannel(response);
-			if(!isOK)
+			if (!isOK)
 				sendMessageToChannel(response.getChannel(), response.getMessage());
 		}
 
@@ -144,7 +144,7 @@ public class TelegramChatMediator extends EventChatMediator {
 		}
 
 	}
-	
+
 	/**
 	 * Sends a message to telegram messenger channel with Markdown formatting and
 	 * optional UI elements.
@@ -153,7 +153,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		assert response != null : "response parameter is null";
 		assert response.getChannel() != null : "response has no channel";
-		assert response.getMessage() != null : "response has no text message";		
+		assert response.getMessage() != null : "response has no text message";
 
 		String channel = response.getChannel();
 		String text = response.getMessage();
@@ -164,23 +164,59 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		if (response.hasButtons()) {
 
-			String[] buttons = new String[response.getButtons().size()];
-			int i = 0;
-			for (String value : response.getButtons()) {
-				buttons[i] = value;
-				i++;
-			}
+			int numButton = response.getButtons().size();
+			if (numButton == 1) {
+				String[] buttons = new String[1];
+				buttons[0] = response.getButtons().get(0);
+				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
+				request.replyMarkup(keyboard);
 
-			ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
-			keyboard.oneTimeKeyboard(true);
-			keyboard.selective(true);
-			request.replyMarkup(keyboard);
+			} else if (numButton == 2){
+				String[] buttons = new String[2];
+				buttons[0] = response.getButtons().get(0);
+				buttons[1] = response.getButtons().get(1);
+				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
+				request.replyMarkup(keyboard);
+				
+			} else {
+
+				int length = response.getButtons().get(0).length();
+				int rowSize = 3;
+				if (length > 20)
+					rowSize = 2;
+				if (length > 40)
+					rowSize = 1;
+
+				int columns = (int) (Math.ceil(numButton / rowSize));
+				String[][] buttons = new String[columns][rowSize];
+				int i = 0;
+				int j = 0;
+
+				for (String value : response.getButtons()) {
+					buttons[i][j] = value;
+
+					if (j == rowSize - 1) {
+						i = i + 1;
+						j = 0;
+					} else {
+						j++;
+					}
+				}
+
+				boolean resize = false;
+				boolean oneTime = true;
+				boolean selective = true;
+
+				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons, resize, oneTime, selective);
+				request.replyMarkup(keyboard);
+
+			}			
 
 		} else
 			request.replyMarkup(new ReplyKeyboardRemove());
 
 		BaseResponse res = bot.execute(request);
-		if(!res.isOk())
+		if (!res.isOk())
 			System.out.println("failed telegram request: " + res.errorCode() + " " + res.description());
 		return res.isOk();
 

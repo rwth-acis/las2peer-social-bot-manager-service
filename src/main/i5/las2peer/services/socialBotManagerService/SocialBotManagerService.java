@@ -85,6 +85,7 @@ import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.TriggerHandler;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
@@ -224,6 +225,7 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(BotResource.class);
 		getResourceConfig().register(BotModelResource.class);
 		getResourceConfig().register(TrainingResource.class);
+		getResourceConfig().register(CreationResource.class);
 		getResourceConfig().register(this);
 	}
 
@@ -352,9 +354,8 @@ public class SocialBotManagerService extends RESTService {
 
 					JSONArray messengerList = new JSONArray();
 					for (Entry<String, Messenger> messengerEntry : b.getMessengers().entrySet()) {
-						JSONObject jm = new JSONObject();
-						jm.put("type", messengerEntry.getValue().getChatService().toString());
-						jm.put("name", messengerEntry.getValue().getName());
+						JSONObject jm = new JSONObject();						
+						jm.put("type", messengerEntry.getValue().getChatService());
 						messengerList.add(jm);
 					}
 					jb.put("messengers", messengerList);
@@ -392,6 +393,56 @@ public class SocialBotManagerService extends RESTService {
 				j.put("slack", vle.getSlackBotMap().toString());
 			}
 			return Response.ok().entity(j).build();
+		}
+		
+		@GET
+		@Path("/{botName}/activate")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
+		public Response activateBot(@PathParam("botName") String name) {
+			try {
+			
+			for(VLE vle :getConfig().getVLEs().values()) {
+				Bot bot = vle.getBotByName(name);
+				if(bot != null) {				
+					String message = "";
+					if(bot.getActive().get(vle.getName()) != null && bot.getActive().get(vle.getName()))
+						message = "bot is already active: " + bot.getName() + " on VLE: " + vle.getName();
+					else {
+						bot.activate(vle.getName());
+						message = "bot activated: " + bot.getName() + " on VLE: " + vle.getName();
+					}
+					return Response.ok().entity(message).build();
+				}
+			}
+							
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return Response.ok().entity("no bot found").build();
+		}
+		
+		@GET
+		@Path("/{botName}/deactivate")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
+		public Response deactivateBot(@PathParam("botName") String name) {			
+			for(VLE vle :getConfig().getVLEs().values()) {
+				Bot bot = vle.getBotByName(name);
+				if(bot != null) {					
+					String message = "";
+					if(bot.getActive().get(vle.getName()) != null && bot.getActive().get(vle.getName())) {
+						bot.deactivateAll();
+						message = "bot " + bot.getName() + " deactivated";
+					} else
+						message = "bot " + bot.getName() + " is already inactive";
+					return Response.ok().entity(message).build();
+				}
+			}
+							
+			return Response.ok().entity("no bot found").build();
 		}
 
 		/**
@@ -789,16 +840,39 @@ public class SocialBotManagerService extends RESTService {
 					// Identify bot
 					Collection<VLE> vles = getConfig().getVLEs().values();
 					Bot bot = null;
-
+					VLE zvle = null;
+	
 					for (VLE vle : vles) {
 						Bot teleBot = vle.getBotbyTelegramToken(token);
-						if (teleBot != null)
+						if (teleBot != null) {
 							bot = teleBot;
+							zvle = vle;
 					}
 					if (bot == null)
 						System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
-
+					
+					if(!bot.isActive(vle)) {
+						System.out.println("bot " + bot.getName() + " is inactive");
+						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+						JSONObject parsedBody;
+						
+						try {							
+							parsedBody = (JSONObject) jsonParser.parse(body);
+							JSONObject message = (JSONObject) parsedBody.get("message");
+							JSONObject chat = (JSONObject) message.get("chat");
+							String channel = chat.getAsString("id");
+							Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+							EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+							ResponseMessage response = new ResponseMessage("I am inactive 😴");
+							mediator.sendMessageToChannel(response);
+							
+						} catch (ParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
 					// Handle event
 					Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
 					EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
@@ -813,7 +887,7 @@ public class SocialBotManagerService extends RESTService {
 						e.printStackTrace();
 					}
 				}
-			}).start();
+			}}).start();
 
 			return Response.status(200).build();
 		}
@@ -1780,6 +1854,186 @@ public class SocialBotManagerService extends RESTService {
 		/**
 		 * @return ok
 		 */
+		@GET
+		@Path("/nlu")
+		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getNLUModels", notes = "get NLU models")
+		public Response getNLUModels() {
+
+			System.out.println("getNLUModels()");
+			try {
+				return Response.ok().entity(getConfig().getNlus().values()).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("cant retrieve knowledge models").build();
+
+		}
+
+		/**
+		 * @return ok
+		 */
+		@POST
+		@Path("/nlu")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Creates NLU model", notes = "creates the nlu model.")
+		public Response createNLU(NLUKnowledge nlu) {
+
+			try {
+
+				if (getConfig().getNlus().containsKey(nlu.getUrl().toString()))
+					return Response.ok().entity("I did not create a new NLU module, because a module with the URL "
+							+ nlu.getUrl() + " already exists 😉").build();
+
+				RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
+				getConfig().addNLU(rasa);
+
+				if (getConfig().getNLU(nlu.getName()) == null)
+					return Response.serverError().entity("nlu creation failed").build();
+
+				String message = "The NLU Knowledge was created: " + rasa.toString();
+				return Response.ok().entity(message).build();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("nlu creation failed").build();
+
+		}
+
+		/**
+		 * @return ok
+		 */
+		@POST
+		@Path("/nlu/train")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
+		public Response trainNLU(TrainingData training,
+				@ApiParam(hidden = true) @QueryParam("botEventId") String botEventId) {
+
+			try {
+				System.out.println("received event id: " + botEventId);
+				Collection<String> intents = training.intents();
+				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
+
+				if (lu == null)
+					return Response.serverError().entity("nlu module not found").build();
+
+				lu.addIntents(intents);
+				System.out.println(training.toMarkdown());
+				TrainingHelper nluTrain = new TrainingHelper(Context.get(), botEventId, lu.getUrl(), null,
+						training.toMarkdown());
+				nluTrain.setDefaultConfig();
+				Thread nluThread = new Thread(nluTrain);
+				nluThread.start();
+
+				return Response.ok().entity(
+						"I started the NLU training for you 😄 \n I will notify you as soon as the training is finished")
+						.build();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return Response.serverError().entity("nlu creation failed").build();
+
+		}
+	}
+	
+	@Api(value = "Creation Resource")
+	@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.13", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
+	@Path("/creation")
+	public static class CreationResource {
+		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
+
+		@POST
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Create bot", notes = "creates the bot.")
+		public Response createBot(i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
+
+			BotModel botModel = null;
+			try {
+
+				System.out.println("Parse bot into BotModel");
+				System.out.println(bot);
+
+				BotModelParser botModelParser = new BotModelParser();
+				botModel = botModelParser.parse(bot, SocialBotManagerService.getConfig());
+				System.out.println("botModel");
+				System.out.println(botModel.toString());
+				botModel = botModelParser.order(botModel);
+				System.out.println("botModel");
+				System.out.println(botModel.toString());
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().entity("Bot creation failed. Can't parse into bot model.").build();
+			}
+
+			try {
+
+				BotModelResource bmr = new BotModelResource();
+				bmr.putModel("botName", botModel);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			try {
+
+				BotResource br = new BotResource();
+				br.init(botModel);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			try {
+
+				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+				String res = gson.toJson(botModel);
+				return Response.ok().entity(res).build();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("bot creation failed").build();
+
+		}
+		
+		@GET
+		@Path("/test/{testParam}")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getTestEnum", notes = "get Test Enum")
+		public Response getTest(@PathParam("testParam") String testParam) {
+
+			JSONArray res = new JSONArray();
+			res.add("optionA");
+			res.add("optionB");
+			res.add("optionC");
+			System.out.println("get Test Enum " + res.toJSONString());
+			try {
+				return Response.ok().entity("The test param is " + testParam).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("cant retrieve knowledge models").build();
+
+		}
+		
+		
 		@GET
 		@Path("/nlu")
 		@Consumes(MediaType.TEXT_PLAIN)

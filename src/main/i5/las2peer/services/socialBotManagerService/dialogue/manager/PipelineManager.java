@@ -35,6 +35,10 @@ import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 
+/**
+ * Meta Dialogue Manager that uses different modules for language understanding,
+ * dialogue management and language generation
+ */
 public class PipelineManager extends MetaDialogueManager {
 
 	Messenger messenger;
@@ -73,14 +77,14 @@ public class PipelineManager extends MetaDialogueManager {
 			act = handleManagement(info, dialogue, messenger);
 		assert act != null : "act is null";
 		System.out.println(act);
-		
+
 		// Generation
 		Map<String, LanguageGenerator> nlgs = messenger.getBot().getNLGs();
 		ResponseMessage res = handleGeneration(act, dialogue, message, nlgs);
 		assert res != null : "res is null";
 		res.setChannel(message.getChannel());
 		System.out.println(res);
-		
+
 		return res;
 	}
 
@@ -165,14 +169,13 @@ public class PipelineManager extends MetaDialogueManager {
 		assert message.getText() != null : "message has no text";
 		assert nlus != null : "nlus is null";
 
+		// try registered nlu modules
 		Intent intent = null;
 		List<LanguageUnderstander> nluList = new ArrayList<>(nlus.values());
 		int i = 0;
 		while (intent == null && i < nluList.size()) {
-
 			try {
-
-				System.out.println("Intent Extraction now with  : " + message.getChannel());
+				System.out.println("Intent Extraction: " + message.getChannel());
 				intent = nluList.get(i).parse(message);
 
 			} catch (Exception e) {
@@ -180,15 +183,18 @@ public class PipelineManager extends MetaDialogueManager {
 			}
 			i++;
 		}
-
+		
+		// use fallback nlu
 		if (intent == null) {
 			LanguageUnderstander fallbackNLU = new FallbackNlu();
+			System.out.println("Intent extraction with default nlu: " + message.getChannel());
 			intent = fallbackNLU.parse(message);
 		}
 
 		if (intent != null)
 			intent.setIntentType(intent.deriveType());
 
+		// return message info
 		MessageInfo res = new MessageInfo();
 		res.setIntent(intent);
 		res.setMessage(message);
@@ -404,11 +410,11 @@ public class PipelineManager extends MetaDialogueManager {
 		// default nlg
 		if (res == null && act.getIntentType() != null) {
 			DefaultMessageGenerator gen = null;
-			if(messenger.getBot() == null || messenger.getBot().getLanguage() == Language.ENGLISH)
+			if (messenger.getBot() == null || messenger.getBot().getLanguage() == Language.ENGLISH)
 				gen = new EnglishMessageGenerator();
 			else
-				gen = new GermanMessageGenerator(); 
-			
+				gen = new GermanMessageGenerator();
+
 			res = gen.parse(act);
 		}
 

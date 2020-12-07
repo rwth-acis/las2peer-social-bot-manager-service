@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.Collection;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DefaultTaskOrientedManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
@@ -39,7 +40,7 @@ public class DialogueManagerGenerator {
     private AbstractDialogueManager generateNaiveDialogueManager(Frame frame) {
 
 	DialogueGoal goal = new DialogueGoal(frame);
-	DefaultDialogueManager manager = new DefaultDialogueManager(goal);
+	DefaultTaskOrientedManager manager = new DefaultTaskOrientedManager(goal);
 	manager.setStartIntent(frame.getIntent());
 
 	return manager;

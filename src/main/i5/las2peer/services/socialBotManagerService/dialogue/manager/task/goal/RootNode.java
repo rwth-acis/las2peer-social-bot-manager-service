@@ -102,7 +102,7 @@ public class RootNode extends Node {
 		}
 		return nodes;
 	}
-
+	
 	@Override
 	public void invariant() {
 		assert this.frame != null : "frame is null";

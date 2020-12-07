@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,25 +9,50 @@ import java.util.Map;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.AbstractDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.DialogueManagerType;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.TaskOrientedManager;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.TaskOrientedManager;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 
+/**
+ * A dialogue contains the dialogue state of a conversation
+ *
+ */
 public class Dialogue {
 
+	/**
+	 * The last dialogue act that was performed by the bot within this dialogue
+	 */
 	DialogueAct lastAct;
+		
+	/**
+	 * The dialogue manager that was last used for this dialogue
+	 */
+	AbstractDialogueManager activeManager;
+	
+	/**
+	 * All dialogue managers that are available for this dialogue
+	 */
+	List<AbstractDialogueManager> managers;
+	
+	/**
+	 * Record of all user performed acts in this dialogue 
+	 */
 	Map<AbstractDialogueManager, ArrayList<MessageInfo>> inputs;
 
-	AbstractDialogueManager activeManager;
-	List<AbstractDialogueManager> managers;
-
+	/**
+	 * Constructor of a dialogue
+	 *  
+	 * @param messenger that realize this dialogue
+	 */
 	public Dialogue(Messenger messenger) {
 		assert messenger != null : "messenger is null";
-
+		
 		this.inputs = new HashMap<>();
+		this.managers = new ArrayList<>();
 		init(messenger);
 	}
 
@@ -36,27 +62,51 @@ public class Dialogue {
 		assert this.managers.contains(manager) : "dialogue do not know manager";
 		assert info != null : "message info is null";
 		assert info.getIntent() != null : "intent is null";
-
 		System.out.println("handle: " + info.toString());
 
-		Intent intent = info.getIntent();
-
-		if (!this.inputs.containsKey(manager)) {
+		// record input
+		if (!this.inputs.containsKey(manager))
 			this.inputs.put(manager, new ArrayList<>());
-		}
-
 		if (info.getIntent().getIntentType() != IntentType.REVERT)
 			this.inputs.get(manager).add(info);
 
+		// add dynamic entities
+		Intent intent = info.getIntent();
+		if(activeManager instanceof TaskOrientedManager)
+			intent = addDynamicEntites(manager, info);
+				
+		// further handling		
 		DialogueAct res = manager.handle(intent);
 		this.lastAct = res;
-
+		this.activeManager = manager;		
+		
 		return res;
 	}
+		
+	public Intent addDynamicEntites(AbstractDialogueManager manager, MessageInfo info) {
+		
+		assert info != null;
+		assert info.getIntent() != null;
+		assert manager != null;
+		Intent intent = info.getIntent();
+		
+		if(info.getMessage() == null || info.getMessage().getText() == null)
+			return intent;
+		
+		if(!(manager instanceof TaskOrientedManager))
+			return intent;
+		
+		TaskOrientedManager taskManager = (TaskOrientedManager) manager;
+		String utterance = info.getMessage().getText();
+		Collection<Entity> entities = taskManager.getDialogueGoal().getEnums(utterance);			
+		intent.addEntities(entities);
+		
+		return intent;		
+	}
+	
 
 	public void init(Messenger messenger) {
-
-		this.managers = new ArrayList<AbstractDialogueManager>();
+		
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 		if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
 			managers.add(generator.generate(DialogueManagerType.SIMPLE, messenger));

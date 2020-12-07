@@ -99,6 +99,12 @@ public class Intent {
 		this.entities.put(key, entity);
 	}
 	
+	public void addEntities(Collection<Entity> entities) {
+		for(Entity entity: entities) {
+			addEntity(entity.getEntityName(), entity);
+		}
+	}
+	
 	public boolean hasEntity() {
 		return (this.entities != null && !this.entities.isEmpty());
 	}

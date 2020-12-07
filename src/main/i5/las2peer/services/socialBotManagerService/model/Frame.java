@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.SlotSet;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 
 public class Frame {
 
@@ -153,20 +153,20 @@ public class Frame {
 	}
 
 	public Slot getSlot(String name) {
-		SlotSet slots = getDescendants();
+		SlotList slots = getDescendants();
 		return slots.get(name);
 	}
 
-	public SlotSet getRequired() {
-		SlotSet res = new SlotSet();
+	public SlotList getRequired() {
+		SlotList res = new SlotList();
 		for (Slot slot : this.slots.values())
 			res.addAll(slot.getRequired());
 
 		return res;
 	}
 
-	public SlotSet getLeafs() {
-		SlotSet leafs = this.getDescendants();
+	public SlotList getLeafs() {
+		SlotList leafs = this.getDescendants();
 		for (Slot slot : leafs)
 			if (slot.hasChildren())
 				leafs.remove(slot);
@@ -174,25 +174,25 @@ public class Frame {
 		return leafs;
 	}
 
-	public SlotSet getDescendants() {
-		SlotSet desc = new SlotSet();
+	public SlotList getDescendants() {
+		SlotList desc = new SlotList();
 		for (Slot slot : this.slots.values())
 			desc.addAll(slot.getDescendants());
 
 		return desc;
 	}
 
-	public SlotSet getDescendants(Map<Slot, String> values) {
-		SlotSet desc = new SlotSet();
+	public SlotList getDescendants(Map<Slot, String> values) {
+		SlotList desc = new SlotList();
 		for (Slot slot : this.slots.values())
 			desc.addAll(slot.getDescendants(values));
 
 		return desc;
 	}
 
-	public SlotSet getRequired(Map<Slot, String> values) {
-		SlotSet slots = this.getDescendants(values);
-		SlotSet res = new SlotSet();
+	public SlotList getRequired(Map<Slot, String> values) {
+		SlotList slots = this.getDescendants(values);
+		SlotList res = new SlotList();
 		for (Slot slot : slots)
 			if (slot.isRequired())
 				res.add(slot);

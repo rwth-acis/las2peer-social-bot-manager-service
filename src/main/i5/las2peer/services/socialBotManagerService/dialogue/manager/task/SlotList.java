@@ -1,11 +1,11 @@
-package i5.las2peer.services.socialBotManagerService.dialogue.manager;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 
-public class SlotSet extends ArrayList<Slot> {
+public class SlotList extends ArrayList<Slot> {
 
 	private static final long serialVersionUID = 2835382998066194672L;
 

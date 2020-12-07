@@ -19,7 +19,6 @@ import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 
-
 public class Bot {
 
 	/**
@@ -41,11 +40,10 @@ public class Bot {
 	 */
 	private Map<String, Boolean> active;
 	private Map<String, ServiceFunction> botServiceFunctions;
-	private Set<Trigger> triggerList;	
+	private Set<Trigger> triggerList;
 	private Map<String, ContentGenerator> generatorList;
 	private Map<String, Messenger> messengers;
-	
-	
+
 	private Map<String, Collection<EventToMessageTrigger>> activeTriggers;
 	private Map<String, LanguageUnderstander> nlus;
 	private Map<String, LanguageGenerator> nlgs;
@@ -158,7 +156,16 @@ public class Bot {
 	}
 
 	public Map<String, Boolean> getActive() {
+		if (this.active == null)
+			this.active = new HashMap<>();
 		return active;
+	}
+
+	public boolean isActive(VLE vle) {
+		String key = vle.getName();
+		if (this.active.containsKey(key) && this.active.get(key))
+			return true;
+		return false;
 	}
 
 	public void setActive(Map<String, Boolean> active) {
@@ -216,6 +223,10 @@ public class Bot {
 		return trueCount;
 	}
 
+	public void activate(String vleName) {
+		this.active.put(vleName, true);
+	}
+
 	public void handleMessages(ArrayList<MessageInfo> messageInfos) {
 		for (Messenger m : this.messengers.values()) {
 			m.handleMessages(messageInfos, this);
@@ -237,42 +248,44 @@ public class Bot {
 	public void setNLGs(Map<String, LanguageGenerator> nlgs) {
 		this.nlgs = nlgs;
 	}
-	
+
 	public void setNLUs(Map<String, LanguageUnderstander> nlus) {
 		this.nlus = nlus;
 	}
-	
+
 	public boolean hasActiveTrigger(String triggerId) {
-		if(this.activeTriggers == null)
+		if (this.activeTriggers == null)
 			return false;
 		return this.activeTriggers.containsKey(triggerId);
 	}
-	
+
 	public void addActiveTrigger(EventToMessageTrigger trigger) {
-		
-		if(this.activeTriggers == null)
+
+		if (this.activeTriggers == null)
 			this.activeTriggers = new HashMap<>();
-		
-		if(!this.activeTriggers.containsKey(trigger.getId()))
+
+		if (!this.activeTriggers.containsKey(trigger.getId()))
 			this.activeTriggers.put(trigger.getId(), new ArrayList<>());
-			
+
 		this.activeTriggers.get(trigger.getId()).add(trigger);
 	}
-	
+
 	public EventToMessageTrigger getActiveTrigger(String triggerId, String eventName) {
-		
-		if(this.activeTriggers.containsKey(triggerId)) {
-			System.out.println("event name: " + eventName + ", getActiveTrigger, size: " + this.activeTriggers.get(triggerId).size());
-			for(EventToMessageTrigger event :this.activeTriggers.get(triggerId)) {
+
+		if (this.activeTriggers.containsKey(triggerId)) {
+			System.out.println("event name: " + eventName + ", getActiveTrigger, size: "
+					+ this.activeTriggers.get(triggerId).size());
+			for (EventToMessageTrigger event : this.activeTriggers.get(triggerId)) {
 				System.out.println("event: " + event.getEvent().getName());
-				if(event.getEvent().getName().equalsIgnoreCase(eventName));
-					return event;
+				if (event.getEvent().getName().equalsIgnoreCase(eventName))
+					;
+				return event;
 			}
 		}
-			
+
 		return null;
 	}
-	
+
 	public void removeActiveTrigger(String triggerId) {
 		this.activeTriggers.remove(triggerId);
 	}
@@ -286,11 +299,11 @@ public class Bot {
 	}
 
 	public void setLanguage(String value) {
-		this.language = Language.fromString(value);	
+		this.language = Language.fromString(value);
 	}
-	
+
 	public Language getLanguage() {
 		return this.language;
 	}
-	
+
 }

@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.SlotSet;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RepetitionNode;
@@ -148,7 +147,7 @@ public class DialogueGoalTest {
 	DialogueGoal goal = new DialogueGoal(frame);
 	slot1.setSelection(true);
 	slot2.setRequired(true);
-	SlotSet slots = frame.getRequired();
+	SlotList slots = frame.getRequired();
 	assertTrue(slots.contains(slot1));
 	assertTrue(slots.contains(slot2));
 
@@ -160,7 +159,7 @@ public class DialogueGoalTest {
 	DialogueGoal goal = new DialogueGoal(frame);
 	slot3.setRequired(true);
 	slot5.setRequired(true);
-	SlotSet slots = frame.getRequired();
+	SlotList slots = frame.getRequired();
 	assertEquals(3, slots.size());
 	assertTrue(slots.contains(slot3));
 	assertTrue(slots.contains(slot5));
@@ -172,7 +171,7 @@ public class DialogueGoalTest {
 	DialogueGoal goal = new DialogueGoal(frame);
 	slot3.setRequired(true);
 	slot5.setRequired(true);
-	SlotSet slots = frame.getRequired();
+	SlotList slots = frame.getRequired();
 	assertEquals(3, slots.size());
 	assertTrue(slots.contains(slot3));
 	assertTrue(slots.contains(slot5));

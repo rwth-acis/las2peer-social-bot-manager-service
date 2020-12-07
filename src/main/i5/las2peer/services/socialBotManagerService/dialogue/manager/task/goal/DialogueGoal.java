@@ -149,7 +149,7 @@ public class DialogueGoal {
 		assert entity != null;
 		assert entity.getEntityName() != null;
 		invariant();
-		
+
 		System.out.println("get node by entity " + entity.getEntityName());
 		System.out.println("number of nodes in goal " + root.getAll().size());
 		Collection<Fillable> nodes = root.getAll().getByEntity(entity.getEntityName());
@@ -248,6 +248,52 @@ public class DialogueGoal {
 		List<Slotable> nodes = root.getAll().Slotable();
 		for (Slotable node : nodes) {
 			res.add(node.getRequestIntent());
+		}
+
+		return res;
+	}
+
+	public Collection<Entity> getEnums(String utterance) {
+				
+		System.out.println("search for enum in utterance: " + utterance);			
+		List<Entity> res = new ArrayList<>();
+		
+		if(this.root.getChildren() == null)
+			return res;
+		
+		for (Node node : this.root.getChildren()) {
+			
+			if (node instanceof Fillable) {
+				Fillable fillable = (Fillable) node;
+				if (fillable.getSlot().getEnumList() != null) {
+					for (String enu : fillable.getSlot().getEnumList()) {
+						if (utterance.toLowerCase().contains(enu.toLowerCase())) {
+							System.out.println("found" + enu + " in " + fillable.getName());
+							Entity entity = new Entity(fillable.getName(), enu);
+							res.add(entity);
+						}
+					}
+				}
+			}
+			
+			if (node instanceof SequenceNode) {
+				SequenceNode sn = (SequenceNode) node;
+				for (Node subNode : sn.getChildren()) {
+					if (subNode instanceof Fillable) {
+						Fillable fillable = (Fillable) subNode;
+						if (fillable.getSlot().getEnumList() != null) {
+							for (String enu : fillable.getSlot().getEnumList()) {
+								if (utterance.toLowerCase().contains(enu.toLowerCase())) {
+									System.out.println("found" + enu + " in " + fillable.getName());
+									Entity entity = new Entity(fillable.getName(), enu);
+									res.add(entity);
+								}
+							}
+						}
+					}
+				}
+			}
+
 		}
 
 		return res;

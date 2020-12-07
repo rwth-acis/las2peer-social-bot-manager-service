@@ -95,6 +95,16 @@ public class VLE {
 		this.bots.put(id, bot);
 	}
 
+	public Bot getBotByName(String name) {
+
+		for (Bot bot : this.bots.values()) {
+			if (bot.getName().contentEquals(name))
+				return bot;
+		}
+
+		return null;
+	}
+
 	public Map<Trigger, HashSet<String>> getTriggerList() {
 		return triggerList;
 	}

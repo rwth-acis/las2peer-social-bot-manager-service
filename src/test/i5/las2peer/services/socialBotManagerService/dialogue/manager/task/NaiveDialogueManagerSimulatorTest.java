@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.DefaultDialogueManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.userSimulator.RandomUserSimulator;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
@@ -29,7 +28,7 @@ public class NaiveDialogueManagerSimulatorTest {
 	frame = new FrameMapper().map(action, frame);
 
 	DialogueGoal goal = new DialogueGoal(frame);
-	DefaultDialogueManager manager = new DefaultDialogueManager(goal);
+	DefaultTaskOrientedManager manager = new DefaultTaskOrientedManager(goal);
 	manager.setStartIntent("start_intent");
 
 	RandomUserSimulator simulator = new RandomUserSimulator(manager);
