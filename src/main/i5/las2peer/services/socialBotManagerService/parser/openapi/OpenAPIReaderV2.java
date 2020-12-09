@@ -24,10 +24,18 @@ import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
-import io.swagger.util.Json;
 
+/**
+ * Reads an OpenAPI / Swagger version 2 specification
+ */
 public class OpenAPIReaderV2 {
 
+	/**
+	 * Read OpenAPI specification by URL
+	 * 
+	 * @param jsonUrl of specification
+	 * @return Swagger model
+	 */
 	public static Swagger readModel(String jsonUrl) {
 
 		URI modelUri = null;
@@ -48,6 +56,14 @@ public class OpenAPIReaderV2 {
 
 	}
 
+	/**
+	 * Read OpenAPI action by method and path
+	 * 
+	 * @param model
+	 * @param functionPath
+	 * @param httpMethod
+	 * @return
+	 */
 	public static ServiceFunction readAction(Swagger model, String functionPath, String httpMethod) {
 
 		Operation operation = getOperationByPath(model, functionPath, httpMethod);
@@ -61,6 +77,13 @@ public class OpenAPIReaderV2 {
 
 	}
 
+	/**
+	 * Read OpenAPI action by operationId
+	 * 
+	 * @param model
+	 * @param operationId
+	 * @return
+	 */
 	public static ServiceFunction readAction(Swagger model, String operationId) {
 
 		Operation operation = getOperationByOperationId(model, operationId);
@@ -77,6 +100,14 @@ public class OpenAPIReaderV2 {
 
 	}
 
+	/**
+	 * Get Operation object of a swagger model by given method and function path
+	 * 
+	 * @param model
+	 * @param path
+	 * @param httpMethod
+	 * @return
+	 */
 	private static Operation getOperationByPath(Swagger model, String path, String httpMethod) {
 
 		// Path
@@ -109,6 +140,13 @@ public class OpenAPIReaderV2 {
 
 	}
 
+	/**
+	 * Get Operation object of a swagger model by a given operationId
+	 * 
+	 * @param openAPI
+	 * @param operationId
+	 * @return
+	 */
 	private static Operation getOperationByOperationId(Swagger openAPI, String operationId) {
 
 		System.out.println("get Operation by Id: " + operationId);
@@ -162,53 +200,62 @@ public class OpenAPIReaderV2 {
 		return null;
 	}
 
+	/**
+	 * Creates a ServiceFunction from an swagger operation
+	 * 
+	 * @param swagger   model
+	 * @param operation of swagger model
+	 * @return service function
+	 */
 	private static ServiceFunction parseAction(Swagger swagger, Operation operation) {
-		ServiceFunction action = new ServiceFunction();
-
 		assert swagger != null : "no model specified";
 		assert operation != null : "no operation specified";
+
+		ServiceFunction action = new ServiceFunction();
 
 		// Operation ID
 		if (operation.getOperationId() != null) {
 			String operationId = operation.getOperationId();
 			action.setFunctionName(operationId);
-		} else {
-			System.out.println("no operation id");
-		}
+		} else
+			System.out.println("swagger operation has no operation id");
 
 		// Parameters
 		List<Parameter> parameters = operation.getParameters();
 		if (operation.getParameters() != null) {
 			for (Parameter parameter : parameters) {
 
-				ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
+				ServiceFunctionAttribute attr = null;
 
-				attr.setRequired(parameter.getRequired());
-				if (parameter.getName() != null)
-					attr.setName(parameter.getName());
-				if (parameter.getDescription() != null)
-					attr.setDescription(parameter.getDescription());
-				if (parameter.getIn() != null)
-					attr.setContentType(parameter.getIn());
-
-				if(parameter.getIn().contentEquals("path"))
-					attr.setParameterType(ParameterType.PATH);
-				
-				if(parameter.getIn().contentEquals("query"))
-					attr.setParameterType(ParameterType.QUERY);
-				
 				// Body Parameter
 				if (parameter.getIn().contentEquals("body")) {
-					String ref = ((BodyParameter) parameter).getSchema().getReference();	
-					ref = ref.substring("#/definitions/".length());
+					
+					String ref = ((BodyParameter) parameter).getSchema().getReference();
+					String name = ref.substring("#/definitions/".length());
+					attr = new ServiceFunctionAttribute("v21", name);
+					attr = addChildrenAttributes(swagger, name, attr);
+					action.addAttribute(attr);
+					
+				// Path and Query Parameter
+				} else {
+					
+					attr = new ServiceFunctionAttribute("v22", parameter.getName());
+					action.addAttribute(attr);
 
-					String name = ref;
-					attr.setName(name);
-					attr = addChildrenAttributes(swagger, ref, attr);
-					attr.setParameterType(ParameterType.BODY);
+					attr.setRequired(parameter.getRequired());
+					if (parameter.getDescription() != null)
+						attr.setDescription(parameter.getDescription());
+					if (parameter.getIn() != null)
+						attr.setContentType(parameter.getIn());
+
+					if (parameter.getIn().contentEquals("path"))
+						attr.setParameterType(ParameterType.PATH);
+
+					if (parameter.getIn().contentEquals("query"))
+						attr.setParameterType(ParameterType.QUERY);
 
 				}
-				action.addAttribute(attr);
+
 			}
 
 		}
@@ -216,7 +263,7 @@ public class OpenAPIReaderV2 {
 		// consumes
 		if (operation.getConsumes() != null) {
 			if (operation.getConsumes().contains("text/plain"))
-				action.setConsumes("application/json");
+				action.setConsumes("text/plain");
 			if (operation.getConsumes().contains("application/json"))
 				action.setConsumes("application/json");
 		}
@@ -245,7 +292,7 @@ public class OpenAPIReaderV2 {
 		assert model != null : "model not found by ref: " + ref;
 
 		// Discriminator
-		if (dis == null)
+		if (getDiscriminator(swagger, model) != null)
 			dis = getDiscriminator(swagger, model);
 
 		if (model instanceof ComposedModel) {
@@ -253,7 +300,6 @@ public class OpenAPIReaderV2 {
 			model = cm.getChild();
 		}
 
-		Json.prettyPrint(model.getClass());
 		// Add properties of model to attribute
 		if (model.getProperties() == null) {
 			System.out.println("schema " + model.getTitle() + " has no properties. Skip");
@@ -261,16 +307,14 @@ public class OpenAPIReaderV2 {
 
 			Map<String, Property> properties = model.getProperties();
 			for (Map.Entry<String, Property> pair : properties.entrySet()) {
-				System.out.println("property: " + pair.getKey());
 
+				System.out.println("property: " + pair.getKey() + ", dis: " + dis);
 				String name = pair.getKey();
 				Property property = pair.getValue();
 
-				ServiceFunctionAttribute childAttr = new ServiceFunctionAttribute();
-				childAttr.setName(name);
+				ServiceFunctionAttribute childAttr = new ServiceFunctionAttribute("v23", name);
 
-				// discriminator
-				System.out.println("name: " + name + "  dis: " + dis);
+				// property is discriminator
 				if (dis != null && dis.contentEquals(name)) {
 					childAttr.setParameterType(ParameterType.DISCRIMINATOR);
 					childAttr = processAttribute(property, childAttr);
@@ -279,8 +323,8 @@ public class OpenAPIReaderV2 {
 					List<String> modelRefs = getSubModels(swagger, ref);
 					parentAttr.addChildAttribute(childAttr);
 					childAttr.setParent(parentAttr);
-					for (String sm : modelRefs) {
-						parentAttr = addChildrenAttributes(swagger, sm, parentAttr, sm, rec);
+					for (String modelRef : modelRefs) {
+						parentAttr = addChildrenAttributes(swagger, modelRef, parentAttr, modelRef, rec);
 					}
 
 				} else {
@@ -369,7 +413,6 @@ public class OpenAPIReaderV2 {
 			String type = arrayProperty.getItems().getType();
 			attr.setContentType(type);
 			if (arrayProperty.getItems() instanceof RefProperty) {
-				System.out.println("array with ref objects");
 				attr.setContentType("object");
 			}
 
@@ -386,16 +429,16 @@ public class OpenAPIReaderV2 {
 		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUri, null, true);
 		Swagger swagger = swaggerParseResult.getSwagger();
 
-		System.out.printf("== Model %s\n", modelUri);
-		System.out.printf("------\n\n");
+		// System.out.printf("== Model %s\n", modelUri);
+		// System.out.printf("------\n\n");
 		return swagger;
 	}
 
 	public static String getDiscriminator(Swagger swagger, Model model) {
 		if (model instanceof ModelImpl) {
-			ModelImpl mi = (ModelImpl) model;
-			if (mi.getDiscriminator() != null && mi.getDiscriminator() != "")
-				return mi.getDiscriminator();
+			ModelImpl modelImpl = (ModelImpl) model;
+			if (modelImpl.getDiscriminator() != null && modelImpl.getDiscriminator() != "")
+				return modelImpl.getDiscriminator();
 		}
 		return null;
 	}

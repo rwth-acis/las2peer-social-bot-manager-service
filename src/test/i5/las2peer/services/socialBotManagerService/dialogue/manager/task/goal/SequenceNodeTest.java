@@ -42,8 +42,8 @@ public class SequenceNodeTest {
 		slotA.setRequired(true);
 		slotB.setRequired(true);
 		
-		attrA =  new ServiceFunctionAttribute();
-		attrB =  new ServiceFunctionAttribute();
+		attrA =  new ServiceFunctionAttribute("Ad", "An");
+		attrB =  new ServiceFunctionAttribute("Bd", "Bn");
 		slotA.setParameter(attrA);
 		slotB.setParameter(attrB);
 
@@ -84,8 +84,6 @@ public class SequenceNodeTest {
 				
 		attrA.setParameterType(ParameterType.CHILD);
 		attrB.setParameterType(ParameterType.CHILD);
-		attrA.setName("An");
-		attrB.setName("Bn");
 		((Fillable) node.getChildren().get(0)).fill("At");
 		((Fillable) node.getChildren().get(1)).fill("Bt");
 		assertEquals("{\"Bn\":\"Bt\",\"An\":\"At\"}", node.toJSON().toString());

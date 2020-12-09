@@ -82,6 +82,7 @@ public class OpenAPIConnector {
 			}
 			action.setService(service);
 			action.setServiceName(baseUrl);
+			System.out.println(action);
 			return action;
 		}
 
@@ -252,8 +253,15 @@ public class OpenAPIConnector {
 		sf.setConsumes("text/plain");
 
 		OpenAPIAction request = new OpenAPIAction(sf);
-		String response = sendRequest(request);
+		return readEnums(request, key);
+	}
 
+	public static Collection<String> readEnums(OpenAPIAction request, String key) {
+
+		String response = sendRequest(request);
+		if(response == null)
+			return null;
+		
 		JsonElement jsonElement = JsonParser.parseString(response);
 
 		if (key != null && !key.contentEquals(""))
@@ -292,12 +300,12 @@ public class OpenAPIConnector {
 			if (jsonObject.has(key)) {
 				JsonElement element = jsonObject.get(key);
 				if (element.isJsonPrimitive())
-					res.add(element.getAsString());				
-			
+					res.add(element.getAsString());
+
 			} else {
 				for (Entry<String, JsonElement> ele : jsonObject.entrySet()) {
 					Collection<String> values = searchValuesByKey(ele.getValue(), key);
-					if(values != null)
+					if (values != null)
 						res.addAll(values);
 				}
 			}

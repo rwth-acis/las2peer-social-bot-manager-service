@@ -33,7 +33,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://bcf40f104e84.ngrok.io";
+	private final static String url = "https://7b2d8af6181d.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -135,13 +135,34 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		if (response.getMessage() != null) {
 			boolean isOK = this.sendFormattedMessageToChannel(response);
-			if (!isOK)
-				sendMessageToChannel(response.getChannel(), response.getMessage());
+			if (!isOK) {
+				boolean isOK2 = this.sendFormatted2(response);
+				if (!isOK2)
+					sendMessageToChannel(response.getChannel(), response.getMessage());
+			}
 		}
 
 		if (response.getFile() != null) {
 			sendFileToChannel(response);
 		}
+
+	}
+
+	public boolean sendFormatted2(ResponseMessage response) {
+
+		String channel = response.getChannel();
+		String text = response.getMessage();
+		if (text.contains("_"))
+			text = text.replace("_", "\\_");
+
+		SendMessage request = new SendMessage(channel, text);
+		request.parseMode(ParseMode.Markdown);
+		request.replyMarkup(new ReplyKeyboardRemove());
+
+		BaseResponse res = bot.execute(request);
+		if (!res.isOk())
+			System.out.println("failed telegram request: " + res.errorCode() + " " + res.description());
+		return res.isOk();
 
 	}
 
@@ -171,46 +192,72 @@ public class TelegramChatMediator extends EventChatMediator {
 				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
 				request.replyMarkup(keyboard);
 
-			} else if (numButton == 2){
+			} else if (numButton == 2) {
 				String[] buttons = new String[2];
 				buttons[0] = response.getButtons().get(0);
 				buttons[1] = response.getButtons().get(1);
 				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
 				request.replyMarkup(keyboard);
-				
+
 			} else {
 
-				int length = response.getButtons().get(0).length();
-				int rowSize = 3;
-				if (length > 20)
-					rowSize = 2;
-				if (length > 40)
-					rowSize = 1;
+				try {
 
-				int columns = (int) (Math.ceil(numButton / rowSize));
-				String[][] buttons = new String[columns][rowSize];
-				int i = 0;
-				int j = 0;
+					int length = response.getButtons().get(0).length();
+					int rowSize = 3;
+					if (length > 20)
+						rowSize = 2;
+					if (numButton % 2 == 0)
+						rowSize = 2;
+					if (length > 40)
+						rowSize = 1;
 
-				for (String value : response.getButtons()) {
-					buttons[i][j] = value;
+					int columns = (int) (Math.ceil(numButton / rowSize));
+					if ((numButton % 2 != 0 && numButton % 3 != 0))
+						columns = columns + 1;
 
-					if (j == rowSize - 1) {
-						i = i + 1;
-						j = 0;
-					} else {
-						j++;
+					String[][] buttons = new String[columns][rowSize];
+					int i = 0;
+					int j = 0;
+					System.out.println("number of buttons: " + numButton);
+					System.out.println("rowSize: " + rowSize);
+					System.out.println("columns: " + columns);
+
+					for (String value : response.getButtons()) {
+						System.out.println("i=" + i);
+						System.out.println("j=" + j);
+						assert i < columns : "i out of bound";
+						assert j < rowSize : "j out of bound";
+						buttons[i][j] = value;
+
+						if (j == rowSize - 1) {
+							i = i + 1;
+							j = 0;
+						} else {
+							j++;
+						}
 					}
+
+					for (int row = 0; row < buttons.length; row++) {
+						for (int col = 0; col < buttons[row].length; col++) {
+							if (buttons[row][col] == null)
+								buttons[row][col] = "";
+						}
+					}
+
+					boolean resize = false;
+					boolean oneTime = true;
+					boolean selective = true;
+
+					ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons, resize, oneTime, selective);
+					request.replyMarkup(keyboard);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					request.replyMarkup(new ReplyKeyboardRemove());
 				}
 
-				boolean resize = false;
-				boolean oneTime = true;
-				boolean selective = true;
-
-				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons, resize, oneTime, selective);
-				request.replyMarkup(keyboard);
-
-			}			
+			}
 
 		} else
 			request.replyMarkup(new ReplyKeyboardRemove());

@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +30,7 @@ public class ServiceFunction extends TriggerFunction {
 	private String messengerName;
 
 	public ServiceFunction() {
-		setAttributes(new HashSet<ServiceFunctionAttribute>());
+		this.attributes = new HashSet<ServiceFunctionAttribute>();
 		setBots(new HashSet<Bot>());
 		setUsers(new HashSet<VLEUser>());
 		setTrigger(new HashSet<Trigger>());
@@ -97,13 +98,13 @@ public class ServiceFunction extends TriggerFunction {
 
 		System.out.println("service is " + this.service);
 		System.out.println("serviceName is " + this.serviceName);
-		
+
 		if (this.service == null)
 			return this.serviceName;
 
 		return service.getServiceURL();
 	}
-	
+
 	public void setBasePath(String path) {
 		this.serviceName = path;
 	}
@@ -126,10 +127,6 @@ public class ServiceFunction extends TriggerFunction {
 
 	public Set<ServiceFunctionAttribute> getAttributes() {
 		return attributes;
-	}
-
-	public void setAttributes(HashSet<ServiceFunctionAttribute> attributes) {
-		this.attributes = attributes;
 	}
 
 	public void addAttribute(ServiceFunctionAttribute attribute) {
@@ -166,6 +163,14 @@ public class ServiceFunction extends TriggerFunction {
 	public String toString() {
 		return "ServiceFunction [id=" + id + "functionName=" + name + ", functionPath=" + path + ", httpMethod="
 				+ method + ", consumes=" + consumes + ", produces=" + produces + " service=" + service + "]";
+	}
+
+	public String toStringWithAttributes() {
+		String res = toString();
+		for (ServiceFunctionAttribute attr : this.attributes) {
+			res = res + attr.toStringWithChildren();
+		}
+		return res;
 	}
 
 	public boolean hasAttributes() {
@@ -255,27 +260,55 @@ public class ServiceFunction extends TriggerFunction {
 	public void setActionType(ActionType actionType) {
 		this.actionType = actionType;
 	}
+
+	public boolean hasFrameGeneratedAttribute() {
+		System.out.println("search for frame generated attribute in " + this.getFunctionName());
+		for(ServiceFunctionAttribute attr :this.getAllAttributes()) {
+			System.out.println("search in attr " + attr.getName() + " " + attr.getSlotName());
+
+			if (attr.getSlotName() != null && !attr.getSlotName().contentEquals("")) {
+				System.out.println("found");
+				return true;
+			}
+		}
+		return false;
+	}
 	
+	public Collection<ServiceFunctionAttribute> getFrameGeneratedAttributes() {		
+		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
+		for(ServiceFunctionAttribute attr :this.getAllAttributes()) {
+			if (attr.getSlotName() != null && !attr.getSlotName().contentEquals("")) {
+				res.add(attr);
+			}
+		}
+		return res;
+	}
+
 	/**
-	 * Merges two service functions. (e.g a swagger generated function with a modeled function)
+	 * Merges two service functions. (e.g a swagger generated function with a
+	 * modeled function)
 	 * 
 	 * @param function with higher priority
 	 * @return merged function
 	 */
 	public ServiceFunction merge(ServiceFunction function) {
-		
-		if(this.serviceName == null && function.serviceName != null)
+
+		if (this.serviceName == null && function.serviceName != null)
 			this.serviceName = function.serviceName;
-		
-		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {			
-			if (this.getAttribute(mergeAttr.getIdName()) != null) {					
-				System.out.println("attribute identified: " + mergeAttr.getIdName());				
-				ServiceFunctionAttribute myAttr = this.getAttribute(mergeAttr.getIdName());				
-				myAttr.merge(mergeAttr);		
+
+		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
+			System.out.println(attr.getIdName());
+		}
+
+		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {
+			if (this.getAttribute(mergeAttr.getIdName()) != null) {
+				System.out.println("attribute identified: " + mergeAttr.getIdName());
+				ServiceFunctionAttribute myAttr = this.getAttribute(mergeAttr.getIdName());
+				myAttr.merge(mergeAttr);
 			} else {
 				System.out.println("cant merge attribute: " + mergeAttr.getIdName());
 			}
-		}		
+		}
 		return this;
 	}
 

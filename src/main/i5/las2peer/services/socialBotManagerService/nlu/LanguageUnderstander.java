@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
@@ -34,6 +35,12 @@ public abstract class LanguageUnderstander {
 	}
 
 	public abstract void addIntents(Collection<String> intents);
+	
+	public void addIntent(String intent) {
+		Collection<String> intents = new ArrayList<>();
+		intents.add(intent);
+		addIntents(intents);
+	}
 
 	@Override
 	public String toString() {

@@ -14,7 +14,9 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.S
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.SequenceNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.ValueNode;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
+import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import io.swagger.util.Json;
 
 public class FrameMapperTest {
@@ -63,24 +65,25 @@ public class FrameMapperTest {
 
     }
 
-    // @Test
+    @Test
     public void frameMapBotTest() {
 
 	FrameMapper mapper = new FrameMapper();
 	ServiceFunction function = new ServiceFunction();
+	Service service = new Service(ServiceType.OPENAPI, "service", "http://localhost:8080/sbfmanager");
+	service.setSwaggerURL("http://localhost:8080/sbfmanager/swagger.json");
 	function.setHttpMethod("post");
-	function.setServiceName("http://localhost:8080/sbfmanager/swagger.json");
+	function.setService(service);
 	function.setFunctionName("createBot");
-	Frame frame = mapper.map(function, new Frame());
+	Frame frame = mapper.map(function, new Frame("newFrame"));
 
 	assertNotNull(frame.getDescendants());
-	assertEquals(18, frame.getDescendants().size());
+	assertEquals(27, frame.getDescendants().size());
 	assertNotNull(frame.getSlot("Bot_name"));
 	assertNotNull(frame.getSlot("Bot_function_type"));
 	assertNotNull(frame.getSlot("Bot_function_type_ChitChat_messages_intent"));
-	assertNotNull(frame.getSlot("Bot_function_type_ChitChat_messages_message"));
 	assertNotNull(frame.getSlot("Bot_function_type_AccessService"));
-	assertNotNull(frame.getSlot("Bot_function_type_AccessService_serviceURL"));
+	assertNotNull(frame.getSlot("Bot_function_type_AccessService_serviceType_type_las2peer"));
 
 	assertNotNull(frame.getSlot("Bot_messenger_type"));
 	assertNotNull(frame.getSlot("Bot_messenger_type_Slack"));
@@ -94,7 +97,7 @@ public class FrameMapperTest {
 	DialogueGoal goal = new DialogueGoal(frame);
 	RootNode root = goal.getRoot();
 	SequenceNode seq = (SequenceNode) root.getChildren().get(0);
-	assertEquals(3, seq.getChildren().size());
+	assertEquals(4, seq.getChildren().size());
 
 	root.getAll().print();
 	assertNotNull(goal.getNode("Bot_name"));
@@ -128,7 +131,8 @@ public class FrameMapperTest {
 
 
 	assertNotNull(goal.getNode("Bot_function_type_ChitChat_messages_intent"));
-	assertNotNull(goal.getNode("Bot_function_type_ChitChat_messages_message"));
+	
+	
 
 
 	System.out.println("#######################");

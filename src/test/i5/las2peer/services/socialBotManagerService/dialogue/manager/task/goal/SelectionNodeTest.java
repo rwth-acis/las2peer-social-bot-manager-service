@@ -45,8 +45,8 @@ public class SelectionNodeTest {
 		slotB.setEntity("B");
 		slotA.setRequired(true);
 		slotB.setRequired(true);
-		slotA.setParameter(new ServiceFunctionAttribute());
-		slotB.setParameter(new ServiceFunctionAttribute());
+		slotA.setParameter(new ServiceFunctionAttribute("", ""));
+		slotB.setParameter(new ServiceFunctionAttribute("", ""));
 
 	}
 

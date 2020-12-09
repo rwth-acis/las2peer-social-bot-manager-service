@@ -25,7 +25,7 @@ public class ValueNodeTest {
 		slot = new Slot("name");
 		slot.setInputType(InputType.Free);
 		
-		attr = new ServiceFunctionAttribute();
+		attr = new ServiceFunctionAttribute("", "");
 		slot.setParameter(attr);
 
 		enums = new ArrayList<String>();

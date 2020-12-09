@@ -35,8 +35,8 @@ public class RepetitionNodeTest {
 		slotVaA.setRequired(true);
 		slotVaB.setRequired(true);
 
-		slotVaA.setParameter(new ServiceFunctionAttribute());
-		slotVaB.setParameter(new ServiceFunctionAttribute());
+		slotVaA.setParameter(new ServiceFunctionAttribute("", ""));
+		slotVaB.setParameter(new ServiceFunctionAttribute("", ""));
 
 	}
 

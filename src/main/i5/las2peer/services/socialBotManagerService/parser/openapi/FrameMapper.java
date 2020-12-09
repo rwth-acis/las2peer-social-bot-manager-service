@@ -76,7 +76,7 @@ public class FrameMapper {
 	public Slot map(ServiceFunctionAttribute attr, String name) {
 
 		assert attr != null : "map attr with slot: attr is null";
-
+		
 		// create slot
 		Slot slot = new Slot(name);
 		slot.setParameter(attr);

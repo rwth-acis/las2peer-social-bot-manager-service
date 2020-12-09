@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -128,8 +129,13 @@ public class OpenAPIAction {
 	}
 
 	public void addPathParameter(String name, String value) {
+		assert name != null: "no name";
+		assert value != null: "no value";
 		assert validatePathParameter(name, value) : "path parameter invalid";
-
+		
+		if(this.pathParameters == null)
+			this.pathParameters = new HashMap<>();
+		
 		this.pathParameters.put(name, value);
 	}
 

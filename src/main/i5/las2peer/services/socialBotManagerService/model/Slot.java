@@ -128,19 +128,20 @@ public class Slot {
 		return (parts[l - 2] + " " + parts[l - 1]);
 	}
 
-	public String getEntity() {	
-		
-		if(entity != null)
-			return entity;	
-		
-		if(this.getParameter() != null && this.getParameter().getEntity() != null)
-			return this.getParameter().getEntity();	
-		
-		if(this.getEnumList() != null)
+	public String getEntity() {
+
+		if (entity != null)
+			return entity;
+
+		if (this.getParameter() != null && this.getParameter().getEntity() != null)
+			return this.getParameter().getEntity();
+
+		if (this.getEnumList() != null)
 			return this.getName();
-		
-		return null;	
+
+		return null;
 	}
+
 	public void setEntity(String entity) {
 		this.entity = entity;
 	}
@@ -280,22 +281,22 @@ public class Slot {
 	public void setSelection(boolean selection) {
 		this.selection = selection;
 	}
-	
+
 	public List<String> getEnumList() {
 		return this.getParameter().getEnumList();
 	}
-	
+
 	public boolean hasEnumList() {
 		List<String> enumList = this.getParameter().getEnumList();
 		return (enumList != null && !enumList.isEmpty());
 	}
 
 	public void setEnumList(List<String> enums) {
-		if (!this.hasParameter()) {
-			ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
-			attr.setEnumList(enums);
-			this.parameter = attr;
-		}
+		if (!this.hasParameter())
+			return;
+
+		this.getParameter().setEnumList(enums);
+
 	}
 
 	public boolean isArray() {
@@ -305,11 +306,11 @@ public class Slot {
 	}
 
 	public void setArray(boolean value) {
-		if (!this.hasParameter()) {
-			ServiceFunctionAttribute attr = new ServiceFunctionAttribute();
-			attr.setArray(value);
-			this.parameter = attr;
-		}
+		if (!this.hasParameter())
+			return;
+
+		this.getParameter().setArray(value);
+
 	}
 
 	public SlotList getRequired() {

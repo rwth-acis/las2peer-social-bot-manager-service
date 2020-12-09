@@ -197,6 +197,8 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		// Request to fill value
 		if (nextNode instanceof Fillable) {
 			Fillable fi = (Fillable) nextNode;
+			if(fi.hasFrameGeneratedEnum())
+				fi.getSlot().getParameter().update(goal);
 			return gen.getRequestAct(fi);
 		}
 		// Ask for repetition

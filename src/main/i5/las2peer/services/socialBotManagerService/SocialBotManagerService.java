@@ -852,7 +852,7 @@ public class SocialBotManagerService extends RESTService {
 						System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
 					
-					if(!bot.isActive(vle)) {
+					if(!bot.isActive(vle) && !bot.getName().contentEquals("CreationBot")) {
 						System.out.println("bot " + bot.getName() + " is inactive");
 						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 						JSONObject parsedBody;
@@ -865,26 +865,28 @@ public class SocialBotManagerService extends RESTService {
 							Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
 							EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
 							ResponseMessage response = new ResponseMessage("I am inactive 😴");
+							response.setChannel(channel);
 							mediator.sendMessageToChannel(response);
-							
+													
 						} catch (ParseException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					}
+					} else {
 					
-					// Handle event
-					Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
-					EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
-					JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-					JSONObject parsedBody;
-					try {
-						parsedBody = (JSONObject) jsonParser.parse(body);
-						ChatMessage message = mediator.handleEvent(parsedBody);
-						if (message != null)
-							messenger.handleMessage(message);
-					} catch (ParseException e) {
-						e.printStackTrace();
+						// Handle event
+						Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+						EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+						JSONObject parsedBody;
+						try {
+							parsedBody = (JSONObject) jsonParser.parse(body);
+							ChatMessage message = mediator.handleEvent(parsedBody);
+							if (message != null)
+								messenger.handleMessage(message);
+						} catch (ParseException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}}).start();
@@ -2012,19 +2014,35 @@ public class SocialBotManagerService extends RESTService {
 		}
 		
 		@GET
-		@Path("/test/{testParam}")
+		@Path("/test/{testarrParam}")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "getTestEnum", notes = "get Test Enum")
-		public Response getTest(@PathParam("testParam") String testParam) {
+		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
+		public Response getTestArray(@PathParam("testarrParam") String testarrParam) {
 
 			JSONArray res = new JSONArray();
-			res.add("optionA");
-			res.add("optionB");
-			res.add("optionC");
+			res.add(testarrParam);
+			res.add("HelloWorld");
 			System.out.println("get Test Enum " + res.toJSONString());
 			try {
-				return Response.ok().entity("The test param is " + testParam).build();
+				return Response.ok().entity(res).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("cant retrieve knowledge models").build();
+
+		}
+		
+		@GET
+		@Path("/test/test/{testParam}/{testParam2}")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getTestString", notes = "get Test Enum")
+		public Response getTestString(@PathParam("testParam") String testParam, @PathParam("testParam2") String testParam2) {
+		
+			try {
+				return Response.ok().entity("test param is " + testParam + " and " + testParam2).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -2045,6 +2063,29 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("getNLUModels()");
 			try {
 				return Response.ok().entity(getConfig().getNlus().values()).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("cant retrieve knowledge models").build();
+
+		}
+		
+		@GET
+		@Path("/nlu/{name}")
+		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getNLUModelIntents", notes = "get NLU model Intents")
+		public Response getNLUModelIntents(@PathParam("name") String name) {
+		
+			try {
+				LanguageUnderstander nlu = getConfig().getNLU(name);
+				if(nlu == null)
+					return Response.serverError().entity("no nlu module found with name: " + name).build();
+				
+				Collection<String> intents = nlu.getIntents();
+				return Response.ok().entity(intents).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

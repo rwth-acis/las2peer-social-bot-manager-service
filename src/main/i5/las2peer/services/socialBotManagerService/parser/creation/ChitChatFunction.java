@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModel;
 
 @ApiModel(parent = Function.class, value = "ChitChat")
 public class ChitChatFunction extends Function {
-
+		
 	private List<Message> messages;
 
 	public List<Message> getMessages() {

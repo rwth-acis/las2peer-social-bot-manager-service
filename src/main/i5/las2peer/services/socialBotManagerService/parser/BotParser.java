@@ -51,6 +51,7 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.model.VLEUser;
+import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
@@ -89,6 +90,7 @@ public class BotParser {
 		Map<String, Bot> bots = new HashMap<String, Bot>();
 
 		Map<String, NLUKnowledge> nluKnowledge = new HashMap<>();
+		Map<String, LanguageUnderstander> nlus = new HashMap<>();
 		Map<String, Frame> frames = new HashMap<>();
 		Map<String, Slot> slots = new HashMap<>();
 		Map<String, Domain> domains = new HashMap<>();
@@ -319,7 +321,7 @@ public class BotParser {
 						// NLU Servers
 					} else if (nluKnowledge.get(target) != null) {
 						NLUKnowledge nlu = nluKnowledge.get(target);
-						b.addRasaServer(nlu);
+						nlus.put(target, b.addRasaServer(nlu));
 					}
 					// User Function has...
 				} else if (usfList.get(source) != null) {
@@ -372,7 +374,8 @@ public class BotParser {
 					if (bsfList.get(target) != null) {
 						ServiceFunction sf = bsfList.get(target);
 						sf.setService(service);
-						System.out.println("set service " + service.getServiceAlias() + " to function " + sf.getFunctionName());
+						System.out.println(
+								"set service " + service.getServiceAlias() + " to function " + sf.getFunctionName());
 						assert sf.getService() == service;
 					}
 					// Event
@@ -460,7 +463,7 @@ public class BotParser {
 				} else if (sfaList.containsKey(source)) {
 					ServiceFunctionAttribute sfa = sfaList.get(source);
 					System.out.println("paramter uses something " + sfa.getName());
-					if (intentEntities.containsKey(target)) {						
+					if (intentEntities.containsKey(target)) {
 						IntentEntity entity = intentEntities.get(target);
 						System.out.println("paramter has entity " + entity.getEntityKeyword());
 						sfa.setEntity(entity);
@@ -521,9 +524,16 @@ public class BotParser {
 						MessageFile file = files.get(target);
 						frame.setFile(file.getName() + "." + file.getType());
 					}
+					// ... Event
 					if (events.containsKey(target)) {
 						ServiceEvent event = events.get(target);
 						frame.addServiceEvent(event);
+					}
+					// ... action attribute
+					if (sfaList.containsKey(target)) {
+						ServiceFunctionAttribute attr = sfaList.get(target);
+						attr.setSlotName(value);
+						System.out.println("attr: " + attr.getName() + " has slotName: " + attr.getSlotName());
 					}
 
 					// Slot generates
@@ -551,8 +561,8 @@ public class BotParser {
 					if (sfaList.containsKey(target)) {
 						ServiceFunctionAttribute attribute = sfaList.get(target);
 						ServiceFunction function = OpenAPIConnector.readFunction(sf);
-						attribute.setRetrieveFunction(function);
-						if(value != null)
+						attribute.setRetrieveFunction(function.merge(sf));
+						if (value != null)
 							attribute.setRetrieveFunctionKey(value);
 					}
 				}
@@ -581,7 +591,19 @@ public class BotParser {
 			String source = elem.getSource();
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
-			if (type.equals("triggers")) {
+			if (type.contentEquals("has")) {
+
+				// LanguageUnderstander
+				if (nlus.get(source) != null) {
+					LanguageUnderstander nlu = nlus.get(source);
+					// intent
+					if (incomingMessages.get(target) != null) {
+						IncomingMessage message = incomingMessages.get(target);
+						nlu.addIntent(message.getIntentKeyword());
+					}
+				}
+
+			} else if (type.equals("triggers")) {
 
 				// Action triggers action
 				if (usfList.get(source) != null) {
@@ -674,10 +696,10 @@ public class BotParser {
 		JSONObject j = new JSONObject();
 
 		JSONArray jaf = swaggerHelperFunction(config);
-		for(ServiceEvent event : events.values()) {
+		for (ServiceEvent event : events.values()) {
 			jaf.add(event.getName());
 		}
-		
+
 		j.put("triggerFunctions", jaf);
 		System.out.println(jaf.toJSONString());
 
@@ -689,17 +711,22 @@ public class BotParser {
 		System.out.println("add bot to monitoring: " + j.toJSONString());
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 		System.out.println("bot initiated");
+
+		for (ServiceFunctionAttribute sfa : sfaList.values()) {
+			System.out.println(sfa.getId() + " " + sfa.getName() + " " + sfa.getSlotName() + " " + sfa.getFunction());
+		}
+
 		return vle;
 	}
 
 	private Service addService(String key, BotModelNode elem, BotConfiguration config) throws MalformedURLException {
-	
+
 		System.out.println("ADD SERVICE");
 		String type = null;
 		String alias = null;
 		String path = null;
 		String swagger = null;
-		
+
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
@@ -708,7 +735,7 @@ public class BotParser {
 			switch (subVal.getName()) {
 			case "Type":
 			case "Service Type":
-				type = value;				
+				type = value;
 				break;
 			case "Service Alias":
 			case "Service Name":
@@ -723,8 +750,8 @@ public class BotParser {
 				break;
 			}
 		}
-		
-		ServiceType serviceType = ServiceType.fromString(type);		
+
+		ServiceType serviceType = ServiceType.fromString(type);
 		Service service = new Service(serviceType, alias, path);
 		service.setSwaggerURL(swagger);
 		return service;
@@ -954,7 +981,7 @@ public class BotParser {
 			if (subVal.getName().contentEquals("Description"))
 				bot.setDescription(subVal.getValue());
 			if (subVal.getName().contentEquals("Language"))
-				bot.setLanguage(subVal.getValue());		
+				bot.setLanguage(subVal.getValue());
 		}
 		return bot;
 	}
@@ -1062,32 +1089,59 @@ public class BotParser {
 
 	private ServiceFunctionAttribute addActionParameter(String key, BotModelNode elem) {
 
-		ServiceFunctionAttribute sfa = new ServiceFunctionAttribute();
-		sfa.setId(key);
+		String contentType = null;
+		String attrName = "";
+		boolean stat = false;
+		String content = null;
+		String contentURL = null;
+		String URLKey = null;
+		String KeyFill = null;
+		ParameterType parameterType = null;
+
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
 			String name = subVal.getName();
-			if (name.equals("Content Type")) {
-				if (subVal.getValue() == "Quiz") {
-					sfa.setContentType("String");
-				} else
-					sfa.setContentType(subVal.getValue());
-			} else if (name.equals("Name")) {
-				sfa.setName(subVal.getValue());
-			} else if (name.equals("Static")) {
-				sfa.setStaticContent(Boolean.parseBoolean(subVal.getValue()));
-			} else if (name.equals("Content")) {
-				sfa.setContent(subVal.getValue());
-			} else if (name.equals("URL")) {
-				sfa.setContentURL(subVal.getValue());
-			}else if (name.contentEquals("URL Key")) {
-				sfa.setContentURLKey(subVal.getValue());
-			} else if (name.equals("Parameter Type")) {
-				String pType = subVal.getValue();
-				sfa.setParameterType(ParameterType.fromString(pType));
+			String value = subVal.getValue();
+
+			switch (name) {
+			case "Name":
+				attrName = value;
+			case "ContentType":
+				if (value == "Quiz")
+					contentType = "String";
+				else
+					contentType = value;
+				break;
+			case "Static":
+				stat = Boolean.parseBoolean(value);
+				break;
+			case "Content":
+				content = value;
+				break;
+			case "URL":
+				contentURL = value;
+				break;
+			case "URL Key":
+				URLKey = value;
+				break;
+			case "Key Fill":
+				KeyFill = value;
+			case "Parameter Type":
+				parameterType = ParameterType.fromString(value);
+				break;
 			}
 		}
+
+		ServiceFunctionAttribute sfa = new ServiceFunctionAttribute(key, attrName);
+		sfa.setContentType(contentType);
+		sfa.setStaticContent(stat);
+		sfa.setContent(content);
+		sfa.setContentURL(contentURL);
+		sfa.setContentURLKey(URLKey);
+		sfa.setContentFill(KeyFill);
+		sfa.setParameterType(parameterType);
+
 		return sfa;
 	}
 

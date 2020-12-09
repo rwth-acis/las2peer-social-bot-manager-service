@@ -6,16 +6,18 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(parent = Function.class, value = "AccessService")
 public class AccessServiceFunction extends Function {
 
-    public ServiceAccessType getServiceType() {
+	@ApiModelProperty(value = "Type of Service Access")
+    ServiceType serviceType;
+	
+    public ServiceType getServiceType() {
 		return serviceType;
 	}
 
-	public void setServiceType(ServiceAccessType serviceType) {
+	public void setServiceType(ServiceType serviceType) {
 		this.serviceType = serviceType;
 	}
 
-	@ApiModelProperty(value = "Type of Service Access")
-    ServiceAccessType serviceType;
+
 
 	
 }

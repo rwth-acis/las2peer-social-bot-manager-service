@@ -5,8 +5,8 @@ import java.net.URL;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(parent = ServiceType.class, value = "OpenAPIService")
-public class OpenAPIService extends ServiceType {
+@ApiModel(parent = ServiceType.class, value = "OpenAPI")
+public class OpenAPI extends ServiceType {
 	
 	@ApiModelProperty(value = "The url of the service", required = true, example = "https://petstore3.swagger.io/")
 	URL baseURL;

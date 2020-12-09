@@ -1,14 +1,20 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class ServiceFunctionAttribute {
-	private String id;
-	private String name;
+	
+	private final String id;
+	private final String name;
 	private ParameterType parameterType;
 	private boolean sameAsTrigger = false;
 	private ServiceFunctionAttribute mappedTo;
@@ -26,12 +32,14 @@ public class ServiceFunctionAttribute {
 	private String contentURL;
 	private String contentURLKey;
 	private String contentType;
+	private String contentFill;
 	// this attribute will dissapear as everything will be done with a single
 	// content attribute
 	private String nluQuizContent;
 	private boolean file;
 	private String entityKeyword;
-	
+	private String slotName;
+
 	// retrieved by swagger
 	private String description;
 	private String example;
@@ -41,16 +49,14 @@ public class ServiceFunctionAttribute {
 	private String discriminator;
 	private String format;
 
-	public ServiceFunctionAttribute() {
+	public ServiceFunctionAttribute(String id, String name) {
 		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
+		this.name = name;
+		this.id = id;
 	}
 
 	public String getName() {
 		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getIdName() {
@@ -86,20 +92,13 @@ public class ServiceFunctionAttribute {
 	 */
 
 	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
-		if (childAttribute == null) {
-			System.out.println("child is null");
+		if (childAttribute == null)
 			return;
-		}
 		this.childAttributes.add(childAttribute);
-		System.out.println("My child is " + childAttribute.getName());
 	}
 
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public boolean isSameAsTrigger() {
@@ -171,7 +170,6 @@ public class ServiceFunctionAttribute {
 	}
 
 	public void setParent(ServiceFunctionAttribute parent) {
-		System.out.println("My parent is " + parent.getName());
 		this.parent = parent;
 	}
 
@@ -196,12 +194,17 @@ public class ServiceFunctionAttribute {
 				+ ", contentType=" + contentType + "]";
 	}
 
+	public String toStringWithChildren() {
+		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
+				+ ", contentType=" + contentType + ", childAttributes=" + childAttributes + "]";
+	}
+
 	public String toStringNoChildren() {
 		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
 				+ ", generator=" + generator + ", function=" + function + ", itb=" + itb + ", staticContent="
 				+ staticContent + ", content=" + content + ", contentURL=" + contentURL + ", contentType=" + contentType
-				+ ", number of children=" + this.childAttributes.size() + ", description=" + description + ", example="
-				+ example + "]";
+				+ ", number of children=" + childAttributes.size() + ", description=" + description + ", example="
+				+ example + " slotName=" + slotName +"]";
 	}
 
 	public String getDescription() {
@@ -230,12 +233,13 @@ public class ServiceFunctionAttribute {
 
 	public void update() {
 
-		System.out.println("update");
-		System.out.println("content url: " + this.contentURL);
-
-		if (this.retrieveFunction == null && this.contentURL == null)
+		if (this.retrieveFunction == null || this.retrieveFunction.hasFrameGeneratedAttribute())
 			return;
 
+		if (this.contentURL == null)
+			return;
+
+		System.out.println("update " + this.getName());
 		List<String> retrievedEnums = null;
 
 		if (this.contentURL != null && this.contentURL.startsWith("http")) {
@@ -253,6 +257,39 @@ public class ServiceFunctionAttribute {
 		if (retrievedEnums != null && !retrievedEnums.isEmpty())
 			this.enumList = retrievedEnums;
 
+	}
+
+	public void update(DialogueGoal goal) {
+
+		assert this.retrieveFunction != null;
+		assert this.retrieveFunction.hasFrameGeneratedAttribute();
+		System.out.println("update by frame " + goal.getFrame().getName());
+
+		Collection<ServiceFunctionAttribute> attrs = this.retrieveFunction.getFrameGeneratedAttributes();
+		OpenAPIAction action = new OpenAPIAction();
+		action.setFunction(retrieveFunction);
+		for (ServiceFunctionAttribute attr : attrs) {
+			if (attr.isFrameGenerated()) {
+				if (attr.getParameterType() == ParameterType.PATH) {
+					Slotable node = goal.getNode(attr.getSlotName());
+					if (node == null) {
+						System.out.println("no node named " + attr.getSlotName() + " found");
+					} else {
+						if (node instanceof Fillable) {
+							Fillable fill = (Fillable) node;
+							System.out.println("fill " + attr.getName() + " with " + fill.getValue());
+							action.addPathParameter(attr.getName(), fill.getValue());
+						}
+					}
+				}
+
+			}
+		}
+		
+		List<String> retrievedEnums = (List<String>) OpenAPIConnector.readEnums(action, this.retrieveFunctionKey);
+		System.out.println("enums: " + retrievedEnums);
+		if (retrievedEnums != null && !retrievedEnums.isEmpty())
+			this.enumList = retrievedEnums;
 	}
 
 	public List<String> getUpdatedEnumList() {
@@ -353,11 +390,11 @@ public class ServiceFunctionAttribute {
 	public void setFile(boolean file) {
 		this.file = file;
 	}
-	
+
 	public void setEntity(IntentEntity entity) {
-		this.entityKeyword = entity.getEntityKeyword();		
+		this.entityKeyword = entity.getEntityKeyword();
 	}
-	
+
 	public String getEntity() {
 		return this.entityKeyword;
 	}
@@ -371,13 +408,13 @@ public class ServiceFunctionAttribute {
 	}
 
 	public boolean hasDynamicEnums() {
-		if(this.contentURL != null && !this.contentURL.contentEquals(""))
+		if (this.contentURL != null && !this.contentURL.contentEquals(""))
 			return true;
-		if(this.retrieveFunction != null)
+		if (this.retrieveFunction != null)
 			return true;
 		return false;
 	}
-	
+
 	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
 		assert attr != null;
 
@@ -387,22 +424,53 @@ public class ServiceFunctionAttribute {
 			this.setContentURLKey(attr.getContentURLKey());
 		if (attr.getContent() != null)
 			this.setContent(attr.getContent());
+		if (attr.getContentFill() != null)
+			this.setContentFill(attr.getContentFill());
 		if (attr.getRetrieveFunction() != null)
 			this.setRetrieveFunction(attr.getRetrieveFunction());
 		if (attr.getRetrieveFunctionKey() != null)
 			this.setRetrieveFunctionKey(attr.getRetrieveFunctionKey());
-		
+
 		if (attr.getContentType() != null)
 			this.setContentType(attr.getContentType());
 		if (attr.getEntity() != null)
 			this.setEntity(new IntentEntity(attr.getEntity()));
-		
-		if(attr.hasDynamicEnums())
+		if (attr.getSlotName() != null)
+			this.setSlotName(attr.getSlotName());
+
+		if (attr.hasDynamicEnums())
 			this.setContentType("enum");
-				
-		
+
 		return attr;
 
+	}
+
+	public boolean hasContent() {
+		return this.content != null && !this.content.contentEquals("");
+	}
+
+	public String getSlotName() {
+		return this.slotName;
+	}
+
+	public void setSlotName(String slotName) {
+		System.out.println("SET SLOT NAME " + slotName);		
+		if (slotName != null)
+			this.slotName = slotName;
+	}
+
+	public String getContentFill() {
+		return contentFill;
+	}
+
+	public void setContentFill(String contentFill) {
+		this.contentFill = contentFill;
+	}
+
+	public boolean isFrameGenerated() {
+		if (this.slotName != null && !this.slotName.contentEquals(""))
+			return true;
+		return false;
 	}
 
 }

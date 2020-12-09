@@ -81,6 +81,22 @@ public class NodeList extends ArrayList<Node> {
 		}
 		return null;
 	}
+	
+	public Slotable getByName(String name) {
+		assert name != null: "name is null";
+		
+		for (Node node : this) {
+			if (node instanceof Slotable) {				
+				Slot slot = ((Slotable) node).getSlot();
+				assert slot != null;
+				assert slot.getAPIName() != null;
+				assert slot.getName() != null;
+				if (name.contentEquals(slot.getAPIName()) || name.contentEquals(slot.getName()))
+					return ((Slotable) node);
+			}
+		}
+		return null;
+	}
 
 	public Collection<Fillable> getByEntity(String entityName) {
 		

@@ -15,8 +15,14 @@ public class ValueNode extends Node implements Fillable {
 		assert slot != null : "slot parameter is null";
 
 		this.slot = slot;
-		this.value = null;
-		this.confirmed = false;
+		
+		if(this.slot.getParameter().hasContent()) {
+			this.value = this.slot.getParameter().getContent();
+			this.confirmed = true;
+		} else {
+			this.value = null;
+			this.confirmed = false;
+		}
 
 		invariant();
 	}
@@ -46,7 +52,6 @@ public class ValueNode extends Node implements Fillable {
 
 		invariant();
 		assert this.isFilled() : "node value not filled yet";
-		assert this.value.contentEquals(value) : "value confirmed that was not filled yet";
 
 		this.confirmed = true;
 

@@ -33,6 +33,11 @@ public class Frame {
 		this.slots = new HashMap<String, Slot>();
 		this.events = new HashSet<ServiceEvent>();
 	}
+	
+	public Frame(String name) {
+		this();
+		this.name = name;
+	}
 
 	public Frame(String name, String intent, String message, ServiceFunction serviceFunction, Map<String, Slot> slots) {
 		super();

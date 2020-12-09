@@ -101,7 +101,7 @@ public class Bot {
 		return null;
 	}
 
-	public void addRasaServer(NLUKnowledge nlu) {
+	public RasaNlu addRasaServer(NLUKnowledge nlu) {
 		RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
 		String id = nlu.getId();
 		if (id == null)
@@ -109,6 +109,7 @@ public class Bot {
 		if (id.contentEquals("0") && this.nlus.containsKey("0"))
 			id = String.valueOf(this.nlus.size());
 		this.nlus.put(id, rasa);
+		return rasa;
 	}
 
 	public Map<String, LanguageUnderstander> getNLUs() {

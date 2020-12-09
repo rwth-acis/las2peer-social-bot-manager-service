@@ -24,17 +24,38 @@ public class RepetitionNode extends Node implements Slotable {
 		this.confirmed = false;
 		this.open = true;
 		this.valueChildren = new ArrayList<Node>();
-		extend();
-		
-		if(this.slot.hasEnumList()) {
-			this.fixed = true;	
-		} 
-		
+
+		System.out.println("Repetition Node: " + slot.getName() + ", enumlist: " + this.slot.hasEnumList());
+		if (this.slot.hasEnumList())
+			extendEnums();
+		else
+			extend();
+
 		invariant();
 	}
 
-	public void extend() {
+	private void extendEnums() {
+		invariant();
+		assert this.slot.hasEnumList();
 
+		System.out.println("Repetition Node with enum list detected");
+		String key = this.slot.getParameter().getContentFill();
+		assert key != null;
+		for (String value : this.slot.getEnumList()) {
+			extend();
+			Node node = this.valueChildren.get(this.valueChildren.size() - 1);
+			NodeList nodes = node.getAll();
+			Slotable targetNode = nodes.getByName(key);
+			if (targetNode != null && targetNode instanceof Fillable) {
+				((Fillable) targetNode).fill(value);
+				this.fixed = true;
+			} else
+				System.out.println("target node " + key + " not found");
+		}
+
+	}
+
+	public void extend() {
 		invariant();
 		assert this.slot.hasChildren();
 
@@ -73,7 +94,7 @@ public class RepetitionNode extends Node implements Slotable {
 		invariant();
 		this.open = false;
 	}
-	
+
 	public boolean isFilled() {
 		invariant();
 		if (this.valueChildren.isEmpty())

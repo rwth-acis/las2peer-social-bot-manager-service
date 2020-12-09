@@ -19,7 +19,6 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelLabel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
-import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.creation.AccessServiceFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
@@ -138,7 +137,7 @@ public class BotModelParser {
 
 						BotModelNode inNode = incomingMessages.get(intent);
 						BotModelNode outNode = addNode("Chat Response");
-						addAttribute(outNode, "Message", message.getResponse());
+					//	addAttribute(outNode, "Message", message.getResponse());
 						addEdge(inNode, outNode, "triggers");
 
 					} else {
@@ -148,7 +147,7 @@ public class BotModelParser {
 						addAttribute(inNode, "NLU ID", "0");
 
 						BotModelNode outNode = addNode("Chat Response");
-						addAttribute(outNode, "Message", message.getResponse());
+					//	addAttribute(outNode, "Message", message.getResponse());
 
 						addEdge(inNode, outNode, "triggers");
 						addMessengerEdges(inNode, "generates");
@@ -162,12 +161,12 @@ public class BotModelParser {
 				AccessServiceFunction as = (AccessServiceFunction) function;
 
 				BotModelNode frameNode = addNode("Frame");
-				addAttribute(frameNode, "intent", as.getOperationID());
+				//addAttribute(frameNode, "intent", as.getOperationID());
 
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "Service");
-				addAttribute(actionNode, "Function Name", as.getOperationID());
-				addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
+				//addAttribute(actionNode, "Function Name", as.getOperationID());
+				//addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
 
 				addEdge(frameNode, actionNode, "triggers");
 				addMessengerEdges(frameNode, "generates");
