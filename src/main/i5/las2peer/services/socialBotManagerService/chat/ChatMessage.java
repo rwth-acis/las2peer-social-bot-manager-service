@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 public class ChatMessage {
 	private String channel;
+	private String subchannel;
 	private String user;
 	private int role;
 	private String email;

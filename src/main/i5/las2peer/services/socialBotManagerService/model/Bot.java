@@ -140,6 +140,10 @@ public class Bot {
 		// methods synchronized?
 		return this.messengers.get(name);
 	}
+	
+	public HashMap<String, Messenger> getMessengers() {
+		return this.messengers;
+	}
 
 	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
 		this.messengers.put(messenger.getName(), messenger);

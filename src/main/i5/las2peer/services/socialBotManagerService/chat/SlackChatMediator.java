@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Vector;
 
@@ -44,10 +45,10 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
 		if (id.isPresent()) {
-			msg.id(id.getAsLong());
+			msg.id(Long.parseLong(id.get()));
 		}
 		String message = msg.build().toJSONString();
 		try {
@@ -153,7 +154,7 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
 		// TODO Auto-generated method stub
 
 	}

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Vector;
 
@@ -16,6 +17,8 @@ import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.MoodleForumMediator;
+import i5.las2peer.services.socialBotManagerService.chat.MoodleChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -36,10 +39,10 @@ public class Messenger {
 	private HashMap<String, IncomingMessage> knownIntents;
 
 	// Used for keeping conversation state per channel
-	private HashMap<String, IncomingMessage> stateMap;
+	private HashMap<String, HashMap<String, IncomingMessage>> stateMap;
 	// Used for keeping context between assessment and non-assessment states
 	// Key is the channelId
-	private HashMap<String, String> currentNluModel;
+	private HashMap<String, HashMap<String, String>> currentNluModel;
 	// Used to know to which Function the received intents/messages are to be sent
 	// Is additionally used to check if we are currently communicating with a service(if set, then yes otherwise no)
 	private HashMap<String, String> triggeredFunction;
@@ -57,15 +60,19 @@ public class Messenger {
 			this.chatMediator = new SlackChatMediator(token);
 		} else if (chatService.contentEquals("Rocket.Chat")) {
 			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+		} else if (chatService.contentEquals("Moodle Forum")) {
+			this.chatMediator = new MoodleForumMediator(token);
+		} else if (chatService.contentEquals("Moodle Chat")) {
+			this.chatMediator = new MoodleChatMediator(token);
 		} else { // TODO: Implement more backends
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
 		this.name = id;
 		this.knownIntents = new HashMap<String, IncomingMessage>();
-		this.stateMap = new HashMap<String, IncomingMessage>();
+		this.stateMap = new HashMap<String, HashMap<String, IncomingMessage>>();
 		this.random = new Random();
 		// Initialize the assessment setup
-		this.currentNluModel = new HashMap<String, String>();
+		this.currentNluModel = new HashMap<String, HashMap<String, String>>();
 		this.triggeredFunction = new HashMap<String, String>();
 	}
 
@@ -90,17 +97,17 @@ public class Messenger {
 		return  chatMediator.getEmail(channel);
 	};*/
 
-	public void setContextToBasic(String channel) {
+	public void setContextToBasic(String channel, String userid) {
 		triggeredFunction.remove(channel);
-
-		IncomingMessage state = this.stateMap.get(channel);
+		
+		IncomingMessage state = this.stateMap.get(channel).get(userid);
 		if (state != null) {
 			if (state.getFollowingMessages() == null) {
 				System.out.println("Conversation flow ended now");
 			} else	if(state.getFollowingMessages().get("") != null) {
 				state = state.getFollowingMessages().get("");
-				stateMap.put(channel, state);
-				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
+				stateMap.get(channel).put(userid, state);
+				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(), Optional.of(userid));
 
 			} else {}
 		}
@@ -118,10 +125,28 @@ public class Messenger {
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
+			String userid = message.getUser();
+			String channel = message.getChannel();
+			
+			
 			try {
-				if (this.currentNluModel.get(message.getChannel()) == null) {
-					this.currentNluModel.put(message.getChannel(), "0");
+				// If a channel/user pair still isn't assigned to a state, assign it to null
+				if (this.stateMap.get(channel) == null) {
+					HashMap<String, IncomingMessage> initMap = new HashMap<String, IncomingMessage>();
+					initMap.put(userid, null);
+					this.stateMap.put(message.getChannel(), initMap);
 				}
+				
+				// If a channel/user pair still isn't assigned to a NLU Model, assign it to the Model 0 
+				if (this.currentNluModel.get(channel) == null) {
+					HashMap<String, String> initMap = new HashMap<String, String>();
+					initMap.put(userid, "0");
+					this.currentNluModel.put(message.getChannel(), initMap);
+				}
+				if (this.currentNluModel.get(channel).get(userid) == null) {
+					this.currentNluModel.get(channel).put(userid, "0");
+				}
+				
 				Intent intent = null;
 				// Special case: `!` commands
 				// System.out.println(this.knownIntents.toString());
@@ -136,7 +161,7 @@ public class Messenger {
 					IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
 					// TODO: Log this? (`!` command with unknown intent / keyword)
 					if (incMsg == null) {
-						if (this.currentNluModel.get(message.getChannel()) == "0") {
+						if (this.currentNluModel.get(channel).get(userid) == "0") {
 							continue;
 						} else {
 							incMsg = new IncomingMessage(intentKeyword, "");
@@ -156,35 +181,37 @@ public class Messenger {
 				} else {
 					// what if you want to start an assessment with a command?
 					System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
-					intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
+					intent = bot.getRasaServer(currentNluModel.get(channel).get(userid)).getIntent(message.getText());
 
 				}
 				System.out.println(intent.getKeyword());
 				String triggeredFunctionId = null;
-				IncomingMessage state = this.stateMap.get(message.getChannel());
+				IncomingMessage state = this.stateMap.get(channel).get(userid);
 				if (state != null) {
-					System.out.println(state.getIntentKeyword());
-
+					System.out.println("State: " + state.getIntentKeyword());
 				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
 					if (intent.getConfidence() >= 0.40f) {
+						// If there is no previous state, assign the new state tied to the identified intent
 						if (state == null) {
 							state = this.knownIntents.get(intent.getKeyword());
 							System.out.println(
 									intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
-							stateMap.put(message.getChannel(), state);
+							stateMap.get(channel).put(userid, state);
 						} else {
 							// any is a static forward
 							// TODO include entities of intents
+							// If there is no next state, stay in the same state
 							if (state.getFollowingMessages() == null || state.getFollowingMessages().isEmpty()) {
 								System.out.println("no follow up messages");
 								state = this.knownIntents.get(intent.getKeyword());
-								this.currentNluModel.put(message.getChannel(), "0");
+								this.currentNluModel.get(channel).put(userid, "0");
 								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
 										+ " confidence.");
-								stateMap.put(message.getChannel(), state);
+								stateMap.get(channel).put(userid, state);
+							// If there is a next state, set the current state to it	
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
 								System.out.println("try follow up message");
 								// check ratings
@@ -197,8 +224,11 @@ public class Messenger {
 									keyword = "highrating";
 								}
 								state = state.getFollowingMessages().get(intent.getKeyword());
-								stateMap.put(message.getChannel(), state);
+								stateMap.get(channel).put(userid, state);
 							} else {
+								System.out.println("\u001B[33mDebug --- Followups: " + state.getFollowingMessages() + "\u001B[0m");
+								System.out.println("\u001B[33mDebug --- Emptiness: " + state.getFollowingMessages().keySet().isEmpty() + "\u001B[0m");
+								System.out.println("\u001B[33mDebug --- State: " + state.getIntentKeyword() + "\u001B[0m");
 								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
 										+ intent.getConfidence() + " confidence.");
 								// try any
@@ -226,7 +256,7 @@ public class Messenger {
 									} else {
 										state = state.getFollowingMessages().get("any");
 									}
-									stateMap.put(message.getChannel(), state);
+									stateMap.get(channel).put(userid, state);
 								} else  // tud
 								if ((intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
 										|| intent.getKeyword().equals("will"))
@@ -255,7 +285,7 @@ public class Messenger {
 									for (Entity e : entities) {
 										System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
 										state = this.knownIntents.get(e.getEntityName());
-										stateMap.put(message.getChannel(), state);
+										stateMap.get(channel).put(userid, state);
 									}
 								}
 								else{
@@ -269,14 +299,12 @@ public class Messenger {
 						state = this.knownIntents.get("default");
 						System.out.println(state.getIntentKeyword() + " set");
 					}
+				// No matching intent found, perform default action
 				} else if (intent.getConfidence() < 0.40f) {
 					intent = new Intent("default", "", "");
 				}
 
-				
-
 				Boolean contextOn = false;
-				// No matching intent found, perform default action
 				if (this.triggeredFunction.containsKey(message.getChannel())) {
 					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
 					contextOn = true;
@@ -296,9 +324,10 @@ public class Messenger {
 						}
 						if (state.getNluID() != "") {
 							System.out.println("New NluId is : " + state.getNluID());
-							this.currentNluModel.put(message.getChannel(), state.getNluID());
+							this.currentNluModel.get(channel).put(userid, state.getNluID());
 						}
 						if (response != null) {
+							System.out.println("Debug - Response : " + response.getResponse());
 							if (response.getResponse() != "") {
 								if (intent.getEntity("schreibaufgabe") != null
 										|| intent.getKeyword().equals("beschreibung")) {
@@ -340,7 +369,6 @@ public class Messenger {
 											}
 										}
 									}
-									// response = response.replace("$X", "" + s);
 									this.chatMediator.sendMessageToChannel(message.getChannel(),
 											response.getResponse().replace("$X", "" + s));
 								} else if (state.getIntentKeyword().equals("liste")) {
@@ -377,13 +405,13 @@ public class Messenger {
 											response.getResponse());
 								} else {
 									String split = "";
-									// allows users to use linebreaks \n during the modeling for chat responses
+									// allows users to use linebreaks \n during the modelling for chat responses
 									for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
 										System.out.println(i);
 										split += response.getResponse().split("\\\\n")[i] + " \n ";
 									}
 									System.out.println(split);
-									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+									this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
 								}
 							} else {
 								if (response.getTriggeredFunctionId() != "") {
@@ -400,7 +428,9 @@ public class Messenger {
 							triggeredFunctionId = state.getTriggeredFunctionId();
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
-							this.stateMap.remove(message.getChannel());
+							HashMap<String, IncomingMessage> resetState = new HashMap<String, IncomingMessage>();
+							resetState.put(userid, null);
+							this.stateMap.put(channel, resetState);
 						}
 					}
 				}

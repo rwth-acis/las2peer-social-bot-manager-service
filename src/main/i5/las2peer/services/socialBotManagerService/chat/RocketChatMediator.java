@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -93,7 +94,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
 
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
@@ -132,7 +133,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());

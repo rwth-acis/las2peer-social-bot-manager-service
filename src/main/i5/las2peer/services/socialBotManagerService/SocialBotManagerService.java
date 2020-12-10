@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.Collections;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -78,6 +79,8 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.ChatMessageCollector;
+import i5.las2peer.services.socialBotManagerService.chat.MoodleForumMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
@@ -1046,7 +1049,7 @@ public class SocialBotManagerService extends RESTService {
 	            			triggerChat(chat, triggeredBody);
 	            			if(response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))){
 	                            System.out.println("Closed Context");
-	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"));
+	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"), triggeredBody.getAsString("email"));
                             }
                         } catch (ParseException e) {
     			         e.printStackTrace();
@@ -1306,6 +1309,35 @@ public class SocialBotManagerService extends RESTService {
 		}
 		return true;
 	}
+	
+	public void getXapiStatements(ArrayList<String> statements) {
+		System.out.println("Bot: Got " + statements.size() + " statements!");
+		System.out.println(statements.toString());
+		// Check if any bots take xAPI statements first
+		HashMap<String, VLE> vles = config.getVLEs();
+		for (Entry<String, VLE> vleEntry : vles.entrySet()) {
+			//System.out.println("Debug --- VLE: " + vleEntry.getValue().getName());
+			HashMap<String, Bot> bots = vleEntry.getValue().getBots();
+			
+			for (Entry<String, Bot> botEntry : bots.entrySet()) {
+				//System.out.println("Debug --- Bots: " + botEntry.getValue().getName());
+				HashMap<String, Messenger> messengers = botEntry.getValue().getMessengers();
+				
+				for (Entry<String, Messenger> messengerEntry : messengers.entrySet()) {
+					//System.out.println("Debug --- Messengers: " + messengerEntry.getValue().getName());
+					ChatMediator mediator = messengerEntry.getValue().getChatMediator();
+					//System.out.println("Debug --- Mediator: " + mediator.getClass());
+					//System.out.println("Debug --- Instance: " + (mediator instanceof MoodleForumMediator));
+					if (mediator instanceof MoodleForumMediator) {
+						MoodleForumMediator moodleMediator = (MoodleForumMediator) mediator;
+						Collections.reverse(statements);
+						moodleMediator.handle(statements);
+					}
+				}
+			}
+		}
+		
+	}
 
 	private boolean checkIfCondition(IfThenBlock itb, String text) {
 		String conditionType = itb.getConditionType();
@@ -1357,6 +1389,7 @@ public class SocialBotManagerService extends RESTService {
 	private class RoutineThread implements Runnable {
 		@Override
 		public void run() {
+			// System.out.println("Debug --- Running");
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();

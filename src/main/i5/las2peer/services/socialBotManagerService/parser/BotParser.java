@@ -77,6 +77,7 @@ public class BotParser {
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
+		HashMap<String, Bot> statementBots = new HashMap<String, Bot>();
         
         HashMap<String, NLUKnowledge> nluKnowledge = new HashMap<String, NLUKnowledge>();
 
@@ -449,6 +450,9 @@ public class BotParser {
 			jarr.add(b.getIdentifier());
 		}
 		j.put("botIds", jarr);
+		
+		
+		
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	}
 
