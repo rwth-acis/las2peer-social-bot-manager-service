@@ -11,6 +11,7 @@ import org.junit.Test;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class TreeTest {
 
@@ -23,7 +24,7 @@ public class TreeTest {
 		frame = new Frame();
 		slots = new Slot[10];
 		for (int i = 0; i < 10; i++)
-			slots[i] = new Slot("s_" + i);
+			slots[i] = new Slot("s_" + i, ParameterType.BODY);
 
 		frame.addSlot(slots[0]);
 		frame.addSlot(slots[1]);

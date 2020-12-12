@@ -47,7 +47,7 @@ public class RootNodeTest {
 	public void toJSONTest() {
 
 		RootNode node = new RootNode(frame);
-		assertNotNull(node.toJSON());
+		assertNotNull(node.toBodyJSON());
 
 	}
 

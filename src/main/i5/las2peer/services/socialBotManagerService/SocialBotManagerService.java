@@ -832,7 +832,9 @@ public class SocialBotManagerService extends RESTService {
 		@ApiOperation(value = "Receive an Telegram event")
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
 		public Response telegramEvent(String body, @PathParam("token") String token) {
-
+			
+			System.out.println("Telegram Message received: " + body);
+			
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -847,12 +849,13 @@ public class SocialBotManagerService extends RESTService {
 						if (teleBot != null) {
 							bot = teleBot;
 							zvle = vle;
+						}
 					}
 					if (bot == null)
 						System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
 					
-					if(!bot.isActive(vle) && !bot.getName().contentEquals("CreationBot")) {
+					if(!bot.isActive(zvle) && !bot.getName().contentEquals("CreationBot")) {
 						System.out.println("bot " + bot.getName() + " is inactive");
 						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 						JSONObject parsedBody;
@@ -872,6 +875,7 @@ public class SocialBotManagerService extends RESTService {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						
 					} else {
 					
 						// Handle event
@@ -889,7 +893,7 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 				}
-			}}).start();
+			}).start();
 
 			return Response.status(200).build();
 		}

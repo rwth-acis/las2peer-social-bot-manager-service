@@ -201,16 +201,19 @@ public class RepetitionNode extends Node implements Slotable {
 	}
 
 	@Override
-	public Object toJSON() {
+	public JSONObject toBodyJSON() {
 		invariant();
 
 		JSONObject res = new JSONObject();
 		JSONArray ar = new JSONArray();
 		for (Node node : this.valueChildren) {
-			ar.add(node.toJSON());
+			JSONObject jsonNode = node.toBodyJSON();
+			if (jsonNode != null && !jsonNode.isEmpty())
+				ar.add(node.toBodyJSON());
 		}
-
-		res.put(this.getAPIName(), ar);
+		if (!ar.isEmpty())
+			res.put(this.getAPIName(), ar);
+		
 		return res;
 	}
 

@@ -33,7 +33,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://7b2d8af6181d.ngrok.io";
+	private final static String url = "https://9556fd18f3e0.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -132,8 +132,8 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		assert response != null : "response parameter is null";
 		assert response.getChannel() != null : "response has no channel";
-
-		if (response.getMessage() != null) {
+		
+		if (response.hasMessage()) {
 			boolean isOK = this.sendFormattedMessageToChannel(response);
 			if (!isOK) {
 				boolean isOK2 = this.sendFormatted2(response);
@@ -141,14 +141,13 @@ public class TelegramChatMediator extends EventChatMediator {
 					sendMessageToChannel(response.getChannel(), response.getMessage());
 			}
 		}
-
-		if (response.getFile() != null) {
-			sendFileToChannel(response);
-		}
+		
+		if (response.hasFile()) 
+			sendFileToChannel(response);	
 
 	}
 
-	public boolean sendFormatted2(ResponseMessage response) {
+	private boolean sendFormatted2(ResponseMessage response) {
 
 		String channel = response.getChannel();
 		String text = response.getMessage();
@@ -170,7 +169,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * Sends a message to telegram messenger channel with Markdown formatting and
 	 * optional UI elements.
 	 */
-	public boolean sendFormattedMessageToChannel(ResponseMessage response) {
+	private boolean sendFormattedMessageToChannel(ResponseMessage response) {
 
 		assert response != null : "response parameter is null";
 		assert response.getChannel() != null : "response has no channel";
@@ -272,7 +271,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * Sends a file to an telegram channel
 	 */
-	public void sendFileToChannel(ResponseMessage response) {
+	private void sendFileToChannel(ResponseMessage response) {
 
 		assert response != null : "resposne is null";
 		assert response.getFile() != null : "response has no file";
@@ -282,18 +281,18 @@ public class TelegramChatMediator extends EventChatMediator {
 		String data = response.getFile().getDataString();
 		String name = response.getFile().getName();
 		String caption = "";
-
-		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-		TelegramBot bot = new TelegramBot(authToken);
+		System.out.println("Send File to Telegram channel: " + channel);
+		
+		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);		
 		SendDocument request = new SendDocument(channel, bytes);
 
-		if (caption != null)
+		if (caption != null && !caption.contentEquals(""))
 			request.caption(caption);
-		if (name != null)
+		if (name != null && !name.contentEquals(""))
 			request.fileName(name);
 
-		BaseResponse res = bot.execute(request);
-		System.out.println(res.description());
+		BaseResponse res = bot.execute(request);		
+		System.out.println(String.valueOf(res.isOk()) + res.errorCode() + res.description());
 	}
 
 	/**

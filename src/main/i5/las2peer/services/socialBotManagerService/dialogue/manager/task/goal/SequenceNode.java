@@ -111,16 +111,15 @@ public class SequenceNode extends Node {
 	}
 
 	@Override
-	public Object toJSON() {
+	public JSONObject toBodyJSON() {
 		invariant();
 
 		JSONObject res = new JSONObject();
 		for (Node node : this.children) {
-			if (node.toJSON() != null) {
-				res.merge(node.toJSON());
-			}
+			JSONObject nodeJson = node.toBodyJSON();
+			if (nodeJson != null && !nodeJson.isEmpty())
+				res.putAll(node.toBodyJSON());
 		}
-
 		return res;
 	}
 

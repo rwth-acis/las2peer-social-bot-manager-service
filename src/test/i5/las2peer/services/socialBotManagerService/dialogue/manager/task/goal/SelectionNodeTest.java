@@ -13,6 +13,7 @@ import org.junit.Test;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class SelectionNodeTest {
 
@@ -66,28 +67,72 @@ public class SelectionNodeTest {
 	@Test
 	public void isReadyTest() {
 
-		SelectionNode node = new SelectionNode(slotS);
-
+		Slot parentSlot = new Slot("parent", ParameterType.BODY);
+		Slot valueSlotA = new Slot("valueA", ParameterType.CHILD);
+		Slot valueSlotB = new Slot("valueB", ParameterType.CHILD);
+		parentSlot.setSelection(true);
+		parentSlot.setEnumList(enums);
+		valueSlotA.setEntity("A");
+		valueSlotB.setEntity("B");
+		parentSlot.addChild(valueSlotA);
+		parentSlot.addChild(valueSlotB);
+		
+		SelectionNode node = new SelectionNode(parentSlot);
+		assertFalse(node.isFilled());
 		assertFalse(node.isReady());
+		assertFalse(node.isFull());
+		
 		node.fill("A");
-		assertFalse(node.isReady());
+		assertTrue(node.isFilled());
+		assertTrue(node.isReady());
+		
+		valueSlotA.setRequired(true);
+		valueSlotB.setRequired(true);
+		assertTrue(node.isFilled());
+		assertFalse(node.isReady());		
 		assertNotNull(node.getChild("A"));
+		
 		((ValueNode) node.getChild("A")).fill("tA");
 		assertTrue(node.isReady());
+		
 		node.clear();
+		assertFalse(node.isReady());		
+		assertFalse(node.isFilled());
+		
+		node.fill("B");
+		assertTrue(node.isFilled());
 		assertFalse(node.isReady());
-		node.fill("A");
 		assertNotNull(node.getChild("B"));
+		
 		((ValueNode) node.getChild("B")).fill("tB");
-
+		assertTrue(node.isReady());
+		
 	}
 
 	@Test
-	public void toJSONTest() {
+	public void toJSONBodyTest() {
 
-		SelectionNode node = new SelectionNode(slotS);
-		assertNotNull(node.toJSON());
+		Slot parentSlot = new Slot("parent", ParameterType.BODY);
+		Slot valueSlotA = new Slot("valueA", ParameterType.CHILD);
+		Slot valueSlotB = new Slot("valueB", ParameterType.CHILD);
+		parentSlot.setSelection(true);
+		parentSlot.setEnumList(enums);
+		valueSlotA.setEntity("A");
+		valueSlotB.setEntity("B");
+		valueSlotA.setRequired(true);
+		valueSlotB.setRequired(true);
+		parentSlot.addChild(valueSlotA);
+		parentSlot.addChild(valueSlotB);
 
+		SelectionNode node = new SelectionNode(parentSlot);	
+		
+		node.fill("A");
+		assertEquals("{\"parent\":\"A\"}", node.toBodyJSON().toString());
+
+		((Fillable) node.getChild("A")).fill("Aval");
+		assertNotNull(node.toBodyJSON());
+		assertEquals("{\"parent\":\"A\",\"valueA\":\"Aval\"}", node.toBodyJSON().toString());
+		
 	}
 
 }

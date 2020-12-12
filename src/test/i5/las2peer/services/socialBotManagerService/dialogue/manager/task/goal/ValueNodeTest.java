@@ -22,12 +22,15 @@ public class ValueNodeTest {
 	@Before
 	public void setUp() {
 
-		slot = new Slot("name");
+		// slot
+		slot = new Slot("slotName");
 		slot.setInputType(InputType.Free);
 		
-		attr = new ServiceFunctionAttribute("", "");
+		//attribute
+		attr = new ServiceFunctionAttribute("attrId", "attrName");
 		slot.setParameter(attr);
 
+		// optional enum list
 		enums = new ArrayList<String>();
 		enums.add("A");
 		enums.add("B");
@@ -57,8 +60,10 @@ public class ValueNodeTest {
 
 		attr.setParameterType(ParameterType.CHILD);
 		ValueNode node = new ValueNode(slot);
-		assertNotNull(node.toJSON());
-
+		node.fill("hello");
+		assertNotNull(node.toBodyJSON());
+		assertEquals("{\"attrName\":\"hello\"}", node.toBodyJSON().toJSONString());
+		
 	}
 
 }

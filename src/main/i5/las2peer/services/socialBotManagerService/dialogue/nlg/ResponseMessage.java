@@ -60,6 +60,14 @@ public class ResponseMessage {
 		this.file = file;
 	}
 
+	public boolean hasFile() {
+		return this.file != null;
+	}
+	
+	public boolean hasMessage() {
+		return this.message != null && !this.message.contentEquals("");
+	}
+	
 	public String getChannel() {
 		return channel;
 	}

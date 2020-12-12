@@ -154,8 +154,7 @@ public class OpenAPIAction {
 		assert RequestMethod
 				.validate(this.function.getHttpMethod().toUpperCase()) : "HTTP method of OpenAPIAction is invalid";
 		assert this.function.getServiceName() != null : "function of OpenAPIAction has no base url";
-		assert this.function.getFunctionName() != null : "function of OpenAPIAction has no function url";
-	}
+		}
 
 	@Override
 	public String toString() {

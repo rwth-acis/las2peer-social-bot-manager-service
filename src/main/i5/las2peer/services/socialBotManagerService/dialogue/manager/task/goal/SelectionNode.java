@@ -170,13 +170,24 @@ public class SelectionNode extends Node implements Fillable {
 	}
 
 	@Override
-	public JSONObject toJSON() {
+	public JSONObject toBodyJSON() {
 		invariant();
 
+		if(!this.isBodyAttribute())
+			return null;
+		
+		if(!this.isFilled())
+			return null;
+		
 		JSONObject res = new JSONObject();
 		res.put(this.getAPIName(), this.getValue());
-		if (this.isFilled())
-			res.merge(this.getActive().toJSON());
+		
+		if(this.getActive() == null)
+			return res;
+		
+		JSONObject jsonChild = this.getActive().toBodyJSON();
+		if(jsonChild != null && !jsonChild.isEmpty())
+			res.putAll(jsonChild);
 
 		return res;
 	}

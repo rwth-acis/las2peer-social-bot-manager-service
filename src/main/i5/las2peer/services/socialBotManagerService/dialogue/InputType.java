@@ -6,7 +6,25 @@ import java.net.URL;
 
 public enum InputType {
 
-    Free, Word, Number, Decimal, Confirmation, Date, Date_Time, Url, Binary, Email, Enum, Entity;
+	Free, Word, Number, Decimal, Confirmation, Date, Date_Time, Url, Binary, Email, Enum, Entity;
+
+	public static InputType fromString(String input) {
+
+		if(input == null)
+			return InputType.Free;
+		
+		switch (input.toLowerCase()) {
+		case "enum":
+			return InputType.Enum;
+		case "integer":
+			return InputType.Number;
+		case "url":
+			return InputType.Url;
+		default:
+			return InputType.Free;
+		}
+
+	}
 
 	public boolean validate(String input) {
 

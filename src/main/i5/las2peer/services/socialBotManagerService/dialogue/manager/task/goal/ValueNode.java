@@ -1,7 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
-import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 import net.minidev.json.JSONObject;
 
 public class ValueNode extends Node implements Fillable {
@@ -139,14 +138,17 @@ public class ValueNode extends Node implements Fillable {
 	}
 
 	@Override
-	public JSONObject toJSON() {
+	public JSONObject toBodyJSON() {
 		invariant();
-
-		JSONObject res = new JSONObject();
-		ParameterType type = this.getSlot().getParameter().getParameterType();
-		if (type == ParameterType.BODY || type == ParameterType.CHILD || type == ParameterType.DISCRIMINATOR)
-			res.put(this.getAPIName(), this.getValue());					
+				
+		if (!this.isBodyAttribute())
+			return null;
 		
+		if(!this.isFilled())
+			return null;
+		
+		JSONObject res = new JSONObject();	
+		res.put(this.getAPIName(), this.getValue());		
 		return res;
 	}
 

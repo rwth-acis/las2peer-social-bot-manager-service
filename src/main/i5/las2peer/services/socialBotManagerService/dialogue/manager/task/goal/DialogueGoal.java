@@ -10,6 +10,7 @@ import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ResponseParseMode;
+import net.minidev.json.JSONObject;
 
 public class DialogueGoal {
 
@@ -202,7 +203,7 @@ public class DialogueGoal {
 		OpenAPIAction res = new OpenAPIAction();
 		ServiceFunction function = this.getFrame().getServiceFunction();
 		res.setFunction(function);
-		res.setBodyParameter(root.toJSON());
+		res.setBodyParameter(root.toBodyJSON());
 		res.setPathParameters(root.getPathParameters());
 		res.setQueryParameters(root.getQueryParameters());
 
@@ -312,9 +313,9 @@ public class DialogueGoal {
 		assert this.root != null : "no root node";
 	}
 
-	public Object toJSON() {
+	public JSONObject toBodyJSON() {
 
-		return this.getRoot().toJSON();
+		return this.getRoot().toBodyJSON();
 	}
 
 }

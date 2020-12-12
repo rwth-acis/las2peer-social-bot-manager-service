@@ -36,8 +36,6 @@ public interface Slotable {
 	
 	public default String getReqConfProceed() {
 		return getSlot().getReqConfIntent();
-	}
-
-
+	}		
 
 }

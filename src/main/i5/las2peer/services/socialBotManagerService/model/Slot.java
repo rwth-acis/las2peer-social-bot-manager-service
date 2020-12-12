@@ -71,9 +71,22 @@ public class Slot {
 		this.name = name;
 		this.children = new SlotList();
 		this.priority = 0;
-
+	}
+	
+	public Slot(ServiceFunctionAttribute attr) {
+		this(attr.getName());
+		this.parameter = attr;
+		this.inputType = InputType.fromString(attr.getContentType());
+	}
+	
+	public Slot(String id, String name, ParameterType type) {
+		this(new ServiceFunctionAttribute(id, name, type));
 	}
 
+	public Slot(String name, ParameterType type) {
+		this(new ServiceFunctionAttribute(name, name, type));
+	}
+	
 	/**
 	 * @param value
 	 * @return true if the input value is acceptable for this slot
@@ -287,6 +300,10 @@ public class Slot {
 	}
 
 	public boolean hasEnumList() {
+		
+		if(getParameter() == null || getParameter().getEnumList() == null)
+			return false;
+		
 		List<String> enumList = this.getParameter().getEnumList();
 		return (enumList != null && !enumList.isEmpty());
 	}

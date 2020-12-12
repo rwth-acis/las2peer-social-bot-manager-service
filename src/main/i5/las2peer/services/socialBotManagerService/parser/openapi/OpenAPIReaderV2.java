@@ -233,6 +233,7 @@ public class OpenAPIReaderV2 {
 					String ref = ((BodyParameter) parameter).getSchema().getReference();
 					String name = ref.substring("#/definitions/".length());
 					attr = new ServiceFunctionAttribute("v21", name);
+					attr.setParameterType(ParameterType.BODY);
 					attr = addChildrenAttributes(swagger, name, attr);
 					action.addAttribute(attr);
 					

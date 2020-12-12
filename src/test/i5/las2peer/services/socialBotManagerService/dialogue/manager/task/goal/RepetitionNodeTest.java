@@ -88,10 +88,10 @@ public class RepetitionNodeTest {
 	}
 
 	@Test
-	public void toJSONTest() {
+	public void toJSONBodyTest() {
 
 		RepetitionNode node = new RepetitionNode(slotRep);
-		assertNotNull(node.toJSON());
+		assertNotNull(node.toBodyJSON());
 
 	}
 }

@@ -83,7 +83,6 @@ public class PipelineManager extends MetaDialogueManager {
 		ResponseMessage res = handleGeneration(act, dialogue, message, nlgs);
 		assert res != null : "res is null";
 		res.setChannel(message.getChannel());
-		System.out.println(res);
 
 		return res;
 	}

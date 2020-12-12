@@ -52,7 +52,12 @@ public class ServiceFunctionAttribute {
 	public ServiceFunctionAttribute(String id, String name) {
 		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
 		this.name = name;
-		this.id = id;
+		this.id = id;		
+	}
+	
+	public ServiceFunctionAttribute(String id, String name, ParameterType type) {
+		this(id, name);
+		this.parameterType = type;
 	}
 
 	public String getName() {
@@ -233,10 +238,11 @@ public class ServiceFunctionAttribute {
 
 	public void update() {
 
-		if (this.retrieveFunction == null || this.retrieveFunction.hasFrameGeneratedAttribute())
+		System.out.println("update: " + this.retrieveFunctionKey + " " + this.contentURL);
+		if (this.retrieveFunction == null && this.contentURL == null)
 			return;
-
-		if (this.contentURL == null)
+				
+		if (this.retrieveFunction != null && this.retrieveFunction.hasFrameGeneratedAttribute())
 			return;
 
 		System.out.println("update " + this.getName());
