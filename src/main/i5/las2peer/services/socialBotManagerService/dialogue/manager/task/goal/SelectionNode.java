@@ -158,7 +158,7 @@ public class SelectionNode extends Node implements Fillable {
 	}
 
 	@Override
-	public void invariant() {
+	protected void invariant() {
 		assert this.slot != null : "slot of value node is null";
 		assert this.children != null : "children map is null";
 		assert !this.children.isEmpty() : "selection node has no children";

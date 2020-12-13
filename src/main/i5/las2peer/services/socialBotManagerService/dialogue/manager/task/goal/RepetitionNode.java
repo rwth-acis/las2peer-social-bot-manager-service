@@ -192,7 +192,7 @@ public class RepetitionNode extends Node implements Slotable {
 	}
 
 	@Override
-	public void invariant() {
+	protected void invariant() {
 		assert this.slot != null : "slot is null";
 		assert this.valueChildren != null : "valueChildren are null";
 		for (Node node : this.valueChildren) {

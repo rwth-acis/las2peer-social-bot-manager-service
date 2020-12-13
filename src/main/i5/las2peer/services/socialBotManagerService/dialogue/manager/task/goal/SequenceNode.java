@@ -99,7 +99,7 @@ public class SequenceNode extends Node {
 	}
 
 	@Override
-	public void invariant() {
+	protected void invariant() {
 		assert this.children != null : "children are null";
 		assert !this.children.isEmpty() : "sequence node has no children";
 	}

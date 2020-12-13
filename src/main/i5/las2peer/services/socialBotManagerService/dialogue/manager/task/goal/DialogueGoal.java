@@ -59,6 +59,24 @@ public class DialogueGoal {
 
 		return true;
 	}
+	
+	/**
+	 * @param value
+	 * @return true if slot was filled. false if value does not match the slot.
+	 */
+	public boolean fill(Slot slot, String value) {
+
+		assert slot != null : "slot parameter is null";
+		assert value != null : "value parameter is null";		
+		assert this.contains(slot);
+		invariant();
+		
+		String name = slot.getName();
+		Fillable node = this.getFillable(name);
+		this.fill(node, value);
+
+		return true;
+	}
 
 	/**
 	 * @return true if slot was deleted. false if slot was not filled.
@@ -68,6 +86,22 @@ public class DialogueGoal {
 		assert node != null : "slot parameter is null";
 		invariant();
 
+		node.clear();
+
+		return true;
+	}
+	
+	/**
+	 * @return true if slot was deleted. false if slot was not filled.
+	 */
+	public boolean delete(Slot slot) {
+
+		assert slot != null : "slot parameter is null";
+		assert this.contains(slot);
+		invariant();
+
+		String name = slot.getName();
+		Fillable node = this.getFillable(name);
 		node.clear();
 
 		return true;
@@ -175,6 +209,17 @@ public class DialogueGoal {
 		return node.getValue();
 
 	}
+	
+	public String getValue(Slot slot) {
+
+		assert slot != null : "slot parameter is null";
+		assert this.contains(slot) : "node is not contained";
+
+		String name = slot.getName();
+		Fillable node = this.getFillable(name);
+		return node.getValue();
+
+	}
 
 	/**
 	 * @return a slot that is not filled yet.
@@ -196,6 +241,14 @@ public class DialogueGoal {
 
 	public Frame getFrame() {
 		return this.root.getFrame();
+	}
+	
+	public RootNode getRoot() {
+		return this.root;
+	}
+	
+	public NodeList getAll() {
+		return this.root.getAll();
 	}
 
 	public OpenAPIAction getOpenAPIAction() {
@@ -305,17 +358,13 @@ public class DialogueGoal {
 		this.root.getAll().print();
 	}
 
-	public RootNode getRoot() {
-		return this.root;
-	}
-
 	public void invariant() {
 		assert this.root != null : "no root node";
 	}
 
 	public JSONObject toBodyJSON() {
 
-		return this.getRoot().toBodyJSON();
+		return this.root.toBodyJSON();
 	}
 
 }

@@ -2,8 +2,8 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import java.util.List;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RootNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
@@ -17,42 +17,42 @@ public class DialogueActGenerator {
 
 	//// Frame Dialogue Acts
 
-	public DialogueAct getReqConfAct(RootNode root) {
+	public DialogueAct getReqConfAct(DialogueGoal goal) {
 
-		assert root != null : "node parameter is null";
-		assert root.getFrame() != null : "root node has no frame";
-		assert root.isReady() : "goal is not ready yet";
+		assert goal != null : "node parameter is null";
+		assert goal.getFrame() != null : "root node has no frame";
+		assert goal.isReady() : "goal is not ready yet";
 
 		// intent and entities
 		DialogueAct act = new DialogueAct();
-		act.setIntent(root.getFrame().getReqConfIntent());
+		act.setIntent(goal.getFrame().getReqConfIntent());
 		act.setIntentType(DialogueActType.REQCONF_FRAME);
-		List<Fillable> values = root.getAll().getFilledValues();
+		List<Fillable> values = goal.getAll().getFilledValues();
 		for (Fillable node : values)
 			act.addEntity(node.getSlot().getDisplayName(), node.getValue());
 
 		// expected input
 		ExpectedInput input = new ExpectedInput();
-		input.setIntend(root.getFrame().getConfirmIntent());
+		input.setIntend(goal.getFrame().getConfirmIntent());
 		input.setType(InputType.Confirmation);
 		act.setExpected(input);
 		return (act);
 	}
 
-	public DialogueAct getReqOptionalAct(RootNode root) {
+	public DialogueAct getReqOptionalAct(DialogueGoal goal) {
 
-		assert root != null : "node parameter is null";
-		assert root.getFrame() != null : "root node has no frame";
-		assert root.isReady() : "goal is not ready yet";
+		assert goal != null : "node parameter is null";
+		assert goal.getFrame() != null : "root node has no frame";
+		assert goal.isReady() : "goal is not ready yet";
 
 		// intent and entities
 		DialogueAct act = new DialogueAct();
-		act.setIntent(root.getFrame().getReqConfIntent() + "_optional");
+		act.setIntent(goal.getFrame().getReqConfIntent() + "_optional");
 		act.setIntentType(DialogueActType.REQCONF_FRAME_OPTIONAL);
 
 		// expected input
 		ExpectedInput input = new ExpectedInput();
-		input.setIntend(root.getFrame().getConfirmIntent() + "_optional");
+		input.setIntend(goal.getFrame().getConfirmIntent() + "_optional");
 		input.setType(InputType.Confirmation);
 		act.setExpected(input);
 		return (act);

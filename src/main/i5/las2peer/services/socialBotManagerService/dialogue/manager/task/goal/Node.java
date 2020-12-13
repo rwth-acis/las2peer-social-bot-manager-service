@@ -10,7 +10,7 @@ public abstract class Node {
 
     public abstract boolean isConfirmed();
 
-    public abstract void invariant();
+    protected abstract void invariant();
 
     public abstract NodeList getAll();
 

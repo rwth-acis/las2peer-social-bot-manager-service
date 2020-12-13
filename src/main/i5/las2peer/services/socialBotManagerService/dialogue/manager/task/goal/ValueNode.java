@@ -130,7 +130,7 @@ public class ValueNode extends Node implements Fillable {
 	}
 
 	@Override
-	public void invariant() {
+	protected void invariant() {
 		assert this.slot != null : "slot of value node is null";
 		if (this.value != null)
 			assert this.slot.validate(this.getValue()) : "slot " + this.slot.getName() + " filled with invalid value "

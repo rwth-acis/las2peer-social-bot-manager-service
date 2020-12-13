@@ -139,7 +139,7 @@ public class MultiValueNode extends Node implements Fillable {
 	}
 
 	@Override
-	public void invariant() {
+	protected void invariant() {
 		assert this.slot != null : "slot of value node is null";
 		assert this.values != null : "values list is null";
 

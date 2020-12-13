@@ -52,7 +52,7 @@ public class DialogueGoalTest {
 	public void testFill() {
 
 		DialogueGoal goal = new DialogueGoal(frame);
-		assertEquals(6, goal.getRoot().getAll().size());
+		assertEquals(6, goal.getAll().size());
 		assertEquals(2, goal.getRoot().getChildren().size());
 
 		goal.print();

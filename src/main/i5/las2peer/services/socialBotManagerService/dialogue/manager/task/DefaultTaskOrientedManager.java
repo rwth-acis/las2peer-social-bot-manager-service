@@ -59,7 +59,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 			if (semantic.getIntentType() == IntentType.DENY) {
 				rep.close();
 				if (goal.isFull())
-					return gen.getReqConfAct(goal.getRoot());
+					return gen.getReqConfAct(goal);
 				return requestNextSlot();
 			}
 		}
@@ -84,16 +84,16 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 				return gen.getReqConfArrayAct(node);
 
 			} else if (!optional && goal.isReady()) {
-				System.out.println("size fillable: " + goal.getRoot().getAll().Fillables().size());
-				if (goal.getRoot().getAll().Fillables().size() < 2)
+				System.out.println("size fillable: " + goal.getAll().Fillables().size());
+				if (goal.getAll().Fillables().size() < 2)
 					return perform();
-				System.out.println("size fillable: " + goal.getRoot().getAll().Fillables().size());
-				return gen.getReqConfAct(goal.getRoot());
+				System.out.println("size fillable: " + goal.getAll().Fillables().size());
+				return gen.getReqConfAct(goal);
 			}
 
 			// check if full
 			if (goal.isFull())
-				return gen.getReqConfAct(goal.getRoot());
+				return gen.getReqConfAct(goal);
 
 			return requestNextSlot();
 
@@ -113,7 +113,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 
 				// ask if optional slots should be filled
 				if (!goal.isFull() && goal.isReady()) {
-					act = gen.getReqOptionalAct(goal.getRoot());
+					act = gen.getReqOptionalAct(goal);
 					this.optional = true;
 					return act;
 				}
@@ -152,7 +152,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 
 				// check if ready
 				if (!optional && goal.isReady())
-					return gen.getReqConfAct(goal.getRoot());
+					return gen.getReqConfAct(goal);
 
 				// request next slot
 				return requestNextSlot();
