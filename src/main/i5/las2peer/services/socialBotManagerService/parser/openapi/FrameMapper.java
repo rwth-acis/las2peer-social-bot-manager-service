@@ -99,6 +99,9 @@ public class FrameMapper {
 			}
 		else
 			slot.setInputType(InputType.Free);
+		
+		if(attr.isFile())
+			slot.setInputType(InputType.File);
 
 		if(attr.getEntity() != null)
 			slot.setEntity(attr.getEntity());

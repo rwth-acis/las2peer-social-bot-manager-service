@@ -551,7 +551,7 @@ public class BotParser {
 					// ...Action Parameter
 					if (sfaList.containsKey(target)) {
 						ServiceFunctionAttribute attribute = sfaList.get(target);
-						attribute.setFile(true);
+						attribute.setFile(file);
 					}
 
 					// Action generates Parameter

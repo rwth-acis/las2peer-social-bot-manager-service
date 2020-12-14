@@ -9,6 +9,7 @@ public class ChatMessage {
 	private String text;
 	private String command;
 	private double timestamp;
+	private String fileContent;
 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
@@ -72,5 +73,13 @@ public class ChatMessage {
 	@Override
 	public String toString() {
 		return "ChatMessage [channel=" + channel + ", text=" + text + "]";
+	}
+
+	public String getFileContent() {
+		return fileContent;
+	}
+
+	public void setFileContent(String fileContent) {
+		this.fileContent = fileContent;
 	}
 }

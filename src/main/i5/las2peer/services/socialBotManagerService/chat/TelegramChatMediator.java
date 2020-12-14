@@ -1,22 +1,32 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.OptionalLong;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.io.IOUtils;
+
 import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.File;
 import com.pengrad.telegrambot.model.request.ChatAction;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardRemove;
+import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendChatAction;
 import com.pengrad.telegrambot.request.SendDocument;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
+import com.pengrad.telegrambot.response.GetFileResponse;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import net.minidev.json.JSONObject;
 
@@ -33,7 +43,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://9556fd18f3e0.ngrok.io";
+	private final static String url = "https://07006056523b.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -57,25 +67,38 @@ public class TelegramChatMediator extends EventChatMediator {
 	@Override
 	public ChatMessage handleEvent(JSONObject event) {
 		assert event != null : "jsonobject event parameter is null";
-
+		
 		try {
-
 			JSONObject message = (JSONObject) event.get("message");
 			JSONObject chat = (JSONObject) message.get("chat");
 			JSONObject from = (JSONObject) message.get("from");
+			JSONObject document = (JSONObject) message.get("document");
 			String channel = chat.getAsString("id");
 			String user = from.getAsString("first_name");
 			String text = message.getAsString("text");
 			String timestamp = message.getAsString("date");
 
-			if (channel == null || user == null || text == null || timestamp == null)
+			if (channel == null || user == null || (text == null && document == null) || timestamp == null)
 				throw new InvalidChatMessageException("missing message fields");
 
 			this.showAction(channel, ChatAction.typing);
 			ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
+			
+			// message with document
+			if(document != null) {				
+				String fileName = document.getAsString("file_name");
+				String mimeType = document.getAsString("mime_type");
+				String fileId = document.getAsString("file_id");
+				String fileUniqueId = document.getAsString("file_unique_id");
+				String fileSize = document.getAsString("file_size");				
+				MessageFile fileMessage = getFile(fileId);
+				fileMessage.setName(fileName);
+				chatMessage.setFileContent(fileMessage.getDataString());
+				chatMessage.setText(fileMessage.getDataString());
+			}			
 
 			// check command
-			if (text.startsWith("/")) {
+			else if (text.startsWith("/")) {
 				String command = text.substring(1).split(" ")[0];
 				System.out.println(command);
 				chatMessage.setCommand(command);
@@ -295,6 +318,30 @@ public class TelegramChatMediator extends EventChatMediator {
 		System.out.println(String.valueOf(res.isOk()) + res.errorCode() + res.description());
 	}
 
+	private MessageFile getFile(String fileId) {
+		
+		GetFile request = new GetFile(fileId);
+		GetFileResponse response = bot.execute(request);			
+		File file = response.file();
+		System.out.println("FILE RECEIVED: " + file);
+		String path = "https://api.telegram.org/file/bot" + authToken + "/" + file.filePath();
+		URL url;
+		String data = null;
+		try {
+			url = new URL(path);
+			data = IOUtils.toString(url);
+		
+		} catch (MalformedURLException e) {			
+			e.printStackTrace();				
+		} catch (IOException e) {		
+			e.printStackTrace();
+		}
+		
+		MessageFile res = new MessageFile();
+		res.setData(data);
+		return res;
+	}
+	
 	/**
 	 * Shows an indication to the user about what the next bots action is
 	 * 

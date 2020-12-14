@@ -8,7 +8,6 @@ public abstract class DefaultMessageGenerator extends LanguageGenerator {
 	public ResponseMessage parse(DialogueAct act) {
 
 		assert act != null : "dialogue act parameter is null";
-		assert act.getIntent() != null : "dialogue act has no intent";
 		assert act.getIntentType() != null : "no intent type specified";
 
 		System.out.println("get default response for intent " + act.getIntent() + " of type " + act.getIntentType());

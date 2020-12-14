@@ -81,13 +81,17 @@ public class DialogueActGenerator {
 		input.setType(slot.getInputType());
 		input.setIntend(slot.getInformIntent());
 		input.setEntity(slot.getEntity());
+		
 		if (slot.getInputType() == InputType.Enum) {
 			slot.update();
 			List<String> enumList = slot.getEnumList();
-			for (String enu : enumList) {
+			for (String enu : enumList)
 				input.addEnum(enu);
-			}
 		}
+		
+		if (slot.getInputType() == InputType.File && slot.getParameter().getFile() != null)
+			act.addEntity("fileType", slot.getParameter().getFile().getType());
+
 		act.setExpected(input);
 		return act;
 
@@ -145,7 +149,7 @@ public class DialogueActGenerator {
 	}
 
 	// System acts
-	
+
 	public DialogueAct getMainMenuAct(Bot bot, List<Command> operations) {
 
 		assert operations != null : "commands is null";
@@ -158,17 +162,17 @@ public class DialogueActGenerator {
 			operation.invariant();
 			act.addEntity(operation.getName(), operation.getDescription());
 		}
-		
-		if(bot != null) {
+
+		if (bot != null) {
 			act.addEntity("botName", bot.getName());
 			act.addEntity("botDescription", bot.getDescription());
 		}
-		
+
 		return act;
 	}
-	
+
 	// Invalid input acts
-	
+
 	public static DialogueAct getInvalidValueAct(ExpectedInput input) {
 
 		DialogueAct act = new DialogueAct();
@@ -184,22 +188,21 @@ public class DialogueActGenerator {
 		act.setIntentType(DialogueActType.ERROR_COMMAND_UNKNOWN);
 		return act;
 	}
-	
+
 	// Internal error acts
-	
+
 	public static DialogueAct getNLUErrorAct() {
-		
+
 		DialogueAct act = new DialogueAct();
-		act.setIntentType(DialogueActType.ERROR_NLU);		
-		return act;		
+		act.setIntentType(DialogueActType.ERROR_NLU);
+		return act;
 	}
-	
-	
+
 	public static DialogueAct getSystemErrorAct() {
-		
+
 		DialogueAct act = new DialogueAct();
-		act.setIntentType(DialogueActType.ERROR_SYSTEM);	
-		return act;		
+		act.setIntentType(DialogueActType.ERROR_SYSTEM);
+		return act;
 	}
-	
+
 }

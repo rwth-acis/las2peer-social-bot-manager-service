@@ -7,6 +7,7 @@ import java.util.List;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
@@ -35,10 +36,10 @@ public class ServiceFunctionAttribute {
 	private String contentFill;
 	// this attribute will dissapear as everything will be done with a single
 	// content attribute
-	private String nluQuizContent;
-	private boolean file;
+	private String nluQuizContent;	
 	private String entityKeyword;
 	private String slotName;
+	private MessageFile file;
 
 	// retrieved by swagger
 	private String description;
@@ -390,10 +391,14 @@ public class ServiceFunctionAttribute {
 	}
 
 	public boolean isFile() {
-		return file;
+		return this.file != null;
 	}
 
-	public void setFile(boolean file) {
+	public MessageFile getFile() {
+		return this.file;
+	}
+	
+	public void setFile(MessageFile file) {
 		this.file = file;
 	}
 
@@ -443,7 +448,9 @@ public class ServiceFunctionAttribute {
 			this.setEntity(new IntentEntity(attr.getEntity()));
 		if (attr.getSlotName() != null)
 			this.setSlotName(attr.getSlotName());
-
+		if (attr.getFile() != null)
+			this.setFile(attr.getFile());
+		
 		if (attr.hasDynamicEnums())
 			this.setContentType("enum");
 

@@ -76,6 +76,12 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 		case Word:
 			message = "Please answer in one word without spaces \n";
 			break;
+		case File:
+			message = "Please send me a file";
+			if(act.getEntities().containsKey("fileType"));
+			String type = act.getEntities().get("fileType");
+			message = message + " in " + type + " format";		
+			break;
 		default:
 			break;		
 		}
@@ -144,7 +150,7 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 			message = message + "Example:    \t" + entities.get("example") + "\n";
 
 		if (act.hasExpected() && act.getExpected().getType() != null)
-			message = message.concat("\n" + this.InputTypeMessage(act.getExpected()) + "\n");
+			message = message.concat("\n" + this.InputTypeMessage(act) + "\n");
 		if (act.getExpected().hasEnums()) {
 			List<String> enums = act.getExpected().getEnums();
 			message = message.concat(enums.get(0));
@@ -179,7 +185,10 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 		return res;
 	}
 
-	protected String InputTypeMessage(ExpectedInput inputType) {
+	protected String InputTypeMessage(DialogueAct act) {
+		assert act != null;
+		assert act.getExpected() != null;
+		ExpectedInput inputType = act.getExpected();
 		assert inputType != null : "inputType parameter is null";
 		assert inputType.getType() != null : "inputType has no type";
 
@@ -207,6 +216,12 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 			break;
 		case Word:
 			message = "Please answer with one word";
+			break;
+		case File:
+			message = "Please send me a file";
+			if(act.getEntities().containsKey("fileType"));
+			String type = act.getEntities().get("fileType");
+			message = message + " in " + type + " format";			
 			break;
 		default:
 			break;

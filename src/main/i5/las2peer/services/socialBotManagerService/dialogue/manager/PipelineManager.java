@@ -182,7 +182,7 @@ public class PipelineManager extends MetaDialogueManager {
 			}
 			i++;
 		}
-		
+
 		// use fallback nlu
 		if (intent == null) {
 			LanguageUnderstander fallbackNLU = new FallbackNlu();
@@ -235,6 +235,19 @@ public class PipelineManager extends MetaDialogueManager {
 
 			} else
 				return DialogueActGenerator.getInvalidValueAct(expected);
+
+		} else if (expectedType == InputType.File && message.getMessage().getFileContent() != null) {
+			
+			System.out.println("Expected input is file");
+			String fileData = message.getMessage().getFileContent();
+			semantic.setKeyword(expected.getIntend());
+			semantic.setIntentType(semantic.deriveType());
+			Entity entity = new Entity(expected.getEntity(), fileData);
+			semantic.addEntity(expected.getEntity(), entity);
+			message.setIntent(semantic);
+
+			if (dialogue.getActiveManager() != null)
+				return dialogue.handle(dialogue.getActiveManager(), message);
 
 		} else if (expected.validate(semantic, text))
 

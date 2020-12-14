@@ -137,7 +137,7 @@ public class GermanMessageGenerator extends DefaultMessageGenerator {
 			message = message + "Beispiel:    \t" + entities.get("example") + "\n";
 
 		if (act.hasExpected() && act.getExpected().getType() != null)
-			message = message.concat("\n" + this.InputTypeMessage(act.getExpected()) + "\n");
+			message = message.concat("\n" + this.InputTypeMessage(act) + "\n");
 		if (act.getExpected().hasEnums()) {
 			List<String> enums = act.getExpected().getEnums();
 			message = message.concat(enums.get(0));
@@ -172,7 +172,8 @@ public class GermanMessageGenerator extends DefaultMessageGenerator {
 		return res;
 	}
 
-	protected String InputTypeMessage(ExpectedInput inputType) {
+	protected String InputTypeMessage(DialogueAct act) {
+		ExpectedInput inputType = act.getExpected();
 		assert inputType != null : "inputType parameter is null";
 		assert inputType.getType() != null : "inputType has no type";
 
@@ -200,6 +201,9 @@ public class GermanMessageGenerator extends DefaultMessageGenerator {
 			break;
 		case Word:
 			message = "Bitte antworte mit einem zusammenhängenden Wort";
+			break;
+		case File:
+			message = "Bitte sende mir eine Datei";
 			break;
 		default:
 			break;
