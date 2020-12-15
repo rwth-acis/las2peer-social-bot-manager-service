@@ -135,9 +135,9 @@ public class OpenAPIConnector {
 		assert sf.getServiceName() != null : "no service name";
 
 		String bodyContent = "";
-		if (action.getBodyParameter() != null)
+		if (action.getBodyParameter() != null) {
 			bodyContent = action.getBodyParameter().toJSONString();
-
+		}
 		String consumes = sf.getConsumes();
 		if (consumes == null || consumes.contentEquals("")) {
 			if (sf.getHttpMethod().equalsIgnoreCase("GET"))

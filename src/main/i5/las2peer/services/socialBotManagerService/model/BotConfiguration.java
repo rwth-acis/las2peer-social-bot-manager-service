@@ -6,14 +6,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
+import i5.las2peer.services.socialBotManagerService.parser.BotModelInfo;
 
 public class BotConfiguration {
 
 	private Map<String, VLE> vles;
 
 	private Map<String, LanguageUnderstander> nlus;
+	
+	private BotModelInfo botModelInfo;
 
 	public BotConfiguration() {
 		vles = new HashMap<>();
@@ -66,6 +68,14 @@ public class BotConfiguration {
 		this.nlus.put(nlu.getUrl(), nlu);
 	}
 
+	public BotModelInfo getBotModelInfo() {
+		return botModelInfo;
+	}
+
+	public void setBotModelInfo(BotModelInfo botModelInfo) {
+		this.botModelInfo = botModelInfo;
+	}
+	
 	public Collection<Bot> getActiveBots() {
 
 		Collection<Bot> bots = new HashSet<>();

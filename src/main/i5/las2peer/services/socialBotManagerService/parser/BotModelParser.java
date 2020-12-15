@@ -33,6 +33,7 @@ import i5.las2peer.services.socialBotManagerService.parser.drawing.SpringEmbedde
 
 public class BotModelParser {
 
+	BotModelInfo info = new BotModelInfo();
 	Map<BotModelNode, String> nodes = new LinkedHashMap<>();
 	List<BotModelNode> messengers = new ArrayList<>();
 	Map<String, BotModelNode> incomingMessages = new HashMap<>();
@@ -57,6 +58,9 @@ public class BotModelParser {
 
 	public BotModel parse(Bot bot, BotConfiguration config) {
 
+		if(config.getBotModelInfo() != null)
+			this.info = config.getBotModelInfo();
+		
 		BotModel model = new BotModel();
 		model.setAttributes(addBotModelAttributes());
 
@@ -72,7 +76,9 @@ public class BotModelParser {
 		// Bot
 		BotModelNode botNode = addNode("Bot");
 		assert bot.getName() != null : "bot has no name";
+		addAttribute(botNode, "Language", "English");
 		addAttribute(botNode, "Name", bot.getName());
+		addAttribute(botNode, "Description", "des");
 		addEdge(vleNode, botNode, "has");
 
 		// NLU Knowledge
@@ -89,7 +95,8 @@ public class BotModelParser {
 			}
 		}
 
-		BotModelNode nluNode = addNode("NLU Knowledge");
+		BotModelNode nluNode = addNode("Knowledge");
+		addAttribute(nluNode, "Type", "Understanding");
 		addAttribute(nluNode, "Name", nluName);
 		addAttribute(nluNode, "ID", nluID);
 		addAttribute(nluNode, "URL", nluURL);
@@ -137,7 +144,7 @@ public class BotModelParser {
 
 						BotModelNode inNode = incomingMessages.get(intent);
 						BotModelNode outNode = addNode("Chat Response");
-					//	addAttribute(outNode, "Message", message.getResponse());
+						addAttribute(outNode, "Message", message.getResponse());
 						addEdge(inNode, outNode, "triggers");
 
 					} else {
@@ -147,7 +154,7 @@ public class BotModelParser {
 						addAttribute(inNode, "NLU ID", "0");
 
 						BotModelNode outNode = addNode("Chat Response");
-					//	addAttribute(outNode, "Message", message.getResponse());
+						addAttribute(outNode, "Message", message.getResponse());
 
 						addEdge(inNode, outNode, "triggers");
 						addMessengerEdges(inNode, "generates");
@@ -161,12 +168,12 @@ public class BotModelParser {
 				AccessServiceFunction as = (AccessServiceFunction) function;
 
 				BotModelNode frameNode = addNode("Frame");
-				//addAttribute(frameNode, "intent", as.getOperationID());
+				// addAttribute(frameNode, "intent", as.getOperationID());
 
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "Service");
-				//addAttribute(actionNode, "Function Name", as.getOperationID());
-				//addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
+				// addAttribute(actionNode, "Function Name", as.getOperationID());
+				// addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
 
 				addEdge(frameNode, actionNode, "triggers");
 				addMessengerEdges(frameNode, "generates");
@@ -213,7 +220,10 @@ public class BotModelParser {
 		String nodeId = nodes.get(node);
 		LinkedHashMap<String, BotModelNodeAttribute> attributes = node.getAttributes();
 		BotModelNodeAttribute attr = getNodeAttribute(nodeId, name, value);
-		attributes.put(getID(), attr);
+		String id = info.getAttrId(node.getType(), name);
+		if (id == null)
+			id = getID();
+		attributes.put(id, attr);
 		node.setAttributes(attributes);
 
 	}
@@ -313,18 +323,6 @@ public class BotModelParser {
 	}
 
 	public BotModel order(BotModel model) {
-
-		/*
-		 * int z = 16001; int i = 4200; int j = 4200;
-		 * 
-		 * for (BotModelNode node : model.getNodes().values()) {
-		 * 
-		 * node.setzIndex(z); node.setLeft(i); node.setTop(j);
-		 * 
-		 * z++; i = i + 80; j = j + 80;
-		 * 
-		 * }
-		 */
 
 		DrawingAlgorithm algorithm = new SpringEmbedders(model);
 		algorithm.execute();

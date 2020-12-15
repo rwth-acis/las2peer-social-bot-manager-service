@@ -111,6 +111,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
+import i5.las2peer.services.socialBotManagerService.parser.BotModelInfo;
 import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
@@ -2129,6 +2130,44 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			return Response.serverError().entity("nlu creation failed").build();
+
+		}
+		
+		/**
+		 * @return ok
+		 */
+		@POST
+		@Path("/metamodel")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Creates NLU model", notes = "creates the nlu model.")
+		public Response uploadMetaModel(@ApiParam(value = "botModel", required = true) String botModel) {
+			
+			String inc = "";
+			if(botModel.length() > 100)
+				inc = botModel.substring(0, 99);
+			else
+				inc = botModel;
+			System.out.println("recived botModel" + inc);
+			System.out.println("recived botModel string: " + botModel.length()); 	
+
+			
+			try {
+				
+				Gson gson = new Gson();
+				BotModel model =  gson.fromJson(botModel, BotModel.class);
+				BotModelInfo info = new BotModelInfo();
+				info.parse(model);
+				getConfig().setBotModelInfo(info);
+				
+				System.out.println("new bot meta model uploaded");
+				return Response.ok().entity("Model was successfully uploaded").build();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.ok().entity("upload meta model failed").build();
 
 		}
 

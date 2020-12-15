@@ -43,7 +43,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://07006056523b.ngrok.io";
+	private final static String url = "https://d431d79bc91c.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -323,7 +323,7 @@ public class TelegramChatMediator extends EventChatMediator {
 		GetFile request = new GetFile(fileId);
 		GetFileResponse response = bot.execute(request);			
 		File file = response.file();
-		System.out.println("FILE RECEIVED: " + file);
+		System.out.println("file received");
 		String path = "https://api.telegram.org/file/bot" + authToken + "/" + file.filePath();
 		URL url;
 		String data = null;

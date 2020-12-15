@@ -228,18 +228,19 @@ public class OpenAPIReaderV2 {
 				ServiceFunctionAttribute attr = null;
 
 				// Body Parameter
-				if (parameter.getIn().contentEquals("body")) {
-					
+				if (parameter.getIn().contentEquals("body")
+						&& ((BodyParameter) parameter).getSchema().getReference() != null) {
+
 					String ref = ((BodyParameter) parameter).getSchema().getReference();
 					String name = ref.substring("#/definitions/".length());
 					attr = new ServiceFunctionAttribute("v21", name);
 					attr.setParameterType(ParameterType.BODY);
 					attr = addChildrenAttributes(swagger, name, attr);
 					action.addAttribute(attr);
-					
-				// Path and Query Parameter
+
+					// Path and Query Parameter
 				} else {
-					
+
 					attr = new ServiceFunctionAttribute("v22", parameter.getName());
 					action.addAttribute(attr);
 
@@ -254,6 +255,9 @@ public class OpenAPIReaderV2 {
 
 					if (parameter.getIn().contentEquals("query"))
 						attr.setParameterType(ParameterType.QUERY);
+					
+					if (parameter.getIn().contentEquals("body"))
+						attr.setParameterType(ParameterType.BODY);
 
 				}
 

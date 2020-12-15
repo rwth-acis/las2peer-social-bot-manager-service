@@ -1,7 +1,10 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 
 public class ValueNode extends Node implements Fillable {
 
@@ -14,8 +17,8 @@ public class ValueNode extends Node implements Fillable {
 		assert slot != null : "slot parameter is null";
 
 		this.slot = slot;
-		
-		if(this.slot.getParameter().hasContent()) {
+
+		if (this.slot.getParameter().hasContent()) {
 			this.value = this.slot.getParameter().getContent();
 			this.confirmed = true;
 		} else {
@@ -140,15 +143,27 @@ public class ValueNode extends Node implements Fillable {
 	@Override
 	public JSONObject toBodyJSON() {
 		invariant();
-				
+
 		if (!this.isBodyAttribute())
 			return null;
-		
-		if(!this.isFilled())
+
+		if (!this.isFilled())
 			return null;
-		
-		JSONObject res = new JSONObject();	
-		res.put(this.getAPIName(), this.getValue());		
+
+		if (this.slot.getInputType() == InputType.File) {
+			try {
+				JSONParser parser = new JSONParser(JSONParser.MODE_RFC4627);
+				JSONObject res = (JSONObject) parser.parse(this.getValue());
+				if (res != null)
+					return res;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		JSONObject res = new JSONObject();
+		res.put(this.getAPIName(), this.getValue());
 		return res;
 	}
 

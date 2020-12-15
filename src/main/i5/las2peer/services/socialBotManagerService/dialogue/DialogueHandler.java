@@ -56,8 +56,9 @@ public class DialogueHandler {
 		assert message.getText() != null : "message has no text";
 		assert message.getChannel() != null : "message has no channel";
 		invariant();
-
-		System.out.println("Handle message \"" + message.getText() + "\" in channel " + message.getChannel());
+		
+		if(!message.isFile())
+			System.out.println("Handle message \"" + message.getText() + "\" in channel " + message.getChannel());
 		if (message == null || message.getText() == null || message.getChannel() == null)
 			return null;
 

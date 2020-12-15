@@ -79,6 +79,10 @@ public class ChatMessage {
 		return fileContent;
 	}
 
+	public boolean isFile() {
+		return this.fileContent != null && !this.fileContent.contentEquals("");
+	}
+	
 	public void setFileContent(String fileContent) {
 		this.fileContent = fileContent;
 	}

@@ -60,6 +60,9 @@ public class PipelineManager extends MetaDialogueManager {
 		if (this.messenger == null)
 			this.messenger = messenger;
 
+		if(message.isFile())
+			return handleFile(message, dialogue);
+		
 		// Understanding
 		Map<String, LanguageUnderstander> nlus = messenger.getBot().getNLUs();
 		MessageInfo info = null;
@@ -75,6 +78,30 @@ public class PipelineManager extends MetaDialogueManager {
 			act = handleCommandManagement(info, dialogue, messenger);
 		else
 			act = handleManagement(info, dialogue, messenger);
+		assert act != null : "act is null";
+		System.out.println(act);
+
+		// Generation
+		Map<String, LanguageGenerator> nlgs = messenger.getBot().getNLGs();
+		ResponseMessage res = handleGeneration(act, dialogue, message, nlgs);
+		assert res != null : "res is null";
+		res.setChannel(message.getChannel());
+
+		return res;
+	}
+
+	public ResponseMessage handleFile(ChatMessage message, Dialogue dialogue) {
+
+		assert message != null : "message is null";
+		assert dialogue != null : "dialogue is null";
+		assert messenger != null : "messenger is null";
+		assert messenger.getBot() != null : "messenger has no bot";
+		assert message.isFile() : "message is no file";
+
+		// Management
+		MessageInfo info = new MessageInfo();
+		info.setMessage(message);
+		DialogueAct act = handleManagement(info, dialogue, messenger);
 		assert act != null : "act is null";
 		System.out.println(act);
 

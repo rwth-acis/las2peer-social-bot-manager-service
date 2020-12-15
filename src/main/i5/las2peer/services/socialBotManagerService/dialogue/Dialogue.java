@@ -96,6 +96,9 @@ public class Dialogue {
 		if(!(manager instanceof TaskOrientedManager))
 			return intent;
 		
+		if(info.getMessage().isFile())
+			return intent;
+		
 		TaskOrientedManager taskManager = (TaskOrientedManager) manager;
 		String utterance = info.getMessage().getText();
 		Collection<Entity> entities = taskManager.getDialogueGoal().getEnums(utterance);			
