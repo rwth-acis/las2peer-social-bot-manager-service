@@ -153,11 +153,11 @@ public class DialogueActGenerator {
 	public DialogueAct getMainMenuAct(Bot bot, List<Command> operations) {
 
 		assert operations != null : "commands is null";
-		assert !operations.isEmpty() : "commands are empty";
-
+		
 		DialogueAct act = new DialogueAct();
 		act.setIntent("start");
 		act.setIntentType(DialogueActType.SYSTEM_HOME);
+		
 		for (Command operation : operations) {
 			operation.invariant();
 			act.addEntity(operation.getName(), operation.getDescription());

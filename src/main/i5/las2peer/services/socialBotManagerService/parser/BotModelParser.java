@@ -86,7 +86,7 @@ public class BotModelParser {
 		String nluID = "0";
 		String nluURL = "http://localhost:5005";
 
-		Collection<LanguageUnderstander> nlus = config.getNlus().values();
+		Collection<LanguageUnderstander> nlus = config.getNLUs().values();
 
 		for (LanguageUnderstander nlu : nlus) {
 			if (nlu.getName().contentEquals(nluName)) {

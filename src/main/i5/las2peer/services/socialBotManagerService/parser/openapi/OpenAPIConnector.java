@@ -19,6 +19,7 @@ import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
@@ -117,6 +118,9 @@ public class OpenAPIConnector {
 
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
+		
+		if(action.getFunction().getServiceType() == ServiceType.SERVICE)
+			client.setLogin("alice", "pwalice");
 
 		return sendRequest(client, action);
 	}
@@ -349,6 +353,6 @@ public class OpenAPIConnector {
 
 		return res;
 	}
-
-
+	
+	
 }

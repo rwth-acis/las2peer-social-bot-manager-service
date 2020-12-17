@@ -22,8 +22,11 @@ public enum DialogueActType {
     ERROR_COMMAND_UNKNOWN("error_command_unkown"),
     
     ERROR_SYSTEM("error_system"),	
-	ERROR_NLU("error_nlu");
+	ERROR_NLU("error_nlu"),
 
+	// selection
+	SELECTION("selection");
+	
 	String string;
 	
 	DialogueActType(String string) {

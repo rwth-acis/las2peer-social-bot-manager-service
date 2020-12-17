@@ -41,6 +41,7 @@ import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.IntentEntity;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
+import i5.las2peer.services.socialBotManagerService.model.Selection;
 import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceEvent;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -95,6 +96,7 @@ public class BotParser {
 		Map<String, Slot> slots = new HashMap<>();
 		Map<String, Domain> domains = new HashMap<>();
 		Map<String, MessageFile> files = new HashMap<>();
+		Map<String, Selection> selections  = new HashMap<>();
 
 		Map<String, Service> services = new HashMap<String, Service>();
 		Map<String, ServiceEvent> events = new HashMap<String, ServiceEvent>();
@@ -204,6 +206,11 @@ public class BotParser {
 			case "Domain":
 				Domain domain = addDomain(entry.getKey(), elem, config);
 				domains.put(entry.getKey(), domain);
+				break;
+				
+			case "Selection":
+				Selection selection = addSelection(entry.getKey(), elem, config);
+				selections.put(entry.getKey(), selection);
 				break;
 
 			case "File":
@@ -515,6 +522,12 @@ public class BotParser {
 						messenger.addFrame(frame);
 						System.out.println("messenger generates frame");
 					}
+					// ...Selection
+					if (selections.containsKey(target)) {
+						Selection selection = selections.get(target);
+						messenger.addSelection(selection);;
+						System.out.println("messenger generates selection");
+					}
 
 					// Frame generates
 				} else if (frames.containsKey(source)) {
@@ -661,7 +674,29 @@ public class BotParser {
 							}
 						}
 					}
-
+					
+					// selection triggers
+				} else if (selections.get(source) != null) {					
+					Selection selection = selections.get(source);
+					// .. Message
+					if (responses.get(target) != null) {
+						ChatResponse response = responses.get(target);
+						IncomingMessage im = new IncomingMessage("", "0");						
+						im.addResponse(response);
+						System.out.println("Selection add Message " + value + " " + im);
+						selection.addElement(value, im);						
+					}
+					// .. Frame
+					if (frames.get(target) != null) {
+						Frame frame = frames.get(target);
+						System.out.println("Selection add Frame " + value + " " + frame);
+						if(value != null)
+							selection.addElement(value, frame);
+						else
+							selection.addElement(frame.getName(), frame);
+						
+					}
+				
 					// event triggers
 				} else if (events.get(source) != null) {
 					System.out.println("Eventtriggers chat response");
@@ -680,6 +715,11 @@ public class BotParser {
 			throw new ParseBotException("Check the Content Generator connections! There are " + checkGeneratorIns
 					+ " inputs and " + checkGeneratorOuts + " outputs.");
 		}
+		
+		// Initialize dialogue handler (need connected frames)
+		for(Messenger messenger : messengers.values()) 
+			messenger.initialize();
+		
 
 		// create if then structure
 		// createIfThenStructure(tempitbList, ibList, tbList, itbList);
@@ -771,10 +811,30 @@ public class BotParser {
 				event.setName(value);
 				break;
 			}
-
 		}
-
 		return event;
+	}
+	
+	private Selection addSelection(String key, BotModelNode elem, BotConfiguration config) {
+
+		Selection selection = new Selection();
+		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			BotModelNodeAttribute subElem = subEntry.getValue();
+			BotModelValue subVal = subElem.getValue();
+			String value = subVal.getValue();
+
+			switch (subVal.getName()) {
+			case "intent":
+			case "Intent":
+				selection.setIntent(value);
+				break;
+			case "message":
+			case "Message":
+				selection.setMessage(value);
+				break;
+			}
+		}
+		return selection;
 	}
 
 	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)

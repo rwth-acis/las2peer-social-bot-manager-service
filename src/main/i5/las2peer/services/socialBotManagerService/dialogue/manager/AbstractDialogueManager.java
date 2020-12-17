@@ -11,14 +11,18 @@ public abstract class AbstractDialogueManager {
 
 	public abstract DialogueAct handle(Intent inputSemantic);
 
-	public abstract boolean hasIntent(String intent);
+	public boolean hasIntent(String intent) {
+		return getNLUIntents().contains(intent);
+	}
 
 	public boolean hasIntent(Intent intent) {
-		return this.hasIntent(intent.getKeyword());
+		return hasIntent(intent.getKeyword());
 	}
 
 	public abstract Collection<String> getNLUIntents();
 
+	public abstract Collection<String> getNLGIntents();
+	
 	public abstract void reset();
 
 	public String getStartIntent() {

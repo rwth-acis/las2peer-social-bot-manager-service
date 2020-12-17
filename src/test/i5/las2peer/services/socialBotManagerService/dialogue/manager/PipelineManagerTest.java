@@ -2,16 +2,13 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
-import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.Dialogue;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
@@ -56,7 +53,7 @@ public class PipelineManagerTest {
 		Dialogue dialogue = new Dialogue(messenger);
 		ChatMessage message = new ChatMessage("channel123", "user123", "message123");
 		
-		PipelineManager manager = new PipelineManager();
+		PipelineManager manager = new PipelineManager(messenger);
 		ResponseMessage response = manager.handle(messenger, message, dialogue);
 		
 		assertNotNull(response);		

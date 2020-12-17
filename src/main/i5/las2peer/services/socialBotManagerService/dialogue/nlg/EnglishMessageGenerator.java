@@ -8,15 +8,15 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 
 /**
- *	Generates default messages in English language
+ * Generates default messages in English language
  *
  */
 public class EnglishMessageGenerator extends DefaultMessageGenerator {
-	
+
 	@Override
 	protected ResponseMessage getErrorSystem(DialogueAct act) {
 		assert act != null;
-		
+
 		String message = "I am sorry. I had an error. Restart conversation.";
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
@@ -25,7 +25,7 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 	@Override
 	protected ResponseMessage getErrorNLU(DialogueAct act) {
 		assert act != null;
-		
+
 		String message = "I am sorry. Currently my language understanding is not working. Please use explicit commands";
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
@@ -34,7 +34,7 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 	@Override
 	protected ResponseMessage getErrorCommandUnknown(DialogueAct act) {
 		assert act != null;
-		
+
 		String message = "Sorry, I dont know this command.";
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
@@ -43,9 +43,9 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 	@Override
 	protected ResponseMessage getErrorInvalidInput(DialogueAct act) {
 		assert act != null;
-				
+
 		String message = "This is not what i asked";
-		switch(act.getExpected().getType()) {
+		switch (act.getExpected().getType()) {
 		case Binary:
 			break;
 		case Confirmation:
@@ -78,22 +78,23 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 			break;
 		case File:
 			message = "Please send me a file";
-			if(act.getEntities().containsKey("fileType"));
+			if (act.getEntities().containsKey("fileType"))
+				;
 			String type = act.getEntities().get("fileType");
-			message = message + " in " + type + " format";		
+			message = message + " in " + type + " format";
 			break;
 		default:
-			break;		
+			break;
 		}
-				
+
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
 	}
-	
+
 	@Override
 	protected ResponseMessage getReqConfSlotProceed(DialogueAct act) {
 		assert act != null;
-				
+
 		String name = act.getEntities().get("name");
 		String message = "Do you want to add another *" + name + "*";
 		ResponseMessage res = new ResponseMessage(message);
@@ -219,9 +220,10 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 			break;
 		case File:
 			message = "Please send me a file";
-			if(act.getEntities().containsKey("fileType"));
+			if (act.getEntities().containsKey("fileType"))
+				;
 			String type = act.getEntities().get("fileType");
-			message = message + " in " + type + " format";			
+			message = message + " in " + type + " format";
 			break;
 		default:
 			break;
@@ -236,33 +238,69 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 
 		assert act != null : "dialogue act parameter is null";
 		assert act.getEntities() != null : "dialogue act has no entities";
-		
+
 		String message = "";
 		Map<String, String> entities = act.getEntities();
 		String botName = entities.get("botName");
 		String botDesc = entities.get("botDescription");
-		if(botName != null)
+		if (botName != null)
 			message = message + "Hi, I am " + botName + " 🤖 \n";
 		else
 			message = message + "Hi, I am a bot 🤖 \n";
-		
-		if(botDesc != null)
+
+		if (botDesc != null)
 			message = message + botDesc + "\n";
-		
-		message = message + "\nI can perform the following operations: \n";
-		
-		for (Entry<String, String> entity : entities.entrySet()) {
-			assert entity.getKey() != null : "entity no key";
-			assert entity.getValue() != null : "entity no value";
-			if(!entity.getKey().contentEquals("botName") && !entity.getKey().contentEquals("botDescription"))
-				message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+
+		if (!entities.isEmpty()) {
+
+			message = message + "\nI can perform the following operations: \n";
+
+			for (Entry<String, String> entity : entities.entrySet()) {
+				assert entity.getKey() != null : "entity no key";
+				assert entity.getValue() != null : "entity no value";
+				if (!entity.getKey().contentEquals("botName") && !entity.getKey().contentEquals("botDescription"))
+					message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+			}
+
+			message = message.concat(
+					"\n During conversation you can use the following commands: \n /cancel Aborts the current operation \n /revert Reverts your last input.");
 		}
-
-		message = message.concat(
-				"\n During conversation you can use the following commands: \n /cancel Aborts the current operation \n /revert Reverts your last input.");
-
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
 	}
-	
+
+	@Override
+	protected ResponseMessage getSelectionRequest(DialogueAct act) {
+		
+		assert act != null : "dialogue act parameter is null";
+		assert act.hasExpected() : "dialogue has no expected";
+		assert act.getExpected().hasEnums() : "act expected has no enums";
+
+		String message = "";
+		Map<String, String> entities = act.getEntities();
+		
+		if(entities != null && entities.containsKey("name")) {
+			String name = entities.get("name");
+			message = message + "Please select one *" + name + "*? \n\n";		
+		} else {
+			message = message + "Please select one";
+		}
+		
+		if (entities != null && entities.containsKey("description"))
+			message = message + entities.get("description") + "\n";
+
+		if (act.hasExpected() && act.getExpected().getType() != null)
+			message = message.concat("\n" + this.InputTypeMessage(act) + "\n");
+		if (act.getExpected().hasEnums()) {
+			List<String> enums = act.getExpected().getEnums();
+			message = message.concat(enums.get(0));
+			for (String enu : enums.subList(1, enums.size()))
+				message = message + ", " + enu;
+		}
+
+		ResponseMessage res = new ResponseMessage(message);
+		return res;
+		
+	}
+
 }

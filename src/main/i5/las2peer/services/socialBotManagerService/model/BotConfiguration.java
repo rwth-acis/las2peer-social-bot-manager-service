@@ -40,7 +40,7 @@ public class BotConfiguration {
 
 	public LanguageUnderstander getNLU(String name) {
 
-		for (LanguageUnderstander lu : this.getNlus().values()) {
+		for (LanguageUnderstander lu : this.getNLUs().values()) {
 			if (lu.getName().contentEquals(name))
 				return lu;
 		}
@@ -48,7 +48,7 @@ public class BotConfiguration {
 		return null;
 	}
 
-	public Map<String, LanguageUnderstander> getNlus() {
+	public Map<String, LanguageUnderstander> getNLUs() {
 
 		for (Entry<String, VLE> vleEntry : this.getVLEs().entrySet()) {
 			VLE vle = vleEntry.getValue();
@@ -60,7 +60,7 @@ public class BotConfiguration {
 		return nlus;
 	}
 
-	public void setNlus(Map<String, LanguageUnderstander> nlus) {
+	public void setNLUs(Map<String, LanguageUnderstander> nlus) {
 		this.nlus = nlus;
 	}
 
@@ -84,7 +84,6 @@ public class BotConfiguration {
 		}
 
 		return bots;
-
 	}
 
 }

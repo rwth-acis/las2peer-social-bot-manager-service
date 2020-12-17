@@ -49,11 +49,10 @@ public class OpenAPIReaderV2 {
 		try {
 			model = processModel(modelUri.getPath());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return model;
-
+		
+		return model;		
 	}
 
 	/**
@@ -439,7 +438,7 @@ public class OpenAPIReaderV2 {
 		return swagger;
 	}
 
-	public static String getDiscriminator(Swagger swagger, Model model) {
+	private static String getDiscriminator(Swagger swagger, Model model) {
 		if (model instanceof ModelImpl) {
 			ModelImpl modelImpl = (ModelImpl) model;
 			if (modelImpl.getDiscriminator() != null && modelImpl.getDiscriminator() != "")
@@ -448,7 +447,7 @@ public class OpenAPIReaderV2 {
 		return null;
 	}
 
-	public static List<String> getSubModels(Swagger swagger, String ref) {
+	private static List<String> getSubModels(Swagger swagger, String ref) {
 		List<String> result = new ArrayList<String>();
 
 		for (Map.Entry<String, Model> entry : swagger.getDefinitions().entrySet()) {

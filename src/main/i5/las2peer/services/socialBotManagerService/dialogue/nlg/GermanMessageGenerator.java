@@ -275,4 +275,10 @@ public class GermanMessageGenerator extends DefaultMessageGenerator {
 		return false;
 	}
 
+	@Override
+	protected ResponseMessage getSelectionRequest(DialogueAct act) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

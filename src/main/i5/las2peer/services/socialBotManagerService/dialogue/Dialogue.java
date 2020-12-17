@@ -13,6 +13,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.TaskOr
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.model.Selection;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
@@ -111,12 +112,19 @@ public class Dialogue {
 	public void init(Messenger messenger) {
 		
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
+		
 		if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
-			managers.add(generator.generate(DialogueManagerType.SIMPLE, messenger));
+			managers.add(generator.generate(DialogueManagerType.SIMPLE_MESSAGES, messenger, null, null));
+		
 		if (messenger.getFrames() != null && !messenger.getFrames().isEmpty()) {
-			for (Frame frame : messenger.getFrames()) {
-				managers.add(generator.generate(DialogueManagerType.NAIVE, messenger, frame));
-			}
+			for (Frame frame : messenger.getFrames()) 
+				managers.add(generator.generate(DialogueManagerType.TASK_ORIENTED_RULE, messenger, frame, null));
+			
+		}
+		
+		if(messenger.getSelections() != null && !messenger.getSelections().isEmpty()) {
+			for(Selection selection: messenger.getSelections().values())
+				managers.add(generator.generateSimpleSelection(messenger, selection));
 		}
 	}
 

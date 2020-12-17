@@ -10,6 +10,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.F
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Node;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RepetitionNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
+import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -197,7 +198,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		// Request to fill value
 		if (nextNode instanceof Fillable) {
 			Fillable fi = (Fillable) nextNode;
-			if(fi.hasFrameGeneratedEnum())
+			if (fi.hasFrameGeneratedEnum())
 				fi.getSlot().getParameter().update(goal);
 			return gen.getRequestAct(fi);
 		}
@@ -240,17 +241,35 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 	@Override
 	public Collection<String> getNLUIntents() {
 		Collection<String> intents = new ArrayList<String>();
-		Collection<Slot> slots = goal.getFrame().getSlots().values();
-		for (Slot slot : slots) {
-			intents.add(slot.getConfirmIntent());
-			intents.add(slot.getInformIntent());
-			intents.add(slot.getRequestIntent());
-			intents.add(slot.getDenyIntent());
-		}
 
 		intents.add(getStartIntent());
 		intents.add(goal.getFrame().getConfirmIntent());
 		intents.add(goal.getFrame().getConfirmIntent() + "_optional");
+
+		Collection<Slot> slots = goal.getFrame().getSlots().values();
+		for (Slot slot : slots) {
+			intents.add(slot.getInformIntent());
+		}
+
+		return intents;
+	}
+
+	@Override
+	public Collection<String> getNLGIntents() {
+		Collection<String> intents = new ArrayList<String>();
+
+		Frame frame = goal.getFrame();
+		intents.add(frame.getReqConfIntent());
+		if (frame.hasOptionalSlots())
+			intents.add(frame.getReqConfIntent() + "_optional");
+
+		for (Slot slot : frame.getDescendants()) {
+			if (slot.isLeaf())
+				intents.add(slot.getRequestIntent());
+			if (slot.isArray())
+				intents.add(slot.getReqConfIntent());
+		}
+
 		return intents;
 	}
 

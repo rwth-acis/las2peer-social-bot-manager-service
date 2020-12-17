@@ -34,7 +34,9 @@ public abstract class DefaultMessageGenerator extends LanguageGenerator {
 		case ERROR_NLU:
 			return getErrorNLU(act);
 		case ERROR_SYSTEM:
-			return getErrorSystem(act);		
+			return getErrorSystem(act);	
+		case SELECTION:
+			return getSelectionRequest(act);
 		case TALK:
 			break;
 		default:
@@ -44,6 +46,8 @@ public abstract class DefaultMessageGenerator extends LanguageGenerator {
 		return null;
 
 	}
+
+	protected abstract ResponseMessage getSelectionRequest(DialogueAct act);
 
 	protected abstract ResponseMessage getErrorSystem(DialogueAct act);
 

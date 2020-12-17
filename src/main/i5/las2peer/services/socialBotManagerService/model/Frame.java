@@ -7,11 +7,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
+import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 
-public class Frame {
+public class Frame implements MessengerElement{
 
 	private String name;
 
@@ -26,14 +28,14 @@ public class Frame {
 	private ServiceFunction serviceFunction;
 
 	private Map<String, Slot> slots;
-	
+
 	private Collection<ServiceEvent> events;
 
 	public Frame() {
 		this.slots = new HashMap<String, Slot>();
 		this.events = new HashSet<ServiceEvent>();
 	}
-	
+
 	public Frame(String name) {
 		this();
 		this.name = name;
@@ -234,17 +236,39 @@ public class Frame {
 	public void setFile(String file) {
 		this.file = file;
 	}
-		
+
 	public boolean hasServiceEvents() {
 		return (events != null && !events.isEmpty());
 	}
-	
+
 	public Collection<ServiceEvent> getServiceEvents() {
 		return events;
 	}
 
 	public void addServiceEvent(ServiceEvent event) {
 		events.add(event);
+	}
+
+	public boolean hasOptionalSlots() {
+		for (Slot slot : this.getDescendants()) {
+			if (!slot.isRequired())
+				return true;
+		}
+		return false;
+	}
+
+	public Collection<InputType> getValueTypes() {
+		Set<InputType> res = new HashSet<InputType>();
+		for (Slot slot : this.getDescendants()) {
+			if(slot.getInputType() != null)
+			res.add(slot.getInputType());
+		}
+		return res;
+	}
+
+	@Override
+	public String getIntentKeyword() {		
+		return this.intent;
 	}
 
 }

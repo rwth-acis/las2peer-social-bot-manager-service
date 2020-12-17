@@ -70,6 +70,8 @@ public class Messenger {
 	 * This map contains all known frames. The key is the intent keyword
 	 */
 	private HashMap<String, Frame> intentFrames;
+	
+	private HashMap<String, Selection> intentSelections;
 
 	/**
 	 * This map contains all known incoming message intents. The key is the intent
@@ -90,9 +92,9 @@ public class Messenger {
 	// private HashMap<String, Bool> contextWithService;
 
 	private Random random;
-	
+
 	public Messenger() {
-		
+
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();
@@ -103,6 +105,7 @@ public class Messenger {
 
 		// Dialogue Manager
 		this.intentFrames = new HashMap<String, Frame>();
+		this.intentSelections = new HashMap<String, Selection>();
 		try {
 			this.handler = new DialogueHandler(this);
 		} catch (Error e) {
@@ -110,7 +113,7 @@ public class Messenger {
 			throw e;
 		}
 	}
-	
+
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
@@ -134,7 +137,7 @@ public class Messenger {
 		}
 
 		// State map
-		this.knownIntents = new HashMap<String, IncomingMessage>();
+		this.knownIntents = new HashMap<String, IncomingMessage>();		
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();
 
@@ -143,6 +146,7 @@ public class Messenger {
 		this.triggeredFunction = new HashMap<String, String>();
 
 		// Dialogue Manager
+		this.intentSelections = new HashMap<String, Selection>();
 		this.intentFrames = new HashMap<String, Frame>();
 		try {
 			this.handler = new DialogueHandler(this);
@@ -560,6 +564,14 @@ public class Messenger {
 		this.domains.put(domain.getName(), domain);
 	}
 
+	public void addSelection(Selection selection) {
+		this.intentSelections.put(selection.getIntentKeyword(), selection);
+	}
+	
+	public Map<String, Selection> getSelections() {
+		return this.intentSelections;
+	}
+	
 	public Collection<IncomingMessage> getIncomingMessages() {
 		return this.knownIntents.values();
 	}
@@ -588,16 +600,37 @@ public class Messenger {
 	public Bot getBot() {
 		return bot;
 	}
-	
+
 	public void setBot(Bot bot) {
 		this.bot = bot;
 	}
-	
+
+	public void initialize() {
+		this.handler.initialize();
+	}
+
 	public Map<String, LanguageUnderstander> getNLUS() {
 		return this.bot.getNLUs();
 	}
-	
+
 	public Map<String, LanguageGenerator> getNLGS() {
 		return this.bot.getNLGs();
 	}
+
+	public Collection<String> getNLUIntents() {
+		Collection<String> res = new ArrayList<>();
+		
+		for(Frame frame :this.intentFrames.values()) 
+			res.add(frame.getIntent());
+
+		for(IncomingMessage message :this.knownIntents.values())
+			res.add(message.getIntentKeyword());
+			
+		return res;
+	}
+
+	public Collection<String> getNLGIntents() {
+		return this.handler.getNLGIntents();
+	}
+
 }

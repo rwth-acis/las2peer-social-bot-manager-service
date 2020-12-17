@@ -267,7 +267,7 @@ public class SocialBotManagerService extends RESTService {
 			td.fromMarkdown(markdownTrainingData);
 			System.out.println("NLU module " + url + " add intents: " + td.intents().size());
 
-			LanguageUnderstander lu = getConfig().getNlus().get(url);
+			LanguageUnderstander lu = getConfig().getNLUs().get(url);
 
 			if (lu != null)
 				lu.addIntents(td.intents());
@@ -1284,7 +1284,7 @@ public class SocialBotManagerService extends RESTService {
 			triggerChat(chat, triggeredBody);
 		}
 	}
-
+	
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");
 		String channel = null;
@@ -1871,7 +1871,7 @@ public class SocialBotManagerService extends RESTService {
 
 			System.out.println("getNLUModels()");
 			try {
-				return Response.ok().entity(getConfig().getNlus().values()).build();
+				return Response.ok().entity(getConfig().getNLUs().values()).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1893,7 +1893,7 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 
-				if (getConfig().getNlus().containsKey(nlu.getUrl().toString()))
+				if (getConfig().getNLUs().containsKey(nlu.getUrl().toString()))
 					return Response.ok().entity("I did not create a new NLU module, because a module with the URL "
 							+ nlu.getUrl() + " already exists 😉").build();
 
@@ -2040,6 +2040,52 @@ public class SocialBotManagerService extends RESTService {
 		}
 		
 		@GET
+		@Path("/bot/{name}/nlu/intents")
+		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getNLUModelIntents", notes = "get NLU model Intents")
+		public Response getNLUIntents(@PathParam("name") String name) {
+		
+			try {
+				for(VLE vle :getConfig().getVLEs().values()) {
+					Bot bot = vle.getBotByName(name);
+					if(bot != null)
+						return Response.ok().entity(bot.getNLUIntents()).build();
+				}
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().entity("failed to receive intents").build();
+			}
+
+			return Response.status(Status.NOT_FOUND).entity("bot not found").build();
+		}
+		
+		@GET
+		@Path("/bot/{name}/nlg/intents")
+		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getNLGModelIntents", notes = "get NLG model Intents")
+		public Response getNLGIntents(@PathParam("name") String name) {
+		
+			try {
+				for(VLE vle :getConfig().getVLEs().values()) {
+					Bot bot = vle.getBotByName(name);
+					if(bot != null)
+						return Response.ok().entity(bot.getNLGIntents()).build();
+				}
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().entity("failed to receive intents").build();
+			}
+
+			return Response.status(Status.NOT_FOUND).entity("bot not found").build();
+		}
+		
+		@GET
 		@Path("/test/test/{testParam}/{testParam2}")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
@@ -2067,7 +2113,7 @@ public class SocialBotManagerService extends RESTService {
 
 			System.out.println("getNLUModels()");
 			try {
-				return Response.ok().entity(getConfig().getNlus().values()).build();
+				return Response.ok().entity(getConfig().getNLUs().values()).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -2112,7 +2158,7 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 
-				if (getConfig().getNlus().containsKey(nlu.getUrl().toString()))
+				if (getConfig().getNLUs().containsKey(nlu.getUrl().toString()))
 					return Response.ok().entity("I did not create a new NLU module, because a module with the URL "
 							+ nlu.getUrl() + " already exists 😉").build();
 

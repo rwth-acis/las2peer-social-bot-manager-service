@@ -51,7 +51,9 @@ public class ServiceFunction extends TriggerFunction {
 	}
 
 	public ServiceType getServiceType() {
-		return this.service.getServiceType();
+		if (this.service != null)
+			return this.service.getServiceType();
+		return ServiceType.OPENAPI;		
 	}
 
 	public Set<Bot> getBots() {

@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,9 +42,13 @@ public class DialogueHandler {
 		this.messenger = messenger;
 		this.openDialogues = new HashMap<>();
 
-		this.manager = new PipelineManager();
+		this.manager = new PipelineManager(messenger);
 
 		invariant();
+	}
+	
+	public void initialize() {
+		this.manager.initialize(messenger);
 	}
 
 	/**
@@ -134,6 +139,14 @@ public class DialogueHandler {
 		this.manager = manager;
 	}
 
+	public Collection<String> getNLUIntents() {
+		return this.manager.getNLUIntents();
+	}
+	
+	public Collection<String> getNLGIntents() {
+		return this.manager.getNLGIntents();		
+	}
+	
 	public void invariant() {
 		assert this.manager != null : "no meta dialogue manager set";
 		assert this.openDialogues != null : "open dialogue map not initilized";

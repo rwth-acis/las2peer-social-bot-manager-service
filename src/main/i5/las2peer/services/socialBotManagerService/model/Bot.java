@@ -306,5 +306,19 @@ public class Bot {
 	public Language getLanguage() {
 		return this.language;
 	}
+	
+	public Collection<String> getNLUIntents() {
+		Collection<String> res = new ArrayList<>();
+		for(Messenger messenger :this.messengers.values()) 
+			res.addAll(messenger.getNLUIntents());
+		return res;		
+	}
+	
+	public Collection<String> getNLGIntents() {
+		Collection<String> res = new ArrayList<>();
+		for(Messenger messenger :this.messengers.values()) 
+			res.addAll(messenger.getNLGIntents());
+		return res;	
+	}
 
 }

@@ -1,10 +1,13 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Random;
 
-public class IncomingMessage {
+public class IncomingMessage implements MessengerElement {
+	
 	String intentKeyword;
 	String entityKeyword;
 	String NluID;
@@ -90,6 +93,15 @@ public class IncomingMessage {
 
 	public String getTriggeredFunctionId() {
 		return this.triggeredFunctionId;
+	}
+
+
+	@Override
+	public Collection<String> getNLUIntents() {
+		
+		Collection<String> res = new HashSet<>();
+		res.add(this.intentKeyword);
+		return res;
 	}
 
 

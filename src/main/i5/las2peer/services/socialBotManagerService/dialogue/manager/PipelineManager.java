@@ -2,8 +2,10 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
@@ -14,6 +16,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.TaskOrientedManager;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.DefaultMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.EnglishMessageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.GermanMessageGenerator;
@@ -43,8 +46,9 @@ public class PipelineManager extends MetaDialogueManager {
 
 	Messenger messenger;
 
-	public PipelineManager() {
+	public PipelineManager(Messenger messenger) {
 		super();
+		this.messenger = messenger;
 	}
 
 	@Override
@@ -75,7 +79,7 @@ public class PipelineManager extends MetaDialogueManager {
 		// Management
 		DialogueAct act = null;
 		if (message.hasCommand())
-			act = handleCommandManagement(info, dialogue, messenger);
+			act = handleCommandManagement(info, dialogue);
 		else
 			act = handleManagement(info, dialogue, messenger);
 		assert act != null : "act is null";
@@ -133,7 +137,7 @@ public class PipelineManager extends MetaDialogueManager {
 		return res;
 	}
 
-	protected DialogueAct handleCommandManagement(MessageInfo message, Dialogue dialogue, Messenger messenger) {
+	protected DialogueAct handleCommandManagement(MessageInfo message, Dialogue dialogue) {
 
 		assert message != null : "message is null";
 		assert message.getIntent() != null : "message has no intent";
@@ -467,7 +471,7 @@ public class PipelineManager extends MetaDialogueManager {
 			}
 		}
 
-		if (act.hasAction())
+		if (act.hasAction() || act.isFull())
 			res.setEnd(true);
 
 		if (file != null)
@@ -477,6 +481,30 @@ public class PipelineManager extends MetaDialogueManager {
 
 	}
 
+	@Override
+	public Collection<String> getNLGIntents() {
+		Collection<String> res = new ArrayList<>();				
+		for(AbstractDialogueManager manager :this.managers) {
+			if(manager.getNLGIntents() != null)
+				res.addAll(manager.getNLGIntents());
+		}
+		
+		res.add("error_system");
+		res.add("error_command_unknown");
+		res.add("error_nlu");		
+		
+		Set<InputType> inputTypes = new HashSet<InputType>();
+		for(TaskOrientedManager manager :this.getTaskOrientedManagers()) 		
+				inputTypes.addAll(manager.getFrame().getValueTypes());
+		
+		inputTypes.remove(InputType.Free);
+		for(InputType type :inputTypes) 
+			res.add("error_invalid_" + type.toString());
+				
+		return res;		
+		
+	}
+	
 	public void invariant() {
 
 	}
