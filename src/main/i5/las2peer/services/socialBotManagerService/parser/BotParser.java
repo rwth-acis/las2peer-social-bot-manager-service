@@ -96,7 +96,7 @@ public class BotParser {
 		Map<String, Slot> slots = new HashMap<>();
 		Map<String, Domain> domains = new HashMap<>();
 		Map<String, MessageFile> files = new HashMap<>();
-		Map<String, Selection> selections  = new HashMap<>();
+		Map<String, Selection> selections = new HashMap<>();
 
 		Map<String, Service> services = new HashMap<String, Service>();
 		Map<String, ServiceEvent> events = new HashMap<String, ServiceEvent>();
@@ -207,7 +207,7 @@ public class BotParser {
 				Domain domain = addDomain(entry.getKey(), elem, config);
 				domains.put(entry.getKey(), domain);
 				break;
-				
+
 			case "Selection":
 				Selection selection = addSelection(entry.getKey(), elem, config);
 				selections.put(entry.getKey(), selection);
@@ -525,7 +525,8 @@ public class BotParser {
 					// ...Selection
 					if (selections.containsKey(target)) {
 						Selection selection = selections.get(target);
-						messenger.addSelection(selection);;
+						messenger.addSelection(selection);
+						;
 						System.out.println("messenger generates selection");
 					}
 
@@ -591,6 +592,14 @@ public class BotParser {
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
 						sourceMessage.addFollowupMessage(value, targetMessage);
+					}
+					// selections			
+				} else 	if (selections.containsKey(source)) {
+					Selection sourceElement = selections.get(source);
+					// ...another IncomingMessage
+					if (selections.containsKey(target)) {
+						Selection targetElement = selections.get(target);
+						sourceElement.addElement(value, targetElement);
 					}
 				}
 			}
@@ -674,29 +683,34 @@ public class BotParser {
 							}
 						}
 					}
-					
+
 					// selection triggers
-				} else if (selections.get(source) != null) {					
+				} else if (selections.get(source) != null) {
 					Selection selection = selections.get(source);
 					// .. Message
 					if (responses.get(target) != null) {
 						ChatResponse response = responses.get(target);
-						IncomingMessage im = new IncomingMessage("", "0");						
+						IncomingMessage im = new IncomingMessage("", "0");
 						im.addResponse(response);
 						System.out.println("Selection add Message " + value + " " + im);
-						selection.addElement(value, im);						
+						selection.addElement(value, im);
+					}
+					if (incomingMessages.get(target) != null) {						
+						IncomingMessage message = incomingMessages.get(target);						
+						System.out.println("Selection add Message " + value + " " + message);
+						selection.addElement(value, message);
 					}
 					// .. Frame
 					if (frames.get(target) != null) {
 						Frame frame = frames.get(target);
 						System.out.println("Selection add Frame " + value + " " + frame);
-						if(value != null)
+						if (value != null)
 							selection.addElement(value, frame);
 						else
 							selection.addElement(frame.getName(), frame);
-						
+
 					}
-				
+
 					// event triggers
 				} else if (events.get(source) != null) {
 					System.out.println("Eventtriggers chat response");
@@ -715,11 +729,10 @@ public class BotParser {
 			throw new ParseBotException("Check the Content Generator connections! There are " + checkGeneratorIns
 					+ " inputs and " + checkGeneratorOuts + " outputs.");
 		}
-		
+
 		// Initialize dialogue handler (need connected frames)
-		for(Messenger messenger : messengers.values()) 
+		for (Messenger messenger : messengers.values())
 			messenger.initialize();
-		
 
 		// create if then structure
 		// createIfThenStructure(tempitbList, ibList, tbList, itbList);
@@ -758,7 +771,7 @@ public class BotParser {
 
 		return vle;
 	}
-
+	
 	private Service addService(String key, BotModelNode elem, BotConfiguration config) throws MalformedURLException {
 
 		System.out.println("ADD SERVICE");
@@ -814,7 +827,7 @@ public class BotParser {
 		}
 		return event;
 	}
-	
+
 	private Selection addSelection(String key, BotModelNode elem, BotConfiguration config) {
 
 		Selection selection = new Selection();
@@ -826,11 +839,22 @@ public class BotParser {
 			switch (subVal.getName()) {
 			case "intent":
 			case "Intent":
+			case "Intent Keyword":
 				selection.setIntent(value);
 				break;
 			case "message":
 			case "Message":
+			case "Response Message":
 				selection.setMessage(value);
+				break;
+			case "Show Operation":
+				selection.setOperation(Boolean.parseBoolean(value));
+				break;
+			case "Operation Name":
+				selection.setOperationName(value);
+				break;
+			case "Operation Description":
+				selection.setOperationDescription(value);
 				break;
 			}
 		}
@@ -937,17 +961,20 @@ public class BotParser {
 			throws ParseBotException {
 		String intentKeyword = null;
 		String NluID = null;
+		String response = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
 			String name = subVal.getName();
-			if (name.contentEquals("Intent Keyword")) {
-				intentKeyword = subVal.getValue();
-			} else if (name.contentEquals("NLU ID")) {
-				NluID = subVal.getValue();
-			}
+			String value = subVal.getValue();
+			if (name.contentEquals("Intent Keyword"))
+				intentKeyword = value;
+			else if (name.contentEquals("NLU ID"))
+				NluID = value;
+			else if (name.contentEquals("Response Message"))
+				response = value;
 		}
 
 		if (intentKeyword == null) {
@@ -955,8 +982,13 @@ public class BotParser {
 		} else if (NluID == null) {
 			throw new ParseBotException("Incoming Message is missing NluID");
 		}
-
-		return new IncomingMessage(intentKeyword, NluID);
+		
+		
+		IncomingMessage res = new IncomingMessage(intentKeyword, NluID);
+		if(response != null && !response.contentEquals(""))
+			res.addResponse(response);
+		
+		return res;
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
@@ -1239,19 +1271,30 @@ public class BotParser {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
 			switch (subVal.getName()) {
-			case "name":
-				frame.setName(subVal.getValue());
-				break;
 			case "intent":
+			case "Intent":
+			case "Intent Keyword":
 				frame.setIntent(subVal.getValue());
 				break;
-			case "message":
+			case "name":
+			case "Name":
+			case "Operation Name":
+				frame.setName(subVal.getValue());
+				break;
+			case "Operation Description":
+			case "Description":
 				frame.setMessage(subVal.getValue());
 				break;
 			case "response":
+			case "Success Response":
+				frame.setResponse(subVal.getValue());
+				break;
+			case "error":
+			case "Error Response":
 				frame.setResponse(subVal.getValue());
 				break;
 			case "file":
+			case "File Response":
 				frame.setFile(subVal.getValue());
 				break;
 			}

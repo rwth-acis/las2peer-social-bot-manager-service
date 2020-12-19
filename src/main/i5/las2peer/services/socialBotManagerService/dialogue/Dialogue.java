@@ -28,30 +28,30 @@ public class Dialogue {
 	 * The last dialogue act that was performed by the bot within this dialogue
 	 */
 	DialogueAct lastAct;
-		
+
 	/**
 	 * The dialogue manager that was last used for this dialogue
 	 */
 	AbstractDialogueManager activeManager;
-	
+
 	/**
 	 * All dialogue managers that are available for this dialogue
 	 */
 	List<AbstractDialogueManager> managers;
-	
+
 	/**
-	 * Record of all user performed acts in this dialogue 
+	 * Record of all user performed acts in this dialogue
 	 */
 	Map<AbstractDialogueManager, ArrayList<MessageInfo>> inputs;
 
 	/**
 	 * Constructor of a dialogue
-	 *  
+	 * 
 	 * @param messenger that realize this dialogue
 	 */
 	public Dialogue(Messenger messenger) {
 		assert messenger != null : "messenger is null";
-		
+
 		this.inputs = new HashMap<>();
 		this.managers = new ArrayList<>();
 		init(messenger);
@@ -73,58 +73,56 @@ public class Dialogue {
 
 		// add dynamic entities
 		Intent intent = info.getIntent();
-		if(activeManager instanceof TaskOrientedManager)
+		if (activeManager instanceof TaskOrientedManager)
 			intent = addDynamicEntites(manager, info);
-				
-		// further handling		
+
+		// further handling
 		DialogueAct res = manager.handle(intent);
 		this.lastAct = res;
-		this.activeManager = manager;		
-		
+		this.activeManager = manager;
+
 		return res;
 	}
-		
+
 	public Intent addDynamicEntites(AbstractDialogueManager manager, MessageInfo info) {
-		
+
 		assert info != null;
 		assert info.getIntent() != null;
 		assert manager != null;
 		Intent intent = info.getIntent();
-		
-		if(info.getMessage() == null || info.getMessage().getText() == null)
+
+		if (info.getMessage() == null || info.getMessage().getText() == null)
 			return intent;
-		
-		if(!(manager instanceof TaskOrientedManager))
+
+		if (!(manager instanceof TaskOrientedManager))
 			return intent;
-		
-		if(info.getMessage().isFile())
+
+		if (info.getMessage().isFile())
 			return intent;
-		
+
 		TaskOrientedManager taskManager = (TaskOrientedManager) manager;
 		String utterance = info.getMessage().getText();
-		Collection<Entity> entities = taskManager.getDialogueGoal().getEnums(utterance);			
+		Collection<Entity> entities = taskManager.getDialogueGoal().getEnums(utterance);
 		intent.addEntities(entities);
-		
-		return intent;		
+
+		return intent;
 	}
-	
 
 	public void init(Messenger messenger) {
-		
+
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
-		
+
 		if (messenger.getIncomingMessages() != null && !messenger.getIncomingMessages().isEmpty())
 			managers.add(generator.generate(DialogueManagerType.SIMPLE_MESSAGES, messenger, null, null));
-		
+
 		if (messenger.getFrames() != null && !messenger.getFrames().isEmpty()) {
-			for (Frame frame : messenger.getFrames()) 
+			for (Frame frame : messenger.getFrames())
 				managers.add(generator.generate(DialogueManagerType.TASK_ORIENTED_RULE, messenger, frame, null));
-			
 		}
-		
-		if(messenger.getSelections() != null && !messenger.getSelections().isEmpty()) {
-			for(Selection selection: messenger.getSelections().values())
-				managers.add(generator.generateSimpleSelection(messenger, selection));
+
+		if (messenger.getSelections() != null && !messenger.getSelections().isEmpty()) {
+			for (Selection selection : messenger.getSelections().values())
+				managers.add(generator.generateSimpleSelection(selection));
 		}
 	}
 
@@ -212,21 +210,21 @@ public class Dialogue {
 	public AbstractDialogueManager getActiveManager() {
 		return activeManager;
 	}
-	
+
 	public boolean hasActiveFrame() {
-		if(this.activeManager == null)
+		if (this.activeManager == null)
 			return false;
-		if(this.activeManager instanceof TaskOrientedManager) 
+		if (this.activeManager instanceof TaskOrientedManager)
 			return true;
 		return false;
-			
+
 	}
-	
-	public Frame getActiveFrame() {		
-		if(!hasActiveFrame())
-			return null;		
+
+	public Frame getActiveFrame() {
+		if (!hasActiveFrame())
+			return null;
 		TaskOrientedManager manager = (TaskOrientedManager) this.activeManager;
-		return manager.getFrame();		
+		return manager.getFrame();
 	}
 
 	public void setActiveManager(AbstractDialogueManager activeManager) {

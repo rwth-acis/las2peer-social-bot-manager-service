@@ -11,11 +11,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
-public class SimpleDialogueManager extends AbstractDialogueManager {
+public class MultiMessageDialogueManager extends AbstractDialogueManager {
 
 	MultivaluedMap<String, String> intentMessageMap;
 
-	public SimpleDialogueManager() {
+	public MultiMessageDialogueManager() {
 		super();
 		this.intentMessageMap = new MultivaluedHashMap<String, String>();
 	}

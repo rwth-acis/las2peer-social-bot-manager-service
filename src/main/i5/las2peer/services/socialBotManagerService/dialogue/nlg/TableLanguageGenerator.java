@@ -12,101 +12,100 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 
 public class TableLanguageGenerator extends LanguageGenerator {
 
-    private Map<String, List<String>> table;
+	private Map<String, List<String>> table;
 
-    public TableLanguageGenerator() {
-	this.table = new MultivaluedHashMap<String, String>();
-    }
-
-    @Override
-    public ResponseMessage parse(DialogueAct act) {
-
-	assert this.table != null : "parse dialogue act. table is null";
-	assert act != null : "parse dialogue act. act is null";
-	assert act.getIntent() != null : "parse dialogue act. act has no intent";
-	assert invariant() : "parse dialogue act. invalid state";
-
-	String intent = act.getIntent();
-	
-	// unknown intent
-	if (!table.containsKey(intent)) {
-	    System.out.println("nlg intent: " + intent + " unknown for table language generator.");
-	    return null;
+	public TableLanguageGenerator() {
+		this.table = new MultivaluedHashMap<String, String>();
 	}
 
-	// get entry from table
-	String res = "";
-	List<String> list = table.get(intent);
-	if (list.size() == 1)
-	    res = list.get(0);
-	else {
-	    Random rand = new Random();
-	    res = list.get(rand.nextInt(list.size()));
+	@Override
+	public ResponseMessage parse(DialogueAct act) {
+
+		assert this.table != null : "parse dialogue act. table is null";
+		assert act != null : "parse dialogue act. act is null";
+		assert act.getIntent() != null : "parse dialogue act. act has no intent";
+		assert invariant() : "parse dialogue act. invalid state";
+
+		String intent = act.getIntent();
+
+		// unknown intent
+		if (!table.containsKey(intent)) {
+			System.out.println("nlg intent: " + intent + " unknown for table language generator.");
+			return null;
+		}
+
+		// get entry from table
+		String res = "";
+		List<String> list = table.get(intent);
+		if (list.size() == 1)
+			res = list.get(0);
+		else {
+			Random rand = new Random();
+			res = list.get(rand.nextInt(list.size()));
+		}
+
+		// parse entities
+		if (act.hasEntities()) {
+			System.out.println("parse entities");
+			for (Entry<String, String> entity : act.getEntities().entrySet()) {
+				System.out.println(entity.getKey() + entity.getValue());
+				res = res.replaceAll("#" + entity.getKey(), entity.getValue());
+				System.out.println(res);
+			}
+		}
+
+		ResponseMessage message = new ResponseMessage(res);
+		return message;
 	}
 
-	// parse entities
-	if (act.hasEntities()) {
-	    System.out.println("parse entities");
-	    for (Entry<String, String> entity : act.getEntities().entrySet()) {
-		 System.out.println(entity.getKey() + entity.getValue());
-		res = res.replaceAll("#" + entity.getKey(), entity.getValue());
-		System.out.println(res);
-	    }
+	/**
+	 * @param intent
+	 * @param message
+	 */
+	public void addEntry(String intent, String message) {
+
+		assert this.table != null : "add nlg entry. table is null";
+		assert intent != null : "add nlg entry. intent is null";
+		assert message != null : "add nlg entry. message is null";
+		assert !intent.equals("") : "add nlg entry. empty intent";
+		assert !message.equals("") : "add nlg entry. empty message";
+
+		if (this.table.containsKey(intent)) {
+			List<String> values = table.get(intent);
+			values.add(message);
+			table.put(intent, values);
+		} else {
+			List<String> values = new ArrayList<String>();
+			values.add(message);
+			table.put(intent, values);
+		}
+
+		assert invariant() : "add nlg entry. invalid state";
 	}
 
-	ResponseMessage message = new ResponseMessage(res);
-	return message;
-    }
-
-    /**
-     * @param intent
-     * @param message
-     */
-    public void addEntry(String intent, String message) {
-
-	assert this.table != null : "add nlg entry. table is null";
-	assert intent != null : "add nlg entry. intent is null";
-	assert message != null : "add nlg entry. message is null";
-	assert !intent.equals("") : "add nlg entry. empty intent";
-	assert !message.equals("") : "add nlg entry. empty message";
-
-	if (this.table.containsKey(intent)) {
-	    List<String> values = table.get(intent);
-	    values.add(message);
-	    table.put(intent, values);
-	} else {
-	    List<String> values = new ArrayList<String>();
-	    values.add(message);
-	    table.put(intent, values);
+	/**
+	 * @param intent
+	 * @return
+	 */
+	public List<String> getEntry(String intent) {
+		assert this.table != null : "get entry. table is null";
+		return this.table.get(intent);
 	}
 
-	assert invariant() : "add nlg entry. invalid state";
-    }
-    
-    /**
-     * @param intent
-     * @return
-     */
-    public List<String> getEntry(String intent) {	
-	assert this.table != null : "get entry. table is null";	
-	return this.table.get(intent);
-    }
-        
-    
-    /**
-     * @return true if this object is in a valid state
-     */
-    public boolean invariant() {
+	/**
+	 * @return true if this object is in a valid state
+	 */
+	public boolean invariant() {
 
-	if (this.table == null)
-	    return false;
+		if (this.table == null)
+			return false;
 
-	for (List<String> list : table.values()) {
-	    if (list == null || list.isEmpty())
-		return false;
+		for (List<String> list : table.values()) {
+			if (list == null || list.isEmpty())
+				return false;
+		}
+
+		return true;
 	}
-
-	return true;
-    }
 
 }

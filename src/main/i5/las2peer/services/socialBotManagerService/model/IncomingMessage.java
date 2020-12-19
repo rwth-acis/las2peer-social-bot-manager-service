@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Random;
 
 public class IncomingMessage implements MessengerElement {
-	
+
 	String intentKeyword;
 	String entityKeyword;
 	String NluID;
@@ -33,16 +33,17 @@ public class IncomingMessage implements MessengerElement {
 		return result;
 	}
 
-
 	public IncomingMessage(String intent, String NluID) {
 		this.intentKeyword = replaceUmlaute(intent);
 		this.followupMessages = new HashMap<String, IncomingMessage>();
 		this.responses = new ArrayList<ChatResponse>();
-        if(NluID == ""){
-            this.NluID = "";
-        } else this.NluID = NluID;
+		if (NluID == "") {
+			this.NluID = "";
+		} else
+			this.NluID = NluID;
 	}
 
+	@Override
 	public String getIntentKeyword() {
 		return intentKeyword;
 	}
@@ -54,11 +55,11 @@ public class IncomingMessage implements MessengerElement {
 	public void setEntityKeyword(String entityKeyword) {
 		this.entityKeyword = entityKeyword;
 	}
-    
+
 	public String getNluID() {
 		return NluID;
 	}
- 
+
 	public HashMap<String, IncomingMessage> getFollowingMessages() {
 		return followupMessages;
 	}
@@ -71,6 +72,27 @@ public class IncomingMessage implements MessengerElement {
 		this.responses.add(response);
 	}
 
+	public void addResponse(String message) {
+		ChatResponse response = new ChatResponse(message);
+		this.responses.add(response);
+	}
+
+	public Collection<String> getResponseMessages() {
+		Collection<String> res = new HashSet<>();
+		for (ChatResponse response : this.responses)
+			res.add(response.getResponse());
+		return res;
+	}
+
+	public String getResponseMessage() {
+		if (responses.isEmpty())
+			return null;
+
+		Random random = new Random();
+		ChatResponse response = getResponse(random);
+		return response.getResponse();
+	}
+
 	public ChatResponse getResponse(Random random) {
 		if (responses.isEmpty()) {
 			return null;
@@ -78,7 +100,7 @@ public class IncomingMessage implements MessengerElement {
 			return responses.get(random.nextInt(responses.size()));
 		}
 	}
-	
+
 	public ArrayList<ChatResponse> getResponseArray() {
 		if (responses.isEmpty()) {
 			return null;
@@ -95,14 +117,25 @@ public class IncomingMessage implements MessengerElement {
 		return this.triggeredFunctionId;
 	}
 
-
 	@Override
 	public Collection<String> getNLUIntents() {
-		
+
 		Collection<String> res = new HashSet<>();
 		res.add(this.intentKeyword);
+		if (this.followupMessages != null)
+			for (IncomingMessage message : this.followupMessages.values())
+				res.addAll(message.getNLUIntents());
 		return res;
 	}
 
+	public Collection<String> getNLGIntents() {
+
+		Collection<String> res = new HashSet<>();
+		res.add(this.getIntentKeyword() + "_response");
+		if (this.followupMessages != null)
+			for (IncomingMessage message : this.followupMessages.values())
+				res.addAll(message.getNLGIntents());
+		return res;
+	}
 
 }

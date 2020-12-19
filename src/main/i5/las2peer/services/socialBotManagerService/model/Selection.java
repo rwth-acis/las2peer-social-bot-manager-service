@@ -13,6 +13,12 @@ public class Selection implements MessengerElement {
 	
 	String message;
 	
+	boolean operation;
+	
+	String operationName;
+	
+	String operationDescription;
+	
 	/**
 	 * elements that are selected be intent (key: intent, value:selection)
 	 */
@@ -57,6 +63,30 @@ public class Selection implements MessengerElement {
 		this.message = message;
 	}
 	
+	public boolean isOperation() {
+		return operation;
+	}
+
+	public void setOperation(boolean operation) {
+		this.operation = operation;
+	}
+
+	public String getOperationName() {
+		return operationName;
+	}
+
+	public void setOperationName(String operationName) {
+		this.operationName = operationName;
+	}
+
+	public String getOperationDescription() {
+		return operationDescription;
+	}
+
+	public void setOperationDescription(String operationDescription) {
+		this.operationDescription = operationDescription;
+	}
+
 	@Override
 	public String getIntentKeyword() {		
 		return this.intent;

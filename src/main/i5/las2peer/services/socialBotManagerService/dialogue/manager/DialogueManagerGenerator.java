@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DefaultTaskOrientedManager;
@@ -8,11 +9,33 @@ import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.model.MessengerElement;
 import i5.las2peer.services.socialBotManagerService.model.Selection;
 
 public class DialogueManagerGenerator {
 
-	public AbstractDialogueManager generate(DialogueManagerType type, Messenger messenger, Frame frame, Selection selection) {
+	public AbstractDialogueManager generate(MessengerElement element) {
+		assert element != null;
+		AbstractDialogueManager res = null;
+		
+		if (element instanceof Frame) 
+			res = generateTaskOrientedRule((Frame) element);
+		
+		if (element instanceof IncomingMessage) {
+			ArrayList<IncomingMessage> messages = new ArrayList<>();
+			messages.add((IncomingMessage) element);
+			res = generateSimpleMessages(messages);			
+		}
+		
+		if (element instanceof Selection) 
+			res = generateSimpleSelection((Selection) element);
+
+		return res;
+		
+	}
+
+	public AbstractDialogueManager generate(DialogueManagerType type, Messenger messenger, Frame frame,
+			Selection selection) {
 
 		System.out.println("generate Dialogue Manager " + type);
 
@@ -25,7 +48,7 @@ public class DialogueManagerGenerator {
 			manager = generateSimpleMessages(messenger.getIncomingMessages());
 			break;
 		case SIMPLE_SELECTION:
-			manager = generateSimpleSelection(messenger, selection);
+			manager = generateSimpleSelection(selection);
 			break;
 		default:
 			manager = null;
@@ -48,7 +71,7 @@ public class DialogueManagerGenerator {
 
 	public AbstractDialogueManager generateSimpleMessages(Collection<IncomingMessage> messages) {
 
-		SimpleDialogueManager manager = new SimpleDialogueManager();
+		MultiMessageDialogueManager manager = new MultiMessageDialogueManager();
 
 		for (IncomingMessage message : messages)
 			if (message.getResponseArray() != null)
@@ -57,9 +80,10 @@ public class DialogueManagerGenerator {
 		return manager;
 	}
 
-	public AbstractDialogueManager generateSimpleSelection(Messenger messenger, Selection selection) {
+	public AbstractDialogueManager generateSimpleSelection(Selection selection) {
 
-		SimpleSelectionManager manager = new SimpleSelectionManager(messenger, selection);		
+		SimpleSelectionManager manager = new SimpleSelectionManager(selection);
+		manager.init(selection);
 		return manager;
 
 	}

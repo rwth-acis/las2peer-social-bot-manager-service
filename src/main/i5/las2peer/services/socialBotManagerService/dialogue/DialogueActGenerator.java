@@ -11,8 +11,10 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
 public class DialogueActGenerator {
 
-	public DialogueAct getAct() {
-		return new DialogueAct();
+	public static DialogueAct getAct(String intent) {
+		DialogueAct res = new DialogueAct();
+		res.setIntent(intent);
+		return res;
 	}
 
 	//// Frame Dialogue Acts
