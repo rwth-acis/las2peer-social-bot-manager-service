@@ -10,7 +10,7 @@ public class IncomingMessage {
 	String intentKeyword;
 	String entityKeyword;
     String NluID;
-    Boolean containsFile;
+    boolean containsFile;
 
 	ArrayList<ChatResponse> responses;
 
@@ -98,7 +98,7 @@ public class IncomingMessage {
 		return this.triggeredFunctionId;
 	}
 
-	public Boolean expectsFile() {
+	public boolean expectsFile() {
 		return this.containsFile;
 	}
 
