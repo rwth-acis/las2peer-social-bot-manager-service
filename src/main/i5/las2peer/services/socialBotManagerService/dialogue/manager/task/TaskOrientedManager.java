@@ -11,5 +11,8 @@ public abstract class TaskOrientedManager extends AbstractDialogueManager {
 	public Frame getFrame() {
 		return this.getDialogueGoal().getFrame();
 	}
+	
+	@Override
+	public abstract void fillRecursive(String attrId, String value);
 		
 }

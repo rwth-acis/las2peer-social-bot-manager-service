@@ -278,4 +278,14 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		return goal;
 	}
 
+	@Override
+	public void fillRecursive(String attrId, String value) {
+		assert attrId != null;
+		assert value != null;
+		assert !attrId.contentEquals("");
+
+		if(this.goal.fill(attrId, value))
+			System.out.println("slot attribute " + attrId + " was external filled with " + value);
+	}
+
 }

@@ -35,6 +35,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.FallbackNlu;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
+import i5.las2peer.services.socialBotManagerService.parser.ResponseParser;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 
@@ -429,9 +430,12 @@ public class PipelineManager extends MetaDialogueManager {
 					file.setData(response);
 					file.setName(act.getFile());
 					break;
-				case TEXT:
+				case MESSAGE_TEXT:
 					act.setMessage(response);
 					break;
+				case JSON_TO_MARKDOWN:
+					ResponseParser parser = new ResponseParser();
+					act.setMessage(parser.toMarkdown(response));
 				default:
 					break;
 				}

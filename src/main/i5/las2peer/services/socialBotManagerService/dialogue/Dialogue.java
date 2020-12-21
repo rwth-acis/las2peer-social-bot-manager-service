@@ -122,7 +122,7 @@ public class Dialogue {
 
 		if (messenger.getSelections() != null && !messenger.getSelections().isEmpty()) {
 			for (Selection selection : messenger.getSelections().values())
-				managers.add(generator.generateSimpleSelection(selection));
+				managers.add(generator.generateSelection(selection));
 		}
 	}
 

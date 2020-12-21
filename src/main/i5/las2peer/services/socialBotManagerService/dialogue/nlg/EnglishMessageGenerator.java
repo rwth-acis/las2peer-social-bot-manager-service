@@ -271,21 +271,26 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 
 	@Override
 	protected ResponseMessage getSelectionRequest(DialogueAct act) {
-		
+
 		assert act != null : "dialogue act parameter is null";
 		assert act.hasExpected() : "dialogue has no expected";
 		assert act.getExpected().hasEnums() : "act expected has no enums";
 
 		String message = "";
 		Map<String, String> entities = act.getEntities();
-		
-		if(entities != null && entities.containsKey("name")) {
-			String name = entities.get("name");
-			message = message + "Please select one *" + name + "*? \n\n";		
+
+		if (act.hasMessage()) {
+			message = message + act.getMessage() + "\n";
 		} else {
-			message = message + "Please select one";
+
+			if (entities != null && entities.containsKey("name")) {
+				String name = entities.get("name");
+				message = message + "Please select one *" + name + "*? \n\n";
+			} else {
+				message = message + "Please select one";
+			}
 		}
-		
+
 		if (entities != null && entities.containsKey("description"))
 			message = message + entities.get("description") + "\n";
 
@@ -300,7 +305,7 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
-		
+
 	}
 
 }

@@ -53,7 +53,7 @@ public class ServiceFunction extends TriggerFunction {
 	public ServiceType getServiceType() {
 		if (this.service != null)
 			return this.service.getServiceType();
-		return ServiceType.OPENAPI;		
+		return ServiceType.OPENAPI;
 	}
 
 	public Set<Bot> getBots() {
@@ -179,10 +179,18 @@ public class ServiceFunction extends TriggerFunction {
 		return (this.attributes != null && !this.attributes.isEmpty());
 	}
 
+	public boolean contains(ServiceFunctionAttribute attr) {
+		for (ServiceFunctionAttribute attr2 : this.getAllAttributes()) {
+			if (attr.equals(attr2))
+				return true;
+		}
+		return false;
+	}
+
 	public ServiceFunctionAttribute getAttribute(String name) {
 		List<ServiceFunctionAttribute> attributes = this.getAllAttributes();
 		for (ServiceFunctionAttribute attr : attributes) {
-			if (attr.getIdName().equalsIgnoreCase(name))
+			if (attr.getIdName().equalsIgnoreCase(name) || attr.getId().contentEquals(name))
 				return attr;
 		}
 
@@ -265,7 +273,7 @@ public class ServiceFunction extends TriggerFunction {
 
 	public boolean hasFrameGeneratedAttribute() {
 		System.out.println("search for frame generated attribute in " + this.getFunctionName());
-		for(ServiceFunctionAttribute attr :this.getAllAttributes()) {
+		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
 			System.out.println("search in attr " + attr.getName() + " " + attr.getSlotName());
 
 			if (attr.getSlotName() != null && !attr.getSlotName().contentEquals("")) {
@@ -275,10 +283,10 @@ public class ServiceFunction extends TriggerFunction {
 		}
 		return false;
 	}
-	
-	public Collection<ServiceFunctionAttribute> getFrameGeneratedAttributes() {		
+
+	public Collection<ServiceFunctionAttribute> getFrameGeneratedAttributes() {
 		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
-		for(ServiceFunctionAttribute attr :this.getAllAttributes()) {
+		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
 			if (attr.getSlotName() != null && !attr.getSlotName().contentEquals("")) {
 				res.add(attr);
 			}

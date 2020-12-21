@@ -103,6 +103,18 @@ public class OpenAPIConnector {
 		return action;
 	}
 
+	public static String sendRequest(ServiceFunction sf) {
+		
+		assert sf != null : "service function is null";
+		assert sf.getBasePath() != null : "no base path";
+		assert sf.getFunctionPath() != null : "no function path";
+		assert sf.getHttpMethod() != null : "no http method";
+		assert sf.getServiceName() != null : "no service name";
+		
+		OpenAPIAction action = new OpenAPIAction(sf);
+		return sendRequest(action);		
+	}
+	
 	/**
 	 * Send a Request to an Service Function that has a OpenAPI documentation.
 	 * 

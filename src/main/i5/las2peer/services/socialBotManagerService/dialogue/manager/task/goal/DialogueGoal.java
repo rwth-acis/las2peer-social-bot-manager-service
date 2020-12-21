@@ -77,6 +77,17 @@ public class DialogueGoal {
 
 		return true;
 	}
+	
+	public boolean fill(String name, String value) {
+		assert name != null;
+		assert value != null;
+		
+		Fillable node = this.getFillable(name);;
+		if(node == null)
+			return false;
+		
+		return this.fill(node, value);		
+	}
 
 	/**
 	 * @return true if slot was deleted. false if slot was not filled.

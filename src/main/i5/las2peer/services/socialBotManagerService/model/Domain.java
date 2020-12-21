@@ -35,36 +35,12 @@ public class Domain {
 	 */
 	Map<String, Selection> selections;
 
-	public Domain() {
+	public Domain(String name) {
 		super();
+		this.name = name;
 		this.frames = new HashMap<String, Frame>();
 		this.messages = new HashMap<String, IncomingMessage>();
 		this.selections = new HashMap<String, Selection>();
-	}
-
-	public Domain(String name, Map<String, Frame> frames, Map<String, IncomingMessage> messages) {
-		super();
-		this.name = name;
-		this.frames = frames;
-		this.messages = messages;
-	}
-
-	public LanguageGenerator generateLanguageGenerator() {
-		TableLanguageGenerator generator = new TableLanguageGenerator();
-		for (IncomingMessage message : this.messages.values()) {
-			generator.addEntry(message.getIntentKeyword(), message.getResponseMessage());
-		}
-
-		return generator;
-
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	public String getName() {
@@ -73,6 +49,14 @@ public class Domain {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public Collection<MessengerElement> getMessengerElements() {
@@ -86,30 +70,50 @@ public class Domain {
 		return res;
 	}
 
-	public Map<String, Frame> getFrames() {
-		return frames;
+	public void add(MessengerElement element) {
+		if (element instanceof Frame)
+			add((Frame) element);
+		if (element instanceof Selection)
+			add((Selection) element);
+		if (element instanceof Frame)
+			add((IncomingMessage) element);
 	}
 
-	public void addFrame(Frame frame) {
+	public void add(Frame frame) {
 		this.frames.put(frame.getIntentKeyword(), frame);
+	}
+
+	public void add(IncomingMessage message) {
+		this.messages.put(message.getEntityKeyword(), message);
+	}
+
+	public void add(Selection selection) {
+		selections.put(selection.getIntentKeyword(), selection);
+	}
+
+	public void add(Collection<MessengerElement> elements) {
+		for (MessengerElement element : elements)
+			this.add(element);
+	}
+
+	public LanguageGenerator generateLanguageGenerator() {
+		TableLanguageGenerator generator = new TableLanguageGenerator();
+		for (IncomingMessage message : this.messages.values()) {
+			generator.addEntry(message.getIntentKeyword(), message.getResponseMessage());
+		}
+		return generator;
 	}
 
 	public Map<String, IncomingMessage> getMessages() {
 		return messages;
 	}
 
-	public void addMessage(IncomingMessage message) {
-		this.messages.put(message.getEntityKeyword(), message);
+	public Map<String, Frame> getFrames() {
+		return frames;
 	}
 
 	public Map<String, Selection> getSelections() {
 		return selections;
-	}
-
-	public void addSelection(Selection selection) {
-		if (this.selections == null)
-			this.selections = new HashMap<>();
-		selections.put(selection.getIntentKeyword(), selection);
 	}
 
 	public Collection<String> getNLUIntents() {

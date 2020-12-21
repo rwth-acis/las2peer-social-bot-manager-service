@@ -13,7 +13,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 
-public class Frame implements MessengerElement{
+public class Frame implements MessengerElement {
 
 	private String name;
 
@@ -62,7 +62,9 @@ public class Frame implements MessengerElement{
 	}
 
 	public String getName() {
-		return name;
+		if (this.name != null && !this.name.contentEquals(""))
+			return name;
+		return this.getIntent();
 	}
 
 	public void setName(String name) {
@@ -92,8 +94,6 @@ public class Frame implements MessengerElement{
 	public Command getCommand() {
 
 		invariant();
-		// assert !this.intent.contentEquals("") : "frame no intent";
-		// assert !this.message.contentEquals("") : "frame no description";
 
 		Command res = new Command();
 
@@ -208,11 +208,12 @@ public class Frame implements MessengerElement{
 
 	public void setMessage(String value) {
 		assert value != null : "value parameter is null";
-		assert !value.contentEquals("") : "empty description of frame";
 		this.message = value;
 	}
 
 	public String getMessage() {
+		if(this.message == null)
+			return "";
 		return this.message;
 	}
 
@@ -260,14 +261,14 @@ public class Frame implements MessengerElement{
 	public Collection<InputType> getValueTypes() {
 		Set<InputType> res = new HashSet<InputType>();
 		for (Slot slot : this.getDescendants()) {
-			if(slot.getInputType() != null)
-			res.add(slot.getInputType());
+			if (slot.getInputType() != null)
+				res.add(slot.getInputType());
 		}
 		return res;
 	}
 
 	@Override
-	public String getIntentKeyword() {		
+	public String getIntentKeyword() {
 		return this.intent;
 	}
 

@@ -14,8 +14,8 @@ import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType
 
 public class ServiceFunctionAttribute {
 	
-	private final String id;
-	private final String name;
+	private String id;
+	private String name;
 	private ParameterType parameterType;
 	private boolean sameAsTrigger = false;
 	private ServiceFunctionAttribute mappedTo;
@@ -37,6 +37,8 @@ public class ServiceFunctionAttribute {
 	// this attribute will dissapear as everything will be done with a single
 	// content attribute
 	private String nluQuizContent;	
+		
+	
 	private String entityKeyword;
 	private String slotName;
 	private MessageFile file;
@@ -61,10 +63,14 @@ public class ServiceFunctionAttribute {
 		this.parameterType = type;
 	}
 
+	public String getId() {
+		return id;
+	}
+	
 	public String getName() {
 		return name;
 	}
-
+		
 	public String getIdName() {
 		if (this.parent != null)
 			return this.parent.getIdName() + "_" + this.name;
@@ -101,10 +107,6 @@ public class ServiceFunctionAttribute {
 		if (childAttribute == null)
 			return;
 		this.childAttributes.add(childAttribute);
-	}
-
-	public String getId() {
-		return id;
 	}
 
 	public boolean isSameAsTrigger() {
@@ -428,7 +430,12 @@ public class ServiceFunctionAttribute {
 
 	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
 		assert attr != null;
-
+		
+		if(this.id == null && attr.getId() != null)
+			this.id = attr.getId();
+		else if(this.id != null && attr.getId() != null && attr.getId().length() > this.id.length())
+			this.id = attr.getId();
+				
 		if (attr.getContentURL() != null)
 			this.setContentURL(attr.getContentURL());
 		if (attr.getContentURLKey() != null)

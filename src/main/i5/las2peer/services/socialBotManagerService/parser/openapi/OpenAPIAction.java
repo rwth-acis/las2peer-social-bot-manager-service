@@ -23,7 +23,7 @@ public class OpenAPIAction {
 	private ResponseParseMode responseParseMode;
 
 	public OpenAPIAction() {
-		this.responseParseMode = ResponseParseMode.TEXT;
+		this.responseParseMode = ResponseParseMode.MESSAGE_TEXT;
 	}
 
 	public OpenAPIAction(ServiceFunction sf) {
@@ -85,6 +85,20 @@ public class OpenAPIAction {
 		this.function = function;
 	}
 
+	public void addParameter(ServiceFunctionAttribute attr, String value) {
+		assert attr != null;
+		assert value != null;
+		assert this.function.contains(attr);
+		assert attr.getParameterType() == ParameterType.PATH || attr.getParameterType() == ParameterType.QUERY;
+		
+		if(attr.getParameterType() == ParameterType.PATH)
+			addPathParameter(attr.getName(), value);
+		
+		if(attr.getParameterType() == ParameterType.QUERY)
+			addQueryParameter(attr.getName(), value);
+		
+	}
+	
 	public JSONObject getBodyParameter() {
 		return bodyParameter;
 	}
@@ -170,5 +184,6 @@ public class OpenAPIAction {
 	public void setResponseParseMode(ResponseParseMode responseParseMode) {
 		this.responseParseMode = responseParseMode;
 	}
+
 
 }

@@ -28,7 +28,7 @@ public class DialogueManagerGenerator {
 		}
 		
 		if (element instanceof Selection) 
-			res = generateSimpleSelection((Selection) element);
+			res = generateSelection((Selection) element);
 
 		return res;
 		
@@ -48,7 +48,7 @@ public class DialogueManagerGenerator {
 			manager = generateSimpleMessages(messenger.getIncomingMessages());
 			break;
 		case SIMPLE_SELECTION:
-			manager = generateSimpleSelection(selection);
+			manager = generateSelection(selection);
 			break;
 		default:
 			manager = null;
@@ -80,10 +80,14 @@ public class DialogueManagerGenerator {
 		return manager;
 	}
 
-	public AbstractDialogueManager generateSimpleSelection(Selection selection) {
+	public AbstractDialogueManager generateSelection(Selection selection) {
 
-		SimpleSelectionManager manager = new SimpleSelectionManager(selection);
-		manager.init(selection);
+		AbstractDialogueManager manager = null;
+		if(selection.isDynamic()) {		
+			manager = new DynamicSelectionManager(selection);
+		} else {
+			manager = new SimpleSelectionManager(selection);
+		}
 		return manager;
 
 	}

@@ -35,6 +35,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.Domain;
+import i5.las2peer.services.socialBotManagerService.model.DynamicEntity;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
@@ -56,6 +57,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ResponseParseMode;
 import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -397,12 +399,12 @@ public class BotParser {
 					// ...Frame
 					if (frames.get(target) != null) {
 						Frame frame = frames.get(target);
-						domain.addFrame(frame);
+						domain.add(frame);
 					}
 					// .. Message
 					if (incomingMessages.get(target) != null) {
 						IncomingMessage message = incomingMessages.get(target);
-						domain.addMessage(message);
+						domain.add(message);
 					}
 				} else if (messengers.get(source) != null) {
 					Messenger messenger = messengers.get(source);
@@ -475,6 +477,31 @@ public class BotParser {
 						System.out.println("paramter has entity " + entity.getEntityKeyword());
 						sfa.setEntity(entity);
 					}
+
+					// Selection uses
+				} else if (selections.containsKey(source)) {
+					Selection selection = selections.get(source);
+
+					// Intent Entity
+					if (intentEntities.containsKey(target)) {
+						IntentEntity entity = intentEntities.get(target);
+						System.out.println("selection uses entity " + entity.getEntityKeyword());
+						if (entity instanceof DynamicEntity) {
+							selection.setDynamicEntity((DynamicEntity) entity);
+						} else {
+							DynamicEntity dynamicEntity = new DynamicEntity(entity.getEntityKeyword(), null, null);
+							selection.setDynamicEntity(dynamicEntity);
+						}
+					}
+
+					// Action
+					else if (bsfList.containsKey(target)) {
+						ServiceFunction function = bsfList.get(target);
+						System.out.println("selection uses Action " + function.getFunctionName() + " " + value);
+						selection.setGeneratorFunction(function);
+						selection.setGeneratorKey(value);
+					}
+
 					// Bot Action uses Messenger
 				} else if (bsfList.containsKey(source)) {
 					ServiceFunction sf = bsfList.get(source);
@@ -559,6 +586,15 @@ public class BotParser {
 						slot.setParameter(attribute);
 					}
 
+					// Selection generates
+				} else if (selections.containsKey(source)) {
+					Selection selection = selections.get(source);
+					// ...BotActionAttribute
+					if (sfaList.containsKey(target)) {
+						ServiceFunctionAttribute attribute = sfaList.get(target);
+						selection.setParameterName(attribute.getName());
+					}
+
 					// File generates
 				} else if (files.containsKey(source)) {
 					MessageFile file = files.get(source);
@@ -571,6 +607,7 @@ public class BotParser {
 					// Action generates Parameter
 				} else if (bsfList.containsKey(source)) {
 					ServiceFunction sf = bsfList.get(source);
+
 					// ...BotActionAttribute
 					if (sfaList.containsKey(target)) {
 						ServiceFunctionAttribute attribute = sfaList.get(target);
@@ -578,6 +615,20 @@ public class BotParser {
 						attribute.setRetrieveFunction(function.merge(sf));
 						if (value != null)
 							attribute.setRetrieveFunctionKey(value);
+
+						// ...Intent entity
+					} else if (intentEntities.containsKey(target)) {
+						IntentEntity entity = intentEntities.get(target);
+						ServiceFunction function = OpenAPIConnector.readFunction(sf);
+						ServiceFunction mergedFunction = function.merge(sf);
+						if (entity instanceof DynamicEntity) {
+							((DynamicEntity) entity).setKey(value);
+							((DynamicEntity) entity).setFunction(mergedFunction);
+						} else {
+							DynamicEntity dynamicEntity = new DynamicEntity(entity.getEntityKeyword(), mergedFunction,
+									value);
+							intentEntities.put(target, dynamicEntity);
+						}
 					}
 				}
 				// TRIGGERS
@@ -593,8 +644,8 @@ public class BotParser {
 						IncomingMessage targetMessage = incomingMessages.get(target);
 						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
-					// selections			
-				} else 	if (selections.containsKey(source)) {
+					// selections
+				} else if (selections.containsKey(source)) {
 					Selection sourceElement = selections.get(source);
 					// ...another IncomingMessage
 					if (selections.containsKey(target)) {
@@ -695,8 +746,8 @@ public class BotParser {
 						System.out.println("Selection add Message " + value + " " + im);
 						selection.addElement(value, im);
 					}
-					if (incomingMessages.get(target) != null) {						
-						IncomingMessage message = incomingMessages.get(target);						
+					if (incomingMessages.get(target) != null) {
+						IncomingMessage message = incomingMessages.get(target);
 						System.out.println("Selection add Message " + value + " " + message);
 						selection.addElement(value, message);
 					}
@@ -704,7 +755,7 @@ public class BotParser {
 					if (frames.get(target) != null) {
 						Frame frame = frames.get(target);
 						System.out.println("Selection add Frame " + value + " " + frame);
-						if (value != null)
+						if (value != null && !value.contentEquals(""))
 							selection.addElement(value, frame);
 						else
 							selection.addElement(frame.getName(), frame);
@@ -771,7 +822,7 @@ public class BotParser {
 
 		return vle;
 	}
-	
+
 	private Service addService(String key, BotModelNode elem, BotConfiguration config) throws MalformedURLException {
 
 		System.out.println("ADD SERVICE");
@@ -830,7 +881,11 @@ public class BotParser {
 
 	private Selection addSelection(String key, BotModelNode elem, BotConfiguration config) {
 
-		Selection selection = new Selection();
+		System.out.println("add selection ");
+		Selection selection = new Selection(key);
+		String generatorURL = null;
+		String responseURL = null;
+
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
@@ -846,6 +901,7 @@ public class BotParser {
 			case "Message":
 			case "Response Message":
 				selection.setMessage(value);
+				selection.setResponseMessage(value);
 				break;
 			case "Show Operation":
 				selection.setOperation(Boolean.parseBoolean(value));
@@ -856,8 +912,33 @@ public class BotParser {
 			case "Operation Description":
 				selection.setOperationDescription(value);
 				break;
+			case "Generator URL":
+				generatorURL = value;
+				break;
+			case "Generator Key":
+				selection.setGeneratorKey(value);
+				break;
+			case "Response URL":
+				responseURL = value;
+				break;
+			case "Response Parse Mode":
+				selection.setParseMode(ResponseParseMode.fromString(value));
+				break;
 			}
 		}
+
+		try {
+
+			if (responseURL != null && !responseURL.contentEquals(""))
+				selection.setResponseURL(new URL(responseURL));
+
+			if (generatorURL != null && !generatorURL.contentEquals(""))
+				selection.setResponseURL(new URL(generatorURL));
+
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		System.out.println("selection added");
 		return selection;
 	}
 
@@ -982,12 +1063,11 @@ public class BotParser {
 		} else if (NluID == null) {
 			throw new ParseBotException("Incoming Message is missing NluID");
 		}
-		
-		
+
 		IncomingMessage res = new IncomingMessage(intentKeyword, NluID);
-		if(response != null && !response.contentEquals(""))
+		if (response != null && !response.contentEquals(""))
 			res.addResponse(response);
-		
+
 		return res;
 	}
 
@@ -1360,16 +1440,25 @@ public class BotParser {
 
 	private Domain addDomain(String key, BotModelNode elem, BotConfiguration config) {
 
-		Domain domain = new Domain();
+		String name = null;
+		String desc = null;
+
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
+			String value = subVal.getValue();
 			switch (subVal.getName()) {
-			case "name":
-				domain.setName(subVal.getValue());
+			case "Name":
+				name = value;
+				break;
+			case "Description":
+			case "Descriptionn":
+				desc = value;
 				break;
 			}
 		}
+		Domain domain = new Domain(name);
+		domain.setDescription(desc);
 		return domain;
 	}
 

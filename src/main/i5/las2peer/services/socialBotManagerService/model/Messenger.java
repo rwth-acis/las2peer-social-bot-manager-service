@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -70,7 +71,7 @@ public class Messenger {
 	 * This map contains all known frames. The key is the intent keyword
 	 */
 	private HashMap<String, Frame> intentFrames;
-	
+
 	private HashMap<String, Selection> intentSelections;
 
 	/**
@@ -137,7 +138,7 @@ public class Messenger {
 		}
 
 		// State map
-		this.knownIntents = new HashMap<String, IncomingMessage>();		
+		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.random = new Random();
 
@@ -567,11 +568,19 @@ public class Messenger {
 	public void addSelection(Selection selection) {
 		this.intentSelections.put(selection.getIntentKeyword(), selection);
 	}
-	
+
+	public Collection<MessengerElement> getElements() {
+		Collection<MessengerElement> res = new HashSet<>();
+		res.addAll(getIncomingMessages());
+		res.addAll(getFrames());
+		res.addAll(this.intentSelections.values());
+		return res;
+	}
+
 	public Map<String, Selection> getSelections() {
 		return this.intentSelections;
 	}
-	
+
 	public Collection<IncomingMessage> getIncomingMessages() {
 		return this.knownIntents.values();
 	}
@@ -594,6 +603,11 @@ public class Messenger {
 			frame.getCommand().invariant();
 			res.add(frame.getCommand());
 		}
+
+		for (Selection selection : this.intentSelections.values()) {
+			if (selection.isOperation())
+				res.add(selection.getCommand());
+		}
 		return res;
 	}
 
@@ -603,6 +617,18 @@ public class Messenger {
 
 	public void setBot(Bot bot) {
 		this.bot = bot;
+	}
+
+	public Map<String, Domain> getDomains() {
+		if (this.getElements().isEmpty())
+			return this.domains;
+		
+		Map<String, Domain> res = new HashMap<String, Domain>();
+		Domain domain = new Domain("Default");
+		domain.add(this.getElements());
+		res.put(domain.getName(), domain);
+		res.putAll(this.domains);
+		return res;				
 	}
 
 	public void initialize() {
@@ -619,13 +645,16 @@ public class Messenger {
 
 	public Collection<String> getNLUIntents() {
 		Collection<String> res = new ArrayList<>();
-		
-		for(Frame frame :this.intentFrames.values()) 
+
+		for (Frame frame : this.intentFrames.values())
 			res.add(frame.getIntent());
 
-		for(IncomingMessage message :this.knownIntents.values())
-			res.add(message.getIntentKeyword());
-			
+		for (IncomingMessage message : this.knownIntents.values())
+			res.addAll(message.getNLUIntents());
+
+		for (Selection selection : this.intentSelections.values())
+			res.addAll(selection.getNLUIntents());
+
 		return res;
 	}
 

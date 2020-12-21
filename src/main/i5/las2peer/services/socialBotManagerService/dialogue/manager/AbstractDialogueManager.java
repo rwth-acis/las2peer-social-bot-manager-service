@@ -25,6 +25,10 @@ public abstract class AbstractDialogueManager {
 	
 	public abstract void reset();
 
+	public void fillRecursive(String attrId, String value) {
+		return;
+	}
+	
 	public String getStartIntent() {
 		return startIntent;
 	}

@@ -6,6 +6,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.D
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
+import i5.las2peer.services.socialBotManagerService.model.DynamicResponse;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
@@ -15,6 +16,18 @@ public class DialogueActGenerator {
 		DialogueAct res = new DialogueAct();
 		res.setIntent(intent);
 		return res;
+	}
+		
+	/**
+	 * get a generic response act.
+	 * 
+	 * @param element
+	 * @return
+	 */
+	public static DialogueAct getAct(DynamicResponse element) {
+		
+		return getAct(element.getActIntent());		
+		
 	}
 
 	//// Frame Dialogue Acts

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.websocket.DeploymentException;
@@ -18,6 +19,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Function;
 
 public class Bot {
 
@@ -48,15 +50,17 @@ public class Bot {
 	private Map<String, LanguageUnderstander> nlus;
 	private Map<String, LanguageGenerator> nlgs;
 	private Language language = Language.ENGLISH;
+	private Map<String, Function> creationFunctions;
 
 	public Bot() {
 
-		this.botServiceFunctions = new HashMap<String, ServiceFunction>();
-		this.triggerList = new HashSet<Trigger>();
-		this.generatorList = new HashMap<String, ContentGenerator>();
-		this.active = new HashMap<String, Boolean>();
-		this.messengers = new HashMap<String, Messenger>();
-		this.nlus = new HashMap<String, LanguageUnderstander>();
+		this.botServiceFunctions = new HashMap<>();
+		this.triggerList = new HashSet<>();
+		this.generatorList = new HashMap<>();
+		this.active = new HashMap<>();
+		this.messengers = new HashMap<>();
+		this.nlus = new HashMap<>();
+		this.creationFunctions = new HashMap<>();
 	}
 
 	public String getId() {
@@ -306,19 +310,53 @@ public class Bot {
 	public Language getLanguage() {
 		return this.language;
 	}
-	
+
 	public Collection<String> getNLUIntents() {
 		Collection<String> res = new ArrayList<>();
-		for(Messenger messenger :this.messengers.values()) 
+		for (Messenger messenger : this.messengers.values())
 			res.addAll(messenger.getNLUIntents());
-		return res;		
+		return res;
 	}
-	
+
 	public Collection<String> getNLGIntents() {
 		Collection<String> res = new ArrayList<>();
-		for(Messenger messenger :this.messengers.values()) 
+		for (Messenger messenger : this.messengers.values())
 			res.addAll(messenger.getNLGIntents());
-		return res;	
+		return res;
+	}
+
+	public Collection<Domain> getDomains() {
+		Map<String, Domain> res = new HashMap<>();		
+		for (Messenger messenger : this.messengers.values()) {
+			for (Entry<String, Domain> domain : messenger.getDomains().entrySet())
+				res.put(domain.getKey(), domain.getValue());
+		}
+		return res.values();
+	}
+
+	public Map<String, Function> getCreationFunctions() {
+		if(this.creationFunctions == null)
+			this.creationFunctions = new HashMap<>();
+		return creationFunctions;
+	}
+
+	public void setCreationFunctions(Collection<Function> creationFunctions) {
+		if(this.creationFunctions == null)
+			this.creationFunctions = new HashMap<String, Function>();
+		for(Function function :creationFunctions) {
+			this.addCreationFunction(function);
+		}
+	}
+
+	public void addCreationFunction(Function creationFunction) {
+		assert creationFunction != null;		
+		
+		String name = creationFunction.getName();
+		if(name == null || name.contentEquals("")) {
+			name = creationFunction.getType() + " " + this.creationFunctions.size();
+			creationFunction.setName(name);
+		}
+		this.creationFunctions.put(name, creationFunction);
 	}
 
 }
