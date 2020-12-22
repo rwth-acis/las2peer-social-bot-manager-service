@@ -33,6 +33,8 @@ while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER}
 done
 echo "${DATABASE_HOST}:${DATABASE_PORT} is available. Continuing..."
 
+
+
 # Create and migrate the database on first run
 if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.MESSAGE" > /dev/null 2>&1; then
     echo "Creating database schema..."
@@ -81,6 +83,8 @@ function selectMnemonic {
 #prepare pastry properties
 echo external_address = $(curl -s https://ipinfo.io/ip):${LAS2PEER_PORT} > etc/pastry.properties
 
+
+
 # start the service within a las2peer node
 if [[ -z "${@}" ]]
 then
@@ -92,3 +96,4 @@ then
 else
   exec ${LAUNCH_COMMAND} ${@}
 fi
+
