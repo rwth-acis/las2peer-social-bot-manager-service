@@ -23,6 +23,5 @@
 	<classpathentry kind="lib" path="servicebundle/json-20190722.jar"/>
 	<classpathentry kind="lib" path="servicebundle/mysql-connector-java-8.0.13.jar"/>
 	<classpathentry kind="lib" path="servicebundle/commons-dbcp2-2.7.0.jar"/>
-	<classpathentry kind="src" path="lib"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>
