@@ -1097,7 +1097,9 @@ public class SocialBotManagerService extends RESTService {
 			channel = chat.getChannelByEmail(email);
 			} 
         System.out.println(channel);
-		chat.sendMessageToChannel(channel, text);
+        if(text != null) {
+        	chat.sendMessageToChannel(channel, text);
+        }
 		if(body.containsKey("fileBody")) {
 			chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"), body.getAsString("fileType"));
 		}

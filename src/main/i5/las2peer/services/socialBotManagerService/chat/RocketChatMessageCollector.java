@@ -72,4 +72,35 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 			System.out.println("Skipped");
 		}
 	}
+	
+	
+	
+	public void handle(RocketChatMessage message, String fileBody, String fileName, String fileType, int role, String email) {
+		Type type = message.getMsgType();
+		if (type != null) {
+			if (type.equals(Type.ATTACHMENT)) {
+				try {
+					System.out.println("Handling Attachment.");
+					JSONArray emails = message.getSender().getEmails();
+					System.out.println("rcket message is " + message);
+					String rid = message.getRoomId();
+					 System.out.println(rid);
+					String user = message.getSender().getUserName();
+					String msg = replaceUmlaute(fileName);
+					ChatMessage cm = new ChatMessage(rid, user, msg, fileName, fileType, fileBody);
+					System.out.println("Email of user is "+ email );
+					cm.setEmail(email);
+					cm.setRole(role);
+					this.addMessage(cm);
+					System.out.println("Message added.");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			} else {
+				System.out.println("Unsupported type: " + type.toString());
+			}
+		} else {
+			System.out.println("Skipped");
+		}
+	}
 }
