@@ -15,7 +15,6 @@ public class SimpleMessageManager extends AbstractDialogueManager {
 	Collection<AbstractDialogueManager> managers;
 
 	public SimpleMessageManager(IncomingMessage message) {
-		this.setStartIntent(message.getIntentKeyword());
 		this.message = message;
 		this.managers = new ArrayList<>();
 		for (MessengerElement element : message.getFollowingMessages().values()) {
@@ -29,7 +28,7 @@ public class SimpleMessageManager extends AbstractDialogueManager {
 	public DialogueAct handle(Intent intent) {
 		assert intent != null;
 		assert intent.getKeyword() != null;
-		
+
 		// first call
 		String key = intent.getKeyword();
 		if (key.contentEquals(message.getIntentKeyword())) {
@@ -37,15 +36,15 @@ public class SimpleMessageManager extends AbstractDialogueManager {
 			act.setMessage(message.getResponseMessage());
 			return act;
 		}
-		
-		//follow up
-		for(AbstractDialogueManager manager :this.managers) {
-			if(manager.getNLUIntents().contains(key))
+
+		// follow up
+		for (AbstractDialogueManager manager : this.managers) {
+			if (manager.getNLUIntents().contains(key))
 				return manager.handle(intent);
 		}
-		
+
 		return null;
-		
+
 	}
 
 	@Override
@@ -61,6 +60,13 @@ public class SimpleMessageManager extends AbstractDialogueManager {
 	@Override
 	public void reset() {
 		return;
+	}
+
+	@Override
+	public String getStartIntent() {
+		if (this.message.getIntentKeyword() != null)
+			return this.message.getIntentKeyword();
+		return " ";
 	}
 
 }

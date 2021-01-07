@@ -2,7 +2,7 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 public enum ParameterType {
 
-    PATH, QUERY, BODY, CHILD, DISCRIMINATOR;
+    PATH, QUERY, BODY, CHILD, DISCRIMINATOR, HELPER;
 
     public static ParameterType fromString(String parameterType) {
 	{

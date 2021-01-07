@@ -98,9 +98,6 @@ public class ServiceFunction extends TriggerFunction {
 
 	public String getBasePath() {
 
-		System.out.println("service is " + this.service);
-		System.out.println("serviceName is " + this.serviceName);
-
 		if (this.service == null)
 			return this.serviceName;
 
@@ -197,6 +194,15 @@ public class ServiceFunction extends TriggerFunction {
 		return null;
 	}
 
+	public List<ServiceFunctionAttribute> getRequiredAttributes() {
+		List<ServiceFunctionAttribute> res = new ArrayList<ServiceFunctionAttribute>();
+		for (ServiceFunctionAttribute attr : this.attributes) {
+			if (attr.isRequired())
+				res.add(attr);
+		}
+		return res;
+	}
+
 	public ServiceFunctionAttribute getBodyAttribute() {
 		for (ServiceFunctionAttribute attr : this.attributes) {
 			if (attr.getParameterType() == ParameterType.BODY)
@@ -271,12 +277,20 @@ public class ServiceFunction extends TriggerFunction {
 		this.actionType = actionType;
 	}
 
+	public boolean hasOpenAttribute() {
+		for (ServiceFunctionAttribute attr : this.getAllAttributes())
+			if (attr.isOpen())
+				return true;
+
+		return false;
+	}
+
 	public boolean hasFrameGeneratedAttribute() {
 		System.out.println("search for frame generated attribute in " + this.getFunctionName());
 		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
-			System.out.println("search in attr " + attr.getName() + " " + attr.getSlotName());
+			System.out.println("search in attr " + attr.getName() + " " + attr.getSlotID());
 
-			if (attr.getSlotName() != null && !attr.getSlotName().contentEquals("")) {
+			if (attr.getSlotID() != null && !attr.getSlotID().contentEquals("")) {
 				System.out.println("found");
 				return true;
 			}
@@ -287,9 +301,8 @@ public class ServiceFunction extends TriggerFunction {
 	public Collection<ServiceFunctionAttribute> getFrameGeneratedAttributes() {
 		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
 		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
-			if (attr.getSlotName() != null && !attr.getSlotName().contentEquals("")) {
+			if (attr.getSlotID() != null && !attr.getSlotID().contentEquals(""))
 				res.add(attr);
-			}
 		}
 		return res;
 	}
@@ -305,6 +318,13 @@ public class ServiceFunction extends TriggerFunction {
 
 		if (this.serviceName == null && function.serviceName != null)
 			this.serviceName = function.serviceName;
+
+		System.out.println("MERGE");
+		if (!this.getBasePath().startsWith("http") && function.getBasePath().startsWith("http"))
+			this.setBasePath(function.getBasePath());
+
+		if (this.actionType == ActionType.SERVICE && function.getActionType() == ActionType.FUNCTION)
+			this.actionType = function.getActionType();
 
 		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
 			System.out.println(attr.getIdName());

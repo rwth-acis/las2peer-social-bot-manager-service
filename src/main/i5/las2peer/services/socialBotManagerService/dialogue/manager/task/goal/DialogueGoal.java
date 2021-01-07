@@ -6,6 +6,7 @@ import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
@@ -239,8 +240,23 @@ public class DialogueGoal {
 
 		invariant();
 		assert !this.isFull() : "next node of full node tree";
-
-		return root.next();
+		
+		Node node = root.next();
+		if(!(node instanceof Fillable))
+			return node;
+		
+		Fillable fillable = ((Fillable) node);		
+		if(!fillable.hasFrameGeneratedEnum())
+			return node;
+		
+		System.out.println("check frame generated attribte " + fillable.getAPIName());
+		ServiceFunctionAttribute attr = fillable.getSlot().getParameter();
+		for(ServiceFunctionAttribute slotAttr :attr.getRetrieveFunction().getFrameGeneratedAttributes()) {
+			Fillable input = this.getFillable(slotAttr.getSlotID());
+			if(!input.isFilled())
+				return (Node) input;						
+		}
+		return node;
 	}
 
 	public void reset() {
@@ -263,10 +279,9 @@ public class DialogueGoal {
 	}
 
 	public OpenAPIAction getOpenAPIAction() {
-
-		OpenAPIAction res = new OpenAPIAction();
+		
 		ServiceFunction function = this.getFrame().getServiceFunction();
-		res.setFunction(function);
+		OpenAPIAction res = new OpenAPIAction(function);
 		res.setBodyParameter(root.toBodyJSON());
 		res.setPathParameters(root.getPathParameters());
 		res.setQueryParameters(root.getQueryParameters());

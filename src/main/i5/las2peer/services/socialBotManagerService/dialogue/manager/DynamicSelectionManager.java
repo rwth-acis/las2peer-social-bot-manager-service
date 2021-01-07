@@ -29,7 +29,6 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 
 		System.out.println("INIT DYNAMIC SELECTION MANAGER ");
 		this.selection = selection;
-		this.setStartIntent(selection.getIntent());
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 
 		for (Entry<String, MessengerElement> entry : selection.getElements().entrySet()) {
@@ -44,8 +43,12 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 	public DialogueAct handle(Intent intent) {
 
 		// first call
-		if (intent.getKeyword().contentEquals(selection.getIntent())) {
+		if (intent.getKeyword().contentEquals(selection.getIntentKeyword())) {
 			System.out.println("DYNAMIC SELECTION First call: " + intent.getKeyword() + "message: " + selection.getResponseMessage());
+			assert this.selection != null;
+			assert this.selection.getDynamicEntity() != null;
+			this.selection.getDynamicEntity().invariantDynamic();
+			
 			DialogueAct act = DialogueActGenerator.getAct(this.selection);
 			act.setIntentType(DialogueActType.SELECTION);
 			act.setMessage(this.selection.getResponseMessage());
@@ -109,12 +112,17 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 	@Override
 	public Collection<String> getNLUIntents() {
 		Collection<String> res = new ArrayList<>();
-		res.add(selection.getIntent());
+		res.add(selection.getIntentKeyword());
 		res.add(selection.getActIntent());
 		if (manager.getNLUIntents() != null)
 			res.addAll(manager.getNLUIntents());
 
 		return res;
+	}
+
+	@Override
+	public String getStartIntent() {
+		return selection.getIntentKeyword();
 	}
 
 }

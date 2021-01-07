@@ -43,7 +43,7 @@ public class Selection implements MessengerElement, Menuable, DynamicResponse{
 	URL responseURL;
 			
 	// Generated Selection
-	DynamicEntity dynamicEntity;
+	IntentEntity dynamicEntity;
 	ServiceFunction generatorFunction;
 	String generatorKey;
 	URL generatorURL;	
@@ -55,10 +55,6 @@ public class Selection implements MessengerElement, Menuable, DynamicResponse{
 	
 	public boolean isDynamic() {
 		return this.dynamicEntity != null;
-	}
-	
-	public String getIntent() {
-		return intent;
 	}
 
 	public void setIntent(String intent) {
@@ -115,6 +111,7 @@ public class Selection implements MessengerElement, Menuable, DynamicResponse{
 		this.responseMessage = message;
 	}
 	
+	@Override
 	public boolean isOperation() {
 		return operation;
 	}
@@ -147,12 +144,12 @@ public class Selection implements MessengerElement, Menuable, DynamicResponse{
 		return this.parameterName;
 	}
 	
-	public DynamicEntity getDynamicEntity() {
+	public IntentEntity getDynamicEntity() {
 		return dynamicEntity;
 	}
 
-	public void setDynamicEntity(DynamicEntity dynamicEntity) {
-		this.dynamicEntity = dynamicEntity;
+	public void setDynamicEntity(IntentEntity entity) {
+		this.dynamicEntity = entity;
 	}
 	
 	public URL getResponseURL() {

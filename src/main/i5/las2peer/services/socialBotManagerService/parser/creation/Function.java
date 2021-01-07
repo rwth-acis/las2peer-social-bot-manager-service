@@ -20,7 +20,7 @@ public abstract class Function {
 
 	@ApiModelProperty(dataType = "string", value = "The intent to start the service access", required = true, example = "add_pet")
 	private String intent;
-	
+
 	private String name;
 
 	public FunctionType getType() {
@@ -38,11 +38,11 @@ public abstract class Function {
 	public void setIntent(String intent) {
 		this.intent = intent;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}

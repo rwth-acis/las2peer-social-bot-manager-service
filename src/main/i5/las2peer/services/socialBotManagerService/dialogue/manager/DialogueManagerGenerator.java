@@ -1,6 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DefaultTaskOrientedManager;
@@ -21,10 +20,8 @@ public class DialogueManagerGenerator {
 		if (element instanceof Frame) 
 			res = generateTaskOrientedRule((Frame) element);
 		
-		if (element instanceof IncomingMessage) {
-			ArrayList<IncomingMessage> messages = new ArrayList<>();
-			messages.add((IncomingMessage) element);
-			res = generateSimpleMessages(messages);			
+		if (element instanceof IncomingMessage) {			
+			res = generate((IncomingMessage) element);			
 		}
 		
 		if (element instanceof Selection) 
@@ -45,17 +42,12 @@ public class DialogueManagerGenerator {
 			manager = generateTaskOrientedRule(frame);
 			break;
 		case SIMPLE_MESSAGES:
-			manager = generateSimpleMessages(messenger.getIncomingMessages());
-			break;
 		case SIMPLE_SELECTION:
 			manager = generateSelection(selection);
 			break;
 		default:
 			manager = null;
 		}
-
-		if (frame != null)
-			manager.setStartIntent(frame.getIntent());
 
 		return manager;
 	}
@@ -64,12 +56,16 @@ public class DialogueManagerGenerator {
 
 		DialogueGoal goal = new DialogueGoal(frame);
 		DefaultTaskOrientedManager manager = new DefaultTaskOrientedManager(goal);
-		manager.setStartIntent(frame.getIntent());
 
 		return manager;
 	}
 
-	public AbstractDialogueManager generateSimpleMessages(Collection<IncomingMessage> messages) {
+	public SimpleMessageManager generate (IncomingMessage message) {
+		SimpleMessageManager manager = new SimpleMessageManager(message);
+		return manager;		
+	}
+	
+	public AbstractDialogueManager generateMultiMessages(Collection<IncomingMessage> messages) {
 
 		MultiMessageDialogueManager manager = new MultiMessageDialogueManager();
 

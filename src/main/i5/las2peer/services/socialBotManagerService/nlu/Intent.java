@@ -21,6 +21,7 @@ public class Intent {
 			{ new String("ß"), "ss" } };
 
 	public static String replaceUmlaute(String orig) {
+		assert orig != null: "replace Umlaute original is null";
 		String result = orig;
 		for (int i = 0; i < UMLAUT_REPLACEMENTS.length; i++)
 			result = result.replace(UMLAUT_REPLACEMENTS[i][0], UMLAUT_REPLACEMENTS[i][1]);
@@ -35,7 +36,8 @@ public class Intent {
 	 * @param confidence of intent keyword
 	 */
 	public Intent(String keyword, float confidence) {
-
+		assert keyword != null: "Intent keyword is null";
+		
 		this.intentKeyword = replaceUmlaute(keyword);
 		this.confidence = confidence;
 		this.intentType = getIntentType();

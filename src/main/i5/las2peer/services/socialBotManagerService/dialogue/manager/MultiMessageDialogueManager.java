@@ -72,4 +72,10 @@ public class MultiMessageDialogueManager extends AbstractDialogueManager {
 		return null;
 	}
 
+	@Override
+	public String getStartIntent() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

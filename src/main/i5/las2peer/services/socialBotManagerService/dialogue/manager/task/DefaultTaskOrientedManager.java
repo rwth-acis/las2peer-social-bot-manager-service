@@ -45,9 +45,10 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 
 		// get corresponding slot
 		Slotable slo = null;
-		if (goal.contains(intent))
+		if (goal.contains(intent)) {
 			slo = goal.getNode(intent);
-		else
+			System.out.println("corresponding slot found: " + slo.getAPIName() + " " + slo.getClass());
+		} else
 			System.out.println("naive dm handle: slot not found for intent: " + intent);
 
 		// Repetition Node
@@ -72,12 +73,20 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		case INFORM:
 
 			// fill slot
+			boolean filled = false;
 			for (Entity entity : semantic.getEntities()) {
 				String value = entity.getValue();
-				if (node.validate(value))
-					this.goal.fill(node, value);
-				else
-					return requestNextSlot();
+				if (node.validate(value)) {
+					System.out.println("node " + node.getName() + " filled with " + value);
+					if (this.goal.fill(node, value))
+						filled = true;
+				}
+			}
+			
+			// Nothing was filled, request again
+			if(!filled) {
+				System.out.println("node " + node.getName() + " not validating any entity " + semantic.getEntities().size());
+				return requestNextSlot();
 			}
 
 			// arrays
@@ -214,6 +223,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 
 	private DialogueAct perform() {
 		DialogueAct act = new DialogueAct();
+		act.setGoal(goal);
 		act.setAction(goal.getOpenAPIAction());
 		if (goal.getFrame().getFile() != null)
 			act.setFile(goal.getFrame().getFile());
@@ -284,8 +294,13 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		assert value != null;
 		assert !attrId.contentEquals("");
 
-		if(this.goal.fill(attrId, value))
+		if (this.goal.fill(attrId, value))
 			System.out.println("slot attribute " + attrId + " was external filled with " + value);
+	}
+
+	@Override
+	public String getStartIntent() {
+		return this.goal.getFrame().getIntentKeyword();
 	}
 
 }

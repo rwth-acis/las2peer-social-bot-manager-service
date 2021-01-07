@@ -1,5 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -34,27 +38,60 @@ public class FrameMapper {
 	 * frame consistent with the service function attributes.
 	 * 
 	 * @param modelAction modeled service action
-	 * @param frame modeled frame
+	 * @param frame       modeled frame
 	 * @return matched frame
 	 */
 	public Frame map(ServiceFunction modelAction, Frame frame) {
 
 		assert modelAction != null;
 		assert frame != null;
-		
-		System.out.println("Mapping service action " + modelAction.getFunctionName() + " into frame " + frame.getName());
-		
+
+		System.out
+				.println("Mapping service action " + modelAction.getFunctionName() + " into frame " + frame.getName());
+
 		// Merge model function definition and swagger received definition
 		ServiceFunction swaggerAction = OpenAPIConnector.readFunction(modelAction);
 		ServiceFunction frameAction = swaggerAction.merge(modelAction);
 		frame.setServiceFunction(frameAction);
 
-		// Generating slots
+		// collect additional helper attributes
+		Collection<ServiceFunctionAttribute> additionalAttrs = new ArrayList<>();
+		for (ServiceFunctionAttribute attr : frameAction.getAllAttributes()) {
+
+			if (attr.hasDynamicEnums()) {
+				System.out.println("mapping attribute " + attr.getName() + " is dynamic");
+
+				System.out.println(
+						"attr: size:" + attr.getAllAttributes().size() + " open" + attr.getOpenAttributes().size());
+				for (ServiceFunctionAttribute addAttr : attr.getOpenAttributes()) {
+
+					ServiceFunctionAttribute helperAttr = new ServiceFunctionAttribute(UUID.randomUUID().toString(),
+							addAttr.getName() + "_helper", ParameterType.HELPER);
+					helperAttr.setRequired(false);
+					helperAttr.setContent(null);
+					addAttr.setSlotID(helperAttr.getId());
+					additionalAttrs.add(helperAttr);
+					System.out.println("new helper attribute " + helperAttr.getName());
+					System.out.println("info attribute " + addAttr.getName() + " filled by " + addAttr.getSlotID());
+				}
+			}
+		}
+
+		// map regular attributes and slots
 		for (ServiceFunctionAttribute attr : frameAction.getAttributes()) {
+			
 			Slot slot = map(attr, attr.getName());
 			frame.addSlot(slot);
 		}
-		
+
+		// map additional attributes
+		for (ServiceFunctionAttribute attr : additionalAttrs) {
+
+			Slot slot = map(attr, attr.getName());
+			System.out.println("mapping additional attr " + attr.getId());
+			frame.addSlot(slot);
+		}
+
 		// Fill missing frame definitions
 		if (frame.getIntent() == null)
 			frame.setIntent(frameAction.getFunctionName());
@@ -76,7 +113,7 @@ public class FrameMapper {
 	public Slot map(ServiceFunctionAttribute attr, String name) {
 
 		assert attr != null : "map attr with slot: attr is null";
-		
+
 		// create slot
 		Slot slot = new Slot(name);
 		slot.setParameter(attr);
@@ -99,13 +136,13 @@ public class FrameMapper {
 			}
 		else
 			slot.setInputType(InputType.Free);
-		
-		if(attr.isFile())
+
+		if (attr.isFile())
 			slot.setInputType(InputType.File);
 
-		if(attr.getEntity() != null)
+		if (attr.getEntity() != null)
 			slot.setEntity(attr.getEntity());
-		
+
 		// selection
 		if (attr.hasDiscriminator()) {
 			slot.setSelection(false);

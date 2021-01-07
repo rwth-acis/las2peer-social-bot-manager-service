@@ -80,15 +80,15 @@ public class RootNode extends Node {
 	@Override
 	public Node next() {
 		invariant();
+
 		for (Node node : this.children) {
-			if (!node.isReady()) {
+			if (!node.isReady())
 				return node.next();
-			}
 		}
+
 		for (Node node : this.children) {
-			if (!node.isFull()) {
+			if (!node.isFull())
 				return node.next();
-			}
 		}
 
 		return null;
@@ -102,7 +102,7 @@ public class RootNode extends Node {
 		}
 		return nodes;
 	}
-	
+
 	@Override
 	protected void invariant() {
 		assert this.frame != null : "frame is null";

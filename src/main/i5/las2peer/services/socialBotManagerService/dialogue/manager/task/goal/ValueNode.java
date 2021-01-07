@@ -123,7 +123,7 @@ public class ValueNode extends Node implements Fillable {
 	}
 
 	@Override
-	public Node next() {
+	public Node next() {			
 		return this;
 	}
 

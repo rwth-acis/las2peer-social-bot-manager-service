@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 import java.util.HashMap;
 import java.util.Map;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 
@@ -11,10 +12,12 @@ public class DialogueAct {
 	String intent;
 	DialogueActType intentType;
 	Map<String, String> entities;
+	Map<String, Map<String, String>> multiEntities;
 	String message;
 
 	ExpectedInput expected;
 	OpenAPIAction action;
+	DialogueGoal goal;
 	String file;
 
 	boolean full;
@@ -53,6 +56,19 @@ public class DialogueAct {
 			this.entities = new HashMap<String, String>();
 		this.entities.put(name, value);
 	}
+	
+	public void addEntity(String context, String name, String value) {
+		
+		System.out.println("addEnttity " + context + name + value);
+		if(this.multiEntities == null)
+			this.multiEntities = new HashMap<>();
+		
+		if(!this.multiEntities.containsKey(context))
+			this.multiEntities.put(context, new HashMap<>());
+		
+		this.multiEntities.get(context).put(name, value);
+		
+	}
 
 	public Map<String, String> getEntities() {
 		return this.entities;
@@ -63,7 +79,19 @@ public class DialogueAct {
 			return true;
 		return false;
 	}
+	
+	public boolean hasMultiEntities() {
+		
+		if(this.multiEntities != null && !this.multiEntities.isEmpty())
+			return true;
+		
+		return false;		
+	}
 
+	public Map<String, Map<String, String>> getContextEntities() {
+		return this.multiEntities;
+	}
+	
 	public String getMessage() {
 		return message;
 	}
@@ -153,6 +181,14 @@ public class DialogueAct {
 
 	public void setFile(String file) {
 		this.file = file;
+	}
+	
+	public void setGoal(DialogueGoal goal) {
+		this.goal = goal;
+	}
+	
+	public DialogueGoal getGoal() {
+		return this.goal;
 	}
 	
 	@Override

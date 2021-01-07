@@ -14,7 +14,7 @@ public class NodeFactory {
 		assert slot != null : "slot is null";
 		assert !(slot.isLeaf() && slot.isSelection()) : "selection slot must have children";
 		System.out.println("node: " + slot.getName());
-		
+
 		// Value Node
 		if (slot.isLeaf() && !slot.isArray()) {
 			return new ValueNode(slot);

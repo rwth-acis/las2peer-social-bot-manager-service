@@ -73,11 +73,9 @@ public class NodeList extends ArrayList<Node> {
 			if (nos instanceof Slotable) {
 				Slotable node = (Slotable) nos;
 				Slot slot = node.getSlot();
-				if (name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
+				if (name.contentEquals(slot.getID()) || name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
 					return node;
-
 			}
-
 		}
 		return null;
 	}

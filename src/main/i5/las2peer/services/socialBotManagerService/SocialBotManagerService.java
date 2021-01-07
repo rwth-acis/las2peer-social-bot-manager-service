@@ -244,7 +244,7 @@ public class SocialBotManagerService extends RESTService {
 	// use Rasa's
 	// API directly once that's fixed. The whole `TrainingHelper` class can be
 	// deleted then as well.
-	public Response trainAndLoad(String body) {
+	public Response trainAndLoad(@ApiParam(value = "body", required = true) String body) {
 		System.out.println("train and load");
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 
@@ -425,7 +425,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			return Response.ok().entity("no bot found").build();
+			return Response.serverError().entity("no bot found").build();
 		}
 
 		@GET
@@ -517,10 +517,13 @@ public class SocialBotManagerService extends RESTService {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
+				e.printStackTrace();
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.serverError().build();
+			} catch (AssertionError e) {
+				e.printStackTrace();
 			}
 
 			// initialized = true;
@@ -954,6 +957,10 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot deactivated") })
 		@ApiOperation(value = "Deactivate bot for unit", notes = "Deactivates a bot for a unit.")
 		public Response deactivateBot(@PathParam("botName") String bot, @PathParam("unit") String unit) {
+
+			if (unit == null || unit.contentEquals(""))
+				return deactivateBot(bot);
+
 			Collection<VLE> vles = getConfig().getVLEs().values();
 			for (VLE vle : vles) {
 				Bot b = vle.getBots().get(bot);
@@ -2049,8 +2056,7 @@ public class SocialBotManagerService extends RESTService {
 						Messenger newMessenger = null;
 						if (messenger instanceof TelegramMessenger) {
 							TelegramMessenger tele = (TelegramMessenger) messenger;
-							newMessenger = new Messenger("Telegram", "Telegram", tele.getToken(),
-									null);
+							newMessenger = new Messenger("Telegram", "Telegram", tele.getToken(), null);
 						}
 
 						if (messenger instanceof SlackMessenger) {
@@ -2075,10 +2081,10 @@ public class SocialBotManagerService extends RESTService {
 
 			return Response.ok().entity("no bot found").build();
 		}
-		
+
 		@DELETE
 		@Path("/{botName}/messenger/delete")
-		@Produces(MediaType.TEXT_PLAIN)		
+		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
 		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
 		public Response deleteMessenger(@PathParam("botName") String name, @PathParam("messengerName") String mName) {
@@ -2086,15 +2092,15 @@ public class SocialBotManagerService extends RESTService {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
 					if (bot != null) {
-						for(Entry<String, Messenger> entry : bot.getMessengers().entrySet()) {
-							if(entry.getValue().getName().contentEquals(mName)) {
+						for (Entry<String, Messenger> entry : bot.getMessengers().entrySet()) {
+							if (entry.getValue().getName().contentEquals(mName)) {
 								bot.getMessengers().remove(entry.getKey());
-								return Response.ok().entity("Messenger" + mName + " deleted fro bot " + name ).build();
+								return Response.ok().entity("Messenger" + mName + " deleted fro bot " + name).build();
 							}
-							
+
 						}
 
-					}					
+					}
 				}
 
 			} catch (
@@ -2105,10 +2111,10 @@ public class SocialBotManagerService extends RESTService {
 
 			return Response.ok().entity("no bot found").build();
 		}
-		
+
 		@DELETE
 		@Path("/{botName}/function/delete")
-		@Produces(MediaType.TEXT_PLAIN)		
+		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
 		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
 		public Response deleteFunction(@PathParam("botName") String name, @PathParam("functionName") String mName) {
@@ -2116,14 +2122,14 @@ public class SocialBotManagerService extends RESTService {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
 					if (bot != null) {
-						for(Entry<String, Function> entry : bot.getCreationFunctions().entrySet()) {
-							if(entry.getValue().getName().contentEquals(mName)) {
+						for (Entry<String, Function> entry : bot.getCreationFunctions().entrySet()) {
+							if (entry.getValue().getName().contentEquals(mName)) {
 								bot.getCreationFunctions().remove(entry.getKey());
-								return Response.ok().entity("function" + mName + " deleted fro bot " + name ).build();
-							}							
+								return Response.ok().entity("function" + mName + " deleted fro bot " + name).build();
+							}
 						}
 
-					}					
+					}
 				}
 
 			} catch (
@@ -2140,12 +2146,31 @@ public class SocialBotManagerService extends RESTService {
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
-		public Response getTestArray(@PathParam("testarrParam") String testarrParam) {
+		public Response getTest(@PathParam("testarrParam") String testarrParam) {
 
 			JSONArray res = new JSONArray();
 			res.add(testarrParam);
 			res.add("HelloWorld");
 			System.out.println("get Test Enum " + res.toJSONString());
+			try {				
+				return Response.ok().entity(res).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.serverError().entity("cant retrieve knowledge models").build();
+
+		}
+
+		@POST
+		@Path("/test/{AttrA}/{AttrB}/{AttrC}")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
+		public Response postTest(@PathParam("AttrA") String attrA, @PathParam("AttrB") String attrB,
+				@PathParam("AttrC") String attrC) {
+
+			String res = "success";
 			try {
 				return Response.ok().entity(res).build();
 			} catch (Exception e) {
@@ -2161,7 +2186,7 @@ public class SocialBotManagerService extends RESTService {
 		@Consumes(MediaType.TEXT_PLAIN)
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "getNLUModelIntents", notes = "get NLU model Intents")
+		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
 		public Response getNLUIntents(@PathParam("name") String name) {
 
 			try {
@@ -2331,6 +2356,64 @@ public class SocialBotManagerService extends RESTService {
 
 			return Response.ok().entity("upload meta model failed").build();
 
+		}
+
+		@POST
+		@Path("/trainAndLoad")
+		@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
+		@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "")
+		// TODO: Just an adapter, since the Rasa server doesn't support
+		// "Access-Control-Expose-Headers"
+		// and the model file name is returned as a response header... Remove and just
+		// use Rasa's
+		// API directly once that's fixed. The whole `TrainingHelper` class can be
+		// deleted then as well.
+		public Response trainAndLoad(@ApiParam(value = "body", required = true) String body) {
+			System.out.println("train and load");
+			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
+			if (sbfservice.nluTrainThread != null && sbfservice.nluTrainThread.isAlive())
+				return Response.status(Status.SERVICE_UNAVAILABLE).entity("Training still in progress.").build();
+
+			try {
+				System.out.println(body);
+				JSONObject bodyJson = (JSONObject) p.parse(body);
+				String url = bodyJson.getAsString("url");
+				String config = bodyJson.getAsString("config");
+				String markdownTrainingData = bodyJson.getAsString("markdownTrainingData");
+
+				// added to have a way to access the intents of the rasa server
+				// this.rasaIntents.put(url.split("://")[1], intents);
+				sbfservice.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
+				sbfservice.nluTrainThread = new Thread(sbfservice.nluTrain);
+				sbfservice.nluTrainThread.start();
+				// TODO: Create a member for this thread, make another REST method to check
+				// whether
+				// training was successful.
+
+				TrainingData td = new TrainingData();
+				td.fromMarkdown(markdownTrainingData);
+				System.out.println("NLU module " + url + " add intents: " + td.intents().size());
+
+				LanguageUnderstander lu = getConfig().getNLUs().get(url);
+
+				if (lu != null)
+					lu.addIntents(td.intents());
+				else {
+					LanguageUnderstander nlu = new RasaNlu(url);
+					nlu.addIntents(td.intents());
+					getConfig().addNLU(nlu);
+				}
+
+			} catch (ParseException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			// Doesn't signal that training and loading was successful, but that it was
+			// started.
+			return Response.ok("Training started.").build();
 		}
 
 		/**

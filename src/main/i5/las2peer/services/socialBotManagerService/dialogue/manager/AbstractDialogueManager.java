@@ -7,8 +7,6 @@ import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public abstract class AbstractDialogueManager {
 
-	private String startIntent;
-
 	public abstract DialogueAct handle(Intent inputSemantic);
 
 	public boolean hasIntent(String intent) {
@@ -22,19 +20,13 @@ public abstract class AbstractDialogueManager {
 	public abstract Collection<String> getNLUIntents();
 
 	public abstract Collection<String> getNLGIntents();
-	
+
 	public abstract void reset();
 
 	public void fillRecursive(String attrId, String value) {
 		return;
 	}
-	
-	public String getStartIntent() {
-		return startIntent;
-	}
 
-	public void setStartIntent(String startIntent) {
-		this.startIntent = startIntent;
-	}
+	public abstract String getStartIntent();	
 
 }

@@ -12,7 +12,7 @@ public class SlotList extends ArrayList<Slot> {
 	public boolean contains(String name) {
 
 		for (Slot slot : this) {
-			if (slot.getName().equals(name) || slot.getIntents().contains(name))
+			if (slot.getID().contains(name) || slot.getName().equals(name) || slot.getIntents().contains(name))
 				return true;
 		}
 		return false;

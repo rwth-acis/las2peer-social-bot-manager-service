@@ -30,6 +30,10 @@ public class DynamicEntity extends IntentEntity {
 		invariant();
 	}
 	
+	public DynamicEntity(String entityKeyword) {
+		super(entityKeyword);
+	}
+
 	public void setKey(String key) {
 		this.generatorKey = key;
 	}
@@ -69,9 +73,9 @@ public class DynamicEntity extends IntentEntity {
 	}
 	
 	public void invariant() {
-		assert this.enumList != null;
-		assert this.generatorFunction != null;
-		assert this.generatorKey != null;
+		assert this.enumList != null : "enumList is null";
+		assert this.generatorFunction != null : "generatorFunction is null";
+		assert this.generatorKey != null: "generatorKey is null";
 	}
 
 }

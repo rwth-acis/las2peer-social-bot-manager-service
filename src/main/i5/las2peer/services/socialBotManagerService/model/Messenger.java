@@ -149,6 +149,7 @@ public class Messenger {
 		// Dialogue Manager
 		this.intentSelections = new HashMap<String, Selection>();
 		this.intentFrames = new HashMap<String, Frame>();
+		this.domains = new HashMap<String, Domain>();
 		try {
 			this.handler = new DialogueHandler(this);
 		} catch (Error e) {
@@ -556,9 +557,12 @@ public class Messenger {
 	}
 
 	public Collection<Frame> getFrames() {
-		if (this.intentFrames != null)
-			return this.intentFrames.values();
-		return null;
+		Collection<Frame> res = new ArrayList<>();
+		res.addAll(this.intentFrames.values());
+		for(Domain domain : this.domains.values()) {
+			res.addAll(domain.getFrames().values());				
+		}
+		return res;
 	}
 
 	public void addDomain(Domain domain) {
@@ -571,14 +575,18 @@ public class Messenger {
 
 	public Collection<MessengerElement> getElements() {
 		Collection<MessengerElement> res = new HashSet<>();
-		res.addAll(getIncomingMessages());
-		res.addAll(getFrames());
+		res.addAll(this.knownIntents.values());
+		res.addAll(this.intentFrames.values());
 		res.addAll(this.intentSelections.values());
 		return res;
 	}
 
 	public Map<String, Selection> getSelections() {
-		return this.intentSelections;
+		Map<String, Selection> res = new HashMap<>();
+		for(Domain domain : this.domains.values()) {
+			res.putAll(domain.getSelections());				
+		}
+		return res;
 	}
 
 	public Collection<IncomingMessage> getIncomingMessages() {
@@ -598,16 +606,12 @@ public class Messenger {
 	}
 
 	public List<Command> getCommands() {
-		List<Command> res = new ArrayList<>();
-		for (Frame frame : this.intentFrames.values()) {
-			frame.getCommand().invariant();
-			res.add(frame.getCommand());
-		}
 
-		for (Selection selection : this.intentSelections.values()) {
-			if (selection.isOperation())
-				res.add(selection.getCommand());
-		}
+		List<Command> res = new ArrayList<>();
+
+		for (Domain domain : this.getDomains().values())
+			res.addAll(domain.getCommands());
+
 		return res;
 	}
 
@@ -620,15 +624,16 @@ public class Messenger {
 	}
 
 	public Map<String, Domain> getDomains() {
+
 		if (this.getElements().isEmpty())
 			return this.domains;
-		
+
 		Map<String, Domain> res = new HashMap<String, Domain>();
 		Domain domain = new Domain("Default");
 		domain.add(this.getElements());
 		res.put(domain.getName(), domain);
 		res.putAll(this.domains);
-		return res;				
+		return res;
 	}
 
 	public void initialize() {
@@ -655,6 +660,7 @@ public class Messenger {
 		for (Selection selection : this.intentSelections.values())
 			res.addAll(selection.getNLUIntents());
 
+		res.remove("");
 		return res;
 	}
 

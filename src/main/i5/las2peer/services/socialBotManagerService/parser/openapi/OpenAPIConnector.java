@@ -17,6 +17,7 @@ import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceType;
@@ -43,9 +44,12 @@ public class OpenAPIConnector {
 		assert (action.getFunctionName() != null || (action.getFunctionPath() != null
 				&& action.getHttpMethod() != null)) : "read open api function: no function specified";
 
+		System.out.println("read function " + action.getFunctionName() + " base path: " + action.getBasePath()
+				+ " serviceName: " + action.getServiceName());
+
 		Service service = action.getService();
 		// base url
-		String baseUrl = action.getServiceName();
+		String baseUrl = action.getBasePath();
 		String last = baseUrl.substring(baseUrl.length() - 1);
 		if (last.contentEquals("/"))
 			baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
@@ -103,25 +107,53 @@ public class OpenAPIConnector {
 		return action;
 	}
 
-	public static String sendRequest(ServiceFunction sf) {
-		
+	public static ClientResponse sendRequest(ServiceFunction sf) {
+
 		assert sf != null : "service function is null";
 		assert sf.getBasePath() != null : "no base path";
 		assert sf.getFunctionPath() != null : "no function path";
 		assert sf.getHttpMethod() != null : "no http method";
 		assert sf.getServiceName() != null : "no service name";
-		
+
 		OpenAPIAction action = new OpenAPIAction(sf);
-		return sendRequest(action);		
+		return sendRequest(action);
 	}
-	
+
+	public static ClientResponse sendRequest(ServiceFunction sf, String loginName, String password) {
+
+		assert sf != null : "service function is null";
+		assert sf.getBasePath() != null : "no base path";
+		assert sf.getFunctionPath() != null : "no function path";
+		assert sf.getHttpMethod() != null : "no http method";
+		assert sf.getServiceName() != null : "no service name";
+		assert sf.getServiceType() == ServiceType.SERVICE;
+		assert loginName != null;
+		assert password != null;
+
+		OpenAPIAction action = new OpenAPIAction(sf);
+		return sendRequest(action, loginName, password);
+	}
+
+	public static ClientResponse sendRequest(OpenAPIAction action, String loginName, String password) {
+
+		assert action != null;
+		assert action.getFunction() != null;
+		assert action.getFunction().getServiceType() == ServiceType.SERVICE;
+
+		MiniClient client = new MiniClient();
+		client.setConnectorEndpoint(action.getBasePath());
+		client.setLogin(loginName, password);
+
+		return sendRequest(client, action);
+	}
+
 	/**
 	 * Send a Request to an Service Function that has a OpenAPI documentation.
 	 * 
 	 * @param action The service access action
 	 * @return The response of the accessed service
 	 */
-	public static String sendRequest(OpenAPIAction action) {
+	public static ClientResponse sendRequest(OpenAPIAction action) {
 
 		assert action != null : "action parameter is null";
 		assert action.getFunction() != null : "action parameter service function is null";
@@ -130,20 +162,36 @@ public class OpenAPIConnector {
 
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
-		
-		if(action.getFunction().getServiceType() == ServiceType.SERVICE)
-			client.setLogin("alice", "pwalice");
 
-		return sendRequest(client, action);
+		ServiceFunction sf = action.getFunction();
+		System.out.println("Action " + sf.getActionType() + " " + sf.getServiceType());
+		if (sf.getActionType() != ActionType.FUNCTION && sf.getServiceType() == ServiceType.SERVICE) {
+
+			String loginName = "alice";
+			String password = "pwalice";
+			client.setLogin(loginName, password);
+			ClientResponse response = sendRequest(client, action);
+			if (response.getHttpCode() == 401) {
+				System.out.println("Authorization Error: " + loginName + " " + password);
+				client = new MiniClient();
+				client.setConnectorEndpoint(action.getBasePath());
+				response = sendRequest(client, action);
+				return response;
+			}
+		}
+
+		ClientResponse response = sendRequest(client, action);
+		assert response != null;
+		System.out.println("received response " + response);
+		return response;
 	}
 
-	private static String sendRequest(MiniClient client, OpenAPIAction action) {
+	private static ClientResponse sendRequest(MiniClient client, OpenAPIAction action) {
 
 		assert client != null : "client is null";
 		assert action != null : "action is null";
 		assert action.getFunction() != null : "open api action has no service function";
 
-		System.out.println("client: " + client);
 		ServiceFunction sf = action.getFunction();
 
 		assert sf.getFunctionPath() != null : "no function path";
@@ -177,17 +225,14 @@ public class OpenAPIConnector {
 			HashMap<String, String> headers = new HashMap<String, String>();
 			response = client.sendRequest(action.getRequestMethod(), action.getFunctionPath(), bodyContent, consumes,
 					produces, headers);
-			System.out.println(response.getHttpCode());
 		} catch (Exception e) {
+			e.printStackTrace();
 			return null;
 		}
 
-		System.out.println("Response: " + response.getHttpCode() + response.getResponse());
+		System.out.println("Response: " + response.getHttpCode() + " " + response.getResponse());
 
-		if (response.getHttpCode() >= 400)
-			return null;
-
-		return response.getResponse();
+		return response;
 
 	}
 
@@ -253,13 +298,14 @@ public class OpenAPIConnector {
 
 	public static Collection<String> readEnums(ServiceFunction sf, String key) {
 
-		System.out.println("read enums: " + sf.getServiceName() + " " + sf.getFunctionPath() + " with key: " + key);
 		assert sf != null : "service function is null";
 		assert sf.getServiceName() != null : "service has no name";
+		assert sf.getFunctionPath() != null : "service function no path";
 
-		if (sf.getHttpMethod() == null) {
+		System.out.println("read enums: " + sf.getServiceName() + " " + sf.getFunctionPath() + " with key: " + key);
+
+		if (sf.getHttpMethod() == null)
 			sf.setHttpMethod("GET");
-		}
 
 		assert sf.getHttpMethod().equalsIgnoreCase("GET") : "function is not a GET request";
 
@@ -269,19 +315,26 @@ public class OpenAPIConnector {
 		sf.setConsumes("text/plain");
 
 		OpenAPIAction request = new OpenAPIAction(sf);
+
 		return readEnums(request, key);
 	}
 
 	public static Collection<String> readEnums(OpenAPIAction request, String key) {
 
-		String response = sendRequest(request);
-		if(response == null)
+		ClientResponse response = sendRequest(request);
+		System.out.println("enum response " + response);
+		if (response == null)
 			return null;
-		
-		JsonElement jsonElement = JsonParser.parseString(response);
 
-		if (key != null && !key.contentEquals(""))
-			return searchValuesByKey(jsonElement, key);
+		if (response.getHttpCode() >= 300)
+			return null;
+
+		JsonElement jsonElement = JsonParser.parseString(response.getResponse());
+
+		if (key != null && !key.contentEquals("")) {
+			Collection<String> res = searchValuesByKey(jsonElement, key);
+			return res;
+		}
 
 		if (!jsonElement.isJsonArray()) {
 			System.out.println("response is not an json array");
@@ -364,7 +417,6 @@ public class OpenAPIConnector {
 		}
 
 		return res;
+
 	}
-	
-	
 }

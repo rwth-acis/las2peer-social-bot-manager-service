@@ -1,14 +1,16 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.net.URL;
+
 /**
  * Model element of a web service
  * 
  */
 public class Service {
-		
+
 	/**
 	 * The service type indicates if this is the model of a las2peer service or a
-	 * external service with openapi documentation
+	 * external service with OpenAPI documentation
 	 */
 	private final ServiceType serviceType;
 
@@ -22,20 +24,20 @@ public class Service {
 	/**
 	 * Base URL of the web service (optional if this object is a las2peer service).
 	 */
-	private final String serviceURL;
+	private final URL serviceURL;
 
 	/**
-	 * Explicit URL of the open api documentation (optional if the document is on a
+	 * Explicit URL of the OpenAPI documentation (optional if the document is on a
 	 * default location).
 	 */
-	private String swaggerURL;
+	private URL swaggerURL;
 
-	public Service(ServiceType serviceType, String serviceAlias, String serviceURL) {		
+	public Service(ServiceType serviceType, String serviceAlias, URL serviceURL) {
 		this.serviceType = serviceType;
-		this.serviceAlias= serviceAlias;
-		this.serviceURL = serviceURL;		
+		this.serviceAlias = serviceAlias;
+		this.serviceURL = serviceURL;
 	}
-	
+
 	public ServiceType getServiceType() {
 		return serviceType;
 	}
@@ -45,17 +47,19 @@ public class Service {
 	}
 
 	public String getServiceURL() {
-		return serviceURL;
+		return serviceURL.toString();
 	}
 
 	public String getSwaggerURL() {
-		return swaggerURL;
+		if (this.swaggerURL != null)
+			return swaggerURL.toString();
+		return null;
 	}
 
-	public void setSwaggerURL(String swaggerURL) {
+	public void setSwaggerURL(URL swaggerURL) {
 		this.swaggerURL = swaggerURL;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Service [serviceType=" + serviceType + ", serviceAlias=" + serviceAlias + ", serviceURL=" + serviceURL

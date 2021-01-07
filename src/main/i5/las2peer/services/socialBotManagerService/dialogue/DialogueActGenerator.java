@@ -6,7 +6,9 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.D
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
+import i5.las2peer.services.socialBotManagerService.model.Domain;
 import i5.las2peer.services.socialBotManagerService.model.DynamicResponse;
+import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
@@ -17,7 +19,7 @@ public class DialogueActGenerator {
 		res.setIntent(intent);
 		return res;
 	}
-		
+
 	/**
 	 * get a generic response act.
 	 * 
@@ -25,9 +27,9 @@ public class DialogueActGenerator {
 	 * @return
 	 */
 	public static DialogueAct getAct(DynamicResponse element) {
-		
-		return getAct(element.getActIntent());		
-		
+
+		return getAct(element.getActIntent());
+
 	}
 
 	//// Frame Dialogue Acts
@@ -96,14 +98,15 @@ public class DialogueActGenerator {
 		input.setType(slot.getInputType());
 		input.setIntend(slot.getInformIntent());
 		input.setEntity(slot.getEntity());
-		
+
 		if (slot.getInputType() == InputType.Enum) {
 			slot.update();
 			List<String> enumList = slot.getEnumList();
+			if(enumList != null)
 			for (String enu : enumList)
 				input.addEnum(enu);
 		}
-		
+
 		if (slot.getInputType() == InputType.File && slot.getParameter().getFile() != null)
 			act.addEntity("fileType", slot.getParameter().getFile().getType());
 
@@ -165,14 +168,36 @@ public class DialogueActGenerator {
 
 	// System acts
 
-	public DialogueAct getMainMenuAct(Bot bot, List<Command> operations) {
+	public DialogueAct getMainMenuAct(Messenger messenger) {
 
-		assert operations != null : "commands is null";
-		
+		Bot bot = messenger.getBot();
 		DialogueAct act = new DialogueAct();
 		act.setIntent("start");
 		act.setIntentType(DialogueActType.SYSTEM_HOME);
-		
+
+		for (Domain domain : messenger.getDomains().values()) {
+			act.addEntity(domain.getName(), "domainName", domain.getName());
+			act.addEntity(domain.getName(), "domainDescription", domain.getDescription());
+			for (Command operation : domain.getCommands()) 
+				act.addEntity(domain.getName(), operation.getName(), operation.getDescription());		
+		}
+
+		if (bot != null) {
+			act.addEntity("botName", bot.getName());
+			act.addEntity("botDescription", bot.getDescription());
+		}
+
+		return act;
+	}
+
+	public DialogueAct getMainMenuAct(Bot bot, List<Command> operations) {
+
+		assert operations != null : "commands is null";
+
+		DialogueAct act = new DialogueAct();
+		act.setIntent("start");
+		act.setIntentType(DialogueActType.SYSTEM_HOME);
+
 		for (Command operation : operations) {
 			operation.invariant();
 			act.addEntity(operation.getName(), operation.getDescription());

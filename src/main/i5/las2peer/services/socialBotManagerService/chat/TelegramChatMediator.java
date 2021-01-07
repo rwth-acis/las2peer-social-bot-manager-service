@@ -43,7 +43,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://0042418661b1.ngrok.io";
+	private final static String url = "https://a6cc03932839.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {

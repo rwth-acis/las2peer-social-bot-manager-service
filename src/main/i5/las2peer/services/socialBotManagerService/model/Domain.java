@@ -1,10 +1,12 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGenerator;
 
@@ -75,7 +77,7 @@ public class Domain {
 			add((Frame) element);
 		if (element instanceof Selection)
 			add((Selection) element);
-		if (element instanceof Frame)
+		if (element instanceof IncomingMessage)
 			add((IncomingMessage) element);
 	}
 
@@ -116,10 +118,21 @@ public class Domain {
 		return selections;
 	}
 
+	public Collection<Command> getCommands() {
+
+		Collection<Command> res = new ArrayList<>();
+		for (MessengerElement element : getMessengerElements())
+			if(element.isOperation())
+				res.add(((Menuable) element).getCommand());
+
+		return res;
+	}
+
 	public Collection<String> getNLUIntents() {
 		Collection<String> res = new HashSet<>();
 		for (MessengerElement element : getMessengerElements())
 			res.add(element.getIntentKeyword());
+		res.remove("");
 		return res;
 	}
 

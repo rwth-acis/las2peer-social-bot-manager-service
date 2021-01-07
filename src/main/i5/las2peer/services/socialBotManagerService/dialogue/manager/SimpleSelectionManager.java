@@ -29,17 +29,18 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 	OpenAPIAction responseAction;
 	String value;
 
-	public SimpleSelectionManager(Selection selection) {
+	public SimpleSelectionManager(Selection selection) {		
 		super();
+		assert selection != null;
+		
 		managers = new HashMap<>();
 		init(selection);
 	}
 
-	public void init(Selection selection) {
+	private void init(Selection selection) {
 
 		System.out.println("INIT SELECTION MANAGER " + selection.getElements().size());
 		this.selection = selection;
-		this.setStartIntent(selection.getIntent());
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 
 		for (Entry<String, MessengerElement> entry : selection.getElements().entrySet()) {
@@ -60,7 +61,7 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 	public DialogueAct handle(Intent intent) {
 
 		// first call
-		if (intent.getKeyword().contentEquals(selection.getIntent())) {
+		if (intent.getKeyword().contentEquals(selection.getIntentKeyword())) {
 			System.out.println("SELECTION First call: " + intent.getKeyword());
 			
 			DialogueAct act = DialogueActGenerator.getAct(selection);
@@ -97,7 +98,7 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 
 				// start new manager
 				if (manager != null) {
-					System.out.println("SELECTION etwa selection: " + intent.getKeyword());
+					System.out.println("selection intent: " + intent.getKeyword() + " on manager " + manager.getClass() + " intent: " + manager.getStartIntent());;
 					this.active = manager;
 					intent = new Intent(manager.getStartIntent(), 1.0f);
 					intent.setIntentType(IntentType.START);
@@ -160,13 +161,18 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 	@Override
 	public Collection<String> getNLUIntents() {
 		Collection<String> res = new ArrayList<>();
-		res.add(selection.getIntent());
+		res.add(selection.getIntentKeyword());
 		res.add(selection.getActIntent());
 		for (AbstractDialogueManager manager : this.managers.values()) {
 			if (manager.getNLUIntents() != null)
 				res.addAll(manager.getNLUIntents());
 		}
 		return res;
+	}
+
+	@Override
+	public String getStartIntent() {
+		return selection.getIntentKeyword();
 	}
 
 }

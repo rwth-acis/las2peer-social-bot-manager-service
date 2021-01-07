@@ -9,6 +9,10 @@ import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
+/**
+ * @author christoph
+ *
+ */
 public class Slot {
 
 	/**
@@ -72,13 +76,13 @@ public class Slot {
 		this.children = new SlotList();
 		this.priority = 0;
 	}
-	
+
 	public Slot(ServiceFunctionAttribute attr) {
 		this(attr.getName());
 		this.parameter = attr;
 		this.inputType = InputType.fromString(attr.getContentType());
 	}
-	
+
 	public Slot(String id, String name, ParameterType type) {
 		this(new ServiceFunctionAttribute(id, name, type));
 	}
@@ -86,7 +90,7 @@ public class Slot {
 	public Slot(String name, ParameterType type) {
 		this(new ServiceFunctionAttribute(name, name, type));
 	}
-	
+
 	/**
 	 * @param value
 	 * @return true if the input value is acceptable for this slot
@@ -98,11 +102,28 @@ public class Slot {
 		if (this.inputType == null)
 			this.inputType = InputType.Free;
 
-		if (this.getInputType() == InputType.Enum)
-			if (!this.getParameter().getEnumList().contains(value))
+		if (this.getInputType() == InputType.Enum) {
+			List<String> enumList = this.getParameter().getEnumList();
+			if (enumList.isEmpty())
+				return true;
+
+			if (!enumList.contains(value))
 				return false;
 
+		}
+
 		return this.inputType.validate(value);
+	}
+
+	/**
+	 * UUID
+	 * 
+	 * @return
+	 */
+	public String getID() {
+		if(this.parameter != null && this.parameter.getId() != null)
+			return this.parameter.getId();
+		return this.name;
 	}
 
 	/**
@@ -300,12 +321,12 @@ public class Slot {
 	}
 
 	public boolean hasEnumList() {
-		
-		if(getParameter() == null || getParameter().getEnumList() == null)
+
+		if (getParameter() == null || getParameter().getEnumList() == null)
 			return false;
-		
+
 		List<String> enumList = this.getParameter().getEnumList();
-		return (enumList != null && !enumList.isEmpty());
+		return (enumList != null);
 	}
 
 	public void setEnumList(List<String> enums) {
@@ -413,14 +434,54 @@ public class Slot {
 		return desc;
 	}
 
+	/**
+	 * Returns parameter type
+	 * 
+	 * @return parameter type
+	 */
 	public ParameterType getParameterType() {
 		assert this.parameter != null : "slot has no assigned function parameter";
 
 		return this.parameter.getParameterType();
 	}
 
+	/**
+	 * Indicate if this slot is filled by a enumeration that is retrieved by a
+	 * function call
+	 * 
+	 * @return filled by retrieved enums (true) or not (false)
+	 */
+	public boolean hasDynamicEnums() {
+		return this.parameter.hasDynamicEnums();
+	}
+
+	public Collection<ServiceFunctionAttribute> getOpenAttributes() {
+
+		ServiceFunctionAttribute attr = this.getParameter();
+		if (!attr.hasDynamicEnums())
+			return new ArrayList<>();
+
+		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
+		ServiceFunction function = attr.getRetrieveFunction();
+		for (ServiceFunctionAttribute fa : function.getAllAttributes()) {
+			if (!fa.isOpen())
+				res.add(fa);
+		}
+
+		return res;
+	}
+
+	/**
+	 * Update dynamic enums of this slot
+	 */
 	public void update() {
-		this.parameter.update();
+
+		if (!this.hasDynamicEnums())
+			return;
+
+		List<String> list = this.parameter.getUpdatedEnumList();
+		assert list != null;
+		System.out.println("slot " + this.getName() + " updated list: " + list.size());
 	}
 
 }

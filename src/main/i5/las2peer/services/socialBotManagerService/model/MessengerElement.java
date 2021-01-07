@@ -18,5 +18,9 @@ public interface MessengerElement {
 		res.add(getIntentKeyword());
 		return res;
 	}
+	
+	public default boolean isOperation() {
+		return false;
+	}
 			
 }

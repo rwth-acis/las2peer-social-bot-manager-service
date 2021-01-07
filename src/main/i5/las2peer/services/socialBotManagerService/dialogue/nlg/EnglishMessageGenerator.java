@@ -251,22 +251,39 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 		if (botDesc != null)
 			message = message + botDesc + "\n";
 
-		if (!entities.isEmpty()) {
-
-			message = message + "\nI can perform the following operations: \n";
-
+		message = message + "\nI can perform the following operations: \n";
+		
+		if(act.hasEntities() && !act.hasMultiEntities()) {
+		
 			for (Entry<String, String> entity : entities.entrySet()) {
 				assert entity.getKey() != null : "entity no key";
 				assert entity.getValue() != null : "entity no value";
 				if (!entity.getKey().contentEquals("botName") && !entity.getKey().contentEquals("botDescription"))
 					message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
 			}
+		
+		
+		} else if (act.hasMultiEntities()) {
+			
+			Map<String, Map<String, String>> mes = act.getContextEntities();
+			for (String context :mes.keySet()) {
+				message = message + "\n" + context + "\n";
+				for(Entry<String, String> entity :mes.get(context).entrySet()) {
+					if (!entity.getKey().contentEquals("domainName") && !entity.getKey().contentEquals("domainDescription"))
+						message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+				}
+				
+			}
+		
 
-			message = message.concat(
-					"\n During conversation you can use the following commands: \n /cancel Aborts the current operation \n /revert Reverts your last input.");
 		}
+		
+		message = message.concat(
+				"\n During conversation you can use the following commands: \n /cancel Aborts the current operation \n /revert Reverts your last input.");
+
 		ResponseMessage res = new ResponseMessage(message);
-		return res;
+		return res;		
+		
 	}
 
 	@Override

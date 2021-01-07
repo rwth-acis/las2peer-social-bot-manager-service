@@ -29,7 +29,6 @@ public class NaiveDialogueManagerSimulatorTest {
 
 	DialogueGoal goal = new DialogueGoal(frame);
 	DefaultTaskOrientedManager manager = new DefaultTaskOrientedManager(goal);
-	manager.setStartIntent("start_intent");
 
 	RandomUserSimulator simulator = new RandomUserSimulator(manager);
 	System.out.println(manager.getNLUIntents());

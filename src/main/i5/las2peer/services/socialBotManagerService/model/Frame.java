@@ -8,20 +8,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 
-public class Frame implements MessengerElement {
+public class Frame implements MessengerElement, Menuable {
 
+	private final String id;
+	
 	private String name;
 
 	private String intent;
 
 	private String message;
 
-	private String response;
+	private String successResponse;
+	
+	private String errorResponse;
 
 	private String file;
 
@@ -32,17 +37,19 @@ public class Frame implements MessengerElement {
 	private Collection<ServiceEvent> events;
 
 	public Frame() {
+		this.id = UUID.randomUUID().toString();
 		this.slots = new HashMap<String, Slot>();
 		this.events = new HashSet<ServiceEvent>();
 	}
 
-	public Frame(String name) {
-		this();
-		this.name = name;
+	public Frame(String id) {
+		this.id = id;
+		this.slots = new HashMap<String, Slot>();
+		this.events = new HashSet<ServiceEvent>();		
 	}
 
-	public Frame(String name, String intent, String message, ServiceFunction serviceFunction, Map<String, Slot> slots) {
-		super();
+	public Frame(String id, String name, String intent, String message, ServiceFunction serviceFunction, Map<String, Slot> slots) {
+		this(id);
 		this.name = name;
 		this.intent = intent;
 		this.serviceFunction = serviceFunction;
@@ -91,6 +98,7 @@ public class Frame implements MessengerElement {
 	 * @return the command to initiate a conversation for this frame
 	 * 
 	 */
+	@Override
 	public Command getCommand() {
 
 		invariant();
@@ -222,14 +230,30 @@ public class Frame implements MessengerElement {
 		assert this.intent != null : "frame intent is null";
 	}
 
-	public String getResponse() {
-		return response;
+	public String getSuccessResponse() {
+		return successResponse;
 	}
 
-	public void setResponse(String response) {
-		this.response = response;
+	public void setSuccessResponse(String response) {
+		this.successResponse = response;
+	}
+	
+	public String getErrorResponse() {
+		return errorResponse;
 	}
 
+	public void setErrorResponse(String response) {
+		this.errorResponse = response;
+	}
+
+	public boolean hasSuccessResponse() {
+		return this.successResponse != null && !this.successResponse.contentEquals("");
+	}
+	
+	public boolean hasErrorResponse() {
+		return this.errorResponse != null && !this.errorResponse.contentEquals("");
+	}
+	
 	public String getFile() {
 		return file;
 	}
@@ -270,6 +294,11 @@ public class Frame implements MessengerElement {
 	@Override
 	public String getIntentKeyword() {
 		return this.intent;
+	}
+	
+	@Override
+	public boolean isOperation() {
+		return true;
 	}
 
 }

@@ -1,11 +1,13 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import net.minidev.json.JSONObject;
@@ -22,15 +24,30 @@ public class OpenAPIAction {
 
 	private ResponseParseMode responseParseMode;
 
-	public OpenAPIAction() {
-		this.responseParseMode = ResponseParseMode.MESSAGE_TEXT;
-	}
-
 	public OpenAPIAction(ServiceFunction sf) {
-		this();
+		assert sf != null;
 		this.function = sf;
+		this.initParameters();
 	}
 
+	public OpenAPIAction(ServiceFunction sf, Map<String, String> parameters) {
+		this(sf);
+		if (parameters != null)
+			this.addParameters(parameters);
+	}
+
+	private void initParameters() {		
+		assert this.function != null;
+		
+		for(ServiceFunctionAttribute attr :this.function.getAllAttributes()) {
+			
+			if(attr.hasContent())
+				this.addParameter(attr, attr.getContent());
+				
+		}
+		
+	}
+	
 	public String getRequestMethod() {
 		invariant();
 		return function.getHttpMethod().toUpperCase();
@@ -54,20 +71,20 @@ public class OpenAPIAction {
 		while (methodURL.length() > 0 && methodURL.charAt(0) == '/') {
 			methodURL = methodURL.substring(1);
 		}
-		
+
 		if (getPathParameters() != null) {
 			for (Entry<String, String> para : getPathParameters().entrySet())
 				methodURL = methodURL.replace("{" + para.getKey() + "}", para.getValue());
 		}
 
 		if (getQueryParameters() != null) {
-			
+
 			Iterator<Entry<String, String>> entries = getQueryParameters().entrySet().iterator();
 			if (entries.hasNext()) {
 				Entry<String, String> entry = entries.next();
 				methodURL = methodURL.concat("?").concat(entry.getKey()).concat("=").concat(entry.getValue());
 			}
-			
+
 			for (; entries.hasNext();) {
 				Entry<String, String> entry = entries.next();
 				methodURL = methodURL.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
@@ -85,20 +102,32 @@ public class OpenAPIAction {
 		this.function = function;
 	}
 
+	public void addParameters(Map<String, String> parameters) {
+
+		for (Entry<String, String> entry : parameters.entrySet()) {
+			ServiceFunctionAttribute attr = this.function.getAttribute(entry.getKey());
+			if (attr == null)
+				throw new IllegalArgumentException(
+						"parameter " + entry.getKey() + " not contained in " + function.getFunctionName());
+			this.addParameter(attr, entry.getValue());
+		}
+
+	}
+
 	public void addParameter(ServiceFunctionAttribute attr, String value) {
 		assert attr != null;
 		assert value != null;
 		assert this.function.contains(attr);
 		assert attr.getParameterType() == ParameterType.PATH || attr.getParameterType() == ParameterType.QUERY;
-		
-		if(attr.getParameterType() == ParameterType.PATH)
+
+		if (attr.getParameterType() == ParameterType.PATH)
 			addPathParameter(attr.getName(), value);
-		
-		if(attr.getParameterType() == ParameterType.QUERY)
+
+		if (attr.getParameterType() == ParameterType.QUERY)
 			addQueryParameter(attr.getName(), value);
-		
+
 	}
-	
+
 	public JSONObject getBodyParameter() {
 		return bodyParameter;
 	}
@@ -143,13 +172,13 @@ public class OpenAPIAction {
 	}
 
 	public void addPathParameter(String name, String value) {
-		assert name != null: "no name";
-		assert value != null: "no value";
+		assert name != null : "no name";
+		assert value != null : "no value";
 		assert validatePathParameter(name, value) : "path parameter invalid";
-		
-		if(this.pathParameters == null)
+
+		if (this.pathParameters == null)
 			this.pathParameters = new HashMap<>();
-		
+
 		this.pathParameters.put(name, value);
 	}
 
@@ -162,13 +191,23 @@ public class OpenAPIAction {
 		return false;
 	}
 
+	public boolean validate() {
+		Collection<ServiceFunctionAttribute> attrs = this.function.getRequiredAttributes();
+		for(ServiceFunctionAttribute attr :attrs) {
+			if(attr.getParameterType() == ParameterType.PATH && !this.pathParameters.containsKey(attr.getName()))
+				return false;
+		}
+		
+		return true;
+	}
+	
 	public void invariant() {
 		assert this.function != null : "function of OpenAPIAction is null";
 		assert this.function.getHttpMethod() != null : "method of function is null";
 		assert RequestMethod
 				.validate(this.function.getHttpMethod().toUpperCase()) : "HTTP method of OpenAPIAction is invalid";
 		assert this.function.getServiceName() != null : "function of OpenAPIAction has no base url";
-		}
+	}
 
 	@Override
 	public String toString() {
@@ -178,12 +217,21 @@ public class OpenAPIAction {
 	}
 
 	public ResponseParseMode getResponseParseMode() {
+		if(responseParseMode != null)
 		return responseParseMode;
+		return ResponseParseMode.MESSAGE_TEXT;
 	}
 
 	public void setResponseParseMode(ResponseParseMode responseParseMode) {
 		this.responseParseMode = responseParseMode;
 	}
 
+	public String execute() {
+		if(!this.validate())
+			throw new IllegalStateException("Not all required parameters are filled");
+		
+		ClientResponse response = OpenAPIConnector.sendRequest(this);
+		return response.toString();
+	}
 
 }

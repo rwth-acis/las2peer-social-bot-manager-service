@@ -74,7 +74,7 @@ public class FrameMapperTest {
 		function.setHttpMethod("post");
 		function.setService(service);
 		function.setFunctionName("createBot");
-		Frame frame = mapper.map(function, new Frame("newFrame"));
+		Frame frame = mapper.map(function, new Frame());
 
 		assertNotNull(frame.getDescendants());
 		assertEquals(27, frame.getDescendants().size());

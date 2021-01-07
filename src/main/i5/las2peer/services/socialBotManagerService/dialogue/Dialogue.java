@@ -124,6 +124,8 @@ public class Dialogue {
 			for (Selection selection : messenger.getSelections().values())
 				managers.add(generator.generateSelection(selection));
 		}
+		
+		
 	}
 
 	public void cancel() {

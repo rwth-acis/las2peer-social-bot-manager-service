@@ -25,8 +25,8 @@ public class RepetitionNode extends Node implements Slotable {
 		this.open = true;
 		this.valueChildren = new ArrayList<Node>();
 
-		System.out.println("Repetition Node: " + slot.getName() + ", enumlist: " + this.slot.hasEnumList());
-		if (this.slot.hasEnumList())
+		System.out.println("Repetition Node: " + slot.getName() + ", enumlist: " + (this.slot.hasEnumList() && !this.slot.getEnumList().isEmpty()));
+		if (this.slot.hasEnumList() && !this.slot.getEnumList().isEmpty())
 			extendEnums();
 		else
 			extend();
@@ -38,7 +38,7 @@ public class RepetitionNode extends Node implements Slotable {
 		invariant();
 		assert this.slot.hasEnumList();
 
-		System.out.println("Repetition Node with enum list detected");
+		System.out.println("Repetition Node " + this.getName() + " with enum list detected");
 		String key = this.slot.getParameter().getContentFill();
 		assert key != null;
 		for (String value : this.slot.getEnumList()) {

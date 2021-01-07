@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
@@ -65,9 +66,9 @@ public class PipelineManager extends MetaDialogueManager {
 		if (this.messenger == null)
 			this.messenger = messenger;
 
-		if(message.isFile())
+		if (message.isFile())
 			return handleFile(message, dialogue);
-		
+
 		// Understanding
 		Map<String, LanguageUnderstander> nlus = messenger.getBot().getNLUs();
 		MessageInfo info = null;
@@ -128,7 +129,15 @@ public class PipelineManager extends MetaDialogueManager {
 		Intent intent = null;
 		if (message.hasCommand()) {
 			System.out.println("command detected: " + message.getCommand());
-			intent = new Intent(message.getCommand(), 1.0f);
+
+			String commandIntent = message.getCommand();
+			for (Command command : messenger.getCommands()) {
+				if (command.getName() != null && command.getIntent() != null
+						&& command.getName().contentEquals(message.getCommand()))
+					commandIntent = command.getIntent();
+			}
+
+			intent = new Intent(commandIntent, 1.0f);
 		}
 
 		MessageInfo res = new MessageInfo();
@@ -162,11 +171,10 @@ public class PipelineManager extends MetaDialogueManager {
 				dialogue.cancel();
 				// return main menu
 				DialogueActGenerator gen = new DialogueActGenerator();
-				List<Command> operations = messenger.getCommands();
-				return gen.getMainMenuAct(messenger.getBot(), operations);
+				return gen.getMainMenuAct(messenger);
 			case START:
 				gen = new DialogueActGenerator();
-				return gen.getMainMenuAct(messenger.getBot(), messenger.getCommands());
+				return gen.getMainMenuAct(messenger);
 			default:
 				break;
 			}
@@ -269,7 +277,7 @@ public class PipelineManager extends MetaDialogueManager {
 				return DialogueActGenerator.getInvalidValueAct(expected);
 
 		} else if (expectedType == InputType.File && message.getMessage().getFileContent() != null) {
-			
+
 			System.out.println("Expected input is file");
 			String fileData = message.getMessage().getFileContent();
 			semantic.setKeyword(expected.getIntend());
@@ -284,7 +292,7 @@ public class PipelineManager extends MetaDialogueManager {
 		} else if (expected.validate(semantic, text))
 
 		{
-			System.out.println("expected input is valid");
+			System.out.println("expected input is valid: " + text);
 			semantic.setKeyword(expected.getIntend());
 			semantic.setIntentType(semantic.deriveType());
 			Entity entity = new Entity(expected.getEntity(), text);
@@ -355,11 +363,11 @@ public class PipelineManager extends MetaDialogueManager {
 		dialogue.setActiveManager(null);
 		if (operations == null)
 			operations = new ArrayList<>();
-		return gen.getMainMenuAct(messenger.getBot(), operations);
+		return gen.getMainMenuAct(messenger);
 
 	}
 
-	protected String handleAction(OpenAPIAction action, ChatMessage message, Dialogue dialogue) {
+	protected String handleAction(DialogueAct act, OpenAPIAction action, ChatMessage message, Dialogue dialogue) {
 
 		assert action != null : "action is null";
 		assert action.getFunction() != null : "openapi action has no service function";
@@ -371,10 +379,29 @@ public class PipelineManager extends MetaDialogueManager {
 		System.out.println("perform action " + action.getFunction().getServiceName() + " "
 				+ action.getFunction().getFunctionName());
 
-		String response = null;
-		response = OpenAPIConnector.sendRequest(action);
+		ClientResponse response = OpenAPIConnector.sendRequest(action);
+		if (act.getGoal() == null)
+			return response.getResponse();
 
-		return response;
+		Frame frame = act.getGoal().getFrame();
+
+		// success
+		if (response.getHttpCode() < 300 && response.getHttpCode() >= 200) {
+			act.setIntent(frame.getIntentKeyword() + "_success");
+			if (frame.hasSuccessResponse()) {
+				act.setMessage(frame.getSuccessResponse());
+				return frame.getSuccessResponse();
+			}
+			// error
+		} else {
+			act.setIntent(frame.getIntentKeyword() + "_error");
+			if (frame.hasErrorResponse()) {
+				act.setMessage(frame.getErrorResponse());
+				return frame.getErrorResponse();
+			}
+		}
+		
+		return response.getResponse();
 
 	}
 
@@ -421,7 +448,7 @@ public class PipelineManager extends MetaDialogueManager {
 		// act includes action
 		if (act.hasAction()) {
 			OpenAPIAction action = act.getAction();
-			String response = handleAction(action, message, dialogue);
+			String response = handleAction(act, action, message, dialogue);
 			if (response != null) {
 				System.out.println("response parsemode: " + action.getResponseParseMode());
 				switch (action.getResponseParseMode()) {
@@ -487,28 +514,28 @@ public class PipelineManager extends MetaDialogueManager {
 
 	@Override
 	public Collection<String> getNLGIntents() {
-		Collection<String> res = new ArrayList<>();				
-		for(AbstractDialogueManager manager :this.managers) {
-			if(manager.getNLGIntents() != null)
+		Collection<String> res = new ArrayList<>();
+		for (AbstractDialogueManager manager : this.managers) {
+			if (manager.getNLGIntents() != null)
 				res.addAll(manager.getNLGIntents());
 		}
-		
+
 		res.add("error_system");
 		res.add("error_command_unknown");
-		res.add("error_nlu");		
-		
+		res.add("error_nlu");
+
 		Set<InputType> inputTypes = new HashSet<InputType>();
-		for(TaskOrientedManager manager :this.getTaskOrientedManagers()) 		
-				inputTypes.addAll(manager.getFrame().getValueTypes());
-		
+		for (TaskOrientedManager manager : this.getTaskOrientedManagers())
+			inputTypes.addAll(manager.getFrame().getValueTypes());
+
 		inputTypes.remove(InputType.Free);
-		for(InputType type :inputTypes) 
+		for (InputType type : inputTypes)
 			res.add("error_invalid_" + type.toString());
-				
-		return res;		
-		
+
+		return res;
+
 	}
-	
+
 	public void invariant() {
 
 	}
