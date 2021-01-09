@@ -45,7 +45,7 @@ public class Messenger {
 	private HashMap<String, HashMap<String, String>> currentNluModel;
 	// Used to know to which Function the received intents/messages are to be sent
 	// Is additionally used to check if we are currently communicating with a service(if set, then yes otherwise no)
-	private HashMap<String, String> triggeredFunction;
+	HashMap<String, HashMap<String, String>> triggeredFunction;
 	// dont think i need this one
 	// private HashMap<String, Bool> contextWithService;
 
@@ -73,7 +73,7 @@ public class Messenger {
 		this.random = new Random();
 		// Initialize the assessment setup
 		this.currentNluModel = new HashMap<String, HashMap<String, String>>();
-		this.triggeredFunction = new HashMap<String, String>();
+		this.triggeredFunction = new HashMap<String, HashMap<String, String>>();
 	}
 
 	public String getName() {
@@ -98,7 +98,7 @@ public class Messenger {
 	};*/
 
 	public void setContextToBasic(String channel, String userid) {
-		triggeredFunction.remove(channel);
+		triggeredFunction.get(channel).remove(userid);
 		
 		IncomingMessage state = this.stateMap.get(channel).get(userid);
 		if (state != null) {
@@ -113,8 +113,8 @@ public class Messenger {
 		}
 	}
 
-	public String getContext(String channel) {
-		return this.triggeredFunction.get(channel);
+	public String getContext(String channel, String user) {
+		return this.triggeredFunction.get(channel).get(user);
 	}
 
 	// Handles simple responses ("Chat Response") directly, logs all messages and
@@ -131,21 +131,29 @@ public class Messenger {
 			
 			try {
 				// If a channel/user pair still isn't assigned to a state, assign it to null
-				if (this.stateMap.get(channel) == null) {
+				if (this.stateMap.get(message.getChannel()) == null) {
 					HashMap<String, IncomingMessage> initMap = new HashMap<String, IncomingMessage>();
-					initMap.put(userid, null);
+					initMap.put(message.getUser(), null);
 					this.stateMap.put(message.getChannel(), initMap);
 				}
 				
 				// If a channel/user pair still isn't assigned to a NLU Model, assign it to the Model 0 
-				if (this.currentNluModel.get(channel) == null) {
+				if (this.currentNluModel.get(message.getChannel()) == null) {
 					HashMap<String, String> initMap = new HashMap<String, String>();
 					initMap.put(userid, "0");
 					this.currentNluModel.put(message.getChannel(), initMap);
 				}
-				if (this.currentNluModel.get(channel).get(userid) == null) {
-					this.currentNluModel.get(channel).put(userid, "0");
+				if (this.currentNluModel.get(message.getChannel()).get(message.getUser()) == null) {
+					this.currentNluModel.get(message.getChannel()).put(message.getUser(), "0");
 				}
+				
+				// If channel/user pair is not assigned to a triggered function, assign it to null 
+//				if (this.triggeredFunction.get(message.getChannel()) == null) {
+//					HashMap<String, String> initMap = new HashMap<String, String>();
+//					initMap.put(message.getUser(), null);
+//					this.triggeredFunction.put(message.getChannel(), initMap);
+//				}
+				
 				
 				Intent intent = null;
 				// Special case: `!` commands
@@ -180,11 +188,11 @@ public class Messenger {
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
 					// what if you want to start an assessment with a command?
-					System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()));
+					System.out.println("Intent Extraction now with  : " + this.currentNluModel.get(message.getChannel()).get(message.getUser()));
 					intent = bot.getRasaServer(currentNluModel.get(channel).get(userid)).getIntent(message.getText());
 
 				}
-				System.out.println(intent.getKeyword());
+				System.out.println("Extracted intent: " + intent.getKeyword());
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(channel).get(userid);
 				if (state != null) {
@@ -192,7 +200,7 @@ public class Messenger {
 				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
-				if (!this.triggeredFunction.containsKey(message.getChannel())) {
+				if (!this.triggeredFunction.get(message.getChannel()).containsKey(message.getUser())) {
 					if (intent.getConfidence() >= 0.40f) {
 						// If there is no previous state, assign the new state tied to the identified intent
 						if (state == null) {
@@ -214,72 +222,16 @@ public class Messenger {
 							// If there is a next state, set the current state to it	
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
 								System.out.println("try follow up message");
-								// check ratings
-								String keyword = intent.getKeyword();
-								String txt = message.getText();
-								if (keyword.equals("highrating")
-										&& (txt.equals("1") || txt.equals("2") || txt.equals("3"))) {
-									keyword = "lowrating";
-								} else if (keyword.equals("lowrating") && (txt.equals("4") || txt.equals("5"))) {
-									keyword = "highrating";
-								}
 								state = state.getFollowingMessages().get(intent.getKeyword());
 								stateMap.get(channel).put(userid, state);
 							} else {
-								System.out.println("\u001B[33mDebug --- Followups: " + state.getFollowingMessages() + "\u001B[0m");
-								System.out.println("\u001B[33mDebug --- Emptiness: " + state.getFollowingMessages().keySet().isEmpty() + "\u001B[0m");
-								System.out.println("\u001B[33mDebug --- State: " + state.getIntentKeyword() + "\u001B[0m");
+								//System.out.println("\u001B[33mDebug --- Followups: " + state.getFollowingMessages() + "\u001B[0m");
+								//System.out.println("\u001B[33mDebug --- Emptiness: " + state.getFollowingMessages().keySet().isEmpty() + "\u001B[0m");
+								//System.out.println("\u001B[33mDebug --- State: " + state.getIntentKeyword() + "\u001B[0m");
 								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
 										+ intent.getConfidence() + " confidence.");
 								// try any
-								if (state.getFollowingMessages().get("any") != null) {
-									String tmp = message.getText().replaceAll("[^0-9]", "");
-									if (tmp.length() > 0 && state.getIntentKeyword().contains("showtasks")) {
-										// try to get tasknumber
-										int t = Integer.parseInt(tmp);
-										if ((message.getRole() % 2) == (t % 2) && t < 9) {
-											state = knownIntents.get("t" + tmp);
-										} else {
-											state = state.getFollowingMessages().get("any");
-										}
-									} else if (state.getIntentKeyword().contains("functions")) {
-										if (message.getText().equals("a") || message.getText().equals("a)")
-												|| message.getText().contains("anzeigen")) {
-											state = knownIntents.get("showtasks" + message.getRole());
-										} else if (message.getText().equals("b") || message.getText().equals("b)")
-												|| message.getText().contains("abgeben")) {
-											state = knownIntents.get("submission");
-										} else if (message.getText().equals("c") || message.getText().equals("c)")
-												|| message.getText().contains("Feedback")) {
-											state = knownIntents.get("userfeedback");
-										}
-									} else {
-										state = state.getFollowingMessages().get("any");
-									}
-									stateMap.get(channel).put(userid, state);
-								} else  // tud
-								if ((intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
-										|| intent.getKeyword().equals("will"))
-										&& !this.triggeredFunction.containsKey(message.getChannel())) {
-									if (intent.getEntity("muster") != null) {
-										state = this.knownIntents.get("mustertext");
-									} else if (intent.getEntity("video") != null) {
-										state = this.knownIntents.get("video");
-									} else if (intent.getEntity("help") != null) {
-										state = this.knownIntents.get("help");
-									} else if (intent.getEntity("pause") != null) {
-										state = this.knownIntents.get("pause");
-									} else if (intent.getEntity("upload") != null) {
-										state = this.knownIntents.get("upload");
-									} else if (intent.getEntity("schreibaufgabe") != null) {
-										state = this.knownIntents.get("beschreibung");
-									} else {
-										state = this.knownIntents.get("default");
-									}
-								}
-
-								// ul
-								else if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
+								if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
 									Collection<Entity> entities = intent.getEntities();
 									System.out.println("try to use entity...");
 									for (Entity e : entities) {
@@ -306,7 +258,7 @@ public class Messenger {
 
 				Boolean contextOn = false;
 				if (this.triggeredFunction.containsKey(message.getChannel())) {
-					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+					triggeredFunctionId = this.triggeredFunction.get(message.getChannel()).get(message.getUser());
 					contextOn = true;
 				} else {
 					if (state != null) {
@@ -329,93 +281,19 @@ public class Messenger {
 						if (response != null) {
 							System.out.println("Debug - Response : " + response.getResponse());
 							if (response.getResponse() != "") {
-								if (intent.getEntity("schreibaufgabe") != null
-										|| intent.getKeyword().equals("beschreibung")) {
-									File f = new File("Schreibauftrag.pdf");
-									this.chatMediator.sendFileMessageToChannel(message.getChannel(), f,
-											response.getResponse());
-								} else if (intent.getEntity("muster") != null
-										|| intent.getKeyword().equals("mustertext")) {
-									File f = new File("Mustertext.pdf");
-									this.chatMediator.sendFileMessageToChannel(message.getChannel(), f,
-											response.getResponse());
-								} else if (state.getIntentKeyword().equals("suggestMaterial")) {
-									// chatbot wl
-									String text = message.getText();
-									String[] words = text.split(",");
-									MiniClient client = new MiniClient();
-									client.setConnectorEndpoint("http://137.226.232.175:32303");
-
-									HashMap<String, String> headers = new HashMap<String, String>();
-									int counter = 0;
-									String s = "";
-									for (int i = 0; i < words.length; i++) {
-										JSONObject body = new JSONObject();
-										JSONArray terms = new JSONArray();
-										terms.add(words[i].trim());
-										body.put("terms", terms);
-										ClientResponse r = client.sendRequest("POST", "materials", body.toJSONString(),
-												"application/json", "application/json", headers);
-
-										JSONParser p = new JSONParser();
-										JSONObject result = (JSONObject) p.parse(r.getResponse());
-										if (result.keySet().size() > 1) {
-											counter++;
-											JSONArray materials = (JSONArray) result.get("@graph");
-											for (Object j : materials) {
-												JSONObject jo = (JSONObject) j;
-												s += "\\n" + words[i] + ": [" + jo.getAsString("title") + "]("
-														+ jo.getAsString("link") + ")";
-											}
-										}
-									}
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											response.getResponse().replace("$X", "" + s));
-								} else if (state.getIntentKeyword().equals("liste")) {
-									String text = message.getText();
-									String[] words = text.split(",");
-									JSONArray wordsCleaned = new JSONArray();
-									for (int i = 0; i < words.length; i++) {
-										wordsCleaned.add(words[i].trim());
-									}
-									MiniClient client = new MiniClient();
-									client.setConnectorEndpoint("http://137.226.232.175:32303");
-
-									HashMap<String, String> headers = new HashMap<String, String>();
-
-									JSONObject body = new JSONObject();
-									body.put("terms", wordsCleaned);
-									ClientResponse r = client.sendRequest("POST", "compare", body.toJSONString(),
-											"application/json", "application/json", headers);
-
-									JSONParser p = new JSONParser();
-									JSONObject result = (JSONObject) p.parse(r.getResponse());
-
-									// response = response.replace("$X", result.getAsString("matchCount"));
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											response.getResponse().replace("$X", result.getAsString("matchCount")));
-								} else if (state.getIntentKeyword().equals("showtasks")) {
-									if (message.getRole() % 2 == 1) {
-										state = this.knownIntents.get("showtasks1");
-									} else {
-										state = this.knownIntents.get("showtasks2");
-									}
-									response = state.getResponse(this.random);
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											response.getResponse());
-								} else {
-									String split = "";
-									// allows users to use linebreaks \n during the modelling for chat responses
-									for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
-										System.out.println(i);
-										split += response.getResponse().split("\\\\n")[i] + " \n ";
-									}
-									System.out.println(split);
-									this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
+								String split = "";
+								// allows users to use linebreaks \n during the modelling for chat responses
+								for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
+									System.out.println(i);
+									split += response.getResponse().split("\\\\n")[i] + " \n ";
 								}
+								System.out.println(split);
+								this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
 							} else {
 								if (response.getTriggeredFunctionId() != "") {
-									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+									HashMap<String, String> initMap = new HashMap<String, String>();
+									initMap.put(message.getUser(), response.getTriggeredFunctionId());
+									this.triggeredFunction.put(message.getChannel(), initMap);
 									contextOn = true;
 								} else {
 									System.out.println("No Bot Action was given to the Response");
@@ -423,7 +301,7 @@ public class Messenger {
 							}
 						}
 						if (this.triggeredFunction.containsKey(message.getChannel())) {
-							triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+							triggeredFunctionId = this.triggeredFunction.get(message.getChannel()).get(message.getUser());;
 						} else
 							triggeredFunctionId = state.getTriggeredFunctionId();
 						// If conversation flow is terminated, reset state

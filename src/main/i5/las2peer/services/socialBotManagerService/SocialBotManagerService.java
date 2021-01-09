@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -54,6 +55,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -763,6 +765,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(messageInfo.getMessage().getEmail());
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
+			body.put("user", messageInfo.getMessage().getUser());
             body.put("intent", messageInfo.getIntent().getKeyword());
             for(Entity entityName : messageInfo.getIntent().getEntities()){
             	body.put(entityName.getEntityName(), entityName.getValue());
@@ -1033,7 +1036,8 @@ public class SocialBotManagerService extends RESTService {
                     triggeredBody.put("botName", botAgent.getIdentifier());
                     System.out.println("botagent is " +  botAgent.getIdentifier());
                     HashMap<String, String> headers = new HashMap<String, String>();
-                    System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
+                    System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string is"
+                    		+ ":" + triggeredBody.toJSONString());
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
                     System.out.println(r.getResponse()); 
@@ -1049,7 +1053,7 @@ public class SocialBotManagerService extends RESTService {
 	            			triggerChat(chat, triggeredBody);
 	            			if(response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))){
 	                            System.out.println("Closed Context");
-	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"), triggeredBody.getAsString("email"));
+	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"), triggeredBody.getAsString("user")); // formerly email
                             }
                         } catch (ParseException e) {
     			         e.printStackTrace();
@@ -1083,15 +1087,18 @@ public class SocialBotManagerService extends RESTService {
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");
 		String channel = null;
+		String user = null;
         
 		if (body.containsKey("channel")) {
 			channel = body.getAsString("channel");
+		} else if (body.containsKey("user")) {
+			user = body.getAsString("user");
 		} else if (body.containsKey("email")) {
 			String email = body.getAsString("email");
 			channel = chat.getChannelByEmail(email);
-			} 
+		} 
         System.out.println(channel);
-		chat.sendMessageToChannel(channel, text);
+		chat.sendMessageToChannel(channel, text, Optional.of(user));
 	}
   
 
