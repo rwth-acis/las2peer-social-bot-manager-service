@@ -200,7 +200,7 @@ public class Messenger {
 				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
-				if (!this.triggeredFunction.get(message.getChannel()).containsKey(message.getUser())) {
+				if (!this.triggeredFunction.containsKey(message.getChannel())) {
 					if (intent.getConfidence() >= 0.40f) {
 						// If there is no previous state, assign the new state tied to the identified intent
 						if (state == null) {
@@ -273,6 +273,12 @@ public class Messenger {
 						}
 						if (response == null) {
 							response = state.getResponse(this.random);
+							if (response == null) {
+								HashMap<String, String> initMap = new HashMap<String, String>();
+								initMap.put(message.getUser(), response.getTriggeredFunctionId());
+								this.triggeredFunction.put(message.getChannel(), initMap);
+								contextOn = true;
+							}
 						}
 						if (state.getNluID() != "") {
 							System.out.println("New NluId is : " + state.getNluID());

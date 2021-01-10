@@ -1034,7 +1034,7 @@ public class SocialBotManagerService extends RESTService {
                     System.out.println(botAgent.getLoginName() + "    pass " +  botPass);
                     client.setLogin(botAgent.getLoginName(), botPass);
                     triggeredBody.put("botName", botAgent.getIdentifier());
-                    System.out.println("botagent is " +  botAgent.getIdentifier());
+                    System.out.println("Bot agent is " +  botAgent.getIdentifier());
                     HashMap<String, String> headers = new HashMap<String, String>();
                     System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string is"
                     		+ ":" + triggeredBody.toJSONString());
@@ -1055,7 +1055,7 @@ public class SocialBotManagerService extends RESTService {
 	                            System.out.println("Closed Context");
 	                            bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"), triggeredBody.getAsString("user")); // formerly email
                             }
-                        } catch (ParseException e) {
+                        } catch (Exception e) {
     			         e.printStackTrace();
     		          }
                     }
@@ -1087,16 +1087,17 @@ public class SocialBotManagerService extends RESTService {
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");
 		String channel = null;
-		String user = null;
+		String user = "";
         
 		if (body.containsKey("channel")) {
 			channel = body.getAsString("channel");
-		} else if (body.containsKey("user")) {
-			user = body.getAsString("user");
 		} else if (body.containsKey("email")) {
 			String email = body.getAsString("email");
 			channel = chat.getChannelByEmail(email);
 		} 
+		if (body.containsKey("user")) {
+			user = body.getAsString("user");
+		}
         System.out.println(channel);
 		chat.sendMessageToChannel(channel, text, Optional.of(user));
 	}
