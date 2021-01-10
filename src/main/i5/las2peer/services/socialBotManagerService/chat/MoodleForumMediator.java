@@ -75,7 +75,7 @@ public class MoodleForumMediator extends ChatMediator {
 				try {
 					String discussionid = obj.getString("id").split("d=")[1].split("#")[0];
 					String postid = obj.getString("id").split("#p")[1].split("#")[0];
-					String parentid = obj.getString("id").split("#parentid=")[1];
+					String parentid = obj.getString("id").split("#parent=")[1];
 					
 					if (!parentid.equals("null")) {
 						MessageTree newPost = new MessageTree(postid, userid, null);
