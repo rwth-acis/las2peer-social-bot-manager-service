@@ -273,9 +273,9 @@ public class Messenger {
 						}
 						if (response == null) {
 							response = state.getResponse(this.random);
-							if (response == null) {
+							if (response == null && state.getTriggeredFunctionId() != "") {
 								HashMap<String, String> initMap = new HashMap<String, String>();
-								initMap.put(message.getUser(), response.getTriggeredFunctionId());
+								initMap.put(message.getUser(), state.getTriggeredFunctionId());
 								this.triggeredFunction.put(message.getChannel(), initMap);
 								contextOn = true;
 							}

@@ -80,7 +80,9 @@ public class MoodleForumMediator extends ChatMediator {
 					if (parentid.equals("null")) {
 						MessageTree newPost = new MessageTree(postid, userid, null);
 						discussions.put(discussionid, newPost);
-						this.messageCollector.handle(discussionid, postid, message);
+						if (!ignoreIds.contains(userid)) {
+							this.messageCollector.handle(discussionid, postid, message);
+						}
 					} else if (discussions.containsKey(discussionid)) {
 						
 						// Add post to existing tree
