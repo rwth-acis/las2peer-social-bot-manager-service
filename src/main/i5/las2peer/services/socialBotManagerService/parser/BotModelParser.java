@@ -56,11 +56,82 @@ public class BotModelParser {
 
 	}
 
+	public BotModel parse(BotModel model, Function function) {
+		
+		this.nodeList = model.getNodes();
+		this.edgeList = model.getEdges();
+		for(BotModelNode node : model.getNodes().values()) {
+			if(node.getType().contentEquals("Messenger")) {
+				this.messengers.add(node);
+			}
+		}
+		
+		// Function
+		switch (function.getType()) {
+			
+			case CHIT_CHAT:
+				ChitChatFunction fn = (ChitChatFunction) function;
+				for (Message message : fn.getMessages()) {
+	
+					String intent = message.getIntent();
+					if (incomingMessages.containsKey(intent)) {
+	
+						BotModelNode inNode = incomingMessages.get(intent);
+						BotModelNode outNode = addNode("Chat Response");
+						addAttribute(outNode, "Message", message.getResponse());
+						addEdge(inNode, outNode, "triggers");
+	
+					} else {
+	
+						BotModelNode inNode = addNode("Incoming Message");
+						addAttribute(inNode, "Intent Keyword", message.getIntent());
+						addAttribute(inNode, "NLU ID", "0");
+	
+						BotModelNode outNode = addNode("Chat Response");
+						addAttribute(outNode, "Message", message.getResponse());
+	
+						addEdge(inNode, outNode, "triggers");
+						addMessengerEdges(inNode, "generates");
+	
+						incomingMessages.put(intent, inNode);
+					}
+				}
+				break;
+	
+			case SERVICE_ACCESS:
+				AccessServiceFunction as = (AccessServiceFunction) function;
+	
+				BotModelNode frameNode = addNode("Frame");
+				// addAttribute(frameNode, "intent", as.getOperationID());
+	
+				BotModelNode actionNode = addNode("Bot Action");
+				addAttribute(actionNode, "Action Type", "Service");
+				// addAttribute(actionNode, "Function Name", as.getOperationID());
+				// addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
+	
+				addEdge(frameNode, actionNode, "triggers");
+				addMessengerEdges(frameNode, "generates");
+				break;
+	
+			default:
+				assert false : "no known function" + function.getType();
+				break;
+	
+			}
+		
+		BotModel newBotModel = new BotModel();
+		processNodes();
+		newBotModel.setEdges(this.edgeList);
+		newBotModel.setNodes(this.nodeList);
+
+		return model;
+	}
+
 	public BotModel parse(Bot bot, BotConfiguration config) {
 
-		if(config.getBotModelInfo() != null)
+		if (config.getBotModelInfo() != null)
 			this.info = config.getBotModelInfo();
-		
+
 		BotModel model = new BotModel();
 		model.setAttributes(addBotModelAttributes());
 

@@ -25,6 +25,9 @@ public class FrameMapper {
 	 */
 	public Frame create(String serviceURL, String operationID) {
 
+		assert serviceURL != null;
+		assert operationID != null;
+		
 		Frame frame = new Frame();
 		ServiceFunction action = new ServiceFunction();
 		action.setServiceName(serviceURL);

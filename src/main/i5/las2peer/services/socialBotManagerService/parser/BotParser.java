@@ -24,10 +24,13 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.dialogue.Command;
+import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActType;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
+import i5.las2peer.services.socialBotManagerService.model.BotModel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
@@ -36,6 +39,7 @@ import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.Domain;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
+import i5.las2peer.services.socialBotManagerService.model.GeneratorFunction;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.IntentEntity;
@@ -70,6 +74,7 @@ public class BotParser {
 	private static final String textToTextName = "i5.las2peer.services.tensorFlowTextToText.TensorFlowTextToText";
 
 	protected BotParser() {
+		
 	}
 
 	public static BotParser getInstance() {
@@ -79,7 +84,7 @@ public class BotParser {
 		return instance;
 	}
 
-	public VLE parseNodesAndEdges(BotConfiguration config, Map<String, BotAgent> botAgents,
+	public VLE parseNodesAndEdges(BotModel model, BotConfiguration config, Map<String, BotAgent> botAgents,
 			Map<String, BotModelNode> nodes, Map<String, BotModelEdge> edges, SQLDatabase database)
 			throws ParseBotException, IOException, DeploymentException {
 
@@ -158,7 +163,7 @@ public class BotParser {
 			switch (nodeType) {
 
 			case "Bot":
-				Bot bot = addBot(elem, botAgents);
+				Bot bot = addBot(model, elem, botAgents);
 				bots.put(entry.getKey(), bot);
 				break;
 
@@ -544,8 +549,9 @@ public class BotParser {
 					else if (bsfList.containsKey(target)) {
 						ServiceFunction function = bsfList.get(target);
 						System.out.println("selection uses Action " + function.getFunctionName() + " " + value);
-						selection.setGeneratorFunction(function);
-						selection.setGeneratorKey(value);
+						GeneratorFunction generator = new GeneratorFunction(DialogueActType.SELECTION,
+								ResponseParseMode.MESSAGE_TEXT, function, value);
+						selection.setGeneratorFunction(generator);
 					}
 
 					// Bot Action uses Messenger
@@ -584,6 +590,7 @@ public class BotParser {
 					// Messenger generates...
 				} else if (messengers.containsKey(source)) {
 					Messenger messenger = messengers.get(source);
+
 					// ...IncomingMessage
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage incMsg = incomingMessages.get(target);
@@ -605,17 +612,20 @@ public class BotParser {
 					// Frame generates
 				} else if (frames.containsKey(source)) {
 					Frame frame = frames.get(source);
+
 					// ...File
 					if (files.containsKey(target)) {
 						MessageFile file = files.get(target);
 						frame.setFile(file.getName() + "." + file.getType());
 					}
+
 					// ... Event
 					if (events.containsKey(target)) {
 						ServiceEvent event = events.get(target);
 						frame.addServiceEvent(event);
 					}
-					// ... action attribute
+
+					// ... Action Attribute
 					if (sfaList.containsKey(target)) {
 						ServiceFunctionAttribute attr = sfaList.get(target);
 						attr.setSlotName(value);
@@ -652,23 +662,29 @@ public class BotParser {
 					// Action generates
 				} else if (bsfList.containsKey(source)) {
 					ServiceFunction sf = bsfList.get(source);
-
+					ServiceFunction function = OpenAPIConnector.readFunction(sf);
+					ServiceFunction mergedFunction = function.merge(sf);
+					
 					// ...BotActionAttribute
 					if (sfaList.containsKey(target)) {
-						ServiceFunctionAttribute attribute = sfaList.get(target);
-						ServiceFunction function = OpenAPIConnector.readFunction(sf);
-						attribute.setFillingFunction(function.merge(sf));
+						ServiceFunctionAttribute attribute = sfaList.get(target);						
+						attribute.setFillingFunction(mergedFunction);
 						if (value != null)
 							attribute.setFillingFunctionKey(value);
 
 						// ...Intent entity
 					} else if (intentEntities.containsKey(target)) {
 						System.out.println("action generates entity");
-						IntentEntity entity = intentEntities.get(target);
-						ServiceFunction function = OpenAPIConnector.readFunction(sf);
-						ServiceFunction mergedFunction = function.merge(sf);
+						IntentEntity entity = intentEntities.get(target);						
 						entity.setKey(value);
 						entity.setFunction(mergedFunction);
+
+					} else if (selections.containsKey(target)) {
+						System.out.println("action generates selection");
+						Selection selection = selections.get(target);
+						GeneratorFunction gf = new GeneratorFunction(DialogueActType.SELECTION,
+								ResponseParseMode.MESSAGE_TEXT, mergedFunction, "");
+						selection.setGeneratorFunction(gf);
 					}
 				}
 				// TRIGGERS
@@ -974,9 +990,14 @@ public class BotParser {
 
 	private Selection addSelection(String key, BotModelNode elem, BotConfiguration config) {
 
-		Selection selection = new Selection(key);
+		String intent = null;
+		String response = null;
 		String generatorURL = null;
+		String generatorKey = null;
 		String responseURL = null;
+
+		String opName = null;
+		String opDes = null;
 
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
@@ -987,49 +1008,39 @@ public class BotParser {
 			case "intent":
 			case "Intent":
 			case "Intent Keyword":
-				selection.setIntent(value);
+				intent = value;
 				break;
 			case "message":
 			case "Message":
 			case "Response Message":
-				selection.setMessage(value);
-				selection.setResponseMessage(value);
-				break;
-			case "Show Operation":
-				selection.setOperation(Boolean.parseBoolean(value));
+				response = value;
 				break;
 			case "Operation Name":
-				selection.setOperationName(value);
+				opName = value;
 				break;
 			case "Operation Description":
-				selection.setOperationDescription(value);
+				opDes = value;
 				break;
 			case "Generator URL":
 				generatorURL = value;
 				break;
 			case "Generator Key":
-				selection.setGeneratorKey(value);
+				generatorKey = value;
 				break;
 			case "Response URL":
 				responseURL = value;
 				break;
-			case "Response Parse Mode":
-				selection.setParseMode(ResponseParseMode.fromString(value));
-				break;
 			}
 		}
 
-		try {
+		Selection selection = new Selection(key, intent, response);
 
-			if (responseURL != null && !responseURL.contentEquals(""))
-				selection.setResponseURL(new URL(responseURL));
-
-			if (generatorURL != null && !generatorURL.contentEquals(""))
-				selection.setResponseURL(new URL(generatorURL));
-
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
+		if (intent != null && opName != null) {
+			Command command = new Command(opName, intent, opDes);
+			selection.setCommand(command);
+			System.out.println("selection add command " + opName);
 		}
+
 		System.out.println("added selection with intent " + selection.getIntentKeyword());
 		return selection;
 	}
@@ -1209,8 +1220,8 @@ public class BotParser {
 		return vle;
 	}
 
-	private Bot addBot(BotModelNode elem, Map<String, BotAgent> botAgents) {
-		Bot bot = new Bot();
+	private Bot addBot(BotModel model, BotModelNode elem, Map<String, BotAgent> botAgents) {
+		Bot bot = new Bot(model);
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
@@ -1310,8 +1321,6 @@ public class BotParser {
 	private ServiceFunction addAction(String key, BotModelNode elem, BotConfiguration config, VLE vle)
 			throws IOException, DeploymentException, ParseBotException {
 
-		ServiceFunction sf = new ServiceFunction();
-		sf.setId(key);
 		String actionType = "";
 		String messengerID = "";
 		String alias = "";
@@ -1335,44 +1344,50 @@ public class BotParser {
 			}
 		}
 
-		URL serviceURL = null;
-		try {
-			serviceURL = new URL(alias);
-		} catch (Exception e) {
-
-		}
-
-		if (serviceURL == null)
-			try {
-				String path = vle.getAddress() + "/" + alias;
-				serviceURL = new URL(path);
-			} catch (Exception e) {
-
-			}
-
-		if (serviceURL == null)
-			throw new ParseBotException("There is no valid path for function " + sfName);
-
-		sf.setFunctionName(sfName);
-		sf.setServiceName(alias);
-		System.out.println(sf.getFunctionName() + " Service URL " + sf.getBasePath());
-
+		// Send Message Action
 		if (actionType.equals("SendMessage")) {
+			ServiceFunction sf = new ServiceFunction();
+			sf.setId(key);
 			sf.setActionType(ActionType.SENDMESSAGE);
 			sf.setMessengerName(messengerID);
 			sf.setServiceName(alias);
 			sf.setFunctionName(sfName);
-		} else {
-			// default case
-			sf.setFunctionName(sfName);
-			sf.setServiceName(alias);
-			sf.setBasePath(serviceURL.toString());
+			return sf;
 		}
+
+		// Service Access Action
+		URL functionURL = null;
+		String functionPath = null;
+		ServiceType serviceType = ServiceType.OPENAPI;
+
+		// Open API with full path
+		try {
+			functionURL = new URL(alias);
+		} catch (Exception e) {
+
+		}
+
+		// las2peer function with service alias
+		if (functionURL == null)
+			try {
+				String path = vle.getAddress() + "/" + alias;
+				functionURL = new URL(path);
+				serviceType = ServiceType.SERVICE;
+			} catch (Exception e) {
+
+			}
+
+		if (functionURL == null)
+			throw new ParseBotException("There is no valid path for function " + sfName);
+
+		Service service = new Service(serviceType, alias, functionURL);
+		ServiceFunction sf = new ServiceFunction(key, service, sfName);
+		System.out.println(sf.getFunctionName() + " Service URL " + sf.getBasePath());
 
 		return sf;
 	}
 
-	private ServiceFunctionAttribute addActionParameter(String key, BotModelNode elem) {
+	private ServiceFunctionAttribute addActionParameter(String key, BotModelNode elem) throws ParseBotException {
 
 		String contentType = null;
 		String attrName = "";
@@ -1412,20 +1427,30 @@ public class BotParser {
 				break;
 			case "Key Fill":
 				KeyFill = value;
+				break;
 			case "Parameter Type":
 				parameterType = ParameterType.fromString(value);
 				break;
 			}
 		}
 
-		ServiceFunctionAttribute sfa = new ServiceFunctionAttribute(key, attrName);
+		if(attrName == null)
+			throw new ParseBotException("service function attribute has no name");
+		
+		ServiceFunctionAttribute sfa = new ServiceFunctionAttribute(key, attrName, parameterType);
 		sfa.setContentType(contentType);
 		sfa.setStaticContent(stat);
 		sfa.setContent(content);
-		sfa.setContentURL(contentURL);
 		sfa.setContentURLKey(URLKey);
 		sfa.setContentFill(KeyFill);
-		sfa.setParameterType(parameterType);
+
+		if (contentURL != null && !contentURL.contentEquals(""))
+			try {
+				sfa.setContentURL(new URL(contentURL));
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+				throw new ParseBotException("parameter " + attrName + " has invalid content url " + contentURL);
+			}
 
 		return sfa;
 	}

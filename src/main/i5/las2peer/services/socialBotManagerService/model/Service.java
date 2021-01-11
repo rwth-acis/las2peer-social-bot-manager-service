@@ -31,13 +31,26 @@ public class Service {
 	 * default location).
 	 */
 	private URL swaggerURL;
-
+	
 	public Service(ServiceType serviceType, String serviceAlias, URL serviceURL) {
+
+		assert serviceURL != null : "cant create service without null url";
+
+		if (serviceType == null)
+			serviceType = ServiceType.OPENAPI;
+		
+		if (serviceAlias == null)
+			serviceAlias = "";
+
 		this.serviceType = serviceType;
 		this.serviceAlias = serviceAlias;
 		this.serviceURL = serviceURL;
 	}
 
+	public Service(URL serviceURL) {
+		this(null, null, serviceURL);
+	}
+	
 	public ServiceType getServiceType() {
 		return serviceType;
 	}
@@ -57,13 +70,19 @@ public class Service {
 	}
 
 	public void setSwaggerURL(URL swaggerURL) {
-		this.swaggerURL = swaggerURL;
+
+		if (swaggerURL != null)
+			this.swaggerURL = swaggerURL;
 	}
 
 	@Override
 	public String toString() {
 		return "Service [serviceType=" + serviceType + ", serviceAlias=" + serviceAlias + ", serviceURL=" + serviceURL
 				+ ", swaggerURL=" + swaggerURL + "]";
+	}
+
+	public void invariant() {
+		assert this.serviceURL != null : "service has no URL";
 	}
 
 }

@@ -10,8 +10,8 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotLi
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 /**
- * @author christoph
- *
+ * Element of a Frame
+ * Connects Frames with ServiceFunctionAttributes
  */
 public class Slot {
 
@@ -71,13 +71,13 @@ public class Slot {
 	 */
 	String requestMessage;
 
-	public Slot(String name) {
+	public Slot(String name) {		
 		this.name = name;
 		this.children = new SlotList();
 		this.priority = 0;
 	}
 
-	public Slot(ServiceFunctionAttribute attr) {
+	public Slot(ServiceFunctionAttribute attr) {						
 		this(attr.getName());
 		this.parameter = attr;
 		this.inputType = InputType.fromString(attr.getContentType());
@@ -121,7 +121,7 @@ public class Slot {
 	 * @return
 	 */
 	public String getID() {
-		if(this.parameter != null && this.parameter.getId() != null)
+		if(this.hasParameter() && this.parameter.getId() != null)
 			return this.parameter.getId();
 		return this.name;
 	}
@@ -141,7 +141,6 @@ public class Slot {
 	 * @return
 	 */
 	public String getAPIName() {
-
 		if (this.hasParameter())
 			return this.parameter.getName();
 		return this.name;
@@ -329,14 +328,6 @@ public class Slot {
 		return (enumList != null);
 	}
 
-	public void setEnumList(List<String> enums) {
-		if (!this.hasParameter())
-			return;
-
-		this.getParameter().setEnumList(enums);
-
-	}
-
 	public boolean isArray() {
 		if (this.hasParameter())
 			return this.getParameter().isArray();
@@ -455,20 +446,19 @@ public class Slot {
 		return this.parameter.hasDynamicEnums();
 	}
 
-	public Collection<ServiceFunctionAttribute> getOpenAttributes() {
-
-		ServiceFunctionAttribute attr = this.getParameter();
-		if (!attr.hasDynamicEnums())
+	/**
+	 * Give a list of parameters that have to be filled before this slot can be filled.
+	 * 
+	 * @return
+	 */
+	public Collection<ServiceFunctionAttribute> getOpenSlots() {
+		assert this.parameter != null;		
+		
+		if (!this.hasDynamicEnums())
 			return new ArrayList<>();
-
-		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
-		ServiceFunction function = attr.getRetrieveFunction();
-		for (ServiceFunctionAttribute fa : function.getAllAttributes()) {
-			if (!fa.isOpen())
-				res.add(fa);
-		}
-
-		return res;
+		
+		ServiceFunctionAttribute attr = this.getParameter();
+		return attr.getOpenAttributes();
 	}
 
 	/**

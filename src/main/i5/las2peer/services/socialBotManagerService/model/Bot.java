@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -19,6 +20,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Function;
 
 public class Bot {
@@ -51,6 +53,16 @@ public class Bot {
 	private Map<String, LanguageGenerator> nlgs;
 	private Language language = Language.ENGLISH;
 	private Map<String, Function> creationFunctions;
+	private BotModel model;
+
+	public Bot(BotModel model) {
+		this();
+		this.model = model;
+	}
+
+	public BotModel getModel() {
+		return this.model;
+	}
 
 	public Bot() {
 
@@ -326,7 +338,7 @@ public class Bot {
 	}
 
 	public Collection<Domain> getDomains() {
-		Map<String, Domain> res = new HashMap<>();		
+		Map<String, Domain> res = new HashMap<>();
 		for (Messenger messenger : this.messengers.values()) {
 			for (Entry<String, Domain> domain : messenger.getDomains().entrySet())
 				res.put(domain.getKey(), domain.getValue());
@@ -334,25 +346,51 @@ public class Bot {
 		return res.values();
 	}
 
-	public Map<String, Function> getCreationFunctions() {
-		if(this.creationFunctions == null)
-			this.creationFunctions = new HashMap<>();
-		return creationFunctions;
+	public Collection<CreationFunction> getCreationFunctions() {
+		assert messengers != null;
+
+		Collection<CreationFunction> res = new LinkedList<CreationFunction>();
+		for (Messenger messenger : this.messengers.values()) {
+			if (messenger.getDomains() != null)
+				for (Domain domain : messenger.getDomains().values()) {
+					if (domain.getCreationFunctions() != null)
+						for (CreationFunction function : domain.getCreationFunctions().values())
+							res.add(function);
+				}
+		}
+		return res;
+
 	}
 
 	public void setCreationFunctions(Collection<Function> creationFunctions) {
-		if(this.creationFunctions == null)
+		if (this.creationFunctions == null)
 			this.creationFunctions = new HashMap<String, Function>();
-		for(Function function :creationFunctions) {
+		for (Function function : creationFunctions) {
 			this.addCreationFunction(function);
 		}
 	}
 
+	public boolean deleteCreationFunction(String name) {
+		if (this.messengers != null)
+
+			for (Messenger messenger : this.messengers.values()) {
+				if (messenger.getDomains() != null)
+					for (Domain domain : messenger.getDomains().values()) {
+						if (domain.getCreationFunctions().containsKey(name)) {
+							domain.deleteCreationFunction(name);
+							return true;
+						}
+					}
+			}
+
+		return false;
+	}
+
 	public void addCreationFunction(Function creationFunction) {
-		assert creationFunction != null;		
-		
+		assert creationFunction != null;
+
 		String name = creationFunction.getName();
-		if(name == null || name.contentEquals("")) {
+		if (name == null || name.contentEquals("")) {
 			name = creationFunction.getType() + " " + this.creationFunctions.size();
 			creationFunction.setName(name);
 		}

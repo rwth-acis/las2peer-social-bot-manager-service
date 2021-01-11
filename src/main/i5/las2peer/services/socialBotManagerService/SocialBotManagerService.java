@@ -116,9 +116,11 @@ import i5.las2peer.services.socialBotManagerService.parser.BotModelInfo;
 import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Function;
 import i5.las2peer.services.socialBotManagerService.parser.creation.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.TelegramMessenger;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -455,12 +457,26 @@ public class SocialBotManagerService extends RESTService {
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
 		@ApiOperation(value = "Retrieve bot information by name", notes = "Returns bot information by the given bot name.")
-		public Response getBotInfo(@PathParam("botName") String name) {
+		public Response getBotInfo(@PathParam("botName") String name, @QueryParam("parsing") String parsing) {
 			try {
 
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
 					if (bot != null) {
+
+						if (parsing != null && parsing.contentEquals("botMessage")) {
+							String res = "My Information about *" + bot.getName() + "* \n";
+
+							res = res + "\nMessenger: \n";
+							for (Messenger messenger : bot.getMessengers().values())
+								res = res + messenger.getName() + " " + messenger.getChatService().toString() + "\n";
+
+							res = res + "\nFunctions: \n";
+							for (CreationFunction function : bot.getCreationFunctions())
+								res = res + function.getName() + " " + function.getType() + "\n";
+
+							return Response.ok().entity(res).build();
+						}
 
 						JSONObject res = new JSONObject();
 						res.put("botName", bot.getName());
@@ -475,7 +491,7 @@ public class SocialBotManagerService extends RESTService {
 
 						JSONArray functionsJSON = new JSONArray();
 						res.put("functions", functionsJSON);
-						for (Function function : bot.getCreationFunctions().values()) {
+						for (CreationFunction function : bot.getCreationFunctions()) {
 							JSONObject functionJSON = new JSONObject();
 							functionJSON.put("functionName", function.getName());
 							functionJSON.put("functionType", function.getType());
@@ -514,8 +530,8 @@ public class SocialBotManagerService extends RESTService {
 			LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
 			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
 			try {
-				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-						nodes, edges, sbfservice.database);
+				bp.parseNodesAndEdges(botModel, SocialBotManagerService.getConfig(),
+						SocialBotManagerService.getBotAgents(), nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
 				e.printStackTrace();
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -1189,11 +1205,11 @@ public class SocialBotManagerService extends RESTService {
 				triggeredBody.put(triggeredFunctionAttribute.getName(), array);
 			} else
 				triggeredBody.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
-		if (triggeredFunctionAttribute.getContentURL().length() > 0) {
+		if (triggeredFunctionAttribute.getContentURL() != null) {
 			URL url;
 			String body = "";
 			try {
-				url = new URL(triggeredFunctionAttribute.getContentURL());
+				url = triggeredFunctionAttribute.getContentURL();
 				HttpURLConnection con = (HttpURLConnection) url.openConnection();
 				con.setDoOutput(true);
 				con.setDoInput(true);
@@ -2029,8 +2045,33 @@ public class SocialBotManagerService extends RESTService {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
 					if (bot != null) {
-						bot.addCreationFunction(function);
+						BotModel newModel = null;
+						try {
+							System.out.println("Add FUnction to bot model");
+							BotModelParser botModelParser = new BotModelParser();
+							BotModel model = bot.getModel();
+							newModel = botModelParser.parse(model, function);
+
+						} catch (Exception e) {
+							e.printStackTrace();
+							return Response.serverError()
+									.entity("Bot creation failed. Can't parse function into model.").build();
+						}
+
+						if (newModel == null)
+							return Response.serverError().entity("No new Model.").build();
+
+						try {
+
+							BotResource br = new BotResource();
+							Response response = br.init(newModel);
+							String botName = (String) response.getEntity();
+
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 						return Response.ok().entity("function added").build();
+
 					}
 				}
 			} catch (Exception e) {
@@ -2121,15 +2162,11 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
-					if (bot != null) {
-						for (Entry<String, Function> entry : bot.getCreationFunctions().entrySet()) {
-							if (entry.getValue().getName().contentEquals(mName)) {
-								bot.getCreationFunctions().remove(entry.getKey());
-								return Response.ok().entity("function" + mName + " deleted fro bot " + name).build();
-							}
-						}
-
-					}
+					if (bot != null)
+						if (bot.deleteCreationFunction(mName))
+							return Response.ok().entity("I deleted the function " + mName).build();
+						else
+							return Response.ok().entity("I was not able to delete the function " + mName).build();
 				}
 
 			} catch (
@@ -2139,6 +2176,29 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			return Response.ok().entity("no bot found").build();
+		}
+
+		@GET
+		@Path("/info/functions")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
+		public Response getFunctionNames(@ApiParam(required = true) @QueryParam("swaggerURL") String swaggerURL) {
+
+			try {
+
+				Collection<String> functions = OpenAPIConnector.getFunctionNames(swaggerURL);
+				JSONArray array = new JSONArray();
+				for(String function : functions) {
+					array.add(function);
+				}
+				
+				return Response.ok().entity(array).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().entity("I cant find functions for swagger url " + swaggerURL).build();
+			}
+
 		}
 
 		@GET
@@ -2152,7 +2212,7 @@ public class SocialBotManagerService extends RESTService {
 			res.add(testarrParam);
 			res.add("HelloWorld");
 			System.out.println("get Test Enum " + res.toJSONString());
-			try {				
+			try {
 				return Response.ok().entity(res).build();
 			} catch (Exception e) {
 				e.printStackTrace();

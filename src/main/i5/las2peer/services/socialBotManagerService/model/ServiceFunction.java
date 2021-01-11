@@ -1,18 +1,19 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import i5.las2peer.services.socialBotManagerService.parser.openapi.FunctionInterface;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
-public class ServiceFunction extends TriggerFunction {
+public class ServiceFunction extends TriggerFunction implements FunctionInterface {
 
 	private String id;
-	private Service service;
-
 	private Set<Bot> bots;
 	private Set<VLEUser> users;
 
@@ -24,16 +25,48 @@ public class ServiceFunction extends TriggerFunction {
 	private String description;
 	private Set<ServiceFunctionAttribute> attributes;
 	private Set<Trigger> trigger;
+
+	private Service service;
 	private String serviceName;
 
 	private ActionType actionType = ActionType.SERVICE;
 	private String messengerName;
 
+	/**
+	 * Create empty Service Function
+	 */
 	public ServiceFunction() {
 		this.attributes = new HashSet<ServiceFunctionAttribute>();
 		setBots(new HashSet<Bot>());
 		setUsers(new HashSet<VLEUser>());
 		setTrigger(new HashSet<Trigger>());
+	}
+
+	/**
+	 * Create a service function, that needs to be completed by a swagger
+	 * call
+	 * 
+	 * @param id
+	 * @param service
+	 * @param functionName
+	 */
+	public ServiceFunction(String id, Service service, String functionName) {
+		this();
+		assert service != null : "function created without service";
+		assert functionName != null : "function created without function path";
+		this.service = service;
+		this.name = functionName;
+	}
+
+	/**
+	 * Create a simple GET function of a specified URL
+	 * 
+	 * @param fullURL
+	 */
+	public ServiceFunction(URL fullURL) {
+		this(UUID.randomUUID().toString(), new Service(fullURL), "");
+		this.method = "GET";
+		this.actionType = (ActionType.FUNCTION);
 	}
 
 	public String getId() {
@@ -80,6 +113,7 @@ public class ServiceFunction extends TriggerFunction {
 		this.users.add(u);
 	}
 
+	@Override
 	public String getFunctionName() {
 		return name;
 	}
@@ -88,6 +122,7 @@ public class ServiceFunction extends TriggerFunction {
 		this.name = functionName;
 	}
 
+	@Override
 	public String getFunctionPath() {
 		return path;
 	}
@@ -96,12 +131,18 @@ public class ServiceFunction extends TriggerFunction {
 		this.path = functionPath;
 	}
 
+	@Override
 	public String getBasePath() {
 
 		if (this.service == null)
 			return this.serviceName;
 
 		return service.getServiceURL();
+	}
+
+	public void setBaseURL(URL path) {
+		assert path != null;
+		this.setBasePath(path.toString());
 	}
 
 	public void setBasePath(String path) {
@@ -132,6 +173,7 @@ public class ServiceFunction extends TriggerFunction {
 		this.attributes.add(attribute);
 	}
 
+	@Override
 	public String getHttpMethod() {
 		return method;
 	}
@@ -176,6 +218,7 @@ public class ServiceFunction extends TriggerFunction {
 		return (this.attributes != null && !this.attributes.isEmpty());
 	}
 
+	@Override
 	public boolean contains(ServiceFunctionAttribute attr) {
 		for (ServiceFunctionAttribute attr2 : this.getAllAttributes()) {
 			if (attr.equals(attr2))
@@ -184,6 +227,7 @@ public class ServiceFunction extends TriggerFunction {
 		return false;
 	}
 
+	@Override
 	public ServiceFunctionAttribute getAttribute(String name) {
 		List<ServiceFunctionAttribute> attributes = this.getAllAttributes();
 		for (ServiceFunctionAttribute attr : attributes) {
@@ -194,6 +238,7 @@ public class ServiceFunction extends TriggerFunction {
 		return null;
 	}
 
+	@Override
 	public List<ServiceFunctionAttribute> getRequiredAttributes() {
 		List<ServiceFunctionAttribute> res = new ArrayList<ServiceFunctionAttribute>();
 		for (ServiceFunctionAttribute attr : this.attributes) {
@@ -211,6 +256,7 @@ public class ServiceFunction extends TriggerFunction {
 		return null;
 	}
 
+	@Override
 	public List<ServiceFunctionAttribute> getPathAttributes() {
 		List<ServiceFunctionAttribute> res = new ArrayList<ServiceFunctionAttribute>();
 		for (ServiceFunctionAttribute attr : this.attributes) {
@@ -220,6 +266,7 @@ public class ServiceFunction extends TriggerFunction {
 		return res;
 	}
 
+	@Override
 	public List<ServiceFunctionAttribute> getQueryAttributes() {
 		List<ServiceFunctionAttribute> res = new ArrayList<ServiceFunctionAttribute>();
 		for (ServiceFunctionAttribute attr : this.attributes) {
@@ -229,6 +276,7 @@ public class ServiceFunction extends TriggerFunction {
 		return res;
 	}
 
+	@Override
 	public ArrayList<ServiceFunctionAttribute> getAllAttributes() {
 		ArrayList<ServiceFunctionAttribute> attributes = new ArrayList<>();
 		for (ServiceFunctionAttribute attr : this.attributes) {
@@ -326,9 +374,12 @@ public class ServiceFunction extends TriggerFunction {
 		if (this.actionType == ActionType.SERVICE && function.getActionType() == ActionType.FUNCTION)
 			this.actionType = function.getActionType();
 
-		for (ServiceFunctionAttribute attr : this.getAllAttributes()) {
+		if(function.getHttpMethod() != null)
+			this.method = function.getHttpMethod();
+		
+		for (ServiceFunctionAttribute attr : this.getAllAttributes()) 
 			System.out.println(attr.getIdName());
-		}
+		
 
 		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {
 			if (this.getAttribute(mergeAttr.getIdName()) != null) {
@@ -339,7 +390,22 @@ public class ServiceFunction extends TriggerFunction {
 				System.out.println("cant merge attribute: " + mergeAttr.getIdName());
 			}
 		}
+
+		this.invariant();
 		return this;
 	}
 
+	public void invariant() {
+
+		assert this.name != null : "function has no name";
+		assert this.service != null : "function " + this.name + " has no service";
+		assert this.actionType != null : "function " + this.name + " has no action type";
+		this.service.invariant();
+
+	}
+
+	@Override
+	public ServiceFunction asServiceFunction() {
+		return this;
+	}
 }

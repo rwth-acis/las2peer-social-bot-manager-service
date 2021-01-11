@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +31,7 @@ public class ServiceFunctionAttribute {
 
 	private boolean staticContent;
 	private String content;
-	private String contentURL;
+	private URL contentURL;
 	private String contentURLKey;
 	private String contentType;
 	private String contentFill;
@@ -53,6 +54,9 @@ public class ServiceFunctionAttribute {
 	private String format;
 
 	public ServiceFunctionAttribute(String id, String name) {
+		assert id != null;
+		assert name != null;
+		
 		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
 		this.name = name;
 		this.id = id;
@@ -60,6 +64,8 @@ public class ServiceFunctionAttribute {
 
 	public ServiceFunctionAttribute(String id, String name, ParameterType type) {
 		this(id, name);
+		assert type != null;
+		
 		this.parameterType = type;
 		if (type == ParameterType.PATH)
 			this.required = true;
@@ -84,7 +90,8 @@ public class ServiceFunctionAttribute {
 	}
 
 	/**
-	 * identification of parameter with parent attributes (example: grandparent_parent_parameter).
+	 * identification of parameter with parent attributes (example:
+	 * grandparent_parent_parameter).
 	 * 
 	 * @return
 	 */
@@ -174,11 +181,11 @@ public class ServiceFunctionAttribute {
 		this.content = content;
 	}
 
-	public String getContentURL() {
-		return contentURL;
+	public URL getContentURL() {
+		return this.contentURL;
 	}
 
-	public void setContentURL(String contentURL) {
+	public void setContentURL(URL contentURL) {
 		this.contentURL = contentURL;
 	}
 
@@ -261,25 +268,22 @@ public class ServiceFunctionAttribute {
 
 	public List<String> update() {
 
-		System.out.println("update: " + this.getName() + " " + this.fillingFunctionKey + " " + this.fillingFunction);
+		System.out.println("update: " + this.getName() + ", function:" + this.fillingFunctionKey + " " + this.fillingFunction + " , (content: " + this.getContent() + ")");
 		if (this.getRetrieveFunction() == null)
 			return null;
 
 		if (this.getRetrieveFunction().hasOpenAttribute()) {
 			System.out.println("retrieve function has open attributes");
 			return null;
-			
+
 		}
 
 		List<String> retrievedEnums = null;
 
-		if (this.contentURL != null && this.contentURL.startsWith("http")) {
+		if (this.contentURL != null) {
 			System.out.println("update by contentURL");
-			ServiceFunction action = new ServiceFunction();
-			action.setHttpMethod("GET");
-			action.setBasePath(contentURL);
-			action.setFunctionPath("");
-			action.setActionType(ActionType.FUNCTION);
+
+			ServiceFunction action = new ServiceFunction(contentURL);
 			retrievedEnums = (List<String>) OpenAPIConnector.readEnums(action, contentURLKey);
 
 		} else if (this.fillingFunction != null) {
@@ -409,14 +413,8 @@ public class ServiceFunctionAttribute {
 		if (this.fillingFunction != null)
 			return fillingFunction;
 
-		if (this.contentURL != null) {
-			ServiceFunction action = new ServiceFunction();
-			action.setHttpMethod("GET");
-			action.setBasePath(contentURL);
-			action.setFunctionPath("");
-			action.setActionType(ActionType.FUNCTION);
-			return action;
-		}
+		if (this.contentURL != null)
+			return new ServiceFunction(contentURL);
 
 		return null;
 	}
@@ -461,24 +459,125 @@ public class ServiceFunctionAttribute {
 		this.contentURLKey = contentURLKey;
 	}
 
+	
+	public String getContentFill() {
+		return contentFill;
+	}
+
+	public void setContentFill(String contentFill) {
+		this.contentFill = contentFill;
+	}
+	
 	public boolean hasDynamicEnums() {
-		if (this.contentURL != null && !this.contentURL.contentEquals(""))
+		if (this.contentURL != null)
 			return true;
 		if (this.getRetrieveFunction() != null)
 			return true;
 		return false;
 	}
 
+	public String getSlotID() {
+		if (slotID != null)
+			return slotID;
+
+		return this.slotName;
+	}
+
+	public void setSlotID(String slotID) {
+		System.out.println("set slot id " + slotID + " of " + this.getIdName());
+		if (slotID != null)
+			this.slotID = slotID;
+	}
+
+	public void setSlotName(String slotName) {
+		System.out.println("set slot name " + slotName);
+		this.slotName = slotName;
+	}
+
+	public String getSlotName() {
+
+		return this.slotName;
+	}
+
+	/**
+	 * Return attributes that this attribute is dependent on by dynamic enums. The
+	 * (if possible values of this attribute depend on a retrieve Function call,
+	 * that has attributes itself)
+	 * 
+	 * @return list of attributes
+	 */
+	public Collection<ServiceFunctionAttribute> getOpenAttributes() {
+
+		if (!this.hasDynamicEnums() || this.getRetrieveFunction() == null)
+			return new ArrayList<>();
+
+		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
+		ServiceFunction function = this.getRetrieveFunction();
+		for (ServiceFunctionAttribute fa : function.getAllAttributes()) {
+			if (fa.isOpen())
+				res.add(fa);
+		}
+
+		return res;
+	}
+
+	/**
+	 * Indicate if this attribute already knows how it is filled with a value
+	 * 
+	 * @return can be filled (true) or not (false)
+	 */
+	public boolean isOpen() {
+
+		System.out.println("is open? " + this.getName() + ", content:" + this.hasContent() + ", frameg: "
+				+ this.isFrameGenerated());
+
+		if (this.hasContent())
+			return false;
+
+		if (this.isFrameGenerated())
+			return false;
+
+		return true;
+	}
+
+	/**
+	 * Indicates if this parameter is already filled with static content
+	 * 
+	 * @return is filled (true) or not (false)
+	 */
+	public boolean hasContent() {
+		return this.content != null && !this.content.contentEquals("");
+	}
+
+	/**
+	 * Indicate if this parameter should be filled with the value of another
+	 * parameter of a preceding frame.
+	 * 
+	 * @return is filled by frame parameter (true) or not (false)
+	 */
+	public boolean isFrameGenerated() {
+		System.out.println(
+				this.getId() + " " + this.getIdName() + " slotID: " + this.slotID + " slotName: " + this.slotName);
+		if (this.slotID != null && !this.slotID.contentEquals(""))
+			return true;
+		if (this.slotName != null && !this.slotName.contentEquals(""))
+			return true;
+		return false;
+	}
+	
 	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
 		assert attr != null;
 
 		System.out.println("Merge " + attr.getName() + " with " + this.getName() + " slotId: " + attr.getSlotID());
-		
+
 		if (this.id == null && attr.getId() != null)
 			this.id = attr.getId();
 		else if (this.id != null && attr.getId() != null && attr.getId().length() > this.id.length())
 			this.id = attr.getId();
 
+		if(attr.getParameterType() != null)
+			this.parameterType = attr.getParameterType();
+		
 		if (attr.getContentURL() != null)
 			this.setContentURL(attr.getContentURL());
 		if (attr.getContentURLKey() != null)
@@ -509,100 +608,6 @@ public class ServiceFunctionAttribute {
 		return attr;
 
 	}
-
-	public String getSlotID() {
-		if(slotID != null)
-			return slotID;
-		
-		return this.slotName;
-	}
-
-	public void setSlotID(String slotID) {
-		System.out.println("set slot id " + slotID + " of " + this.getIdName());
-		if (slotID != null)
-			this.slotID = slotID;
-	}
-
-	public String getContentFill() {
-		return contentFill;
-	}
-
-	public void setContentFill(String contentFill) {
-		this.contentFill = contentFill;
-	}
-
-	/**
-	 * Return attributes that this attribute is dependent on by dynamic enums. The
-	 * (if possible values of this attribute depend on a retrieve Function call, that
-	 * has attributes itself)
-	 * 
-	 * @return list of attributes
-	 */
-	public Collection<ServiceFunctionAttribute> getOpenAttributes() {
-
-		if (!this.hasDynamicEnums() || this.getRetrieveFunction() == null)
-			return new ArrayList<>();
-
-		Collection<ServiceFunctionAttribute> res = new ArrayList<>();
-		ServiceFunction function = this.getRetrieveFunction();
-		for (ServiceFunctionAttribute fa : function.getAllAttributes()) {
-			if (fa.isOpen())
-				res.add(fa);
-		}
-		
-		return res;
-	}
-
-	/**
-	 * Indicate if this attribte already knows how it is filled with a value
-	 * 
-	 * @return can be filled (true) or not (false)
-	 */
-	public boolean isOpen() {
-		
-		System.out.println("is open? " + this.getName() + ", content:" + this.hasContent() + ", frameg: " + this.isFrameGenerated());
-		
-		if(this.hasContent())
-			return false;
-		
-		if(this.isFrameGenerated())
-			return false;
 	
-		return true;
-	}
-
-	/**
-	 * Indicates if this parameter is already filled with static content
-	 * 
-	 * @return is filled (true) or not (false)
-	 */
-	public boolean hasContent() {
-		return this.content != null && !this.content.contentEquals("");
-	}
-
-	/**
-	 * Indicate if this parameter should be filled with the value of another
-	 * parameter of a preceding frame.
-	 * 
-	 * @return is filled by frame parameter (true) or not (false)
-	 */
-	public boolean isFrameGenerated() {
-		System.out.println(this.getId() + " " + this.getIdName() + " slotID: " + this.slotID + " slotName: " + this.slotName);
-		if (this.slotID != null && !this.slotID.contentEquals(""))
-			return true;
-		if (this.slotName != null && !this.slotName.contentEquals(""))
-			return true;
-		return false;
-	}
-
-	public void setSlotName(String slotName) {
-		System.out.println("set slot name " + slotName);
-		this.slotName  = slotName;		
-	}
 	
-	public String getSlotName() {
-		
-		return this.slotName;
-	}
-
 }

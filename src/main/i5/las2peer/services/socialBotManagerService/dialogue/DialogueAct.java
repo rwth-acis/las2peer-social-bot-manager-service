@@ -9,7 +9,7 @@ import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction
 
 public class DialogueAct {
 
-	String intent;
+	String intentKeyword;
 	DialogueActType intentType;
 	Map<String, String> entities;
 	Map<String, Map<String, String>> multiEntities;
@@ -30,14 +30,23 @@ public class DialogueAct {
 		this.full = full;
 	}
 
-	public DialogueAct() {
-
-	}
+	/**
+	 * Create valid Dialogue Act
+	 * 
+	 * @param type
+	 * @param intent
+	 * @param input
+	 */
+	public DialogueAct(DialogueActType type, String intent, String input) {
+		this.intentType = type;
+		this.intentKeyword = intent;
+		this.message = input;
+	}	
 
 	public DialogueAct(String message) {
 		this.message = message;
 	}
-
+	
 	public DialogueAct(String message, ExpectedInput expected) {
 		super();
 		this.message = message;
@@ -46,9 +55,13 @@ public class DialogueAct {
 
 	public DialogueAct(String intent, String message, ExpectedInput expected) {
 		super();
-		this.intent = intent;
+		this.intentKeyword = intent;
 		this.message = message;
 		this.expected = expected;
+	}
+
+	public DialogueAct() {
+
 	}
 
 	public void addEntity(String name, String value) {
@@ -56,18 +69,18 @@ public class DialogueAct {
 			this.entities = new HashMap<String, String>();
 		this.entities.put(name, value);
 	}
-	
+
 	public void addEntity(String context, String name, String value) {
-		
+
 		System.out.println("addEnttity " + context + name + value);
-		if(this.multiEntities == null)
+		if (this.multiEntities == null)
 			this.multiEntities = new HashMap<>();
-		
-		if(!this.multiEntities.containsKey(context))
+
+		if (!this.multiEntities.containsKey(context))
 			this.multiEntities.put(context, new HashMap<>());
-		
+
 		this.multiEntities.get(context).put(name, value);
-		
+
 	}
 
 	public Map<String, String> getEntities() {
@@ -79,19 +92,19 @@ public class DialogueAct {
 			return true;
 		return false;
 	}
-	
+
 	public boolean hasMultiEntities() {
-		
-		if(this.multiEntities != null && !this.multiEntities.isEmpty())
+
+		if (this.multiEntities != null && !this.multiEntities.isEmpty())
 			return true;
-		
-		return false;		
+
+		return false;
 	}
 
 	public Map<String, Map<String, String>> getContextEntities() {
 		return this.multiEntities;
 	}
-	
+
 	public String getMessage() {
 		return message;
 	}
@@ -109,15 +122,15 @@ public class DialogueAct {
 	}
 
 	public String getIntent() {
-		return intent;
+		return intentKeyword;
 	}
 
 	public void setIntent(String intent) {
-		this.intent = intent;
+		this.intentKeyword = intent;
 	}
 
 	public boolean hasIntent() {
-		return (this.intent != null);
+		return (this.intentKeyword != null);
 	}
 
 	public boolean hasMessage() {
@@ -131,14 +144,14 @@ public class DialogueAct {
 	public DialogueAct concat(DialogueAct act) {
 
 		if (act.hasIntent())
-			this.intent = act.intent;
+			this.intentKeyword = act.intentKeyword;
 		if (act.hasMessage())
 			this.message = this.message.concat(act.getMessage());
 		if (act.hasExpected())
 			this.expected = act.getExpected();
 		return this;
 	}
-	
+
 	public OpenAPIAction getAction() {
 		return action;
 	}
@@ -182,19 +195,19 @@ public class DialogueAct {
 	public void setFile(String file) {
 		this.file = file;
 	}
-	
+
 	public void setGoal(DialogueGoal goal) {
 		this.goal = goal;
 	}
-	
+
 	public DialogueGoal getGoal() {
 		return this.goal;
 	}
-	
+
 	@Override
 	public String toString() {
-		return "DialogueAct [intentType=" + this.intentType + " intent=" + intent + ", message=" + message + ", expected=" + expected + "]";
+		return "DialogueAct [intentType=" + this.intentType + " intent=" + intentKeyword + ", message=" + message
+				+ ", expected=" + expected + "]";
 	}
-	
-	
+
 }

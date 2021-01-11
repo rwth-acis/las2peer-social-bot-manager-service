@@ -1,7 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 public enum ResponseParseMode {
-    MESSAGE_TEXT, FUNCTION_TEXT, JSON_TO_MARKDOWN, FILE, VARS;
+    MESSAGE_TEXT, JSON_TO_MARKDOWN, FILE, VARS;
     
     public static ResponseParseMode fromString(String value) {			
     	

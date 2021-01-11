@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
 
 public class Domain {
 
@@ -122,7 +124,7 @@ public class Domain {
 
 		Collection<Command> res = new ArrayList<>();
 		for (MessengerElement element : getMessengerElements())
-			if(element.isOperation())
+			if (element.isOperation())
 				res.add(((Menuable) element).getCommand());
 
 		return res;
@@ -134,6 +136,45 @@ public class Domain {
 			res.add(element.getIntentKeyword());
 		res.remove("");
 		return res;
+	}
+
+	public Map<String, CreationFunction> getCreationFunctions() {
+
+		Map<String, CreationFunction> res = new HashMap<>();
+		if (this.frames != null)
+			for (Frame frame : this.frames.values()) {
+				CreationFunction function = new CreationFunction(frame.getName(), "Service Access");
+				res.put(function.getName(), function);
+			}
+
+		if (this.messages != null && !this.messages.isEmpty()) {
+			CreationFunction function = new CreationFunction(this.getName(), "Chit Chat");
+			res.put(function.getName(), function);
+		}
+
+		return res;
+	}
+
+	public boolean deleteCreationFunction(String name) {
+		assert name != null;
+
+		if (this.frames != null)
+			for (Entry<String, Frame> entry : this.frames.entrySet()) {
+				String key = entry.getKey();
+				Frame frame = entry.getValue();
+				if (name.contentEquals(frame.getName())) {
+					this.frames.remove(key);
+					return true;
+				}
+			}
+
+		if (this.messages != null && name.contentEquals(this.getName())) {
+			this.messages.clear();
+			return true;
+		}
+		
+		return false;
+
 	}
 
 	public boolean validate() {

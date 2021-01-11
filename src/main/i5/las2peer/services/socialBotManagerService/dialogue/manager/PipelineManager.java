@@ -376,8 +376,7 @@ public class PipelineManager extends MetaDialogueManager {
 		if (eventId != null)
 			action.addQueryParameter("botEventId", eventId);
 
-		System.out.println("perform action " + action.getFunction().getServiceName() + " "
-				+ action.getFunction().getFunctionName());
+		System.out.println("perform action " + action.getFunction().getFunctionName());
 
 		ClientResponse response = OpenAPIConnector.sendRequest(action);
 		if (act.getGoal() == null)
@@ -400,7 +399,7 @@ public class PipelineManager extends MetaDialogueManager {
 				return frame.getErrorResponse();
 			}
 		}
-		
+
 		return response.getResponse();
 
 	}

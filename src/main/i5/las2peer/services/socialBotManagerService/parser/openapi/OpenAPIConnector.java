@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -138,7 +140,6 @@ public class OpenAPIConnector {
 
 		assert action != null;
 		assert action.getFunction() != null;
-		assert action.getFunction().getServiceType() == ServiceType.SERVICE;
 
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
@@ -163,7 +164,7 @@ public class OpenAPIConnector {
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
 
-		ServiceFunction sf = action.getFunction();
+		ServiceFunction sf = action.getFunction().asServiceFunction();
 		System.out.println("Action " + sf.getActionType() + " " + sf.getServiceType());
 		if (sf.getActionType() != ActionType.FUNCTION && sf.getServiceType() == ServiceType.SERVICE) {
 
@@ -192,12 +193,11 @@ public class OpenAPIConnector {
 		assert action != null : "action is null";
 		assert action.getFunction() != null : "open api action has no service function";
 
-		ServiceFunction sf = action.getFunction();
+		ServiceFunction sf = action.getFunction().asServiceFunction();
 
 		assert sf.getFunctionPath() != null : "no function path";
 		assert sf.getHttpMethod() != null : "no http method";
-		assert sf.getServiceName() != null : "no service name";
-
+	
 		String bodyContent = "";
 		if (action.getBodyParameter() != null) {
 			bodyContent = action.getBodyParameter().toJSONString();
@@ -419,4 +419,29 @@ public class OpenAPIConnector {
 		return res;
 
 	}
+	
+	public static Collection<String> getFunctionNames(String swaggerURL) {
+		
+		assert swaggerURL != null;
+		System.out.println("find functions for " + swaggerURL);
+		String modelUrl = swaggerURL;
+				
+		// read function V2
+		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUrl, null, true);
+		Swagger swagger = swaggerParseResult.getSwagger();
+		assert swagger != null;
+	    ObjectMapper mapper = new ObjectMapper();
+		String jsonString = "";
+		try {
+			jsonString = mapper.writeValueAsString(swagger);
+		} catch (JsonProcessingException e) {			
+			e.printStackTrace();
+		}
+		JsonElement jsonElement = JsonParser.parseString(jsonString);
+		
+		return searchValuesByKey(jsonElement, "operationId");
+				
+		
+	}
+	
 }

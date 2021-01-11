@@ -12,14 +12,13 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActType;
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.TaskOrientedManager;
+import i5.las2peer.services.socialBotManagerService.model.GeneratorFunction;
 import i5.las2peer.services.socialBotManagerService.model.MessengerElement;
 import i5.las2peer.services.socialBotManagerService.model.Selection;
-import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
-import i5.las2peer.services.socialBotManagerService.parser.openapi.ResponseParseMode;
 
 public class SimpleSelectionManager extends AbstractDialogueManager {
 
@@ -32,6 +31,7 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 	public SimpleSelectionManager(Selection selection) {		
 		super();
 		assert selection != null;
+		assert !selection.isDynamic();
 		
 		managers = new HashMap<>();
 		init(selection);
@@ -39,7 +39,8 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 
 	private void init(Selection selection) {
 
-		System.out.println("INIT SELECTION MANAGER " + selection.getElements().size());
+		assert selection != null;
+		System.out.println("INIT SELECTION MANAGER " + selection.getElements().size() + " generator: " + selection.getGeneratorFunction() != null);
 		this.selection = selection;
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 
@@ -52,8 +53,8 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 			managers.put(key, manager);
 		}
 
-		if (selection.isDynamic())
-			responseAction = new OpenAPIAction(selection.getResponseFunction());
+		if (selection.getGeneratorFunction() != null)
+			responseAction = new OpenAPIAction(selection.getGeneratorFunction());
 
 	}
 
@@ -64,13 +65,16 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 		if (intent.getKeyword().contentEquals(selection.getIntentKeyword())) {
 			System.out.println("SELECTION First call: " + intent.getKeyword());
 			
+			// static
 			DialogueAct act = DialogueActGenerator.getAct(selection);
 			act.setIntentType(DialogueActType.SELECTION);
 			act.setMessage(this.selection.getResponseMessage());
 
-			ExpectedInput expected = new ExpectedInput();
-			expected.setType(InputType.Enum);
-			expected.setIntend(selection.getActIntent());
+			// generated
+			if(this.responseAction != null) 
+				act = this.responseAction.generate(selection.getActIntent(), selection.getResponseMessage());
+			
+			ExpectedInput expected = new ExpectedInput(InputType.Enum, selection.getActIntent());			
 			for (Entry<String, MessengerElement> enu : selection.getElements().entrySet()) {
 				String key = enu.getKey();
 				MessengerElement value = enu.getValue();
@@ -78,12 +82,7 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 				expected.setEntity("selection");
 			}
 			act.setExpected(expected);
-			
-			if(selection.isDynamic()) {
-				this.responseAction.setResponseParseMode(ResponseParseMode.JSON_TO_MARKDOWN);
-				act.setAction(this.responseAction);				
-			}
-			
+									
 			return act;
 		}
 
@@ -133,17 +132,19 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 	public void fillRecursive(String attrId, String value) {
 
 		System.out.println("simple selection " + this.getStartIntent() + " try to fill " + attrId + " with " + value);
-		if (this.selection.isDynamic()) {
-			ServiceFunction function = this.selection.getResponseFunction();
+		
+		// generated Response function
+		if (this.selection.getGeneratorFunction() != null) {
+			GeneratorFunction function = this.selection.getGeneratorFunction();
 			ServiceFunctionAttribute attr = function.getAttribute(attrId);
 			if (attr != null) {
 				this.responseAction.addParameter(attr, value);
 				System.out.println(
 						"fill recursive " + attr.getName() + " filled in simple selection " + this.getStartIntent());
-				return;
 			}
 		}
-
+				
+		// sub managers
 		for (AbstractDialogueManager manager : this.managers.values())
 			manager.fillRecursive(attrId, value);
 	}
@@ -168,11 +169,12 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 				res.addAll(manager.getNLUIntents());
 		}
 		return res;
-	}
-
+	}	
+	
 	@Override
 	public String getStartIntent() {
 		return selection.getIntentKeyword();
 	}
+
 
 }

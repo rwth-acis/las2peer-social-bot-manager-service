@@ -34,10 +34,12 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		assert semantic.getKeyword() != null : "naive dm handle: semantic has no intent";
 		assert semantic.getIntentType() != null : "no intent type set";
 
-		// first call
+		// first call		
 		String intent = semantic.getKeyword();
 		if (intent.equalsIgnoreCase(getStartIntent())) {
 			handleEntities(semantic);
+			System.out.println("first call " + this.getFrame().getIntent() + " ready: " + goal.isReady() + " fillables: "
+					+ this.goal.getAll().Fillables().size());
 			if (!goal.isReady())
 				return requestNextSlot();
 			return perform();
@@ -82,10 +84,11 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 						filled = true;
 				}
 			}
-			
+
 			// Nothing was filled, request again
-			if(!filled) {
-				System.out.println("node " + node.getName() + " not validating any entity " + semantic.getEntities().size());
+			if (!filled) {
+				System.out.println(
+						"node " + node.getName() + " not validating any entity " + semantic.getEntities().size());
 				return requestNextSlot();
 			}
 
@@ -238,7 +241,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		if (semantic.hasEntity()) {
 			for (Entity entity : semantic.getEntities()) {
 				Fillable node = goal.getNodeByEntity(entity);
-				if (node != null) {
+				if (node != null && entity.getValue() != null && !entity.getValue().contentEquals("")) {
 					goal.fill(node, entity.getValue());
 					System.out.println("entity " + entity.getEntityName() + " of node " + node.getName()
 							+ " filled with " + entity.getValue());
@@ -295,7 +298,8 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		assert !attrId.contentEquals("");
 
 		if (this.goal.fill(attrId, value))
-			System.out.println("slot attribute " + attrId + " was external filled with " + value);
+			System.out.println("slot attribute " + attrId + " of frame " + this.goal.getFrame().getIntent()
+					+ " was external filled with " + value);
 	}
 
 	@Override

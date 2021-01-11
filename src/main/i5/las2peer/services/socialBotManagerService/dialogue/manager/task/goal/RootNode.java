@@ -20,6 +20,7 @@ public class RootNode extends Node {
 		assert frame != null : "frame parameter is null";
 
 		this.frame = frame;
+		this.children = new ArrayList<>();
 		if (frame.getSlots() != null)
 			for (Slot childSlot : frame.getSlots().values()) {
 				assert childSlot != null : "child slot is null";
