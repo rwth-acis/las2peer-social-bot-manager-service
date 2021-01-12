@@ -98,7 +98,7 @@ public class Messenger {
 	};*/
 
 	public void setContextToBasic(String channel, String userid) {
-		triggeredFunction.get(channel).remove(userid);
+		triggeredFunction.remove(channel);
 		
 		IncomingMessage state = this.stateMap.get(channel).get(userid);
 		if (state != null) {
