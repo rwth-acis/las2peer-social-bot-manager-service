@@ -1,8 +1,15 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Random;
@@ -337,6 +344,7 @@ public class Messenger {
 				} else {
 					if (state != null) {
 						ChatResponse response = null;
+						// choose a response based on entity value
 						if (intent.getEntitieValues().size() == 1) {
 							for (ChatResponse res : state.getResponseArray()) {
 								System.out.println(res.getTriggerEntity());
@@ -438,6 +446,55 @@ public class Messenger {
 									}
 									System.out.println(split);
 									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+									// check whether a file url is attached to the chat response and try to send it to the user
+									if(!response.getFileURL().equals("")) {
+										try {
+											// Replacable variable in url menteeEmail
+											String urlEmail = response.getFileURL().replace("menteeEmail", message.getEmail());
+											System.out.println(urlEmail);
+											URL url = new URL(urlEmail);
+											HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+											// Header for l2p services
+											httpConn.addRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString((bot.getName()+":actingAgent").getBytes()));
+											
+											String fieldValue = httpConn.getHeaderField("Content-Disposition");
+											System.out.println(fieldValue);
+											if (fieldValue == null || ! fieldValue.contains("filename=\"")) {
+											  System.out.println("No file name available :(");
+											  fieldValue = "pdf.pdf";
+											}
+											// parse the file name from the header field
+											System.out.println(fieldValue);
+											String fileName = "pdf.pdf";
+											if(!fieldValue.equals("pdf.pdf")) {
+												fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10, fieldValue.length() - 1);
+											} else {
+												// check if name is part of url
+												if(urlEmail.contains(".pdf") || urlEmail.contains(".png") || urlEmail.contains(".svg") || urlEmail.contains(".json") || urlEmail.contains(".txt") ) {
+													fileName = urlEmail.split("/")[urlEmail.split("/").length-1];
+												}
+											}
+											InputStream in =(InputStream) httpConn.getInputStream();
+											FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+											int file_size = httpConn.getContentLength();
+											if(file_size < 1 ) {
+												file_size = 2048;
+											}
+											System.out.println("fiule size is " + file_size);
+											byte dataBuffer[] = new byte[file_size];
+										    int bytesRead;
+										    while ((bytesRead = in.read(dataBuffer, 0, file_size)) != -1) {
+										        fileOutputStream.write(dataBuffer, 0, bytesRead);
+										    }
+											fileOutputStream.close();							
+											this.chatMediator.sendFileMessageToChannel(message.getChannel(), new File(fileName) , "");
+								
+										}
+										catch(Exception e){
+											System.out.println("Could not extract File for reason " + e);
+											this.chatMediator.sendMessageToChannel(message.getChannel(), response.getErrorMessage());
+										}
+									}
 									if (response.getTriggeredFunctionId() != null) {
 										this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
 										contextOn = true;

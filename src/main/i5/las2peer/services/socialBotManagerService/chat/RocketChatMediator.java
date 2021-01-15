@@ -114,6 +114,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			public void onUploadError(ErrorObject arg0, IOException arg1) {
 				room.sendMessage(arg0.getMessage());
 				room.sendMessage(arg0.getReason());
+				try {
+					java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 			@Override
@@ -131,6 +137,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			@Override
 			public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1, String arg2, String arg3,
 					String arg4) {
+				try {
+					java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -141,7 +153,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
 		String newText = "";
+		System.out.println(fileBody);
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
+		System.out.println(decodedBytes);
 		File file = new File(fileName);
 		try {
 			FileUtils.writeByteArrayToFile(file, decodedBytes);
@@ -149,8 +163,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		room.uploadFile(file, fileName, newText, new FileListener() {
+		room.uploadFile(file, file.getName() , newText, new FileListener() {
 
 			@Override
 			public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
@@ -178,6 +191,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			@Override
 			public void onUploadStarted(String arg0, String arg1, String arg2) {
 				// TODO Auto-generated method stub
+				
 
 			}
 
@@ -677,6 +691,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					} else {
 						messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
 					}
+				} else {
+					messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
 				}
 			}
 		}

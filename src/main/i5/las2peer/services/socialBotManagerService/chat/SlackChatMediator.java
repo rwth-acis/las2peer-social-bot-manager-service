@@ -125,7 +125,7 @@ public class SlackChatMediator extends ChatMediator {
 			for(int i = 0; i < ((JSONArray) o.get("files")).size(); i++) {
 				// left it as for(...),  but only sending 1 file at a time will be accepted currently
 				try {
-					URL url = new URL(((JSONObject)((JSONArray) o.get("files")).get(i)).getAsString("url_private_download"));
+					URL url = new URL(((JSONObject)((JSONArray) o.get("files")).get(i)).getAsString("url_private"));
 					HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
 					httpConn.addRequestProperty("Authorization", "Bearer " + botTokens.get(channel));
 					InputStream in =(InputStream) httpConn.getInputStream();
@@ -217,7 +217,22 @@ public class SlackChatMediator extends ChatMediator {
 
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
-		// TODO Auto-generated method stub
+		ArrayList<String> channels = new ArrayList<String>();
+		channels.add(channel);
+		FilesUploadResponse response2;
+		try {
+			response2 = slack.methods(authToken).filesUpload(req -> req.channels(channels).file(f).content("Pretty stuff").filename(f.getName()).title(f.getName()));
+			System.out.println("File sent: " + response2.isOk());
+		} catch (IOException | SlackApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			Files.deleteIfExists(Paths.get(f.getName()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
