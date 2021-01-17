@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.chat;
+ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,6 +29,10 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.java_websocket.util.Base64;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import org.apache.commons.io.FileUtils;
+
+
 
 import com.google.common.io.Files;
 import com.rocketchat.common.data.lightdb.document.UserDocument;
@@ -109,6 +114,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			public void onUploadError(ErrorObject arg0, IOException arg1) {
 				room.sendMessage(arg0.getMessage());
 				room.sendMessage(arg0.getReason());
+				try {
+					java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 			@Override
@@ -126,9 +137,75 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			@Override
 			public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1, String arg2, String arg3,
 					String arg4) {
+				try {
+					java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 
+	}
+	
+	@Override
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, OptionalLong id) {
+		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
+		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
+		String newText = "";
+		System.out.println(fileBody);
+		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
+		System.out.println(decodedBytes);
+		File file = new File(fileName);
+		try {
+			FileUtils.writeByteArrayToFile(file, decodedBytes);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		room.uploadFile(file, file.getName() , newText, new FileListener() {
+
+			@Override
+			public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void onUploadError(ErrorObject arg0, IOException arg1) {
+				room.sendMessage(arg0.getMessage());
+				room.sendMessage(arg0.getReason());
+				try {
+					java.nio.file.Files.deleteIfExists(Paths.get(fileName));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+			@Override
+			public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onUploadStarted(String arg0, String arg1, String arg2) {
+				// TODO Auto-generated method stub
+				
+
+			}
+
+			@Override
+			public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1, String arg2, String arg3,
+					String arg4) {
+				try {
+					java.nio.file.Files.deleteIfExists(Paths.get(fileName));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 
 	@Override
@@ -159,6 +236,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					if (userName.length() > 2) {
 						userName = userName.substring(0, userName.length() - 2);
 					}
+					System.out.println(username + newText);
 					newText = newText.replace("menteeName", userName);
 					newText = newText.replace("\\n", "\n");
 					if (newText.length() > 5000) {
@@ -377,6 +455,17 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		}
 		return writer.toString();
 	}
+	
+	protected String getFileBase64(String userId, String file) {
+		System.out.println(userId);
+		MiniClient textClient = new MiniClient();
+		textClient.setConnectorEndpoint(url);
+		HashMap<String, String> textClientHeader = new HashMap<String, String>();
+		textClientHeader.put("cookie", "rc_uid=" + userId + "; rc_token=" + token + "; ");
+		ClientResponse r = textClient.sendRequest("GET", file, "", MediaType.TEXT_PLAIN, "application/pdf",
+				textClientHeader);
+		return Base64.encodeBytes(r.getRawResponse());
+	}
 
 	protected byte[] getPDFFile(String userId, String file) {
 		MiniClient textClient = new MiniClient();
@@ -588,6 +677,68 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				*/
 				Type type = message.getMsgType();
 				if (type.equals(Type.ATTACHMENT)) {
+					System.out.println("Handling attachement");
+					JSONObject j = message.getRawJsonObject();
+					String fileType = j.getJSONObject("file").getString("type");
+					String fileName = j.getJSONObject("file").getString("name");
+					System.out.println(j);
+					if (fileType.equals("text/plain") || fileType.equals("application/pdf") || fileType.equals("image/png")) {
+						String file = j.getJSONArray("attachments").getJSONObject(0)
+								.getString("title_link").substring(1);
+						JSONObject bodyJSON = new JSONObject();
+						String fileBody = getFileBase64(client.getMyUserId(), file);
+						messageCollector.handle(message, fileBody, fileName, fileType, role, getStudentEmail(message.getSender().getUserName()));
+					} else {
+						messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
+					}
+				} else {
+					messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
+				}
+			}
+		}
+	}		
+
+		
+		/*
+		 * @Override
+	public void onMessage(String arg0, RocketChatMessage message) {
+		ChatRoom room = client.getChatRoomFactory().getChatRoomById(message.getRoomId());
+		synchronized (room) {
+			if (!message.getSender().getUserId().equals(client.getMyUserId())) {
+				String email = getStudentEmail(message.getSender().getUserName());
+				System.out.println("Email: " + email);
+				System.out.println("Message: " + message.getMessage());
+				if (!checkUserExist(email)) {
+					System.out.println("Add new user: " + email);
+					addNewUser(email);
+				}
+
+				Boolean dataProvided = checkUserProvidedData(email);
+				System.out.println(dataProvided);
+
+				StatefulResponse statefulResponse = states.get(email);
+
+				int role = getStudentRole(email);
+
+				/*if (statefulResponse == null && dataProvided == null) {
+				
+					DataAsking userDataQuestion = new DataAsking(rasa, database, email);
+					room.sendMessage(userDataQuestion.getResponse());
+					states.put(email, userDataQuestion);
+					return;
+				}
+				
+				if (statefulResponse != null) {
+					statefulResponse = statefulResponse.getNext(message.getMessage());
+					states.put(email, statefulResponse);
+					if (statefulResponse != null) {
+						room.sendMessage(statefulResponse.getResponse());
+						return;
+					}
+				}
+				
+				Type type = message.getMsgType();
+				if (type.equals(Type.ATTACHMENT)) {
 					try {
 						new Thread(new Runnable() {
 							@Override
@@ -702,7 +853,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												tempFile = new File(message.getRoomId() + ending);
 												ImageIO.write(bImageFromConvert, "png", tempFile);
 											} 
-											*/
+											
 											else if (role == 3) {
 												room.sendMessage(
 														"Danke für deine Abgabe. Ich leite sie an das Analysesystem 'T-MITOCAR' weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
@@ -821,6 +972,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 		}
 	}
+		*/
+	
+	
 
 	@Override
 	public void close() {

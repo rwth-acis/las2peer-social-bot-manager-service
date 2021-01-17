@@ -765,6 +765,12 @@ public class SocialBotManagerService extends RESTService {
             	body.put(entityName.getEntityName(), entityName.getValue());
               //  body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
             }
+            if(messageInfo.getMessage().getFileBody() != null) {
+            	body.put("fileBody", messageInfo.getMessage().getFileBody());
+            	body.put("fileName", messageInfo.getMessage().getFileName());
+            	body.put("fileType", messageInfo.getMessage().getFileType());
+            	
+            }
             body.put("msg", messageInfo.getMessage().getText());
             body.put("contextOn", messageInfo.contextActive());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
@@ -1028,9 +1034,7 @@ public class SocialBotManagerService extends RESTService {
                     System.out.println(botAgent.getLoginName() + "    pass " +  botPass);
                     client.setLogin(botAgent.getLoginName(), botPass);
                     triggeredBody.put("botName", botAgent.getIdentifier());
-                    System.out.println("botagent is " +  botAgent.getIdentifier());
                     HashMap<String, String> headers = new HashMap<String, String>();
-                    System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string iss:" + triggeredBody.toJSONString());
                     ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath, triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
                     System.out.println("Connect Success");
                     System.out.println(r.getResponse()); 
@@ -1042,7 +1046,12 @@ public class SocialBotManagerService extends RESTService {
 	                        JSONObject response = (JSONObject) parser.parse(r.getResponse());                        
 	                        System.out.println(response);
 	                        triggeredBody.put("text", response.getAsString("text"));
-	                        ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();          
+	                        ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();     
+	                        if(response.containsKey("fileBody")) {
+	                        	triggeredBody.put("fileBody", response.getAsString("fileBody"));
+	                        	triggeredBody.put("fileName", response.getAsString("fileName"));
+	                        	triggeredBody.put("fileType", response.getAsString("fileType"));
+	                        } else triggeredBody.remove("fileBody");
 	            			triggerChat(chat, triggeredBody);
 	            			if(response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))){
 	                            System.out.println("Closed Context");
@@ -1080,7 +1089,7 @@ public class SocialBotManagerService extends RESTService {
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");
 		String channel = null;
-        
+        System.out.println(body);
 		if (body.containsKey("channel")) {
 			channel = body.getAsString("channel");
 		} else if (body.containsKey("email")) {
@@ -1088,7 +1097,12 @@ public class SocialBotManagerService extends RESTService {
 			channel = chat.getChannelByEmail(email);
 			} 
         System.out.println(channel);
-		chat.sendMessageToChannel(channel, text);
+        if(text != null) {
+        	chat.sendMessageToChannel(channel, text);
+        }
+		if(body.containsKey("fileBody")) {
+			chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"), body.getAsString("fileType"));
+		}
 	}
   
 
