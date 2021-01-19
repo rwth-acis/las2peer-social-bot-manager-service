@@ -6,4 +6,5 @@ public abstract class LanguageGenerator {
 
     abstract public ResponseMessage parse(DialogueAct act);
     
+    abstract public void addEntry(String intent, String message);
 }

@@ -2,16 +2,19 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 /**
- * Element of a Frame
- * Connects Frames with ServiceFunctionAttributes
+ * Element of a Frame Connects Frames with ServiceFunctionAttributes
  */
 public class Slot {
 
@@ -71,13 +74,13 @@ public class Slot {
 	 */
 	String requestMessage;
 
-	public Slot(String name) {		
+	public Slot(String name) {
 		this.name = name;
 		this.children = new SlotList();
 		this.priority = 0;
 	}
 
-	public Slot(ServiceFunctionAttribute attr) {						
+	public Slot(ServiceFunctionAttribute attr) {
 		this(attr.getName());
 		this.parameter = attr;
 		this.inputType = InputType.fromString(attr.getContentType());
@@ -121,7 +124,7 @@ public class Slot {
 	 * @return
 	 */
 	public String getID() {
-		if(this.hasParameter() && this.parameter.getId() != null)
+		if (this.parameter != null && this.parameter.getId() != null)
 			return this.parameter.getId();
 		return this.name;
 	}
@@ -132,7 +135,8 @@ public class Slot {
 	 * @return
 	 */
 	public String getName() {
-		return name;
+
+		return this.name;
 	}
 
 	/**
@@ -221,6 +225,19 @@ public class Slot {
 
 	public List<Slot> getChildren() {
 		return children;
+	}
+
+	/**
+	 * @param i priority of requested children
+	 * @return
+	 */
+	public List<Slot> getChildren(int i) {
+		List<Slot> res = new ArrayList<>();
+		for (Slot child : this.children) {
+			if (child.getPriority() == i)
+				res.add(child);
+		}
+		return res;
 	}
 
 	public void setChildren(List<Slot> children) {
@@ -443,20 +460,90 @@ public class Slot {
 	 * @return filled by retrieved enums (true) or not (false)
 	 */
 	public boolean hasDynamicEnums() {
+		if (!this.hasParameter())
+			return false;
 		return this.parameter.hasDynamicEnums();
 	}
 
+	public List<String> getUpdatedEnumList(Map<String, String> parameters) {
+
+		if (!this.hasParameter())
+			return new ArrayList<>();
+		return this.getParameter().getUpdatedEnumList(parameters);
+
+	}
+
+	public boolean hasDynamicFormat() {
+
+		System.out.println(" check dynamic format " + this.getParameter().getFormat());
+
+		if (!this.hasParameter())
+			return false;
+
+		if (this.getParameter().getFormat() == null) {
+			System.out.println("parameter " + this.getName() + " has no format");
+			return false;
+		}
+
+		ServiceFunctionAttribute para = this.getParameter();
+		if (para.getRetrieveFunction() == null)
+			return false;
+		if (para.getFormat().startsWith("/"))
+			return true;
+		return false;
+	}
+
+	public String getUpdatedFormat(Map<String, String> parameters) {
+
+		assert this.parameter != null : "slot has no parameter";
+
+		ServiceFunctionAttribute para = this.getParameter();
+		if (!this.hasDynamicFormat())
+			return para.getFormat();
+
+		if (parameters == null)
+			parameters = new HashMap<>();
+
+		ServiceFunction function = para.getRetrieveFunction();
+		assert function != null;
+
+		Collection<ServiceFunctionAttribute> attrs = function.getFrameGeneratedAttributes();
+		for (ServiceFunctionAttribute attr : attrs)
+			assert parameters.containsKey(attr.getName()) : "value for parameter " + attr.getName() + " is missing";
+
+		OpenAPIAction action = new OpenAPIAction(function);
+		action.addParameters(parameters);
+
+		OpenAPIResponse response = action.execute();
+		if (response.isError())
+			return para.getFormat();
+
+		String keyFilter = para.getFormat().replaceFirst("/", "");
+		Collection<String> res = OpenAPIConnector.searchValuesByKey(response.getAsJSON(), keyFilter);
+		System.out.println("searched for dynamic input format by key " + keyFilter + " found " + res.size());
+
+		for (String value : res)
+			if (InputType.fromString(value) != InputType.Free)
+				return value;
+		for (String value : res)
+			return value;
+
+		return para.getFormat();
+
+	}
+
 	/**
-	 * Give a list of parameters that have to be filled before this slot can be filled.
+	 * Give a list of parameters that have to be filled before this slot can be
+	 * filled.
 	 * 
 	 * @return
 	 */
 	public Collection<ServiceFunctionAttribute> getOpenSlots() {
-		assert this.parameter != null;		
-		
+		assert this.parameter != null;
+
 		if (!this.hasDynamicEnums())
 			return new ArrayList<>();
-		
+
 		ServiceFunctionAttribute attr = this.getParameter();
 		return attr.getOpenAttributes();
 	}
@@ -472,6 +559,18 @@ public class Slot {
 		List<String> list = this.parameter.getUpdatedEnumList();
 		assert list != null;
 		System.out.println("slot " + this.getName() + " updated list: " + list.size());
+	}
+
+	public String prettyPrint(int i) {
+		String res = "";
+		for (int j = 0; j < i; j++) {
+			res = res + "#";
+		}
+		res = res + this.getName();
+		for (Slot slot : this.children)
+			res = res + "\n" + slot.prettyPrint(i + 1);
+
+		return res;
 	}
 
 }

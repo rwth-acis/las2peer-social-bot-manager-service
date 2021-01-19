@@ -1,6 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,6 +10,10 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.IOUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.File;
 import com.pengrad.telegrambot.model.request.ChatAction;
@@ -43,7 +46,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://b7f7a384fa84.ngrok.io";
+	private final static String url = "https://2d267e7aa313.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -67,7 +70,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	@Override
 	public ChatMessage handleEvent(JSONObject event) {
 		assert event != null : "jsonobject event parameter is null";
-		
+
 		try {
 			JSONObject message = (JSONObject) event.get("message");
 			JSONObject chat = (JSONObject) message.get("chat");
@@ -83,19 +86,19 @@ public class TelegramChatMediator extends EventChatMediator {
 
 			this.showAction(channel, ChatAction.typing);
 			ChatMessage chatMessage = new ChatMessage(channel, user, text, timestamp);
-			
+
 			// message with document
-			if(document != null) {				
+			if (document != null) {
 				String fileName = document.getAsString("file_name");
 				String mimeType = document.getAsString("mime_type");
 				String fileId = document.getAsString("file_id");
 				String fileUniqueId = document.getAsString("file_unique_id");
-				String fileSize = document.getAsString("file_size");				
+				String fileSize = document.getAsString("file_size");
 				MessageFile fileMessage = getFile(fileId);
 				fileMessage.setName(fileName);
 				chatMessage.setFileContent(fileMessage.getDataString());
 				chatMessage.setText(fileMessage.getDataString());
-			}			
+			}
 
 			// check command
 			else if (text.startsWith("/")) {
@@ -155,8 +158,12 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		assert response != null : "response parameter is null";
 		assert response.getChannel() != null : "response has no channel";
-		
+
 		if (response.hasMessage()) {
+
+			if (response.getMessage().length() > 4090)
+				response.setMessage(response.getMessage().substring(0, 4089));
+
 			boolean isOK = this.sendFormattedMessageToChannel(response);
 			if (!isOK) {
 				boolean isOK2 = this.sendFormatted2(response);
@@ -164,9 +171,9 @@ public class TelegramChatMediator extends EventChatMediator {
 					sendMessageToChannel(response.getChannel(), response.getMessage());
 			}
 		}
-		
-		if (response.hasFile()) 
-			sendFileToChannel(response);	
+
+		if (response.hasFile())
+			sendFileToChannel(response);
 
 	}
 
@@ -241,13 +248,8 @@ public class TelegramChatMediator extends EventChatMediator {
 					String[][] buttons = new String[columns][rowSize];
 					int i = 0;
 					int j = 0;
-					System.out.println("number of buttons: " + numButton);
-					System.out.println("rowSize: " + rowSize);
-					System.out.println("columns: " + columns);
 
 					for (String value : response.getButtons()) {
-						System.out.println("i=" + i);
-						System.out.println("j=" + j);
 						assert i < columns : "i out of bound";
 						assert j < rowSize : "j out of bound";
 						buttons[i][j] = value;
@@ -305,8 +307,20 @@ public class TelegramChatMediator extends EventChatMediator {
 		String name = response.getFile().getName();
 		String caption = "";
 		System.out.println("Send File to Telegram channel: " + channel);
-		
-		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);		
+
+		try {
+
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			JsonParser jp = new JsonParser();
+			JsonElement je = jp.parse(data);
+			data = gson.toJson(je);
+			System.out.println(data.substring(0, 160));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
 		SendDocument request = new SendDocument(channel, bytes);
 
 		if (caption != null && !caption.contentEquals(""))
@@ -314,14 +328,14 @@ public class TelegramChatMediator extends EventChatMediator {
 		if (name != null && !name.contentEquals(""))
 			request.fileName(name);
 
-		BaseResponse res = bot.execute(request);		
+		BaseResponse res = bot.execute(request);
 		System.out.println(String.valueOf(res.isOk()) + res.errorCode() + res.description());
 	}
 
 	private MessageFile getFile(String fileId) {
-		
+
 		GetFile request = new GetFile(fileId);
-		GetFileResponse response = bot.execute(request);			
+		GetFileResponse response = bot.execute(request);
 		File file = response.file();
 		System.out.println("file received");
 		String path = "https://api.telegram.org/file/bot" + authToken + "/" + file.filePath();
@@ -330,18 +344,18 @@ public class TelegramChatMediator extends EventChatMediator {
 		try {
 			url = new URL(path);
 			data = IOUtils.toString(url);
-		
-		} catch (MalformedURLException e) {			
-			e.printStackTrace();				
-		} catch (IOException e) {		
+
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		MessageFile res = new MessageFile();
 		res.setData(data);
 		return res;
 	}
-	
+
 	/**
 	 * Shows an indication to the user about what the next bots action is
 	 * 

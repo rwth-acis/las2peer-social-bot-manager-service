@@ -1,6 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
@@ -8,9 +11,12 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.S
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Domain;
 import i5.las2peer.services.socialBotManagerService.model.DynamicResponse;
+import i5.las2peer.services.socialBotManagerService.model.GeneratorFunction;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
 
 public class DialogueActGenerator {
 
@@ -52,6 +58,8 @@ public class DialogueActGenerator {
 		ExpectedInput input = new ExpectedInput();
 		input.setIntend(goal.getFrame().getConfirmIntent());
 		input.setType(InputType.Confirmation);
+		input.addEnum("yes");
+		input.addEnum("no");
 		act.setExpected(input);
 		return (act);
 	}
@@ -71,13 +79,14 @@ public class DialogueActGenerator {
 		ExpectedInput input = new ExpectedInput();
 		input.setIntend(goal.getFrame().getConfirmIntent() + "_optional");
 		input.setType(InputType.Confirmation);
+		input.addEnum("yes");
+		input.addEnum("no");
 		act.setExpected(input);
 		return (act);
 	}
 
 	//// Slot Dialogue Acts
-
-	public DialogueAct getRequestAct(Fillable node) {
+	public DialogueAct getRequestAct(Fillable node, DialogueGoal goal) {
 
 		assert node != null : "slot parameter is null";
 		assert node.getSlot() != null : "node has no slot";
@@ -99,12 +108,43 @@ public class DialogueActGenerator {
 		input.setIntend(slot.getInformIntent());
 		input.setEntity(slot.getEntity());
 
-		if (slot.getInputType() == InputType.Enum) {
-			slot.update();
-			List<String> enumList = slot.getEnumList();
-			if(enumList != null)
-			for (String enu : enumList)
-				input.addEnum(enu);
+		if (slot.hasDynamicFormat()) {
+
+			Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
+			String format = slot.getUpdatedFormat(parameters);
+			System.out.println(node.getName() + " has dynamic format " + format);
+			input.setType(InputType.fromString(format));
+
+		} else {
+
+			if (slot.getInputType() == InputType.Enum) {
+
+				List<String> enumList = new ArrayList<>();
+				if (slot.hasDynamicEnums()) {
+
+					Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
+					enumList = node.getSlot().getParameter().getUpdatedEnumList(parameters);
+
+				} else {
+					//slot.update();
+					enumList = slot.getEnumList();
+				}
+
+				if (enumList != null)
+					for (String enu : enumList)
+						input.addEnum(enu);
+			}
+		}
+
+		if (slot.getParameter().getRetrieveFunction() != null) {
+			Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
+			OpenAPIAction action = new OpenAPIAction(slot.getParameter().getRetrieveFunction(), parameters);
+			OpenAPIResponse response = action.execute();
+			if (response.isSuccess()) {
+				Map<String, String> entities = GeneratorFunction.getEntities(response.getAsJSON());
+				for (Entry<String, String> en : entities.entrySet())
+					act.addEntity(en.getKey(), en.getValue());
+			}
 		}
 
 		if (slot.getInputType() == InputType.File && slot.getParameter().getFile() != null)
@@ -143,6 +183,8 @@ public class DialogueActGenerator {
 		ExpectedInput input = new ExpectedInput();
 		input.setIntend(slot.getConfirmIntent());
 		input.setType(InputType.Confirmation);
+		input.addEnum("yes");
+		input.addEnum("no");
 		return (act);
 	}
 
@@ -162,6 +204,8 @@ public class DialogueActGenerator {
 		ExpectedInput input = new ExpectedInput();
 		input.setIntend(node.getReqConfProceed());
 		input.setType(InputType.Confirmation);
+		input.addEnum("yes");
+		input.addEnum("no");
 		act.setExpected(input);
 		return act;
 	}
@@ -178,8 +222,8 @@ public class DialogueActGenerator {
 		for (Domain domain : messenger.getDomains().values()) {
 			act.addEntity(domain.getName(), "domainName", domain.getName());
 			act.addEntity(domain.getName(), "domainDescription", domain.getDescription());
-			for (Command operation : domain.getCommands()) 
-				act.addEntity(domain.getName(), operation.getName(), operation.getDescription());		
+			for (Command operation : domain.getCommands())
+				act.addEntity(domain.getName(), operation.getName(), operation.getDescription());
 		}
 
 		if (bot != null) {

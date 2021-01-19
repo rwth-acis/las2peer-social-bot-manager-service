@@ -15,13 +15,13 @@ import javax.websocket.DeploymentException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.Language;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
-import i5.las2peer.services.socialBotManagerService.parser.creation.Function;
 
 public class Bot {
 
@@ -52,7 +52,7 @@ public class Bot {
 	private Map<String, LanguageUnderstander> nlus;
 	private Map<String, LanguageGenerator> nlgs;
 	private Language language = Language.ENGLISH;
-	private Map<String, Function> creationFunctions;
+	private Map<String, CreationFunction> creationFunctions;
 	private BotModel model;
 
 	public Bot(BotModel model) {
@@ -72,6 +72,7 @@ public class Bot {
 		this.active = new HashMap<>();
 		this.messengers = new HashMap<>();
 		this.nlus = new HashMap<>();
+		this.nlgs = new HashMap<>();
 		this.creationFunctions = new HashMap<>();
 	}
 
@@ -126,6 +127,18 @@ public class Bot {
 			id = String.valueOf(this.nlus.size());
 		this.nlus.put(id, rasa);
 		return rasa;
+	}
+	
+	public LanguageUnderstander addRasaServer(LanguageUnderstander nlu) {
+		this.nlus.put(String.valueOf(this.nlus.size()), nlu);
+		return nlu;
+	}
+	
+	public LanguageGenerator addNLGModule(NLUKnowledge nlu) {
+		LanguageGenerator lgen = new TableLanguageGenerator();
+		this.nlgs.put(nlu.getName(), lgen);
+		System.out.println("added nlg module " + nlu.getName());
+		return lgen;
 	}
 
 	public Map<String, LanguageUnderstander> getNLUs() {
@@ -362,10 +375,10 @@ public class Bot {
 
 	}
 
-	public void setCreationFunctions(Collection<Function> creationFunctions) {
+	public void setCreationFunctions(Collection<CreationFunction> creationFunctions) {
 		if (this.creationFunctions == null)
-			this.creationFunctions = new HashMap<String, Function>();
-		for (Function function : creationFunctions) {
+			this.creationFunctions = new HashMap<String, CreationFunction>();
+		for (CreationFunction function : creationFunctions) {
 			this.addCreationFunction(function);
 		}
 	}
@@ -386,7 +399,7 @@ public class Bot {
 		return false;
 	}
 
-	public void addCreationFunction(Function creationFunction) {
+	public void addCreationFunction(CreationFunction creationFunction) {
 		assert creationFunction != null;
 
 		String name = creationFunction.getName();
@@ -396,5 +409,9 @@ public class Bot {
 		}
 		this.creationFunctions.put(name, creationFunction);
 	}
+
+
+
+
 
 }

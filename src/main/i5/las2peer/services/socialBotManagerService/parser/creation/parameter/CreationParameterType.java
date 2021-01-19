@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.parser.creation;
+package i5.las2peer.services.socialBotManagerService.parser.creation.parameter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

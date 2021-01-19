@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.RepeatingNode;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
-public class MultiValueNode extends Node implements Fillable {
+public class MultiValueNode extends Node implements Fillable, RepeatingNode {
 
 	private Slot slot;
 	private List<String> values;
@@ -66,6 +67,10 @@ public class MultiValueNode extends Node implements Fillable {
 	@Override
 	public boolean isFilled() {
 		invariant();
+
+		if (this.size() < this.getMinItems())
+			return false;
+
 		return !this.values.isEmpty();
 	}
 
@@ -139,19 +144,33 @@ public class MultiValueNode extends Node implements Fillable {
 	}
 
 	@Override
+	public int size() {
+		return this.values.size();
+	}
+
+	@Override
+	public int getMinItems() {
+		if (this.getSlot().getParameter() == null)
+			return 0;
+		return this.getSlot().getParameter().getMinItems();
+	}
+
+	@Override
 	protected void invariant() {
 		assert this.slot != null : "slot of value node is null";
 		assert this.values != null : "values list is null";
 
-		for (String value : this.values) {
-			assert this.slot.validate(value) : "slot " + this.slot.getName() + " filled with invalid value " + value;
-		}
+		if (!this.slot.hasDynamicEnums())
+			for (String value : this.values) {
+				assert this.slot.validate(value) : "slot " + this.slot.getName() + " filled with invalid value "
+						+ value;
+			}
 	}
 
 	@Override
 	public JSONObject toBodyJSON() {
 		invariant();
-		
+
 		if (!this.isBodyAttribute())
 			return null;
 

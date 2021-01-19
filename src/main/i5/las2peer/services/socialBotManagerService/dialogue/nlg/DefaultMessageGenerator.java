@@ -69,7 +69,7 @@ public abstract class DefaultMessageGenerator extends LanguageGenerator {
 
 	protected abstract ResponseMessage getMainMenu(DialogueAct act);
 		
-	protected String escape(String text) {
+	private String escape(String text) {
 
 		String res = text.replaceAll("\\*", "\\\\*").replace("\\", "\\\\").replace("_", "\\_");
 		res = res.replaceAll("#", "\\#").replaceAll("\\+", "\\\\+").replaceAll("-", "\\-");

@@ -20,10 +20,25 @@ public class SlotList extends ArrayList<Slot> {
 
 	public Slot get(String name) {
 
+		// slot name
 		for (Slot slot : this) {
-			if (slot.getName().equals(name) || slot.getIntents().contains(name))
+			if (slot.getName().equalsIgnoreCase(name) || slot.getIntents().contains(name))
 				return slot;
 		}
+
+		// parameter name
+		for (Slot slot : this) {
+			if (slot.hasParameter())
+				if (slot.getParameter().getIdName().equalsIgnoreCase(name))
+					return slot;
+		}
+
+		// api name
+		for (Slot slot : this) {
+			if (name.equalsIgnoreCase(slot.getAPIName()))
+				return slot;
+		}
+
 		return null;
 	}
 
@@ -35,7 +50,7 @@ public class SlotList extends ArrayList<Slot> {
 		}
 		return intents;
 	}
-		
+
 	@Override
 	public String toString() {
 

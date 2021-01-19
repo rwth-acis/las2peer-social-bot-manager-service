@@ -17,7 +17,7 @@ public abstract class MetaDialogueManager {
 	public abstract ResponseMessage handle(Messenger messenger, ChatMessage message, Dialogue dialogue);
 
 	public MetaDialogueManager() {
-
+		this.managers = new ArrayList<AbstractDialogueManager>();
 	}
 
 	public void initialize(Messenger messenger) {

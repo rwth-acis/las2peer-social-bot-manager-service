@@ -11,13 +11,14 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
+import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.FrameMapper;
 
 public class NaiveDialogueManagerSimulatorTest {
 
     @SuppressWarnings("deprecation")
 	@Test
-    public void RandomTest() {
+    public void RandomTest() throws ParseBotException {
 
 	ServiceFunction action = new ServiceFunction();
 	action.setFunctionName("addPet");
@@ -28,7 +29,7 @@ public class NaiveDialogueManagerSimulatorTest {
 	frame = new FrameMapper().map(action, frame);
 
 	DialogueGoal goal = new DialogueGoal(frame);
-	DefaultTaskOrientedManager manager = new DefaultTaskOrientedManager(goal);
+	TaskOrientedManagerImpl manager = new TaskOrientedManagerImpl(goal);
 
 	RandomUserSimulator simulator = new RandomUserSimulator(manager);
 	System.out.println(manager.getNLUIntents());

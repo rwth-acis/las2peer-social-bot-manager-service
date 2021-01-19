@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.parser.creation;
 
 import java.net.URL;
 
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

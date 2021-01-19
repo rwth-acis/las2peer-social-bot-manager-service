@@ -2,7 +2,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager;
 
 import java.util.Collection;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.DefaultTaskOrientedManager;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.TaskOrientedManagerImpl;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
@@ -42,6 +42,8 @@ public class DialogueManagerGenerator {
 			manager = generateTaskOrientedRule(frame);
 			break;
 		case SIMPLE_MESSAGES:
+			manager = generateMultiMessages(messenger.getIncomingMessages());
+			break;
 		case SIMPLE_SELECTION:
 			manager = generateSelection(selection);
 			break;
@@ -55,7 +57,7 @@ public class DialogueManagerGenerator {
 	public AbstractDialogueManager generateTaskOrientedRule(Frame frame) {
 
 		DialogueGoal goal = new DialogueGoal(frame);
-		DefaultTaskOrientedManager manager = new DefaultTaskOrientedManager(goal);
+		TaskOrientedManagerImpl manager = new TaskOrientedManagerImpl(goal);
 
 		return manager;
 	}

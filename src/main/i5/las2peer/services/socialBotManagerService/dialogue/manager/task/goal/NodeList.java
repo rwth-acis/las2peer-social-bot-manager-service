@@ -59,37 +59,75 @@ public class NodeList extends ArrayList<Node> {
 	 */
 	public boolean contains(String name) {
 
-		for (Fillable node : getFillableNodes()) {
-			Slot slot = node.getSlot();
-			if (name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
-				return true;
-		}
-
-		return false;
+		return this.get(name) != null;
 	}
 
 	public Slotable get(String name) {
-		for (Node nos : this) {
-			if (nos instanceof Slotable) {
-				Slotable node = (Slotable) nos;
-				Slot slot = node.getSlot();
-				if (name.contentEquals(slot.getID()) || name.contentEquals(slot.getName()) || slot.getIntents().contains(name))
-					return node;
-			}
-		}
+
+		// by name
+		Slotable res = this.getByName(name);
+		if (res != null)
+			return res;
+
+		// by intent
+		res = this.getByIntent(name);
+		if (res != null)
+			return res;
+
+		// by id
+		res = this.getById(name);
+		if (res != null)
+			return res;
+
 		return null;
+
 	}
-	
-	public Slotable getByName(String name) {
-		assert name != null: "name is null";
-		
+
+	public Slotable getByIntent(String name) {
+		assert name != null : "name is null";
+
 		for (Node node : this) {
-			if (node instanceof Slotable) {				
+			if (node instanceof Slotable) {
 				Slot slot = ((Slotable) node).getSlot();
 				assert slot != null;
 				assert slot.getAPIName() != null;
 				assert slot.getName() != null;
-				if (name.contentEquals(slot.getAPIName()) || name.contentEquals(slot.getName()))
+				assert slot.getIntents() != null;
+				if (slot.getIntents().contains(name))
+					return ((Slotable) node);
+			}
+		}
+		return null;
+	}
+
+	public Slotable getByName(String name) {
+		assert name != null : "name is null";
+
+		for (Node node : this) {
+			if (node instanceof Slotable) {
+				Slot slot = ((Slotable) node).getSlot();
+				assert slot != null;
+				assert slot.getAPIName() != null;
+				assert slot.getName() != null;
+				if (name.equalsIgnoreCase(slot.getAPIName()) || name.equalsIgnoreCase(slot.getName()))
+					return ((Slotable) node);
+			}
+		}
+		return null;
+	}
+
+	public Slotable getById(String name) {
+		assert name != null : "name is null";
+
+		for (Node node : this) {
+			if (node instanceof Slotable) {
+				Slot slot = ((Slotable) node).getSlot();
+				assert slot != null;
+				assert slot.getAPIName() != null;
+				assert slot.getName() != null;
+				if (name.contentEquals(slot.getID()))
+					return ((Slotable) node);
+				if (slot.hasParameter() && name.contentEquals(slot.getParameter().getIdName()))
 					return ((Slotable) node);
 			}
 		}
@@ -97,19 +135,19 @@ public class NodeList extends ArrayList<Node> {
 	}
 
 	public Collection<Fillable> getByEntity(String entityName) {
-		
-		Collection<Fillable> res = new ArrayList<>();		
+
+		Collection<Fillable> res = new ArrayList<>();
 		for (Node node : this) {
 			if (node instanceof Fillable) {
 				Fillable fillable = (Fillable) node;
-				if(fillable.hasEntity(entityName))
+				if (fillable.hasEntity(entityName))
 					res.add(fillable);
 			}
 		}
-		
-		return res;		
+
+		return res;
 	}
-	
+
 	/**
 	 * Get list of intents
 	 * 

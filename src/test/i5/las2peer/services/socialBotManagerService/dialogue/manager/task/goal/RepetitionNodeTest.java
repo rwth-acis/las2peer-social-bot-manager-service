@@ -70,6 +70,7 @@ public class RepetitionNodeTest {
 	@Test
 	public void isReadyTest() {
 
+		slotRep.setRequired(true);
 		RepetitionNode node = new RepetitionNode(slotRep);
 		assertFalse(node.isReady());
 

@@ -17,6 +17,7 @@ public enum InputType {
 		case "enum":
 			return InputType.Enum;
 		case "integer":
+		case "number":
 			return InputType.Number;
 		case "url":
 			return InputType.Url;

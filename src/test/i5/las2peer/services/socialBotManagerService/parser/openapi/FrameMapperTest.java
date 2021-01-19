@@ -5,6 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
@@ -17,12 +21,34 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceType;
+import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import io.swagger.models.Swagger;
 import io.swagger.util.Json;
 
 public class FrameMapperTest {
 
-	@Test
-	public void frameMapPetstoreV3Test() {
+	URL serviceURL;	
+	URL swaggerURL;	
+	Service service;
+	
+	@Before
+	public void setUp() {
+				
+		
+		try {
+			serviceURL = new URL("http://localhost:8080/sbfmanager");
+			swaggerURL = new URL("http://localhost:8080/sbfmanager/swagger.json");
+
+		} catch (MalformedURLException e) {		
+			e.printStackTrace();
+		}
+		
+		service = new Service(ServiceType.OPENAPI, "sbfmanager", serviceURL, swaggerURL);
+		
+	}
+	
+	//@Test
+	public void frameMapPetstoreV3Test() throws ParseBotException {
 
 		FrameMapper mapper = new FrameMapper();
 		ServiceFunction function = new ServiceFunction();
@@ -43,7 +69,7 @@ public class FrameMapperTest {
 	}
 
 	@Test
-	public void frameMapPetstoreV2Test() {
+	public void frameMapPetstoreV2Test() throws ParseBotException {
 
 		FrameMapper mapper = new FrameMapper();
 		ServiceFunction function = new ServiceFunction();
@@ -60,17 +86,42 @@ public class FrameMapperTest {
 		assertNotNull(frame.getSlot("Pet_name"));
 
 		assertNotNull(frame.getCommand());
-		assertEquals("Add a new pet to the store", frame.getMessage());
+
 
 	}
 
 	//@Test
-	public void frameMapBotTest() {
+	public void parameterTest() throws ParseBotException {
 
 		FrameMapper mapper = new FrameMapper();
 		ServiceFunction function = new ServiceFunction();
-		Service service = new Service(ServiceType.OPENAPI, "service", "http://localhost:8080/sbfmanager");
-		service.setSwaggerURL("http://localhost:8080/sbfmanager/swagger.json");
+		String fName = "addFunction";
+		
+		function.setHttpMethod("POST");
+		function.setService(service);
+		function.setFunctionName(fName);
+		
+		OpenAPIReaderV2 reader = new OpenAPIReaderV2();
+
+		Swagger swagger = OpenAPIReaderV2.readModel("http://localhost:8080/sbfmanager/swagger.json");
+		assert swagger != null;
+		ServiceFunction sf = OpenAPIReaderV2.readAction(swagger, fName);
+		System.out.println(sf.prettyPrint());
+		
+		Frame frame = mapper.map(function, new Frame());		
+		System.out.println(frame.prettyPrint());
+
+		
+
+	}
+
+	// @Test
+	public void frameMapBotTest() throws ParseBotException {
+
+		FrameMapper mapper = new FrameMapper();
+		ServiceFunction function = new ServiceFunction();
+		Service service = new Service(ServiceType.OPENAPI, "service", swaggerURL);
+		service.setSwaggerURL(swaggerURL);
 		function.setHttpMethod("post");
 		function.setService(service);
 		function.setFunctionName("createBot");

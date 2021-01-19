@@ -15,14 +15,15 @@ import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.RepeatingNode;
 
-public class DefaultTaskOrientedManager extends TaskOrientedManager {
+public class TaskOrientedManagerImpl extends TaskOrientedManager {
 
 	DialogueGoal goal;
 	DialogueActGenerator gen;
 	boolean optional;
 
-	public DefaultTaskOrientedManager(DialogueGoal goal) {
+	public TaskOrientedManagerImpl(DialogueGoal goal) {
 		this.goal = goal;
 		this.gen = new DialogueActGenerator();
 	}
@@ -34,12 +35,12 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 		assert semantic.getKeyword() != null : "naive dm handle: semantic has no intent";
 		assert semantic.getIntentType() != null : "no intent type set";
 
-		// first call		
+		// first call
 		String intent = semantic.getKeyword();
 		if (intent.equalsIgnoreCase(getStartIntent())) {
 			handleEntities(semantic);
-			System.out.println("first call " + this.getFrame().getIntent() + " ready: " + goal.isReady() + " fillables: "
-					+ this.goal.getAll().Fillables().size());
+			System.out.println("first call " + this.getFrame().getIntent() + " ready: " + goal.isReady()
+					+ " fillables: " + this.goal.getAll().Fillables().size());
 			if (!goal.isReady())
 				return requestNextSlot();
 			return perform();
@@ -64,6 +65,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 				rep.close();
 				if (goal.isFull())
 					return gen.getReqConfAct(goal);
+				System.out.println("request next slot because deny proceed");				
 				return requestNextSlot();
 			}
 		}
@@ -86,14 +88,21 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 			}
 
 			// Nothing was filled, request again
-			if (!filled) {
-				System.out.println(
-						"node " + node.getName() + " not validating any entity " + semantic.getEntities().size());
+			if (!filled) {				
 				return requestNextSlot();
 			}
 
 			// arrays
 			if (node != null && node.getSlot().isArray()) {
+				
+				if (node instanceof RepeatingNode) {
+					RepeatingNode rep = (RepeatingNode) node;
+					System.out.println("repeating node " + node.getAPIName() + " size " + rep.size() + " min "
+							+ rep.getMinItems());
+					if (rep.getMinItems() > rep.size())
+						return requestNextSlot();					
+				}
+				
 				return gen.getReqConfArrayAct(node);
 
 			} else if (!optional && goal.isReady()) {
@@ -141,7 +150,7 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 
 			// user wants to fill more values for same slot
 			if (node != null && semantic.getKeyword().contentEquals(node.getReqConfProceed()))
-				return gen.getRequestAct(node);
+				return gen.getRequestAct(node, goal);
 
 			// user confirm but bot dont know why
 			return requestNextSlot();
@@ -205,18 +214,28 @@ public class DefaultTaskOrientedManager extends TaskOrientedManager {
 	private DialogueAct requestNextSlot() {
 		assert goal != null : "goal is null";
 		assert !goal.isFull() : "goal is already full";
-
+		
 		Node nextNode = goal.next();
+		System.out.println("request next node " + nextNode.getClass());
 		// Request to fill value
 		if (nextNode instanceof Fillable) {
 			Fillable fi = (Fillable) nextNode;
-			if (fi.hasFrameGeneratedEnum())
-				fi.getSlot().getParameter().update(goal);
-			return gen.getRequestAct(fi);
+			return gen.getRequestAct(fi, goal);
 		}
-		// Ask for repetition
+
+		// next repetition of node
 		if (nextNode instanceof RepetitionNode) {
 			RepetitionNode rep = (RepetitionNode) nextNode;
+
+			// min values not reached yet
+			//System.out.println("min values = " + rep.getSlot().getParameter().getMinItems() + " , size "
+			//		+ rep.getValueChildren().size());
+			//if (rep.getSlot().getParameter().getMinItems() > rep.getValueChildren().size()) {
+			//	rep.extend();
+			//	return requestNextSlot();
+			//}
+
+			// ask if should repeat
 			return gen.getReqConfArrayAct(rep);
 		}
 

@@ -1,11 +1,11 @@
 package i5.las2peer.services.socialBotManagerService.parser;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,16 +20,20 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
-import i5.las2peer.services.socialBotManagerService.parser.creation.AccessServiceFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
 import i5.las2peer.services.socialBotManagerService.parser.creation.ChitChatFunction;
-import i5.las2peer.services.socialBotManagerService.parser.creation.Function;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
-import i5.las2peer.services.socialBotManagerService.parser.creation.Messenger;
-import i5.las2peer.services.socialBotManagerService.parser.creation.SlackMessenger;
-import i5.las2peer.services.socialBotManagerService.parser.creation.TelegramMessenger;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.AccessServiceFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.Las2peer;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.OpenAPI;
+import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
+import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
+import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.drawing.DrawingAlgorithm;
 import i5.las2peer.services.socialBotManagerService.parser.drawing.SpringEmbedders;
+import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGDataGroup;
+import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGTrainingData;
 
 public class BotModelParser {
 
@@ -40,6 +44,12 @@ public class BotModelParser {
 
 	LinkedHashMap<String, BotModelEdge> edgeList = new LinkedHashMap<>();
 	LinkedHashMap<String, BotModelNode> nodeList = new LinkedHashMap<>();
+
+	BotConfiguration config;
+
+	public BotModelParser(BotConfiguration config) {
+		this.config = config;
+	}
 
 	public String toJSON(BotModel botModel) {
 		assert botModel != null;
@@ -57,74 +67,163 @@ public class BotModelParser {
 	}
 
 	public BotModel parse(BotModel model, Function function) {
-		
+
 		this.nodeList = model.getNodes();
 		this.edgeList = model.getEdges();
-		for(BotModelNode node : model.getNodes().values()) {
-			if(node.getType().contentEquals("Messenger")) {
+		for (BotModelNode node : model.getNodes().values()) {
+			if (node.getType().contentEquals("Messenger")) {
 				this.messengers.add(node);
 			}
 		}
 		
+		for (Entry<String, BotModelNode> entry : model.getNodes().entrySet()) {
+			BotModelNode node = entry.getValue();
+			if (node.getType().contentEquals("Incoming Message")) {
+				for(BotModelNodeAttribute attr :node.getAttributes().values())
+					if(attr.getName().contentEquals("Intent")) {
+						this.incomingMessages.put(attr.getValue().getValue(), node);
+						System.out.println("add existing incoming Message for " + attr.getValue().getValue());
+					}
+			}
+		}
+
 		// Function
+		System.out.println("function type " + function.getType());
 		switch (function.getType()) {
-			
-			case CHIT_CHAT:
-				ChitChatFunction fn = (ChitChatFunction) function;
-				for (Message message : fn.getMessages()) {
-	
+
+		case CHIT_CHAT:
+			ChitChatFunction fn = (ChitChatFunction) function;
+			for (Message message : fn.getMessages()) {
+				try {
 					String intent = message.getIntent();
 					if (incomingMessages.containsKey(intent)) {
-	
+
 						BotModelNode inNode = incomingMessages.get(intent);
 						BotModelNode outNode = addNode("Chat Response");
 						addAttribute(outNode, "Message", message.getResponse());
 						addEdge(inNode, outNode, "triggers");
-	
+
 					} else {
-	
+
 						BotModelNode inNode = addNode("Incoming Message");
 						addAttribute(inNode, "Intent Keyword", message.getIntent());
 						addAttribute(inNode, "NLU ID", "0");
-	
+
 						BotModelNode outNode = addNode("Chat Response");
 						addAttribute(outNode, "Message", message.getResponse());
-	
+
 						addEdge(inNode, outNode, "triggers");
 						addMessengerEdges(inNode, "generates");
-	
+
 						incomingMessages.put(intent, inNode);
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				break;
-	
-			case SERVICE_ACCESS:
-				AccessServiceFunction as = (AccessServiceFunction) function;
-	
-				BotModelNode frameNode = addNode("Frame");
-				// addAttribute(frameNode, "intent", as.getOperationID());
-	
-				BotModelNode actionNode = addNode("Bot Action");
-				addAttribute(actionNode, "Action Type", "Service");
-				// addAttribute(actionNode, "Function Name", as.getOperationID());
-				// addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
-	
-				addEdge(frameNode, actionNode, "triggers");
-				addMessengerEdges(frameNode, "generates");
-				break;
-	
-			default:
-				assert false : "no known function" + function.getType();
-				break;
-	
 			}
-		
+			break;
+
+		case SERVICE_ACCESS:
+			AccessServiceFunction as = (AccessServiceFunction) function;
+
+			if (as.getServiceType() instanceof OpenAPI) {
+				try {
+					OpenAPI oa = (OpenAPI) as.getServiceType();
+					BotModelNode frameNode = addNode("Frame");
+					addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+
+					BotModelNode actionNode = addNode("Bot Action");
+					addAttribute(actionNode, "Action Type", "OpenAPI");
+					addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+					addAttribute(actionNode, "Service Alias", oa.getBaseURL().toString());
+
+					addEdge(frameNode, actionNode, "triggers");
+					addMessengerEdges(frameNode, "generates");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			if (as.getServiceType() instanceof Las2peer) {
+
+				try {
+					Las2peer oa = (Las2peer) as.getServiceType();
+					BotModelNode frameNode = addNode("Frame");
+					addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+
+					BotModelNode actionNode = addNode("Bot Action");
+					addAttribute(actionNode, "Action Type", "Service");
+					addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+					addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
+
+					addEdge(frameNode, actionNode, "triggers");
+					addMessengerEdges(frameNode, "generates");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			break;
+		default:
+			assert false : "no known function" + function.getType();
+			break;
+
+		}
+
 		BotModel newBotModel = new BotModel();
 		processNodes();
 		newBotModel.setEdges(this.edgeList);
 		newBotModel.setNodes(this.nodeList);
 
-		return model;
+		return newBotModel;
+	}
+
+	public BotModel parse(BotModel model, NLGTrainingData data) {
+
+		this.nodeList = model.getNodes();
+		this.edgeList = model.getEdges();
+		for (BotModelNode node : model.getNodes().values()) {
+			if (node.getType().contentEquals("Messenger")) {
+				this.messengers.add(node);
+			}
+		}
+
+		// search Knowledge Node
+		BotModelNode nlgNode = null;
+		for (BotModelNode node : model.getNodes().values()) {
+			if (node.getType().contentEquals("Knowledge")) {
+				for (BotModelNodeAttribute attr : node.getAttributes().values()) {
+					if (attr.getName().contentEquals("Type") && attr.getValue().getValue().contentEquals("Generation"))
+						nlgNode = node;
+				}
+			}
+		}
+
+		// add Knowledge Node
+		if (nlgNode == null) {
+			nlgNode = this.addNode("Knowledge");
+			this.addAttribute(nlgNode, "Name", "abcNLG");
+
+			for (BotModelNode node1 : model.getNodes().values()) {
+				if (node1.getType().contentEquals("Bot"))
+					this.addEdge(node1, nlgNode, "has");
+			}
+		}
+
+		// add messages
+		for (NLGDataGroup d : data.getDatagroups()) {
+			BotModelNode nn = this.addNode("Incoming Message");
+			this.addAttribute(nn, "Intent Keyword", d.getIntent());
+			this.addAttribute(nn, "Response Message", d.getResponse());
+			this.addEdge(nlgNode, nn, "has");
+		}
+
+		BotModel newBotModel = new BotModel();
+		processNodes();
+		newBotModel.setEdges(this.edgeList);
+		newBotModel.setNodes(this.nodeList);
+
+		return newBotModel;
 	}
 
 	public BotModel parse(Bot bot, BotConfiguration config) {
@@ -149,22 +248,15 @@ public class BotModelParser {
 		assert bot.getName() != null : "bot has no name";
 		addAttribute(botNode, "Language", "English");
 		addAttribute(botNode, "Name", bot.getName());
-		addAttribute(botNode, "Description", "des");
+		addAttribute(botNode, "Description", bot.getDescription());
 		addEdge(vleNode, botNode, "has");
 
 		// NLU Knowledge
+		LanguageUnderstander nluu = config.getNLU(bot.getNluModule());
+		assert nluu != null : "no nlu module found for " + bot.getNluModule();
 		String nluName = bot.getNluModule();
 		String nluID = "0";
-		String nluURL = "http://localhost:5005";
-
-		Collection<LanguageUnderstander> nlus = config.getNLUs().values();
-
-		for (LanguageUnderstander nlu : nlus) {
-			if (nlu.getName().contentEquals(nluName)) {
-				System.out.println("found nlu module: " + nlu.getUrl());
-				nluURL = nlu.getUrl();
-			}
-		}
+		String nluURL = nluu.getUrl();
 
 		BotModelNode nluNode = addNode("Knowledge");
 		addAttribute(nluNode, "Type", "Understanding");
@@ -238,16 +330,43 @@ public class BotModelParser {
 			case SERVICE_ACCESS:
 				AccessServiceFunction as = (AccessServiceFunction) function;
 
-				BotModelNode frameNode = addNode("Frame");
-				// addAttribute(frameNode, "intent", as.getOperationID());
+				if (as.getServiceType() instanceof OpenAPI) {
+					try {
+						OpenAPI oa = (OpenAPI) as.getServiceType();
+						BotModelNode frameNode = addNode("Frame");
+						addAttribute(frameNode, "Intent Keyword", oa.getIntent());
 
-				BotModelNode actionNode = addNode("Bot Action");
-				addAttribute(actionNode, "Action Type", "Service");
-				// addAttribute(actionNode, "Function Name", as.getOperationID());
-				// addAttribute(actionNode, "Service Alias", as.getServiceURL().toString());
+						BotModelNode actionNode = addNode("Bot Action");
+						addAttribute(actionNode, "Action Type", "OpenAPI");
+						addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+						addAttribute(actionNode, "Service Alias", oa.getBaseURL().toString());
 
-				addEdge(frameNode, actionNode, "triggers");
-				addMessengerEdges(frameNode, "generates");
+						addEdge(frameNode, actionNode, "triggers");
+						addMessengerEdges(frameNode, "generates");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
+				if (as.getServiceType() instanceof Las2peer) {
+
+					try {
+						Las2peer oa = (Las2peer) as.getServiceType();
+						BotModelNode frameNode = addNode("Frame");
+						addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+
+						BotModelNode actionNode = addNode("Bot Action");
+						addAttribute(actionNode, "Action Type", "Service");
+						addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+						addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
+
+						addEdge(frameNode, actionNode, "triggers");
+						addMessengerEdges(frameNode, "generates");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
 				break;
 
 			default:

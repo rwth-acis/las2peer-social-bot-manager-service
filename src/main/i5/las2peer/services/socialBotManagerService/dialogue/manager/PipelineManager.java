@@ -514,7 +514,9 @@ public class PipelineManager extends MetaDialogueManager {
 	@Override
 	public Collection<String> getNLGIntents() {
 		Collection<String> res = new ArrayList<>();
-		for (AbstractDialogueManager manager : this.managers) {
+		
+		Dialogue dialogue = new Dialogue(messenger);
+		for (AbstractDialogueManager manager : dialogue.getManagers()) {
 			if (manager.getNLGIntents() != null)
 				res.addAll(manager.getNLGIntents());
 		}

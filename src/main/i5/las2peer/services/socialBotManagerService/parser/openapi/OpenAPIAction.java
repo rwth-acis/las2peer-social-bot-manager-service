@@ -75,27 +75,30 @@ public class OpenAPIAction {
 		}		
 	}
 	
-	/**
+	/**	
 	 * Send HTTP Request 
 	 * Need all required parameters to be filled
 	 * 
-	 * @return response message
+	 * @return open api response
 	 */
-	public ClientResponse execute() {
+	public OpenAPIResponse execute() throws IllegalStateException {
+		
 		if(!this.validate())
 			throw new IllegalStateException("Not all required parameters are filled");
 		
 		ClientResponse response = OpenAPIConnector.sendRequest(this);
-		return response;
+		return new OpenAPIResponse(response);
 	}
 	
 	public DialogueAct generate(String intent, String template) {
 		if(this.function instanceof GeneratorFunction) {
+			System.out.println("--- Generator Function");
 			Map<String, String> parameters = this.pathParameters;
 			parameters.putAll(this.queryParameters);
 			
 			return ((GeneratorFunction) this.function).generate(intent, template, parameters);
 		}
+		
 		return null;
 		
 	}
@@ -157,7 +160,7 @@ public class OpenAPIAction {
 
 		return methodURL;
 	}
-
+	
 	public void addParameters(Map<String, String> parameters) {
 
 		for (Entry<String, String> entry : parameters.entrySet()) {
@@ -172,7 +175,7 @@ public class OpenAPIAction {
 
 	public void addParameter(ServiceFunctionAttribute attr, String value) {
 		assert attr != null;
-		assert value != null;
+		assert value != null : "add parameter " + attr.getName() + " no value";
 		System.out.println("add parameter " + attr.getName() + " " + attr.getParameterType() + ", value: " + value);
 		assert this.function.contains(attr);
 		assert attr.getParameterType() == ParameterType.PATH || attr.getParameterType() == ParameterType.QUERY;
@@ -208,6 +211,9 @@ public class OpenAPIAction {
 	}
 
 	public boolean validateQueryParameter(String name, String value) {
+		if(name.contentEquals("botEventId"))
+			return true;
+		
 		List<ServiceFunctionAttribute> attrs = function.getQueryAttributes();
 		for (ServiceFunctionAttribute attr : attrs) {
 			if (attr.getName().contentEquals(name))
@@ -269,12 +275,15 @@ public class OpenAPIAction {
 	
 	public boolean validate() {
 		Collection<ServiceFunctionAttribute> attrs = this.function.getRequiredAttributes();
-		for(ServiceFunctionAttribute attr :attrs) {
-			if(attr.getParameterType() == ParameterType.PATH && !this.pathParameters.containsKey(attr.getName()))
-				return false;
+		boolean flag = true;
+		for(ServiceFunctionAttribute attr :attrs) {		
+			if(attr.getParameterType() == ParameterType.PATH && !this.pathParameters.containsKey(attr.getName())) {
+				System.out.println("missing parameter: " + attr.getName());
+				flag = false;				
+			}
 		}
 		
-		return true;
+		return flag;
 	}
 	
 	public void invariant() {

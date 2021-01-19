@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
+import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -14,54 +16,67 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "Bot")
 public class Bot {
 
-    @ApiModelProperty(dataType = "string", value = "A name gives your bot personality. It should make him recognizable as a bot.", required = true, example = "Botter")
-    private String name;
+	@ApiModelProperty(dataType = "string", value = "A name gives your bot personality. It should make him recognizable as a bot.", required = true, example = "Botter")
+	private String name;
 
-    @ApiModelProperty(dataType = "string", value = "The NLU module allows us bots to understand your human language. Please choose one or create a new /createnlu", required = true)
-    private String nluModule;
+	@ApiModelProperty(dataType = "string", value = "This is how your bot introduces itself", required = true, example = "Hi, I am a bot :)")
+	private String description;
 
-    private List<Function> function = new ArrayList<Function>();
+	@ApiModelProperty(dataType = "string", value = "The NLU module allows us bots to understand your human language. Please choose one or create a new /createnlu", required = true)
+	private String nluModule;
 
-    private List<Messenger> messenger = new ArrayList<Messenger>();
+	@ApiModelProperty(required = true)
+	private List<Function> function = new ArrayList<Function>();
 
-    @XmlElement(name = "name")
-    public String getName() {
-	return name;
-    }
+	@ApiModelProperty(required = true)
+	private List<Messenger> messenger = new ArrayList<Messenger>();
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	@XmlElement(name = "name")
+	public String getName() {
+		return name;
+	}
 
-    public List<Function> getFunction() {
-	return function;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setFunction(List<Function> function) {
-	this.function = function;
-    }
+	public List<Function> getFunction() {
+		return function;
+	}
 
-    @XmlElementWrapper(name = "messengers")
-    @XmlElement(name = "messenger")
-    public List<Messenger> getMessenger() {
-	return messenger;
-    }
+	public void setFunction(List<Function> function) {
+		this.function = function;
+	}
 
-    public void setMessenger(List<Messenger> messenger) {
-	this.messenger = messenger;
-    }
+	@XmlElementWrapper(name = "messengers")
+	@XmlElement(name = "messenger")
+	public List<Messenger> getMessenger() {
+		return messenger;
+	}
 
-    @Override
-    public String toString() {
-	return "Bot [name=" + name + ", function=" + function + ", messenger=" + messenger + "]";
-    }
+	public void setMessenger(List<Messenger> messenger) {
+		this.messenger = messenger;
+	}
 
-    public String getNluModule() {
-	return nluModule;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public void setNluModule(String nluModule) {
-	this.nluModule = nluModule;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	@Override
+	public String toString() {
+		return "Bot [name=" + name + ", function=" + function + ", messenger=" + messenger + "]";
+	}
+
+	public String getNluModule() {
+		return nluModule;
+	}
+
+	public void setNluModule(String nluModule) {
+		this.nluModule = nluModule;
+	}
 
 }

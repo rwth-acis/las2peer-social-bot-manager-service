@@ -97,40 +97,64 @@ public class RepetitionNode extends Node implements Slotable {
 
 	public boolean isFilled() {
 		invariant();
+		
 		if (this.valueChildren.isEmpty())
 			return false;
+		
 		return true;
 	}
 
 	@Override
 	public boolean isReady() {
 		invariant();
-		if (this.open == true)
+		
+		if (!this.getSlot().isRequired()) {
+			System.out.println("ready cause not required");
+			return true; 
+			
+		}
+		
+		if (this.open == true) {
+			System.out.println("still open");
 			return false;
+			
+		}
 
-		if (!this.isFilled())
+		if (!this.isFilled()) {
+			System.out.println("not filled yet");
 			return false;
+		}
 
 		for (Node node : this.valueChildren) {
 			if (!node.isReady()) {
+				System.out.println("child  not ready yet");
 				return false;
 			}
 		}
 
+		System.out.println("node ready");
 		return true;
 	}
 
 	@Override
 	public boolean isFull() {
 		invariant();
-		if (this.open == true)
+		if (this.open == true) {			
+			System.out.println("not full because open");
 			return false;
+		}
 
-		if (!this.isFilled())
+		if (!this.isFilled()) {
+			System.out.println("not full because not filled");
 			return false;
+		}
 
 		for (Node node : this.valueChildren) {
 			if (!node.isFull()) {
+				if(node instanceof Fillable)
+					System.out.println("not full not full child" + ((Fillable) node).getName());
+				else
+					System.out.println("not full not full child");
 				return false;
 			}
 		}
@@ -189,6 +213,10 @@ public class RepetitionNode extends Node implements Slotable {
 		NodeList nodes = new NodeList(this);
 		nodes.addAll(this.valueChildren.get(this.valueChildren.size() - 1).getAll());
 		return nodes;
+	}
+	
+	public int size() {
+		return this.valueChildren.size();
 	}
 
 	@Override

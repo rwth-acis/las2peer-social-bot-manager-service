@@ -57,7 +57,7 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 		this.service = service;
 		this.name = functionName;
 	}
-
+	
 	/**
 	 * Create a simple GET function of a specified URL
 	 * 
@@ -367,7 +367,7 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 		if (this.serviceName == null && function.serviceName != null)
 			this.serviceName = function.serviceName;
 
-		System.out.println("MERGE");
+		System.out.println("merge function " + function.getFunctionName());
 		if (!this.getBasePath().startsWith("http") && function.getBasePath().startsWith("http"))
 			this.setBasePath(function.getBasePath());
 
@@ -378,7 +378,7 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 			this.method = function.getHttpMethod();
 		
 		for (ServiceFunctionAttribute attr : this.getAllAttributes()) 
-			System.out.println(attr.getIdName());
+			System.out.println( " " + attr.getIdName());
 		
 
 		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {
@@ -398,14 +398,22 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 	public void invariant() {
 
 		assert this.name != null : "function has no name";
-		assert this.service != null : "function " + this.name + " has no service";
+		assert this.service != null || this.serviceName != null : "function " + this.name + " has no service";
 		assert this.actionType != null : "function " + this.name + " has no action type";
-		this.service.invariant();
 
 	}
 
 	@Override
 	public ServiceFunction asServiceFunction() {
 		return this;
+	}
+
+	public String prettyPrint() {
+		
+		String res = "--- ServiceFunction: " + this.getFunctionName();
+		for(ServiceFunctionAttribute attr : this.attributes)
+			res = "\n" + res + attr.prettyPrint(0);
+		
+		return res;
 	}
 }

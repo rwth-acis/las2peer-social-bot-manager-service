@@ -40,6 +40,10 @@ public class BotModelInfo {
 		this.addAttrId("Bot Action", "Service Alias", "bc1335cdf59dedb856e635be");
 		this.addAttrId("Bot Action", "Action Type", "5529bde8544426cd5580efc1");
 		
+		this.addAttrId("Action Parameter", "Name", "68f226ab6d61c452f8834cae");
+		this.addAttrId("Action Parameter", "Content", "23711db691227bba16e9d9c3");
+		this.addAttrId("Action Parameter", "Parameter Type", "c64fe29fae8daad81617c282");
+		
 	}
 	
 	public void parse(BotModel model) {

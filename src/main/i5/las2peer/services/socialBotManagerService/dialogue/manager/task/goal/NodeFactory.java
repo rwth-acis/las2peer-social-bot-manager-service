@@ -32,7 +32,16 @@ public class NodeFactory {
 
 		// Selection Node
 		if (slot.hasChildren() && slot.isSelection() && !slot.isArray()) {
-			return new SelectionNode(slot);
+			SelectionNode res = new SelectionNode(slot);
+			if(slot.getChildren(-1).isEmpty())
+				return res;
+			
+			SequenceNode node = new SequenceNode();			
+			for(Slot wslot :slot.getChildren(-1)) 
+				node.addChild(create(wslot));
+			node.addChild(res);
+			node.setWrapperNode(res);
+			
 		}
 
 		// Repetition Node

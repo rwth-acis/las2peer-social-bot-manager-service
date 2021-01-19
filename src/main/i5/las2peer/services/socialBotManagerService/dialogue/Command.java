@@ -43,9 +43,7 @@ public class Command {
 
 	public void invariant() {
 		assert this.intent != null : "command has no intent";
-		assert this.description != null : "command description is null";
 		assert this.name != null : "command has no name";
-		assert !this.description.contentEquals("") : "command has no description";
 	}
 
 }

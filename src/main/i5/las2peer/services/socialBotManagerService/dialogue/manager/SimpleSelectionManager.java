@@ -105,7 +105,12 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 					if (selection.fillsParameter()) {
 						if (manager instanceof TaskOrientedManager)
 							((TaskOrientedManager) manager).getDialogueGoal().fill(selection.getParameterName(), value);
+						else 
+							manager.fillRecursive(selection.getParameterName(), value);
+					
 					}
+					
+					
 
 					return manager.handle(intent);
 				}

@@ -153,4 +153,9 @@ public class DialogueHandler {
 		assert this.messenger != null : "dialogue handler has no related messenger";
 	}
 
+	public void reset() {
+		this.openDialogues = this.openDialogues = new HashMap<>();
+		
+	}
+
 }

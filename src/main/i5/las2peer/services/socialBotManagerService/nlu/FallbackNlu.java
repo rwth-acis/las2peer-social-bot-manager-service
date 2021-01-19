@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 
 /**
  * This LanguageUnderstander knows basic intents that are needed for dialogue
@@ -66,6 +67,18 @@ public class FallbackNlu extends LanguageUnderstander {
 	@Override
 	public void addIntents(Collection<String> intents) {
 		// no effect
+	}
+
+	@Override
+	public void addTrainingData(TrainingData data) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public TrainingData getTrainingData() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

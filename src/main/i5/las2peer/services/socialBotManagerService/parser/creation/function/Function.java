@@ -1,9 +1,11 @@
-package i5.las2peer.services.socialBotManagerService.parser.creation;
+package i5.las2peer.services.socialBotManagerService.parser.creation.function;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import i5.las2peer.services.socialBotManagerService.parser.creation.ChitChatFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.Notification;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -20,11 +22,6 @@ public abstract class Function {
 			+ "*Notification*: The bot sends a notification when a service was accessed.")
 	private FunctionType type;
 
-	@ApiModelProperty(dataType = "string", value = "The intent to start the service access", required = true, example = "add_pet")
-	private String intent;
-
-	private String name;
-
 	public FunctionType getType() {
 		return type;
 	}
@@ -33,19 +30,4 @@ public abstract class Function {
 		this.type = type;
 	}
 
-	public String getIntent() {
-		return intent;
-	}
-
-	public void setIntent(String intent) {
-		this.intent = intent;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return this.name;
-	}
 }

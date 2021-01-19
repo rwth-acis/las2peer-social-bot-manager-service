@@ -48,12 +48,11 @@ public class TableLanguageGenerator extends LanguageGenerator {
 		if (act.hasEntities()) {
 			System.out.println("parse entities");
 			for (Entry<String, String> entity : act.getEntities().entrySet()) {
-				System.out.println(entity.getKey() + entity.getValue());
-				res = res.replaceAll("#" + entity.getKey(), entity.getValue());
-				System.out.println(res);
+				System.out.println("entity:" + entity.getKey() + " " + entity.getValue());
+				res = res.replaceAll("#" + entity.getKey(), entity.getValue());				
 			}
 		}
-
+		System.out.println("response:" + res);
 		ResponseMessage message = new ResponseMessage(res);
 		return message;
 	}
@@ -62,6 +61,7 @@ public class TableLanguageGenerator extends LanguageGenerator {
 	 * @param intent
 	 * @param message
 	 */
+	@Override
 	public void addEntry(String intent, String message) {
 
 		assert this.table != null : "add nlg entry. table is null";
@@ -69,7 +69,9 @@ public class TableLanguageGenerator extends LanguageGenerator {
 		assert message != null : "add nlg entry. message is null";
 		assert !intent.equals("") : "add nlg entry. empty intent";
 		assert !message.equals("") : "add nlg entry. empty message";
-
+		
+		System.out.println("add nlg entry " + intent + " " + message);
+		
 		if (this.table.containsKey(intent)) {
 			List<String> values = table.get(intent);
 			values.add(message);

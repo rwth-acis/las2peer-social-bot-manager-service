@@ -325,4 +325,10 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 
 	}
 
+	@Override
+	public void addEntry(String intent, String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

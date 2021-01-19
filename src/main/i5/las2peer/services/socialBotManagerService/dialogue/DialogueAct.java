@@ -37,11 +37,16 @@ public class DialogueAct {
 	 * @param intent
 	 * @param input
 	 */
-	public DialogueAct(DialogueActType type, String intent, String input) {
+	public DialogueAct(DialogueActType type, String intent, String message) {
 		this.intentType = type;
 		this.intentKeyword = intent;
-		this.message = input;
+		this.message = message;
 	}	
+	
+	public DialogueAct(DialogueActType type, String intent, String message, Map<String, String> entities) {
+		this(type, intent, message);
+		this.setEntities(entities);	
+	}
 
 	public DialogueAct(String message) {
 		this.message = message;
@@ -146,7 +151,7 @@ public class DialogueAct {
 		if (act.hasIntent())
 			this.intentKeyword = act.intentKeyword;
 		if (act.hasMessage())
-			this.message = this.message.concat(act.getMessage());
+			this.message = this.message + act.getMessage();
 		if (act.hasExpected())
 			this.expected = act.getExpected();
 		return this;
@@ -163,7 +168,7 @@ public class DialogueAct {
 	public void setEntities(Map<String, String> entities) {
 		this.entities = entities;
 	}
-
+		
 	public void addEntity(Entity entity) {
 		if (!this.hasEntities())
 			this.entities = new HashMap<String, String>();

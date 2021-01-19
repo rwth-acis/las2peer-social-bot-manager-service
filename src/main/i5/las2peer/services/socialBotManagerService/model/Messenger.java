@@ -559,6 +559,7 @@ public class Messenger {
 	public Collection<Frame> getFrames() {
 		Collection<Frame> res = new ArrayList<>();
 		res.addAll(this.intentFrames.values());
+		if(this.domains != null)
 		for(Domain domain : this.domains.values()) {
 			res.addAll(domain.getFrames().values());				
 		}
@@ -583,6 +584,7 @@ public class Messenger {
 
 	public Map<String, Selection> getSelections() {
 		Map<String, Selection> res = new HashMap<>();
+		if(this.domains != null)
 		for(Domain domain : this.domains.values()) {
 			res.putAll(domain.getSelections());				
 		}
@@ -664,6 +666,10 @@ public class Messenger {
 		return res;
 	}
 
+	public void reset() {
+		this.handler.reset();
+	}
+	
 	public Collection<String> getNLGIntents() {
 		return this.handler.getNLGIntents();
 	}

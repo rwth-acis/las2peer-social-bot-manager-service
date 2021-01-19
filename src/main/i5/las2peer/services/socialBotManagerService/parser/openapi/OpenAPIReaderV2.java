@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,21 +39,54 @@ public class OpenAPIReaderV2 {
 	 */
 	public static Swagger readModel(String jsonUrl) {
 
+		Swagger model = null;
+		try {
+			model = processModel(jsonUrl);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return model;
+	}
+
+	/**
+	 * Read OpenAPI specification by URL
+	 * 
+	 * @param jsonUrl of specification
+	 * @return Swagger model
+	 */
+	public static Swagger readModel(URL jsonUrl) {
+
+		assert jsonUrl != null;
 		URI modelUri = null;
 		try {
-			modelUri = new URI(jsonUrl);
+			modelUri = jsonUrl.toURI();
 		} catch (URISyntaxException e1) {
 			System.out.println("no valid uri");
 			e1.printStackTrace();
 		}
+
+		Swagger model = readModel(modelUri);
+		return model;
+	}
+
+	/**
+	 * Read OpenAPI specification by URL
+	 * 
+	 * @param jsonUrl of specification
+	 * @return Swagger model
+	 */
+	public static Swagger readModel(URI modelUri) {
+
 		Swagger model = null;
 		try {
 			model = processModel(modelUri.getPath());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		return model;		
+
+		return model;
 	}
 
 	/**
@@ -232,7 +266,7 @@ public class OpenAPIReaderV2 {
 
 					String ref = ((BodyParameter) parameter).getSchema().getReference();
 					String name = ref.substring("#/definitions/".length());
-					attr = new ServiceFunctionAttribute("v21", name);
+					attr = new ServiceFunctionAttribute(name);
 					attr.setParameterType(ParameterType.BODY);
 					attr = addChildrenAttributes(swagger, name, attr);
 					action.addAttribute(attr);
@@ -240,7 +274,7 @@ public class OpenAPIReaderV2 {
 					// Path and Query Parameter
 				} else {
 
-					attr = new ServiceFunctionAttribute("v22", parameter.getName());
+					attr = new ServiceFunctionAttribute(parameter.getName());
 					action.addAttribute(attr);
 
 					attr.setRequired(parameter.getRequired());
@@ -254,7 +288,7 @@ public class OpenAPIReaderV2 {
 
 					if (parameter.getIn().contentEquals("query"))
 						attr.setParameterType(ParameterType.QUERY);
-					
+
 					if (parameter.getIn().contentEquals("body"))
 						attr.setParameterType(ParameterType.BODY);
 
@@ -316,7 +350,7 @@ public class OpenAPIReaderV2 {
 				String name = pair.getKey();
 				Property property = pair.getValue();
 
-				ServiceFunctionAttribute childAttr = new ServiceFunctionAttribute("v23", name);
+				ServiceFunctionAttribute childAttr = new ServiceFunctionAttribute(name);
 
 				// property is discriminator
 				if (dis != null && dis.contentEquals(name)) {
@@ -431,10 +465,10 @@ public class OpenAPIReaderV2 {
 	private static Swagger processModel(String modelUri) throws Exception {
 
 		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUri, null, true);
+		System.out.println(swaggerParseResult.getSwagger());
 		Swagger swagger = swaggerParseResult.getSwagger();
+		System.out.println("read model " + modelUri + " " + swagger);
 
-		// System.out.printf("== Model %s\n", modelUri);
-		// System.out.printf("------\n\n");
 		return swagger;
 	}
 

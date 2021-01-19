@@ -22,6 +22,7 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
+import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.ServiceType;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
@@ -42,7 +43,8 @@ public class OpenAPIConnector {
 	public static ServiceFunction readFunction(ServiceFunction action) {
 
 		assert action != null : "read open api function: action parameter is null";
-		assert action.getServiceName() != null : "read open api function: action has no service url specified";
+		assert action.getServiceName() != null
+				|| action.getSwaggerUrl() != null : "read open api function: action has no service url specified";
 		assert (action.getFunctionName() != null || (action.getFunctionPath() != null
 				&& action.getHttpMethod() != null)) : "read open api function: no function specified";
 
@@ -50,6 +52,7 @@ public class OpenAPIConnector {
 				+ " serviceName: " + action.getServiceName());
 
 		Service service = action.getService();
+
 		// base url
 		String baseUrl = action.getBasePath();
 		String last = baseUrl.substring(baseUrl.length() - 1);
@@ -166,23 +169,22 @@ public class OpenAPIConnector {
 
 		ServiceFunction sf = action.getFunction().asServiceFunction();
 		System.out.println("Action " + sf.getActionType() + " " + sf.getServiceType());
+		ClientResponse response = null;
 		if (sf.getActionType() != ActionType.FUNCTION && sf.getServiceType() == ServiceType.SERVICE) {
 
 			String loginName = "alice";
 			String password = "pwalice";
 			client.setLogin(loginName, password);
-			ClientResponse response = sendRequest(client, action);
-			if (response.getHttpCode() == 401) {
-				System.out.println("Authorization Error: " + loginName + " " + password);
-				client = new MiniClient();
-				client.setConnectorEndpoint(action.getBasePath());
-				response = sendRequest(client, action);
-				return response;
-			}
+			response = sendRequest(client, action);
+		
+		} 
+		if(response == null) {
+			System.out.println("------ resend action");
+			response = sendRequest(client, action);
+			assert response != null;
 		}
-
-		ClientResponse response = sendRequest(client, action);
-		assert response != null;
+		
+		
 		System.out.println("received response " + response);
 		return response;
 	}
@@ -197,7 +199,7 @@ public class OpenAPIConnector {
 
 		assert sf.getFunctionPath() != null : "no function path";
 		assert sf.getHttpMethod() != null : "no http method";
-	
+
 		String bodyContent = "";
 		if (action.getBodyParameter() != null) {
 			bodyContent = action.getBodyParameter().toJSONString();
@@ -246,6 +248,9 @@ public class OpenAPIConnector {
 
 		if (baseUrl.contains(".json"))
 			return baseUrl;
+
+		if (baseUrl.length() > 1 && baseUrl.endsWith("/"))
+			baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
 
 		URL url;
 		try {
@@ -419,29 +424,72 @@ public class OpenAPIConnector {
 		return res;
 
 	}
-	
+
+	public static Collection<ServiceFunction> getFunctions(String swaggerURL) {
+		assert swaggerURL != null : "swagger URL is null";
+		assert !swaggerURL.contentEquals("") : "swagger url is empty";
+
+		try {
+			URL url = new URL(swaggerURL);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(swaggerURL + " is not valid URL");
+		}
+
+		Collection<String> operationIds = getFunctionNames(swaggerURL);
+		for (String functionName : operationIds) {
+
+		}
+
+		return null;
+
+	}
+
 	public static Collection<String> getFunctionNames(String swaggerURL) {
-		
+
 		assert swaggerURL != null;
 		System.out.println("find functions for " + swaggerURL);
 		String modelUrl = swaggerURL;
-				
+
 		// read function V2
 		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUrl, null, true);
 		Swagger swagger = swaggerParseResult.getSwagger();
 		assert swagger != null;
-	    ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = new ObjectMapper();
 		String jsonString = "";
 		try {
 			jsonString = mapper.writeValueAsString(swagger);
-		} catch (JsonProcessingException e) {			
+		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		JsonElement jsonElement = JsonParser.parseString(jsonString);
-		
+
 		return searchValuesByKey(jsonElement, "operationId");
-				
-		
+
 	}
-	
+
+	public static Collection<ServiceFunctionAttribute> getParameters(String serviceURL, String functionName) {
+
+		assert serviceURL != null;
+		assert functionName != null;
+
+		String swaggerURL = getSwaggerLocation(serviceURL);
+
+		URL swagger = null;
+		URL su = null;
+		try {
+			swagger = new URL(swaggerURL);
+			su = new URL(serviceURL);
+
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Service service = new Service(null, functionName, su, swagger);
+		ServiceFunction function = new ServiceFunction("", service, functionName);
+		ServiceFunction parsedFunction = readFunction(function);
+
+		return parsedFunction.getAllAttributes();
+	}
+
 }

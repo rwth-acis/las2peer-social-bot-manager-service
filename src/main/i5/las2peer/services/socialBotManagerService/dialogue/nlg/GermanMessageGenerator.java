@@ -281,4 +281,10 @@ public class GermanMessageGenerator extends DefaultMessageGenerator {
 		return null;
 	}
 
+	@Override
+	public void addEntry(String intent, String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

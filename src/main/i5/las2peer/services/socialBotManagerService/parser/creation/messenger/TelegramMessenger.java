@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.parser.creation;
+package i5.las2peer.services.socialBotManagerService.parser.creation.messenger;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import io.swagger.annotations.ApiModel;

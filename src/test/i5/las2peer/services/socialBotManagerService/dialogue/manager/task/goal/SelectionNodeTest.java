@@ -38,7 +38,7 @@ public class SelectionNodeTest {
 
 		slotS.setSelection(true);
 		slotS.setInputType(InputType.Enum);
-		slotS.setEnumList(enums);
+	
 		slotS.addChild(slotA);
 		slotS.addChild(slotB);
 
@@ -71,42 +71,42 @@ public class SelectionNodeTest {
 		Slot valueSlotA = new Slot("valueA", ParameterType.CHILD);
 		Slot valueSlotB = new Slot("valueB", ParameterType.CHILD);
 		parentSlot.setSelection(true);
-		parentSlot.setEnumList(enums);
+
 		valueSlotA.setEntity("A");
 		valueSlotB.setEntity("B");
 		parentSlot.addChild(valueSlotA);
 		parentSlot.addChild(valueSlotB);
-		
+
 		SelectionNode node = new SelectionNode(parentSlot);
 		assertFalse(node.isFilled());
 		assertFalse(node.isReady());
 		assertFalse(node.isFull());
-		
+
 		node.fill("A");
 		assertTrue(node.isFilled());
 		assertTrue(node.isReady());
-		
+
 		valueSlotA.setRequired(true);
 		valueSlotB.setRequired(true);
 		assertTrue(node.isFilled());
-		assertFalse(node.isReady());		
+		assertFalse(node.isReady());
 		assertNotNull(node.getChild("A"));
-		
+
 		((ValueNode) node.getChild("A")).fill("tA");
 		assertTrue(node.isReady());
-		
+
 		node.clear();
-		assertFalse(node.isReady());		
+		assertFalse(node.isReady());
 		assertFalse(node.isFilled());
-		
+
 		node.fill("B");
 		assertTrue(node.isFilled());
 		assertFalse(node.isReady());
 		assertNotNull(node.getChild("B"));
-		
+
 		((ValueNode) node.getChild("B")).fill("tB");
 		assertTrue(node.isReady());
-		
+
 	}
 
 	@Test
@@ -116,7 +116,6 @@ public class SelectionNodeTest {
 		Slot valueSlotA = new Slot("valueA", ParameterType.CHILD);
 		Slot valueSlotB = new Slot("valueB", ParameterType.CHILD);
 		parentSlot.setSelection(true);
-		parentSlot.setEnumList(enums);
 		valueSlotA.setEntity("A");
 		valueSlotB.setEntity("B");
 		valueSlotA.setRequired(true);
@@ -124,15 +123,15 @@ public class SelectionNodeTest {
 		parentSlot.addChild(valueSlotA);
 		parentSlot.addChild(valueSlotB);
 
-		SelectionNode node = new SelectionNode(parentSlot);	
-		
+		SelectionNode node = new SelectionNode(parentSlot);
+
 		node.fill("A");
 		assertEquals("{\"parent\":\"A\"}", node.toBodyJSON().toString());
 
 		((Fillable) node.getChild("A")).fill("Aval");
 		assertNotNull(node.toBodyJSON());
 		assertEquals("{\"parent\":\"A\",\"valueA\":\"Aval\"}", node.toBodyJSON().toString());
-		
+
 	}
 
 }

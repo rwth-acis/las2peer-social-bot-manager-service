@@ -22,6 +22,7 @@ public class SelectionNode extends Node implements Fillable {
 		this.value = null;
 		this.confirmed = false;
 		this.children = new HashMap<String, Node>();
+						
 		for (Slot childSlot : slot.getChildren()) {
 			Node childNode = NodeFactory.create(childSlot);
 			this.children.put(childSlot.getEntity(), childNode);
@@ -131,7 +132,7 @@ public class SelectionNode extends Node implements Fillable {
 	public void setChildren(Map<String, Node> children) {
 		this.children = children;
 	}
-
+	
 	public Node getChild(String enu) {
 		return this.children.get(enu);
 	}
@@ -143,6 +144,7 @@ public class SelectionNode extends Node implements Fillable {
 	@Override
 	public Node next() {
 		invariant();
+		
 		if (!this.isFilled())
 			return this;
 
@@ -163,12 +165,13 @@ public class SelectionNode extends Node implements Fillable {
 		assert this.children != null : "children map is null";
 		assert !this.children.isEmpty() : "selection node has no children";
 		if (this.value != null) {
+			if(!this.slot.hasDynamicEnums())
 			assert this.slot.validate(this.getValue()) : "slot " + this.slot.getName() + " filled with invalid value "
 					+ this.value;
 			assert this.children.containsKey(this.value) : "no child path with value " + this.value;
 		}
 	}
-
+	
 	@Override
 	public JSONObject toBodyJSON() {
 		invariant();

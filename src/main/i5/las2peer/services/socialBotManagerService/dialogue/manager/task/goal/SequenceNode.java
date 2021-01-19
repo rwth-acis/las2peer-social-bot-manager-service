@@ -9,6 +9,7 @@ import net.minidev.json.JSONObject;
 public class SequenceNode extends Node {
 
 	private List<Node> children;
+	private Node wrapper;
 
 	public SequenceNode(Slot slot) {
 
@@ -22,6 +23,18 @@ public class SequenceNode extends Node {
 		}
 
 		invariant();
+	}
+
+	public SequenceNode() {
+		this.children = new ArrayList<Node>();
+	}
+
+	public void setWrapperNode(Node node) {
+		assert node != null;
+		assert this.children.contains(node) : "wrapper node not contained in children";
+
+		System.out.println("wrapper set to " + node.toString());
+		this.wrapper = node;
 	}
 
 	@Override
@@ -75,11 +88,21 @@ public class SequenceNode extends Node {
 	@Override
 	public Node next() {
 		invariant();
+
+		//for (Node node : this.children) {
+		//	if (node instanceof Slotable && ((Slotable) node).getSlot() != null) {
+		///		Slot slot = ((Slotable) node).getSlot();
+		//		if (!node.isReady() && slot.getPriority() == -1)
+		//			return node.next();
+		//	}
+		//}
+
 		for (Node node : this.children) {
 			if (!node.isReady()) {
 				return node.next();
 			}
 		}
+
 		for (Node node : this.children) {
 			if (!node.isFull()) {
 				return node.next();
@@ -114,13 +137,32 @@ public class SequenceNode extends Node {
 	public JSONObject toBodyJSON() {
 		invariant();
 
-		JSONObject res = new JSONObject();
-		for (Node node : this.children) {
-			JSONObject nodeJson = node.toBodyJSON();
-			if (nodeJson != null && !nodeJson.isEmpty())
-				res.putAll(node.toBodyJSON());
+		if (this.wrapper == null) {
+
+			// normal sequence
+			JSONObject res = new JSONObject();
+			for (Node node : this.children) {
+				JSONObject nodeJson = node.toBodyJSON();
+				if (nodeJson != null && !nodeJson.isEmpty())
+					res.putAll(node.toBodyJSON());
+			}
+			return res;
+
+		} else {
+
+			// combiner
+			JSONObject wrapperJson = this.wrapper.toBodyJSON();
+			for (Node node : this.children) {
+				if (node != this.wrapper) {
+					JSONObject nodeJson = node.toBodyJSON();
+					if (nodeJson != null && !nodeJson.isEmpty())
+						wrapperJson.putAll(node.toBodyJSON());
+				}
+			}
+
+			return wrapperJson;
 		}
-		return res;
+
 	}
 
 }

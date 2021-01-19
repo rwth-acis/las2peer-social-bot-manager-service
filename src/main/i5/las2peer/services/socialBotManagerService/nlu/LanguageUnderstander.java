@@ -2,8 +2,11 @@ package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
+import i5.las2peer.services.socialBotManagerService.parser.training.DataGroup;
+import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 
 public abstract class LanguageUnderstander {
 
@@ -34,6 +37,8 @@ public abstract class LanguageUnderstander {
 		this.url = url;
 	}
 
+	public abstract void addTrainingData(TrainingData data); 
+	
 	public abstract void addIntents(Collection<String> intents);
 	
 	public void addIntent(String intent) {
@@ -46,5 +51,17 @@ public abstract class LanguageUnderstander {
 	public String toString() {
 		return "LanguageUnderstander [name=" + name + ", url=" + url + "]";
 	}
+
+	public void addTrainingData(String intentKeyword, List<String> responseMessages) {
+		assert intentKeyword != null;
+		assert responseMessages != null;
+		System.out.println("number of responses " + responseMessages.size());
+		DataGroup data = new DataGroup(intentKeyword, responseMessages);
+		TrainingData res = new TrainingData();
+		res.addDataGroup(data);
+		this.addTrainingData(res);
+	}
+
+	public abstract TrainingData getTrainingData();
 
 }

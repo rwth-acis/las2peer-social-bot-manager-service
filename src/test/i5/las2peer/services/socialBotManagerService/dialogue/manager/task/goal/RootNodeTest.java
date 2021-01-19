@@ -31,8 +31,7 @@ public class RootNodeTest {
 		slotA.setInputType(InputType.Free);
 		slotB.setInputType(InputType.Free);
 
-		frame.addSlot(slot);
-		slot.setEnumList(enums);
+		frame.addSlot(slot);		
 		slot.addChild(slotA);
 		slot.addChild(slotB);
 

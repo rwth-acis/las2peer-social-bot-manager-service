@@ -3,7 +3,10 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
@@ -11,6 +14,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.S
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterInput;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 
 public class ServiceFunctionAttribute {
@@ -26,9 +30,6 @@ public class ServiceFunctionAttribute {
 	private ServiceFunction function;
 	private IfThenBlock itb;
 
-	private ServiceFunction fillingFunction;
-	private String fillingFunctionKey;
-
 	private boolean staticContent;
 	private String content;
 	private URL contentURL;
@@ -40,9 +41,13 @@ public class ServiceFunctionAttribute {
 	private String nluQuizContent;
 
 	private String entityKeyword;
+	private MessageFile file;
+
+	// Filling by other elements
+	private ServiceFunction fillingFunction;
+	private String fillingFunctionKey;
 	private String slotID;
 	private String slotName;
-	private MessageFile file;
 
 	// retrieved by swagger
 	private String description;
@@ -50,13 +55,19 @@ public class ServiceFunctionAttribute {
 	private List<String> enumList;
 	private boolean required;
 	private boolean array;
+	private int minItems;
 	private String discriminator;
 	private String format;
+	private ParameterInput input;
+
+	public ServiceFunctionAttribute(String name) {
+		this(UUID.randomUUID().toString(), name);
+	}
 
 	public ServiceFunctionAttribute(String id, String name) {
 		assert id != null;
 		assert name != null;
-		
+
 		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();
 		this.name = name;
 		this.id = id;
@@ -65,7 +76,7 @@ public class ServiceFunctionAttribute {
 	public ServiceFunctionAttribute(String id, String name, ParameterType type) {
 		this(id, name);
 		assert type != null;
-		
+
 		this.parameterType = type;
 		if (type == ParameterType.PATH)
 			this.required = true;
@@ -268,7 +279,8 @@ public class ServiceFunctionAttribute {
 
 	public List<String> update() {
 
-		System.out.println("update: " + this.getName() + ", function:" + this.fillingFunctionKey + " " + this.fillingFunction + " , (content: " + this.getContent() + ")");
+		System.out.println("update: " + this.getName() + ", function:" + this.fillingFunctionKey + " "
+				+ this.fillingFunction + " , (content: " + this.getContent() + ")");
 		if (this.getRetrieveFunction() == null)
 			return null;
 
@@ -298,7 +310,35 @@ public class ServiceFunctionAttribute {
 
 	}
 
-	public void update(DialogueGoal goal) {
+	/**
+	 * Get the dynamic enum list for this attribute
+	 * 
+	 * @param parameters that needs to be filled call the function that receives
+	 *                   this enum list.
+	 * @return list of enums
+	 */
+	public List<String> getUpdatedEnumList(Map<String, String> parameters) {
+
+		if (parameters == null)
+			parameters = new HashMap<>();
+
+		System.out.println("get updated enum list for " + this.getIdName() + " , parameters: " + parameters.size());
+
+		Collection<ServiceFunctionAttribute> attrs = this.fillingFunction.getFrameGeneratedAttributes();
+		for (ServiceFunctionAttribute attr : attrs)
+			assert parameters.containsKey(attr.getName()) : "value for parameter " + attr.getName() + " is missing";
+
+		OpenAPIAction action = new OpenAPIAction(fillingFunction);
+		action.addParameters(parameters);
+
+		List<String> res = (List<String>) OpenAPIConnector.readEnums(action, this.fillingFunctionKey);
+		System.out.println("received enums: " + res);
+		return res;
+
+	}
+
+	@Deprecated
+	private void update(DialogueGoal goal) {
 
 		assert this.fillingFunction != null;
 		assert this.fillingFunction.hasFrameGeneratedAttribute();
@@ -308,16 +348,15 @@ public class ServiceFunctionAttribute {
 		OpenAPIAction action = new OpenAPIAction(fillingFunction);
 		for (ServiceFunctionAttribute attr : attrs) {
 			if (attr.isFrameGenerated()) {
-				if (attr.getParameterType() == ParameterType.PATH) {
-					Slotable node = goal.getNode(attr.getSlotID());
-					if (node == null) {
-						System.out.println("no node named " + attr.getSlotID() + " found");
-					} else {
-						if (node instanceof Fillable) {
-							Fillable fill = (Fillable) node;
-							System.out.println("fill " + attr.getName() + " with " + fill.getValue());
-							action.addPathParameter(attr.getName(), fill.getValue());
-						}
+
+				Slotable node = goal.getNode(attr.getSlotName());
+				if (node == null) {
+					System.out.println("no node named " + attr.getSlotID() + " found");
+				} else {
+					if (node instanceof Fillable) {
+						Fillable fill = (Fillable) node;
+						System.out.println("fill " + attr.getName() + " with " + fill.getValue());
+						action.addParameter(attr, fill.getValue());
 					}
 				}
 
@@ -447,6 +486,14 @@ public class ServiceFunctionAttribute {
 		this.entityKeyword = entity.getEntityKeyword();
 	}
 
+	public ParameterInput getInput() {
+		return input;
+	}
+
+	public void setInput(ParameterInput input) {
+		this.input = input;
+	}
+
 	public String getEntity() {
 		return this.entityKeyword;
 	}
@@ -459,7 +506,6 @@ public class ServiceFunctionAttribute {
 		this.contentURLKey = contentURLKey;
 	}
 
-	
 	public String getContentFill() {
 		return contentFill;
 	}
@@ -467,7 +513,7 @@ public class ServiceFunctionAttribute {
 	public void setContentFill(String contentFill) {
 		this.contentFill = contentFill;
 	}
-	
+
 	public boolean hasDynamicEnums() {
 		if (this.contentURL != null)
 			return true;
@@ -477,10 +523,9 @@ public class ServiceFunctionAttribute {
 	}
 
 	public String getSlotID() {
-		if (slotID != null)
-			return slotID;
 
-		return this.slotName;
+		return slotID;
+
 	}
 
 	public void setSlotID(String slotID) {
@@ -495,7 +540,8 @@ public class ServiceFunctionAttribute {
 	}
 
 	public String getSlotName() {
-
+		if (this.slotName == null || this.slotName.contentEquals(""))
+			return null;
 		return this.slotName;
 	}
 
@@ -534,9 +580,6 @@ public class ServiceFunctionAttribute {
 		if (this.hasContent())
 			return false;
 
-		if (this.isFrameGenerated())
-			return false;
-
 		return true;
 	}
 
@@ -556,28 +599,29 @@ public class ServiceFunctionAttribute {
 	 * @return is filled by frame parameter (true) or not (false)
 	 */
 	public boolean isFrameGenerated() {
-		System.out.println(
-				this.getId() + " " + this.getIdName() + " slotID: " + this.slotID + " slotName: " + this.slotName);
+		System.out.println("is frame generated? " + this.getId() + " " + this.getIdName() + " slotID: " + this.slotID
+				+ " slotName: " + this.slotName);
 		if (this.slotID != null && !this.slotID.contentEquals(""))
 			return true;
 		if (this.slotName != null && !this.slotName.contentEquals(""))
 			return true;
 		return false;
 	}
-	
+
 	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
 		assert attr != null;
 
-		System.out.println("Merge " + attr.getName() + " with " + this.getName() + " slotId: " + attr.getSlotID());
+		System.out.println("Merge " + attr.getName() + " into " + this.getName() + " slotId: " + attr.getSlotID());
+		System.out.println("Merge " + attr.getId() + " into " + this.getId() + " format: " + attr.getFormat());
 
-		if (this.id == null && attr.getId() != null)
+		if (attr.getId() != null && !attr.getId().contentEquals("")) {
 			this.id = attr.getId();
-		else if (this.id != null && attr.getId() != null && attr.getId().length() > this.id.length())
-			this.id = attr.getId();
+			System.out.println("setting id to " + this.id);
+		}
 
-		if(attr.getParameterType() != null)
+		if (attr.getParameterType() != null)
 			this.parameterType = attr.getParameterType();
-		
+
 		if (attr.getContentURL() != null)
 			this.setContentURL(attr.getContentURL());
 		if (attr.getContentURLKey() != null)
@@ -604,10 +648,33 @@ public class ServiceFunctionAttribute {
 
 		if (attr.hasDynamicEnums())
 			this.setContentType("enum");
+		if (attr.getFormat() != null)
+			this.format = attr.getFormat();
+		if (attr.getInput() != null)
+			this.input = attr.getInput();
 
-		return attr;
+		return this;
 
 	}
-	
-	
+
+	public int getMinItems() {
+		return minItems;
+	}
+
+	public void setMinItems(int minItems) {
+		this.minItems = minItems;
+	}
+
+	public String prettyPrint(int i) {
+		String res = "";
+		for(int j=0; j<i; j++) {
+			res = res + "#";
+		}
+		res = res + this.getName() + " " + this.getDiscriminator();
+		for(ServiceFunctionAttribute attr : this.childAttributes)
+			res = res + "\n" + attr.prettyPrint(i+1);
+		
+		return res;
+	}
+
 }

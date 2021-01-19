@@ -28,11 +28,11 @@ public class DialogueGoalTest {
 	public void setUp() {
 
 		frame = new Frame();
-		slot1 = new Slot("s1", "", ParameterType.BODY);
-		slot2 = new Slot("s2", "", ParameterType.CHILD);
-		slot3 = new Slot("s3", "", ParameterType.CHILD);
-		slot4 = new Slot("s4", "", ParameterType.CHILD);
-		slot5 = new Slot("s5", "", ParameterType.CHILD);
+		slot1 = new Slot("s1", ParameterType.BODY);
+		slot2 = new Slot("s2", ParameterType.CHILD);
+		slot3 = new Slot("s3", ParameterType.CHILD);
+		slot4 = new Slot("s4", ParameterType.CHILD);
+		slot5 = new Slot("s5", ParameterType.CHILD);
 		frame.addSlot(slot1);
 		frame.addSlot(slot2);
 		slot1.addChild(slot3);
@@ -52,7 +52,7 @@ public class DialogueGoalTest {
 	public void testFill() {
 
 		DialogueGoal goal = new DialogueGoal(frame);
-		assertEquals(6, goal.getAll().size());
+		assertEquals(6, goal.getRoot().getAll().size());
 		assertEquals(2, goal.getRoot().getChildren().size());
 
 		goal.print();

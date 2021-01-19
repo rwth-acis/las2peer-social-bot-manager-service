@@ -12,13 +12,15 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
 public class RasaNlu extends LanguageUnderstander {
 	private Collection<String> Intents;
-
+	private TrainingData data;
+	
 	public RasaNlu(String url) {
 		this.url = url;
 		this.name = "Rasa";
@@ -36,6 +38,7 @@ public class RasaNlu extends LanguageUnderstander {
 		this.Intents = Intents;
 	}
 
+	@Override
 	public void addIntent(String intent) {
 		this.Intents.add(intent);
 	}
@@ -109,6 +112,23 @@ public class RasaNlu extends LanguageUnderstander {
 	@Override
 	public String toString() {
 		return super.toString();
+	}
+
+	@Override
+	public void addTrainingData(TrainingData data) {
+		assert data != null;
+				
+		if(this.data == null) {
+			this.data = data;
+		} else {
+			this.data.addAll(data);
+		}
+		
+	}
+
+	@Override
+	public TrainingData getTrainingData() {
+		return this.data;
 	}
 
 }

@@ -34,7 +34,7 @@ public class Service {
 	
 	public Service(ServiceType serviceType, String serviceAlias, URL serviceURL) {
 
-		assert serviceURL != null : "cant create service without null url";
+		assert serviceURL != null : "cant create service with null url";
 
 		if (serviceType == null)
 			serviceType = ServiceType.OPENAPI;
@@ -46,7 +46,12 @@ public class Service {
 		this.serviceAlias = serviceAlias;
 		this.serviceURL = serviceURL;
 	}
-
+	
+	public Service(ServiceType serviceType, String serviceAlias, URL serviceURL, URL swaggerURL) {
+		this(serviceType, serviceAlias, serviceURL);
+		this.swaggerURL = swaggerURL;
+	}
+	
 	public Service(URL serviceURL) {
 		this(null, null, serviceURL);
 	}

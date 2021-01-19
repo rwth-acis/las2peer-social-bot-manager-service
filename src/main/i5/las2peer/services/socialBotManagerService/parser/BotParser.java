@@ -8,12 +8,16 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.websocket.DeploymentException;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
@@ -26,6 +30,7 @@ import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActType;
+import i5.las2peer.services.socialBotManagerService.dialogue.nlg.LanguageGenerator;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -98,6 +103,7 @@ public class BotParser {
 
 		Map<String, NLUKnowledge> nluKnowledge = new HashMap<>();
 		Map<String, LanguageUnderstander> nlus = new HashMap<>();
+		Map<String, LanguageGenerator> nlgs = new HashMap<>();
 		Map<String, Frame> frames = new HashMap<>();
 		Map<String, Slot> slots = new HashMap<>();
 		Map<String, Domain> domains = new HashMap<>();
@@ -306,7 +312,8 @@ public class BotParser {
 			String source = elem.getSource();
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
-
+			Collection<BotModelNodeAttribute> parameters = elem.getAttributes().values();
+			
 			// HAS
 			if (type.equals("has")) {
 				// VLE has...
@@ -340,7 +347,14 @@ public class BotParser {
 						// NLU Servers
 					} else if (nluKnowledge.get(target) != null) {
 						NLUKnowledge nlu = nluKnowledge.get(target);
-						nlus.put(target, b.addRasaServer(nlu));
+						if(nlu.getType().contentEquals("Generation")) {
+							nlgs.put(target, b.addNLGModule(nlu));
+						} else {
+							if(config.getNLU(nlu.getName()) != null)
+								nlus.put(target, b.addRasaServer(config.getNLU(nlu.getName())));
+							else 
+								nlus.put(target, b.addRasaServer(nlu));
+						}
 					}
 					// User Function has...
 				} else if (usfList.get(source) != null) {
@@ -431,6 +445,7 @@ public class BotParser {
 				}
 
 			} else if (type.contentEquals("fills")) {
+				
 				// Parameter filled by
 				if (sfaList.containsKey(target)) {
 					ServiceFunctionAttribute para = sfaList.get(target);
@@ -444,11 +459,16 @@ public class BotParser {
 
 					// .. Frame
 					else if (frames.containsKey(source)) {
+						
 						Frame frame = frames.get(source);
+						
+						if(value == null || value.contentEquals(""))
+							throw new ParseBotException("Frame " + frame.getName() + " fills need attribute name as label");
+						
+						frame.addFilledAttrId(value, para.getId());
 						para.setSlotName(value);
 						System.out.println(
-								para.getName() + " filled by " + para.getSlotName() + " " + para.isFrameGenerated());
-						;
+								para.getName() + " filled by " + para.getSlotName() + " " + para.isFrameGenerated());				
 					}
 
 					// .. Selection
@@ -730,7 +750,24 @@ public class BotParser {
 					// intent
 					if (incomingMessages.get(target) != null) {
 						IncomingMessage message = incomingMessages.get(target);
+						ArrayList<String> list = new ArrayList<String>();
+						list.addAll(message.getResponseMessages());
+						nlu.addTrainingData(message.getIntentKeyword(), list);
+					
 						nlu.addIntent(message.getIntentKeyword());
+					}
+				}
+				
+				// LanguageGenerator
+				if (nlgs.get(source) != null) {
+					LanguageGenerator nlg = nlgs.get(source);
+					
+					// intent
+					if (incomingMessages.get(target) != null) {
+						IncomingMessage message = incomingMessages.get(target);						
+						for(ChatResponse response : message.getResponseArray()) {						
+							nlg.addEntry(message.getIntentKeyword(), response.getResponse());
+						}
 					}
 				}
 
@@ -843,7 +880,7 @@ public class BotParser {
 		// Initialize dialogue handler (need connected frames)
 		for (Messenger messenger : messengers.values())
 			messenger.initialize();
-
+		
 		// create if then structure
 		// createIfThenStructure(tempitbList, ibList, tbList, itbList);
 
@@ -879,6 +916,11 @@ public class BotParser {
 			System.out.println(sfa.getId() + " " + sfa.getName() + " " + sfa.getSlotID() + " " + sfa.getFunction());
 		}
 
+		for(Messenger messenger : messengers.values()) {
+			messenger.reset();
+			
+		}
+		
 		return vle;
 	}
 
@@ -1104,7 +1146,7 @@ public class BotParser {
 			BotModelValue subVal = subElem.getValue();
 			String name = subVal.getName();
 			if (name.contentEquals("Message")) {
-				message = subVal.getValue();
+				message = StringEscapeUtils.unescapeJava(subVal.getValue());
 			}
 		}
 
@@ -1120,6 +1162,7 @@ public class BotParser {
 		String rasaName = null;
 		String id = null;
 		String url = null;
+		String type = null;
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
@@ -1131,15 +1174,17 @@ public class BotParser {
 				id = subVal.getValue();
 			} else if (name.contentEquals("URL")) {
 				url = subVal.getValue();
+			} else if (name.contentEquals("Type")) {
+				type = subVal.getValue();
 			}
 		}
 
-		if (url == null) {
+		if (!type.contentEquals("Generation") && url == null) {
 			throw new ParseBotException("NLU Knowledge without URL");
 		}
 
 		System.out.println("add NLU:" + rasaName + " . " + id + " . " + url);
-		return new NLUKnowledge(rasaName, id, url);
+		return new NLUKnowledge(rasaName, id, url, type);
 	}
 
 	private IncomingMessage addIncomingMessage(String key, BotModelNode elem, BotConfiguration config)
@@ -1169,8 +1214,10 @@ public class BotParser {
 		}
 
 		IncomingMessage res = new IncomingMessage(intentKeyword, NluID);
-		if (response != null && !response.contentEquals(""))
-			res.addResponse(response);
+		if (response != null && !response.contentEquals("")) {
+			String escaped = StringEscapeUtils.unescapeJava(response);
+			res.addResponse(escaped);			
+		}
 
 		return res;
 	}
@@ -1396,6 +1443,7 @@ public class BotParser {
 		String contentURL = null;
 		String URLKey = null;
 		String KeyFill = null;
+		String format = null;
 		ParameterType parameterType = null;
 
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -1431,11 +1479,18 @@ public class BotParser {
 			case "Parameter Type":
 				parameterType = ParameterType.fromString(value);
 				break;
+			case "Format":
+			case "format":
+				format = value;
+				break;
 			}
 		}
 
 		if(attrName == null)
 			throw new ParseBotException("service function attribute has no name");
+		
+		assert key != null;
+		assert !key.contentEquals("");
 		
 		ServiceFunctionAttribute sfa = new ServiceFunctionAttribute(key, attrName, parameterType);
 		sfa.setContentType(contentType);
@@ -1443,6 +1498,7 @@ public class BotParser {
 		sfa.setContent(content);
 		sfa.setContentURLKey(URLKey);
 		sfa.setContentFill(KeyFill);
+		sfa.setFormat(format);
 
 		if (contentURL != null && !contentURL.contentEquals(""))
 			try {

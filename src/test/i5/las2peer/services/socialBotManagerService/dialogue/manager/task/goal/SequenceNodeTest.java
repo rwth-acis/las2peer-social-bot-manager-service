@@ -41,7 +41,6 @@ public class SequenceNodeTest {
 		slotA.setInputType(InputType.Free);
 		slotB.setInputType(InputType.Free);
 
-		slotS.setEnumList(enums);
 		slotS.addChild(slotA);
 		slotS.addChild(slotB);
 

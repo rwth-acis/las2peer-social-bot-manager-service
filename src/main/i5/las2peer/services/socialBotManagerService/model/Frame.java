@@ -14,12 +14,22 @@ import i5.las2peer.services.socialBotManagerService.dialogue.Command;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 
+/**
+ * Frame generates a dialogue to trigger a Bot Action
+ *
+ */
 public class Frame implements MessengerElement, Menuable {
 
+	/**
+	 * UUID of this element
+	 */
 	private final String id;
 	
 	private String name;
 
+	/**
+	 * intent keyword to trigger this element
+	 */
 	private String intent;
 
 	private String message;
@@ -30,16 +40,32 @@ public class Frame implements MessengerElement, Menuable {
 
 	private String file;
 
-	private ServiceFunction serviceFunction;
-
+	/**
+	 * slots that this frame consists of (tree structure)
+	 */
 	private Map<String, Slot> slots;
 
+	
+	/**
+	 *  Service Function that is triggered by this frame
+	 */
+	private ServiceFunction serviceFunction;
+
+	/**
+	 * Events that are generated when completing this frame
+	 */
 	private Collection<ServiceEvent> events;
+	
+	/**
+	 * Ids of attributes (corresponding to further service functions) that are filled by this Frame
+	 */
+	private Map<String, String> attrIds;
 
 	public Frame() {
 		this.id = UUID.randomUUID().toString();
-		this.slots = new HashMap<String, Slot>();
-		this.events = new HashSet<ServiceEvent>();
+		this.slots = new HashMap<>();
+		this.events = new HashSet<>();
+		this.attrIds = new HashMap<>();
 	}
 
 	public Frame(String id) {
@@ -274,6 +300,26 @@ public class Frame implements MessengerElement, Menuable {
 		events.add(event);
 	}
 
+	public Map<String, String> getFilledAttrIds() {
+		return this.attrIds;
+	}
+	
+	/**
+	 * Register attributes of second level functions that are the same as first level function attributes.
+	 * 
+	 * @param slotName of filling attribute
+	 * @param AttrId of to be filled attribute
+	 */
+	public void addFilledAttrId(String slotName, String attrId) {
+		assert slotName != null;
+		assert attrId != null;
+		
+		if(this.attrIds == null)
+			this.attrIds = new HashMap<>();
+		this.attrIds.put(slotName, attrId);
+		
+	}
+	
 	public boolean hasOptionalSlots() {
 		for (Slot slot : this.getDescendants()) {
 			if (!slot.isRequired())
@@ -299,6 +345,14 @@ public class Frame implements MessengerElement, Menuable {
 	@Override
 	public boolean isOperation() {
 		return true;
+	}
+
+	public String prettyPrint() {
+		String res = "--- Frame: " + this.getName();
+		for(Slot slot : this.slots.values()) {
+			res = "\n" + res + slot.prettyPrint(0);
+		}
+		return res;
 	}
 
 }

@@ -17,6 +17,7 @@ public class MessageFile {
 	}
 
 	public String getDataString() {
+
 		return data;
 	}
 
