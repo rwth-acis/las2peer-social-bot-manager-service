@@ -14,7 +14,7 @@ public class Entity {
         if(o.getAsNumber("confidence") == null){
             // added this because there was a nullpointerexception when extracting entities, may need to further search what caused the problem
             System.out.println("No Confidence Available");
-            this.confidence = 1;
+            this.confidence = 0;
         } else{ 
           if(o.getAsNumber("confidence_entity") != null){
           this.confidence = o.getAsNumber("confidence_entity").floatValue();

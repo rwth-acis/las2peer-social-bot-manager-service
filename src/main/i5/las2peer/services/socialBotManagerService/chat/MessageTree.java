@@ -123,5 +123,9 @@ public class MessageTree {
 			return false;
 		}
 	}
+	
+	public boolean containsPost(String postid) {
+		return searchPost(postid) != null;
+	}
 }
 

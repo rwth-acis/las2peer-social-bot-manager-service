@@ -43,8 +43,10 @@ public class Intent {
 		entities.forEach(
 			o ->
 			{
-				Entity entity = new Entity((JSONObject)o);			
-                entitiesMap.put(entity.getEntityName(), entity);
+				Entity entity = new Entity((JSONObject)o);
+				if (!entitiesMap.containsKey(entity.getEntityName())) {
+					entitiesMap.put(entity.getEntityName(), entity);
+				}
 			}
 		);
 		this.entities = entitiesMap;
@@ -90,7 +92,15 @@ public class Intent {
         return extractedEntitieValues;
     }
 
-
+    public Entity getFirstEntity() {
+    	Entity result = null;
+    	for (Entry<String, Entity> entry : entities.entrySet()) {
+    		if (result == null || entry.getValue().getConfidence() > result.getConfidence()) {
+    			result = entry.getValue();
+    		}
+    	}
+    	return result;
+    }
 
 	public Collection<Entity> getEntities() {
 		return this.entities.values();

@@ -1,10 +1,8 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.OptionalLong;
 import java.util.Vector;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,13 +75,13 @@ public class MoodleForumMediator extends ChatMediator {
 					String postid = obj.getString("id").split("#p")[1].split("#")[0];
 					String parentid = obj.getString("id").split("#parent=")[1];
 					
-					if (parentid.equals("null")) {
+					if (parentid.equals("null") && !discussions.containsKey(discussionid)) {
 						MessageTree newPost = new MessageTree(postid, userid, null);
 						discussions.put(discussionid, newPost);
 						if (!ignoreIds.contains(userid)) {
 							this.messageCollector.handle(discussionid, postid, message);
 						}
-					} else if (discussions.containsKey(discussionid)) {
+					} else if (discussions.containsKey(discussionid) && !discussions.get(discussionid).containsPost(postid)) {
 						
 						// Add post to existing tree
 						//System.out.println("\u001B[33mDebug --- Parent ID: " + parentid + "\u001B[0m");
