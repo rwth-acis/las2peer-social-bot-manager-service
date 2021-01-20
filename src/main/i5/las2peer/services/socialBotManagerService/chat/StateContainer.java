@@ -6,5 +6,4 @@ public abstract class StateContainer {
 
 	public abstract IncomingMessage getIntentState(String channel, String user);
 	
-	public abstract 
 }
