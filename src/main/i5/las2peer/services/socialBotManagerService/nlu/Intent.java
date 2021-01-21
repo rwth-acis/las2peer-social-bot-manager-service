@@ -91,7 +91,8 @@ public class Intent {
         }
         return extractedEntitieValues;
     }
-
+    
+    // Returns the name of the entity with the highest confidence
     public Entity getFirstEntity() {
     	Entity result = null;
     	for (Entry<String, Entity> entry : entities.entrySet()) {

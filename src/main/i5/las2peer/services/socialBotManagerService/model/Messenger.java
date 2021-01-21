@@ -263,7 +263,7 @@ public class Messenger {
 				} else {
 					if (state != null) {
 						ChatResponse response = null;
-						if (intent.getEntitieValues().size() == 1) {
+						if (intent.getEntitieValues().size() == 1 && state.getResponseArray() != null) {
 							for (ChatResponse res : state.getResponseArray()) {
 								System.out.println(res.getTriggerEntity());
 								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {

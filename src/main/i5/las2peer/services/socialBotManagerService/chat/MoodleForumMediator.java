@@ -15,6 +15,7 @@ public class MoodleForumMediator extends ChatMediator {
 	private final static HashSet<String> ignoreIds = new HashSet<String>(Arrays.asList("148", "75"));
 	private MoodleForumMessageCollector messageCollector = new MoodleForumMessageCollector();
 	private HashMap<String, MessageTree> discussions = new HashMap<String, MessageTree>();
+	private String signature = "<pre><i>This message was sent by an assistant chatbot. Please consider to fill in a survey about its performance under <a href=' https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/253638?lang=en'>this link</a>.</i></pre>";
 	
 	public MoodleForumMediator(String authToken) {
 		super(authToken);
@@ -26,7 +27,7 @@ public class MoodleForumMediator extends ChatMediator {
 		try {
 			// Get sequence IDs and find origin post
 			HashMap<String,String> args = new HashMap<String,String>();
-			args.put("message", text);
+			args.put("message", text + signature);
 			args.put("subject", "Bot response");
 			
 			String originpid = id.get();
