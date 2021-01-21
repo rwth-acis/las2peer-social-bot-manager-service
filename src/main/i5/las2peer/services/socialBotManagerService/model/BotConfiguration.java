@@ -39,7 +39,8 @@ public class BotConfiguration {
 	}
 
 	public LanguageUnderstander getNLU(String name) {
-
+		assert name != null;
+		
 		for (LanguageUnderstander lu : this.getNLUs().values()) {
 			if (lu.getName().contentEquals(name))
 				return lu;

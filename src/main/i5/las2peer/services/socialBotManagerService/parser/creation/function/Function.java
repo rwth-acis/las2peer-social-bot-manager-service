@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import i5.las2peer.services.socialBotManagerService.parser.creation.ChitChatFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Notification;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -21,7 +20,7 @@ public abstract class Function {
 			+ "*ChitChat*: The bot has a casual conversation with the user."
 			+ "*Notification*: The bot sends a notification when a service was accessed.")
 	private FunctionType type;
-
+	
 	public FunctionType getType() {
 		return type;
 	}

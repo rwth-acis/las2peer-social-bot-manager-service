@@ -16,7 +16,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGe
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
-import i5.las2peer.services.socialBotManagerService.nlu.FallbackNlu;
+import i5.las2peer.services.socialBotManagerService.nlu.FallbackNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 
 public class PipelineManagerTest {
@@ -38,7 +38,7 @@ public class PipelineManagerTest {
 		Bot bot = new Bot();
 		nlus = new HashMap<>();
 		nlgs = new HashMap<>();
-		LanguageUnderstander nlu = new FallbackNlu();
+		LanguageUnderstander nlu = new FallbackNLU();
 		LanguageGenerator nlg = new TableLanguageGenerator();
 		nlus.put("nlu", nlu);
 		nlgs.put("nlg", nlg);

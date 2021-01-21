@@ -11,17 +11,21 @@ import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData
  * This LanguageUnderstander knows basic intents that are needed for dialogue
  * management.
  */
-public class FallbackNlu extends LanguageUnderstander {
+public class FallbackNLU extends LanguageUnderstander {
 
 	final private Collection<String> intents = new HashSet<>();
 	final private List<String> confirms = new ArrayList<>();
 	final private List<String> denys = new ArrayList<>();
+	final private List<String> greets = new ArrayList<>();
 
-	public FallbackNlu() {
+	public FallbackNLU() {
 
+		this.setUrl("fallback");
+		this.setName("fallback");
+		
 		intents.add("confirm");
 		intents.add("deny");
-
+		
 		confirms.add("yes");
 		confirms.add("true");
 		confirms.add("okay");
@@ -33,6 +37,7 @@ public class FallbackNlu extends LanguageUnderstander {
 
 		denys.add("no");
 		denys.add("false");
+		
 
 	}
 
@@ -80,5 +85,5 @@ public class FallbackNlu extends LanguageUnderstander {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
 }

@@ -1977,11 +1977,11 @@ public class SocialBotManagerService extends RESTService {
 			BotModel botModel = null;
 			try {
 
-				System.out.println("Parse bot into BotModel");
+				System.out.println("Parse chat generated bot into BotModel");
 				System.out.println(bot);
 
-				BotModelParser botModelParser = new BotModelParser(getConfig());
-				botModel = botModelParser.parse(bot, SocialBotManagerService.getConfig());
+				BotModelParser botModelParser = new BotModelParser(getConfig());			
+				botModel = botModelParser.parse(bot);
 				botModel = botModelParser.order(botModel);
 				System.out.println("botModel");
 				System.out.println(botModel.toString());
@@ -1992,7 +1992,8 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			try {
-
+				
+				System.out.println("store new bot model");
 				BotModelResource bmr = new BotModelResource();
 				bmr.putModel("botName", botModel);
 
@@ -2002,15 +2003,9 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 
+				System.out.println("create new Bot from botModel");
 				BotResource br = new BotResource();
 				Response response = br.init(botModel);
-				String botName = (String) response.getEntity();
-
-				System.out.println("add functions " + botName);
-				CreationResource cr = new CreationResource();
-				for (Function function : bot.getFunction()) {
-					cr.addFunction(botName, function);
-				}
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -2046,7 +2041,9 @@ public class SocialBotManagerService extends RESTService {
 							System.out.println("Add Function to bot model, old nodes: " + bot.getModel().getNodes().size());
 							BotModelParser botModelParser = new BotModelParser(getConfig());
 							BotModel model = bot.getModel();
-							newModel = botModelParser.parse(model, function);
+							botModelParser.read(model);
+							botModelParser.parse(function);
+							newModel = botModelParser.generate();
 							System.out.println("new nodes: " + newModel.getNodes().size());
 
 						} catch (Exception e) {
@@ -2144,7 +2141,9 @@ public class SocialBotManagerService extends RESTService {
 							System.out.println("Train Model NLG");
 							BotModelParser botModelParser = new BotModelParser(getConfig());
 							BotModel model = bot.getModel();
-							newModel = botModelParser.parse(model, data);
+							botModelParser.read(model);
+							botModelParser.parse(data);
+							newModel = botModelParser.generate();
 
 						} catch (Exception e) {
 							e.printStackTrace();

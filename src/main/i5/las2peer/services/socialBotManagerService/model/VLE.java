@@ -154,10 +154,12 @@ public class VLE {
 
 	public Bot getBotbyTelegramToken(String token) {
 		for (Bot bot : bots.values()) {
-			TelegramChatMediator mediator = (TelegramChatMediator) bot.getMessenger(ChatService.TELEGRAM)
-					.getChatMediator();
-			if (mediator.hasToken(token))
-				return bot;
+			if (bot.getMessenger(ChatService.TELEGRAM) != null) {
+				TelegramChatMediator mediator = (TelegramChatMediator) bot.getMessenger(ChatService.TELEGRAM)
+						.getChatMediator();
+				if (mediator.hasToken(token))
+					return bot;
+			}
 		}
 		return null;
 	}

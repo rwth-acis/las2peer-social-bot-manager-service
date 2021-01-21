@@ -79,4 +79,10 @@ public class Bot {
 		this.nluModule = nluModule;
 	}
 
+	public void addFunction(Function function) {
+		if(this.function == null)
+			this.function = new ArrayList<>();
+		this.function.add(function);
+	}
+	
 }
