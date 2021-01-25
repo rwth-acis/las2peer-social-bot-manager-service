@@ -102,6 +102,7 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 					intent = new Intent(manager.getStartIntent(), 1.0f);
 					intent.setIntentType(IntentType.START);
 
+					System.out.println("simple selection fill " + selection.getParameterName() + " " + value );
 					if (selection.fillsParameter()) {
 						if (manager instanceof TaskOrientedManager)
 							((TaskOrientedManager) manager).getDialogueGoal().fill(selection.getParameterName(), value);

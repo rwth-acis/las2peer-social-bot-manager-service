@@ -126,11 +126,15 @@ public class RootNode extends Node {
 
 	public Map<String, String> getPathParameters() {
 
+		System.out.println("get path parameters:");
+		
 		Map<String, String> res = new HashMap<>();
 		for (Node node : this.children) {
 			if (node instanceof Fillable) {
+				System.out.println(((Fillable) node).getSlot().getAPIName() + " " + ((Fillable) node).getValue());
 				Slot slot = ((Slotable) node).getSlot();
-				if (slot.getParameterType() == ParameterType.PATH)
+				System.out.println(slot.getParameterType());
+				if (slot.getParameterType() == ParameterType.PATH || slot.getParameterType() == ParameterType.HELPER)
 					res.put(slot.getAPIName(), ((Fillable) node).getValue());
 			}
 		}

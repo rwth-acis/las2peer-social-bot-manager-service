@@ -275,8 +275,21 @@ public class OpenAPIAction {
 	
 	public boolean validate() {
 		Collection<ServiceFunctionAttribute> attrs = this.function.getRequiredAttributes();
+		
+		if(attrs == null || attrs.size() < 1)
+			return true;
+		
 		boolean flag = true;
+		System.out.println("validate");
+		for(String key :this.getPathParameters().keySet()) {
+			System.out.println(" has: " + key);
+		}
+		for(String key :this.getQueryParameters().keySet()) {
+			System.out.println(" has: " + key);
+		}
+		
 		for(ServiceFunctionAttribute attr :attrs) {		
+			System.out.println("needs: " + attr.getName());
 			if(attr.getParameterType() == ParameterType.PATH && !this.pathParameters.containsKey(attr.getName())) {
 				System.out.println("missing parameter: " + attr.getName());
 				flag = false;				

@@ -79,7 +79,7 @@ public class BotParser {
 	private static final String textToTextName = "i5.las2peer.services.tensorFlowTextToText.TensorFlowTextToText";
 
 	protected BotParser() {
-		
+
 	}
 
 	public static BotParser getInstance() {
@@ -313,7 +313,7 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			Collection<BotModelNodeAttribute> parameters = elem.getAttributes().values();
-			
+
 			// HAS
 			if (type.equals("has")) {
 				// VLE has...
@@ -347,12 +347,12 @@ public class BotParser {
 						// NLU Servers
 					} else if (nluKnowledge.get(target) != null) {
 						NLUKnowledge nlu = nluKnowledge.get(target);
-						if(nlu.getType().contentEquals("Generation")) {
+						if (nlu.getType().contentEquals("Generation")) {
 							nlgs.put(target, b.addNLGModule(nlu));
 						} else {
-							if(config.getNLU(nlu.getName()) != null)
+							if (config.getNLU(nlu.getName()) != null)
 								nlus.put(target, b.addRasaServer(config.getNLU(nlu.getName())));
-							else 
+							else
 								nlus.put(target, b.addRasaServer(nlu));
 						}
 					}
@@ -445,7 +445,7 @@ public class BotParser {
 				}
 
 			} else if (type.contentEquals("fills")) {
-				
+
 				// Parameter filled by
 				if (sfaList.containsKey(target)) {
 					ServiceFunctionAttribute para = sfaList.get(target);
@@ -459,16 +459,17 @@ public class BotParser {
 
 					// .. Frame
 					else if (frames.containsKey(source)) {
-						
+
 						Frame frame = frames.get(source);
-						
-						if(value == null || value.contentEquals(""))
-							throw new ParseBotException("Frame " + frame.getName() + " fills need attribute name as label");
-						
+
+						if (value == null || value.contentEquals(""))
+							throw new ParseBotException(
+									"Frame " + frame.getName() + " fills need attribute name as label");
+
 						frame.addFilledAttrId(value, para.getId());
 						para.setSlotName(value);
 						System.out.println(
-								para.getName() + " filled by " + para.getSlotName() + " " + para.isFrameGenerated());				
+								para.getName() + " filled by " + para.getSlotName() + " " + para.isFrameGenerated());
 					}
 
 					// .. Selection
@@ -489,7 +490,21 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 
-			if (type.equals("performs")) {
+			if (type.equals("triggers")) {
+
+				// Incoming Message triggers Chat Response
+				if (incomingMessages.get(source) != null) {
+					IncomingMessage m = incomingMessages.get(source);
+					// ...Chat Response
+					if (responses.get(target) != null) {
+						ChatResponse response = responses.get(target);
+						response.addTriggerEntity(value);
+						m.addResponse(response);
+					}
+				}
+			}
+
+			else if (type.equals("performs")) {
 				// Bot performs Action
 				if (bots.get(source) != null) {
 					Bot bot = bots.get(source);
@@ -684,10 +699,10 @@ public class BotParser {
 					ServiceFunction sf = bsfList.get(source);
 					ServiceFunction function = OpenAPIConnector.readFunction(sf);
 					ServiceFunction mergedFunction = function.merge(sf);
-					
+
 					// ...BotActionAttribute
 					if (sfaList.containsKey(target)) {
-						ServiceFunctionAttribute attribute = sfaList.get(target);						
+						ServiceFunctionAttribute attribute = sfaList.get(target);
 						attribute.setFillingFunction(mergedFunction);
 						if (value != null)
 							attribute.setFillingFunctionKey(value);
@@ -695,7 +710,7 @@ public class BotParser {
 						// ...Intent entity
 					} else if (intentEntities.containsKey(target)) {
 						System.out.println("action generates entity");
-						IntentEntity entity = intentEntities.get(target);						
+						IntentEntity entity = intentEntities.get(target);
 						entity.setKey(value);
 						entity.setFunction(mergedFunction);
 
@@ -753,19 +768,19 @@ public class BotParser {
 						ArrayList<String> list = new ArrayList<String>();
 						list.addAll(message.getResponseMessages());
 						nlu.addTrainingData(message.getIntentKeyword(), list);
-					
+
 						nlu.addIntent(message.getIntentKeyword());
 					}
 				}
-				
+
 				// LanguageGenerator
 				if (nlgs.get(source) != null) {
 					LanguageGenerator nlg = nlgs.get(source);
-					
+
 					// intent
 					if (incomingMessages.get(target) != null) {
-						IncomingMessage message = incomingMessages.get(target);						
-						for(ChatResponse response : message.getResponseArray()) {						
+						IncomingMessage message = incomingMessages.get(target);
+						for (ChatResponse response : message.getResponseArray()) {
 							nlg.addEntry(message.getIntentKeyword(), response.getResponse());
 						}
 					}
@@ -797,14 +812,9 @@ public class BotParser {
 					// Incoming Message triggers...
 				} else if (incomingMessages.get(source) != null) {
 					IncomingMessage m = incomingMessages.get(source);
-					// ...Chat Response
-					if (responses.get(target) != null) {
-						ChatResponse response = responses.get(target);
-						response.addTriggerEntity(value);
-						m.addResponse(response);
-
+					
 						// ...Bot Action
-					} else if (bsfList.get(target) != null) {
+					if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
 						m.setTriggeredFunction(botFunction);
 					}
@@ -880,7 +890,7 @@ public class BotParser {
 		// Initialize dialogue handler (need connected frames)
 		for (Messenger messenger : messengers.values())
 			messenger.initialize();
-		
+
 		// create if then structure
 		// createIfThenStructure(tempitbList, ibList, tbList, itbList);
 
@@ -916,11 +926,11 @@ public class BotParser {
 			System.out.println(sfa.getId() + " " + sfa.getName() + " " + sfa.getSlotID() + " " + sfa.getFunction());
 		}
 
-		for(Messenger messenger : messengers.values()) {
+		for (Messenger messenger : messengers.values()) {
 			messenger.reset();
-			
+
 		}
-		
+
 		return vle;
 	}
 
@@ -1216,7 +1226,7 @@ public class BotParser {
 		IncomingMessage res = new IncomingMessage(intentKeyword, NluID);
 		if (response != null && !response.contentEquals("")) {
 			String escaped = StringEscapeUtils.unescapeJava(response);
-			res.addResponse(escaped);			
+			res.addResponse(escaped);
 		}
 
 		return res;
@@ -1486,12 +1496,12 @@ public class BotParser {
 			}
 		}
 
-		if(attrName == null)
+		if (attrName == null)
 			throw new ParseBotException("service function attribute has no name");
-		
+
 		assert key != null;
 		assert !key.contentEquals("");
-		
+
 		ServiceFunctionAttribute sfa = new ServiceFunctionAttribute(key, attrName, parameterType);
 		sfa.setContentType(contentType);
 		sfa.setStaticContent(stat);

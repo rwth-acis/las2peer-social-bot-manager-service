@@ -377,7 +377,7 @@ public class OpenAPIReaderV2 {
 						childAttr = processAttribute(property, childAttr);
 					}
 
-					if (childAttr.getContentType().contentEquals("object")) {
+					if (childAttr.getContentType() != null && childAttr.getContentType().contentEquals("object")) {
 						if (rec > 8) {
 							System.out.println("to much nesting");
 						} else {
@@ -425,9 +425,22 @@ public class OpenAPIReaderV2 {
 		// required
 		attr.setRequired(property.getRequired());
 
+		if (property instanceof StringProperty) {
+			StringProperty prop = (StringProperty) property;
+			StringInput input = new StringInput();
+			if (prop.getPattern() != null)
+				input.setPattern(prop.getPattern());
+			if (prop.getMinLength() != null)
+				input.setMinLength(prop.getMinLength());
+			if (prop.getMaxLength() != null)
+				input.setMaxLength(prop.getMaxLength());
+			attr.setInput(input);
+		}
+
 		// parameter type
 		switch (property.getType()) {
 		case "integer":
+		case "number":
 			attr.setContentType("integer");
 			break;
 		case "string":
@@ -456,7 +469,7 @@ public class OpenAPIReaderV2 {
 
 			break;
 		default:
-			System.out.println("unknown parameter content type");
+			System.out.println("unknown parameter content type: " + property.getType());
 		}
 
 		return attr;

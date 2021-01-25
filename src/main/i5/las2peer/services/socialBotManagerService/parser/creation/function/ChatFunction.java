@@ -3,20 +3,22 @@ package i5.las2peer.services.socialBotManagerService.parser.creation.function;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel(parent = Function.class, value = "ChitChat")
-public class ChitChatFunction extends Function {
+@ApiModel(value = "ChatFunction")
+public class ChatFunction {
 
 	@ApiModelProperty(required = true)
 	private List<Message> messages;
 
-	public ChitChatFunction(String intent, String... responses) {
+	public ChatFunction() {
+		
+	}
+	
+	public ChatFunction(String intent, String... responses) {
+		
 		this();
 		this.messages = new ArrayList<>();
 		for (String response : responses) {
@@ -25,11 +27,7 @@ public class ChitChatFunction extends Function {
 			message.setResponse(response);
 			this.messages.add(message);
 		}
-				
-	}
 
-	public ChitChatFunction() {
-		this.setType(FunctionType.CHIT_CHAT);
 	}
 
 	public List<Message> getMessages() {
@@ -42,7 +40,7 @@ public class ChitChatFunction extends Function {
 
 	@Override
 	public String toString() {
-		return "ChitChatFunction [messages=" + messages + "]";
+		return "ChatFunction [messages=" + messages + "]";
 	}
 
 }

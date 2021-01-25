@@ -65,6 +65,17 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 				rep.close();
 				if (goal.isFull())
 					return gen.getReqConfAct(goal);
+				
+				// ask if optional slots should be filled
+				if (!goal.isFull() && goal.isReady()) {
+					if(goal.getFrame().getName().contentEquals("createbot")) {
+						return perform();
+					}
+					
+					DialogueAct act = gen.getReqOptionalAct(goal);
+					this.optional = true;
+					return act;
+				}
 				System.out.println("request next slot because deny proceed");				
 				return requestNextSlot();
 			}
@@ -141,6 +152,7 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 				}
 
 				// perform the action
+				System.out.println("perform by confirm");
 				return perform();
 			}
 

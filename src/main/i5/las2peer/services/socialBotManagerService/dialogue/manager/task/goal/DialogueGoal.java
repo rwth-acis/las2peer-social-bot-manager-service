@@ -58,7 +58,7 @@ public class DialogueGoal {
 		assert value != null : "value parameter is null";
 		invariant();
 
-		System.out.println(node.getName() + " was filled with " +  value);
+		System.out.println(node.getName() + " was filled with " + value);
 		node.fill(value);
 
 		return true;
@@ -87,10 +87,10 @@ public class DialogueGoal {
 		assert value != null;
 
 		Fillable node = this.getFillable(name);
-		
+
 		if (node == null)
 			return false;
-		
+
 		return this.fill(node, value);
 	}
 
@@ -353,7 +353,7 @@ public class DialogueGoal {
 		res.setBodyParameter(root.toBodyJSON());
 		res.setPathParameters(root.getPathParameters());
 		res.setQueryParameters(root.getQueryParameters());
-
+		System.out.println("parameters " + this.getFrame().getName() + " path:" + root.getPathParameters().size());
 		if (getFrame().getFile() != null && !getFrame().getFile().contentEquals(""))
 			res.setResponseParseMode(ResponseParseMode.FILE);
 

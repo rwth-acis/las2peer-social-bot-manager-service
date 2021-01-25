@@ -109,30 +109,33 @@ public class RepetitionNode extends Node implements Slotable {
 		invariant();
 		
 		if (!this.getSlot().isRequired()) {
-			System.out.println("ready cause not required");
+			System.out.println(this.getName() + " ready cause not required");
 			return true; 
 			
 		}
 		
 		if (this.open == true) {
-			System.out.println("still open");
+			System.out.println(this.getName() + " not ready cause still open");
 			return false;
 			
 		}
 
 		if (!this.isFilled()) {
-			System.out.println("not filled yet");
+			System.out.println(this.getName() + " not ready cause not filled yet");
 			return false;
 		}
 
 		for (Node node : this.valueChildren) {
 			if (!node.isReady()) {
-				System.out.println("child  not ready yet");
+				if(node instanceof Fillable)
+					System.out.println(this.getName() + " not ready cause child " + ((Fillable) node).getName()+ " not ready yet");
+				else 
+					System.out.println(this.getName() + " not ready cause child not ready yet");
 				return false;
 			}
 		}
 
-		System.out.println("node ready");
+		System.out.println("node " + this.getName() + "ready");
 		return true;
 	}
 
@@ -140,21 +143,21 @@ public class RepetitionNode extends Node implements Slotable {
 	public boolean isFull() {
 		invariant();
 		if (this.open == true) {			
-			System.out.println("not full because open");
+			System.out.println(this.getName() +  " not full because open");
 			return false;
 		}
 
 		if (!this.isFilled()) {
-			System.out.println("not full because not filled");
+			System.out.println(this.getName() + " not full because not filled");
 			return false;
 		}
 
 		for (Node node : this.valueChildren) {
 			if (!node.isFull()) {
 				if(node instanceof Fillable)
-					System.out.println("not full not full child" + ((Fillable) node).getName());
+					System.out.println(this.getName() +  "not full not full child " + ((Fillable) node).getName());
 				else
-					System.out.println("not full not full child");
+					System.out.println(this.getName() +  "not full not full child");
 				return false;
 			}
 		}
@@ -201,7 +204,7 @@ public class RepetitionNode extends Node implements Slotable {
 		for (Node node : this.valueChildren) {
 			if (!node.isReady()) {
 				return node.next();
-			}
+			}			
 		}
 
 		return this;

@@ -115,7 +115,15 @@ public class Slot {
 
 		}
 
-		return this.inputType.validate(value);
+		if (!this.inputType.validate(value))
+			return false;
+		
+		if (this.hasParameter() && this.parameter.getInput() != null) {
+			if(!this.parameter.getInput().validate(value))
+				return false;
+		}
+		
+		return true;
 	}
 
 	/**

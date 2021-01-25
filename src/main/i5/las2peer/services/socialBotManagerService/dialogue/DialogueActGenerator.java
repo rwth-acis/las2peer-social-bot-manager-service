@@ -107,6 +107,9 @@ public class DialogueActGenerator {
 		input.setType(slot.getInputType());
 		input.setIntend(slot.getInformIntent());
 		input.setEntity(slot.getEntity());
+		
+		if(node.getSlot().getParameter() != null && node.getSlot().getParameter().getInput() != null)
+			input.setParameterInput(node.getSlot().getParameter().getInput());
 
 		if (slot.hasDynamicFormat()) {
 
@@ -233,33 +236,13 @@ public class DialogueActGenerator {
 
 		return act;
 	}
-
-	public DialogueAct getMainMenuAct(Bot bot, List<Command> operations) {
-
-		assert operations != null : "commands is null";
-
-		DialogueAct act = new DialogueAct();
-		act.setIntent("start");
-		act.setIntentType(DialogueActType.SYSTEM_HOME);
-
-		for (Command operation : operations) {
-			operation.invariant();
-			act.addEntity(operation.getName(), operation.getDescription());
-		}
-
-		if (bot != null) {
-			act.addEntity("botName", bot.getName());
-			act.addEntity("botDescription", bot.getDescription());
-		}
-
-		return act;
-	}
-
+	
 	// Invalid input acts
 
 	public static DialogueAct getInvalidValueAct(ExpectedInput input) {
 
 		DialogueAct act = new DialogueAct();
+		act.setIntent(input.getIntend() + "_invalid");
 		act.setExpected(input);
 		act.setIntentType(DialogueActType.ERROR_INVALID_INPUT);
 		return act;

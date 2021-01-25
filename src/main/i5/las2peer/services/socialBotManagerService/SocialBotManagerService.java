@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -116,6 +117,7 @@ import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChatFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
@@ -239,7 +241,7 @@ public class SocialBotManagerService extends RESTService {
 	@POST
 	@Path("/trainAndLoad")
 	@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
-	@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "")
+	@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "train and load")
 	// TODO: Just an adapter, since the Rasa server doesn't support
 	// "Access-Control-Expose-Headers"
 	// and the model file name is returned as a response header... Remove and just
@@ -519,7 +521,7 @@ public class SocialBotManagerService extends RESTService {
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Init successful.") })
 		@ApiOperation(value = "Init Bot", notes = "Reads the configuration file.")
-		public Response init(BotModel botModel) {
+		public Response init(@ApiParam(required = true) BotModel botModel) {
 			BotParser bp = BotParser.getInstance();
 
 			String botName = "";
@@ -1980,7 +1982,7 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("Parse chat generated bot into BotModel");
 				System.out.println(bot);
 
-				BotModelParser botModelParser = new BotModelParser(getConfig());			
+				BotModelParser botModelParser = new BotModelParser(getConfig());
 				botModel = botModelParser.parse(bot);
 				botModel = botModelParser.order(botModel);
 				System.out.println("botModel");
@@ -1992,7 +1994,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			try {
-				
+
 				System.out.println("store new bot model");
 				BotModelResource bmr = new BotModelResource();
 				bmr.putModel("botName", botModel);
@@ -2038,7 +2040,8 @@ public class SocialBotManagerService extends RESTService {
 					if (bot != null) {
 						BotModel newModel = null;
 						try {
-							System.out.println("Add Function to bot model, old nodes: " + bot.getModel().getNodes().size());
+							System.out.println(
+									"Add Function to bot model, old nodes: " + bot.getModel().getNodes().size());
 							BotModelParser botModelParser = new BotModelParser(getConfig());
 							BotModel model = bot.getModel();
 							botModelParser.read(model);
@@ -2064,7 +2067,114 @@ public class SocialBotManagerService extends RESTService {
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-						
+
+						return Response.ok().entity("function added").build();
+
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok().entity("failed to add function").build();
+			}
+
+			return Response.ok().entity("no bot found").build();
+		}
+
+		@POST
+		@Path("/{botName}/function/add/access")
+		@Produces(MediaType.TEXT_PLAIN)
+		@Consumes(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
+		public Response addServiceAccessFunction(@PathParam("botName") String botName,
+				i5.las2peer.services.socialBotManagerService.parser.creation.function.ServiceType function) {
+			try {
+				for (VLE vle : getConfig().getVLEs().values()) {
+					Bot bot = vle.getBotByName(botName);
+					if (bot != null) {
+						BotModel newModel = null;
+						try {
+							System.out.println(
+									"Add Function to bot model, old nodes: " + bot.getModel().getNodes().size());
+							BotModelParser botModelParser = new BotModelParser(getConfig());
+							BotModel model = bot.getModel();
+							botModelParser.read(model);
+							botModelParser.parse(function);
+							newModel = botModelParser.generate();
+							System.out.println("new nodes: " + newModel.getNodes().size());
+
+						} catch (Exception e) {
+							e.printStackTrace();
+							return Response.serverError()
+									.entity("Bot creation failed. Can't parse function into model.").build();
+						}
+
+						if (newModel == null)
+							return Response.serverError().entity("No new Model.").build();
+
+						try {
+
+							BotResource br = new BotResource();
+							Response response = br.init(newModel);
+							
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
+						return Response.ok().entity("function added").build();
+
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok().entity("failed to add function").build();
+			}
+
+			return Response.ok().entity("no bot found").build();
+		}
+
+		@POST
+		@Path("/{botName}/function/add/chat")
+		@Produces(MediaType.TEXT_PLAIN)
+		@Consumes(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
+		public Response addChatFunction(@PathParam("botName") String name, ChatFunction function) {
+			try {
+				for (VLE vle : getConfig().getVLEs().values()) {
+					Bot bot = vle.getBotByName(name);
+					if (bot != null) {
+						BotModel newModel = null;
+						try {
+							System.out.println(
+									"Add Function to bot model, old nodes: " + bot.getModel().getNodes().size());
+							BotModelParser botModelParser = new BotModelParser(getConfig());
+							BotModel model = bot.getModel();
+							botModelParser.read(model);
+							botModelParser.parse(function);
+							newModel = botModelParser.generate();
+							System.out.println("new nodes: " + newModel.getNodes().size());
+
+						} catch (Exception e) {
+							e.printStackTrace();
+							return Response.serverError()
+									.entity("Bot creation failed. Can't parse function into model.").build();
+						}
+
+						if (newModel == null)
+							return Response.serverError().entity("No new Model.").build();
+
+						try {
+
+							BotResource br = new BotResource();
+							Response response = br.init(newModel);
+							String botName = (String) response.getEntity();
+
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
 						return Response.ok().entity("function added").build();
 
 					}
@@ -2147,8 +2257,8 @@ public class SocialBotManagerService extends RESTService {
 
 						} catch (Exception e) {
 							e.printStackTrace();
-							return Response.serverError()
-									.entity("Bot creation failed. Can't parse NLG into model.").build();
+							return Response.serverError().entity("Bot creation failed. Can't parse NLG into model.")
+									.build();
 						}
 
 						if (newModel == null)
@@ -2157,12 +2267,12 @@ public class SocialBotManagerService extends RESTService {
 						try {
 
 							BotResource br = new BotResource();
-							Response response = br.init(newModel);							
+							Response response = br.init(newModel);
 
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-						
+
 						return Response.ok().entity("NLG added").build();
 
 					}
@@ -2365,8 +2475,17 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
-					if (bot != null)
-						return Response.ok().entity(bot.getModel()).build();
+					if (bot != null) {
+						BotModel model = bot.getModel();
+						try {
+							BotModelParser parser = new BotModelParser(getConfig());
+							BotModel res = parser.order(model);
+							return Response.ok().entity(res).build();
+						} catch (Exception e) {
+							e.printStackTrace();
+							return Response.ok().entity(model).build();
+						}
+					}
 				}
 
 			} catch (Exception e) {
@@ -2378,18 +2497,23 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@GET
-		@Path("/bot/{name}/nlu/intents")
+		@Path("/bot/{botName}/nlu/intents")
 		@Consumes(MediaType.TEXT_PLAIN)
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
-		public Response getNLUIntents(@PathParam("name") String name) {
-
+		public Response getBotNLUIntents(@PathParam("botName") String botName) {
+			Collection<String> res = new LinkedList<>();
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
-					Bot bot = vle.getBotByName(name);
-					if (bot != null)
-						return Response.ok().entity(bot.getNLUIntents()).build();
+					Bot bot = vle.getBotByName(botName);
+					if (bot != null) {
+						
+						for (LanguageUnderstander nlu : bot.getNLUs().values()) {
+							res.addAll(nlu.getIntents());
+						}
+					}
+					return Response.ok().entity(res).build();
 				}
 
 			} catch (Exception e) {
@@ -2557,14 +2681,15 @@ public class SocialBotManagerService extends RESTService {
 		@POST
 		@Path("/trainAndLoad")
 		@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
-		@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "train nlu model")
 		// TODO: Just an adapter, since the Rasa server doesn't support
 		// "Access-Control-Expose-Headers"
 		// and the model file name is returned as a response header... Remove and just
 		// use Rasa's
 		// API directly once that's fixed. The whole `TrainingHelper` class can be
 		// deleted then as well.
-		public Response trainAndLoad(@ApiParam(value = "body", required = true) String body) {
+		public Response trainAndLoad(@ApiParam(value = "nluModel", required = true) String nluModel) {
 			System.out.println("train and load");
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
@@ -2572,8 +2697,8 @@ public class SocialBotManagerService extends RESTService {
 				return Response.status(Status.SERVICE_UNAVAILABLE).entity("Training still in progress.").build();
 
 			try {
-				System.out.println(body);
-				JSONObject bodyJson = (JSONObject) p.parse(body);
+				System.out.println(nluModel);
+				JSONObject bodyJson = (JSONObject) p.parse(nluModel);
 				String url = bodyJson.getAsString("url");
 				String config = bodyJson.getAsString("config");
 				String markdownTrainingData = bodyJson.getAsString("markdownTrainingData");

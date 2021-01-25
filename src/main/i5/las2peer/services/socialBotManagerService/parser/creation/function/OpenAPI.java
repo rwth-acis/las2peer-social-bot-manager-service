@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.parser.creation.function;
 import java.net.URL;
 import java.util.Collection;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import i5.las2peer.services.socialBotManagerService.parser.creation.parameter.CreationParameter;
@@ -63,6 +64,11 @@ public class OpenAPI extends ServiceType {
 	
 	public void setParameters(Collection<CreationParameter> parameters) {
 		this.parameters = parameters;
+	}
+
+	@JsonIgnore
+	public ServiceAccessType getAccessType() {
+		return ServiceAccessType.OPENAPI;
 	}
 
 }

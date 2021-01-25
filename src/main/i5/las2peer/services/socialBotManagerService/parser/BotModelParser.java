@@ -24,17 +24,20 @@ import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.AccessServiceFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChatFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChitChatFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.Las2peer;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.OpenAPI;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.ServiceType;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.drawing.DrawingAlgorithm;
-import i5.las2peer.services.socialBotManagerService.parser.drawing.SpringEmbedders;
+import i5.las2peer.services.socialBotManagerService.parser.drawing.ScaffoldDrawing;
 import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGDataGroup;
 import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGTrainingData;
+import io.swagger.util.Json;
 
 public class BotModelParser {
 
@@ -125,7 +128,7 @@ public class BotModelParser {
 		// NLU Knowledge
 		String nluName = bot.getNluModule();
 		LanguageUnderstander nlu = null;
-		if(nluName != null)
+		if (nluName != null)
 			nlu = config.getNLU(nluName);
 		else
 			nlu = new FallbackNLU();
@@ -165,6 +168,108 @@ public class BotModelParser {
 		processNodes();
 
 		return model;
+	}
+
+	/**
+	 * Adds a function to a model
+	 * 
+	 * @param model
+	 * @param function
+	 * @return
+	 */
+	public void parse(ChatFunction function) {
+
+		assert this.nodeList != null : "parse function into empty model";
+		assert !this.nodeList.isEmpty() : "parse function into empty model";
+		assert function != null : "function is null";
+
+		// Function
+		System.out.println("parse function of type Chat Function");
+
+		for (Message message : function.getMessages()) {
+			try {
+				String intent = message.getIntent();
+				if (incomingMessages.containsKey(intent)) {
+
+					BotModelNode inNode = incomingMessages.get(intent);
+					BotModelNode outNode = addNode("Chat Response");
+					addAttribute(outNode, "Message", message.getResponse());
+					addEdge(inNode, outNode, "triggers");
+
+				} else {
+
+					BotModelNode inNode = addNode("Incoming Message");
+					addAttribute(inNode, "Intent Keyword", message.getIntent());
+					addAttribute(inNode, "NLU ID", "0");
+
+					BotModelNode outNode = addNode("Chat Response");
+					addAttribute(outNode, "Message", message.getResponse());
+
+					addEdge(inNode, outNode, "triggers");
+					addMessengerEdges(inNode, "generates");
+
+					incomingMessages.put(intent, inNode);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Adds a function to a model
+	 * 
+	 * @param model
+	 * @param function
+	 * @return
+	 */
+	public void parse(ServiceType function) {
+
+		assert this.nodeList != null : "parse function into empty model";
+		assert !this.nodeList.isEmpty() : "parse function into empty model";
+		assert function != null : "function is null";
+
+		System.out.println(function.getClass());
+		if (function instanceof OpenAPI) {
+			try {
+				OpenAPI oa = (OpenAPI) function;
+				BotModelNode frameNode = addNode("Frame");
+				addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+				addAttribute(frameNode, "Operation Name", oa.getIntent());
+
+				BotModelNode actionNode = addNode("Bot Action");
+				addAttribute(actionNode, "Action Type", "OpenAPI");
+				addAttribute(actionNode, "Function Name", oa.getFunctionName());
+				addAttribute(actionNode, "Service Alias", oa.getBaseURL().toString());
+
+				addEdge(frameNode, actionNode, "triggers");
+				addMessengerEdges(frameNode, "generates");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		else if (function instanceof Las2peer) {
+
+			try {
+				Las2peer oa = (Las2peer) function;
+				BotModelNode frameNode = addNode("Frame");
+				addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+
+				BotModelNode actionNode = addNode("Bot Action");
+				addAttribute(actionNode, "Action Type", "Service");
+				addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+				addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
+
+				addEdge(frameNode, actionNode, "triggers");
+				addMessengerEdges(frameNode, "generates");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			System.out.println("unknown action type");
+		}
+
 	}
 
 	/**
@@ -219,6 +324,8 @@ public class BotModelParser {
 		case SERVICE_ACCESS:
 			AccessServiceFunction as = (AccessServiceFunction) function;
 
+			Json.prettyPrint(as);
+			System.out.println(as.getServiceType());
 			if (as.getServiceType() instanceof OpenAPI) {
 				try {
 					OpenAPI oa = (OpenAPI) as.getServiceType();
@@ -237,7 +344,7 @@ public class BotModelParser {
 				}
 			}
 
-			if (as.getServiceType() instanceof Las2peer) {
+			else if (as.getServiceType() instanceof Las2peer) {
 
 				try {
 					Las2peer oa = (Las2peer) as.getServiceType();
@@ -254,6 +361,8 @@ public class BotModelParser {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+			} else {
+				System.out.println("unknown action type");
 			}
 
 			break;
@@ -335,6 +444,7 @@ public class BotModelParser {
 
 	public BotModelNode addNode(String type) {
 
+		System.out.println("add graphical element of type " + type);
 		BotModelNode node = new BotModelNode();
 		node.setType(type);
 		node.setAttributes(new LinkedHashMap<>());
@@ -475,7 +585,7 @@ public class BotModelParser {
 	 */
 	public BotModel order(BotModel model) {
 
-		DrawingAlgorithm algorithm = new SpringEmbedders(model);
+		DrawingAlgorithm algorithm = new ScaffoldDrawing(model);
 		algorithm.execute();
 
 		return model;

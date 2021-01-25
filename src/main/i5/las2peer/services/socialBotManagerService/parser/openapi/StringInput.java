@@ -5,58 +5,63 @@ import java.util.regex.Pattern;
 
 public class StringInput extends ParameterInput {
 
-    Integer minLength;
-    Integer maxLength;
-    Pattern pattern;
+	Integer minLength;
+	Integer maxLength;
+	Pattern pattern;
 
-    @Override
-    public boolean validate(String value) {
+	@Override
+	public boolean validate(String value) {
 
-	if (this.minLength != null) {
-	    if (value.length() < this.minLength)
-		return false;
+		if (this.minLength != null) {
+			if (value.length() < this.minLength)
+				return false;
+		}
+
+		if (this.maxLength != null) {
+			if (value.length() > this.maxLength)
+				return false;
+		}
+
+		if (this.pattern != null) {
+			Matcher m = this.pattern.matcher(value);
+			if (!m.matches()) {
+				System.out.println(value + " not matching " + this.pattern.toString());
+				return false;
+			}
+		}
+
+		if (getType() != null)
+			return getType().validate(value);
+		
+		return true;
 	}
 
-	if (this.maxLength != null) {
-	    if (value.length() > this.maxLength)
-		return false;
+	public Integer getMinLength() {
+		return minLength;
 	}
 
-	if (this.pattern != null) {
-	    Matcher m = this.pattern.matcher(value);
-	    if (!m.matches())
-		return false;
+	public void setMinLength(int minLength) {
+		this.minLength = minLength;
 	}
 
-	return super.getType().validate(value);
-    }
+	public Integer getMaxLength() {
+		return maxLength;
+	}
 
-    public Integer getMinLength() {
-	return minLength;
-    }
+	public void setMaxLength(int maxLength) {
+		this.maxLength = maxLength;
+	}
 
-    public void setMinLength(int minLength) {
-	this.minLength = minLength;
-    }
+	public Pattern getPattern() {
+		return pattern;
+	}
 
-    public Integer getMaxLength() {
-	return maxLength;
-    }
+	public void setPattern(String pattern) {
+		this.pattern = Pattern.compile(pattern);
+	}
 
-    public void setMaxLength(int maxLength) {
-	this.maxLength = maxLength;
-    }
-
-    public Pattern getPattern() {
-	return pattern;
-    }
-
-    public void setPattern(String pattern) {
-	this.pattern = Pattern.compile(pattern);
-    }
-
-    public void setPattern(Pattern pattern) {
-	this.pattern = pattern;
-    }
+	public void setPattern(Pattern pattern) {
+		this.pattern = pattern;
+	}
 
 }

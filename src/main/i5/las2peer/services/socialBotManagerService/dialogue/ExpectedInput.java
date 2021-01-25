@@ -5,10 +5,12 @@ import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterInput;
 
 public class ExpectedInput {
 
 	private InputType type;
+	private ParameterInput input;
 	private String intend;
 	private String entity;
 	private List<String> enums;
@@ -51,6 +53,10 @@ public class ExpectedInput {
 			return false;
 		}
 
+		if(this.input != null)
+			if(!this.input.validate(message))
+				return false;
+		
 		// other
 		return this.validate(message);
 	}
@@ -117,6 +123,14 @@ public class ExpectedInput {
 	@Override
 	public String toString() {
 		return "ExpectedInput [type=" + type + ", intend=" + intend + ", entity=" + entity + "]";
+	}
+
+	public ParameterInput getInputType() {
+		return input;
+	}
+
+	public void setParameterInput(ParameterInput input) {
+		this.input = input;
 	}
 
 }

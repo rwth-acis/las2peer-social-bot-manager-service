@@ -193,7 +193,7 @@ public class PipelineManager extends MetaDialogueManager {
 
 			// return main menu
 			List<Command> operations = messenger.getCommands();
-			return gen.getMainMenuAct(messenger.getBot(), operations);
+			return gen.getMainMenuAct(messenger);
 		}
 
 		// not recognized command
