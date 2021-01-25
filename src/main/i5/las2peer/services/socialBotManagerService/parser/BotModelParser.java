@@ -258,7 +258,7 @@ public class BotModelParser {
 
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "Service");
-				addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+				addAttribute(actionNode, "Function Name", oa.getFunctionName());
 				addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
 
 				addEdge(frameNode, actionNode, "triggers");
