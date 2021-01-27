@@ -103,7 +103,7 @@ public class MoodleForumMediator extends ChatMediator {
 						
 					// If discussion does not exist (for example, because the service stopped), 
 					} else {
-						if (!ignoreIds.contains(userid)) {
+						if (!ignoreIds.contains(userid) && !discussions.containsKey(discussionid)) {
 							this.messageCollector.handle(discussionid, postid, message);
 						}
 						System.out.println("Error: Discussion tree not initialized (postid = " + postid + ")");
