@@ -95,9 +95,7 @@ public class Intent {
     // Returns the name of the entity with the highest confidence
     public Entity getFirstEntity() {
     	Entity result = null;
-    	HashMap<Entity, Integer> count = new HashMap<Entity, Integer>();
     	for (Entry<String, Entity> entry : entities.entrySet()) {
-    		count.put(entry.getValue(), count.get(entry.getValue()) + 1);
     		if (result == null || entry.getValue().getConfidence() > result.getConfidence()) {
     			result = entry.getValue();
     		}
