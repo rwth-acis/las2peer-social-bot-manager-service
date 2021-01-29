@@ -240,11 +240,16 @@ public class Slot {
 	 * @return
 	 */
 	public List<Slot> getChildren(int i) {
+		if(i != 0)
+		System.out.println("get Children of priority " + i);
 		List<Slot> res = new ArrayList<>();
+		
 		for (Slot child : this.children) {
+			System.out.println(child.getName() + " " + child.getPriority());
 			if (child.getPriority() == i)
 				res.add(child);
 		}
+		
 		return res;
 	}
 
@@ -341,7 +346,7 @@ public class Slot {
 	}
 
 	public List<String> getEnumList() {
-		return this.getParameter().getEnumList();
+		return this.getParameter().getUpdatedEnumList();
 	}
 
 	public boolean hasEnumList() {

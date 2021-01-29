@@ -16,10 +16,13 @@ public class OpenAPI extends ServiceType {
 
 	@ApiModelProperty(value = "Which intent should activate the service access?", required = true, example = "greet")
 	String intent;
+	
 	@ApiModelProperty(value = "The url of the service", required = true, example = "https://petstore3.swagger.io/")
 	URL baseURL;
+	
 	@ApiModelProperty(value = "The name of the service function", required = true, example = "addPet")
 	String functionName;
+	
 	@ApiModelProperty(value = "URL of the openAPI definition", required = true, example = "https://petstore.swagger.io/v2/swagger.json")
 	URL swaggerURL;
 

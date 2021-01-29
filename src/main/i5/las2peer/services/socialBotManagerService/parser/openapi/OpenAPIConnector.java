@@ -176,15 +176,14 @@ public class OpenAPIConnector {
 			String password = "pwalice";
 			client.setLogin(loginName, password);
 			response = sendRequest(client, action);
-		
-		} 
-		if(response == null) {
+
+		}
+		if (response == null) {
 			System.out.println("------ resend action");
 			response = sendRequest(client, action);
 			assert response != null;
 		}
-		
-		
+
 		System.out.println("received response " + response);
 		return response;
 	}
@@ -197,7 +196,6 @@ public class OpenAPIConnector {
 
 		ServiceFunction sf = action.getFunction().asServiceFunction();
 
-		assert sf.getFunctionPath() != null : "no function path";
 		assert sf.getHttpMethod() != null : "no http method";
 
 		String bodyContent = "";
@@ -305,7 +303,6 @@ public class OpenAPIConnector {
 
 		assert sf != null : "service function is null";
 		assert sf.getServiceName() != null : "service has no name";
-		assert sf.getFunctionPath() != null : "service function no path";
 
 		System.out.println("read enums: " + sf.getServiceName() + " " + sf.getFunctionPath() + " with key: " + key);
 
@@ -490,6 +487,44 @@ public class OpenAPIConnector {
 		ServiceFunction parsedFunction = readFunction(function);
 
 		return parsedFunction.getAllAttributes();
+	}
+
+	public static String getServiceName(String serviceAlias) {
+
+		String name = "";
+
+		switch (serviceAlias) {
+
+		case "i5.las2peer.services.weatherService.WeatherService":
+			name = "weather";
+			break;
+
+		case "i5.las2peer.services.weatherService.CoronaService":
+			name = "corona";
+			break;
+
+		case "i5.las2peer.services.socialBotManagerService.SocialBotManagerService":
+			name = "sbfmanager";
+			break;
+
+		}
+		
+		return name;
+
+	}
+
+	public static Collection<String> getOperationNames(String serviceAlias, String address) {
+
+		String name = getServiceName(serviceAlias);
+		if (name.contentEquals(""))
+			return null;
+
+		if(address.endsWith("/"))
+			address = address.substring(0, address.length() - 1);
+		String swaggerURL = address + "/" + name + "/swagger.json";
+		System.out.println("Search for " + swaggerURL);
+
+		return getFunctionNames(swaggerURL);
 	}
 
 }

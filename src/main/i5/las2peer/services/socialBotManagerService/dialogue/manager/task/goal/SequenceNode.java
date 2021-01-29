@@ -10,7 +10,7 @@ public class SequenceNode extends Node {
 
 	private List<Node> children;
 	private Node wrapper;
-
+	
 	public SequenceNode(Slot slot) {
 
 		assert slot != null : "slot parameter is null";
@@ -39,6 +39,10 @@ public class SequenceNode extends Node {
 
 	@Override
 	public boolean isFull() {
+		
+		if(this.children.isEmpty())
+			return true;
+		
 		invariant();
 		for (Node node : this.children) {
 			if (!node.isFull()) {
@@ -51,6 +55,10 @@ public class SequenceNode extends Node {
 	@Override
 	public boolean isReady() {
 		invariant();
+		
+		if(this.children.isEmpty())
+			return true;
+		
 		for (Node node : this.children) {
 			if (!node.isReady()) {
 				return false;
@@ -62,6 +70,10 @@ public class SequenceNode extends Node {
 	@Override
 	public boolean isConfirmed() {
 		invariant();
+		
+		if(this.children.isEmpty())
+			return true;
+		
 		for (Node node : this.children) {
 			if (!node.isConfirmed()) {
 				return false;
@@ -89,13 +101,19 @@ public class SequenceNode extends Node {
 	public Node next() {
 		invariant();
 
-		//for (Node node : this.children) {
-		//	if (node instanceof Slotable && ((Slotable) node).getSlot() != null) {
-		///		Slot slot = ((Slotable) node).getSlot();
-		//		if (!node.isReady() && slot.getPriority() == -1)
-		//			return node.next();
-		//	}
-		//}
+		System.out.println("SequenceNode next: " + this.children.size());
+		
+		if(this.children.isEmpty())
+			return null;
+		
+		for (Node node : this.children) {			
+			if (node instanceof Slotable && ((Slotable) node).getSlot() != null) {				
+				Slot slot = ((Slotable) node).getSlot();
+				System.out.println(slot.getName() + " " + slot.getPriority());
+				if (!node.isReady() && slot.getPriority() == -1)
+					return node.next();
+			}
+		}
 
 		for (Node node : this.children) {
 			if (!node.isReady()) {
@@ -124,7 +142,7 @@ public class SequenceNode extends Node {
 	@Override
 	protected void invariant() {
 		assert this.children != null : "children are null";
-		assert !this.children.isEmpty() : "sequence node has no children";
+
 	}
 
 	@Override

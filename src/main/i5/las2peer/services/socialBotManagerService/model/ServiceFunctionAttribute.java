@@ -270,11 +270,7 @@ public class ServiceFunctionAttribute {
 
 	public List<String> getEnumList() {
 
-		if (this.enumList != null)
-			return this.enumList;
-
 		return getUpdatedEnumList();
-
 	}
 
 	public List<String> update() {
@@ -371,12 +367,16 @@ public class ServiceFunctionAttribute {
 
 	public List<String> getUpdatedEnumList() {
 
+		System.out.println("get updated enum list " + this.getName());
 		List<String> res = this.update();
 		if (res != null)
 			return res;
 
-		if (this.enumList != null)
+		if (this.enumList != null) {
+			System.out.println("return old");
 			return this.enumList;
+			
+		}
 
 		return new ArrayList<String>();
 	}

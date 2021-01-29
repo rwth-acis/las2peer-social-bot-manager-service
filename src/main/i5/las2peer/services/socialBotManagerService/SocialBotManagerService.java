@@ -905,7 +905,7 @@ public class SocialBotManagerService extends RESTService {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-
+					
 					// Identify bot
 					Collection<VLE> vles = getConfig().getVLEs().values();
 					Bot bot = null;
@@ -2373,6 +2373,36 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.serverError().entity("I cant find functions for swagger url " + swaggerURL).build();
+			}
+
+		}
+		
+		@GET
+		@Path("/info/operations")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
+		public Response getOperationNames(@ApiParam(required = true) @QueryParam("serviceAlias") String serviceAlias) {
+
+			try {
+				String address = "";
+				for (VLE vle : getConfig().getVLEs().values()) {
+					if(vle.getName().contentEquals("VLECreation"))
+						address = vle.getAddress();
+				}
+				if(address.contentEquals("") || address.contentEquals("http://127.0.0.1:8070/"))
+					address = "http://127.0.0.1:8080";
+				
+				Collection<String> functions = OpenAPIConnector.getOperationNames(serviceAlias, address);
+				JSONArray array = new JSONArray();
+				for (String function : functions) {
+					array.add(function);
+				}
+
+				return Response.ok().entity(array).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().entity("I cant find functions for service alias").build();
 			}
 
 		}

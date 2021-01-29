@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +17,7 @@ import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
 
 public class DialogueActGenerator {
@@ -107,8 +109,8 @@ public class DialogueActGenerator {
 		input.setType(slot.getInputType());
 		input.setIntend(slot.getInformIntent());
 		input.setEntity(slot.getEntity());
-		
-		if(node.getSlot().getParameter() != null && node.getSlot().getParameter().getInput() != null)
+
+		if (node.getSlot().getParameter() != null && node.getSlot().getParameter().getInput() != null)
 			input.setParameterInput(node.getSlot().getParameter().getInput());
 
 		if (slot.hasDynamicFormat()) {
@@ -148,6 +150,19 @@ public class DialogueActGenerator {
 				for (Entry<String, String> en : entities.entrySet())
 					act.addEntity(en.getKey(), en.getValue());
 			}
+
+			if (input.getEnums() == null || input.getEnums().isEmpty())
+				if (slot.getParameter().getContentFill() != null
+						&& !slot.getParameter().getContentFill().contentEquals("")) {
+					if (slot.getParameter().getContentURLKey() != null) {
+						Collection<String> enumList = OpenAPIConnector.searchValuesByKey(response.getAsJSON(),
+								slot.getParameter().getContentURLKey());
+						if (enumList != null)
+							for (String enu : enumList)
+								input.addEnum(enu);
+					}
+				}
+
 		}
 
 		if (slot.getInputType() == InputType.File && slot.getParameter().getFile() != null)
@@ -236,7 +251,7 @@ public class DialogueActGenerator {
 
 		return act;
 	}
-	
+
 	// Invalid input acts
 
 	public static DialogueAct getInvalidValueAct(ExpectedInput input) {

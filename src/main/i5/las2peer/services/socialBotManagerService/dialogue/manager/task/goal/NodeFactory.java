@@ -16,7 +16,7 @@ public class NodeFactory {
 		System.out.println("node: " + slot.getName());
 
 		// Value Node
-		if (slot.isLeaf() && !slot.isArray()) {
+		if (slot.isLeaf() && !slot.isArray() && slot.getParameter() != null) {
 			return new ValueNode(slot);
 		}
 
@@ -33,15 +33,28 @@ public class NodeFactory {
 		// Selection Node
 		if (slot.hasChildren() && slot.isSelection() && !slot.isArray()) {
 			SelectionNode res = new SelectionNode(slot);
-			if(slot.getChildren(-1).isEmpty())
-				return res;
 			
-			SequenceNode node = new SequenceNode();			
-			for(Slot wslot :slot.getChildren(-1)) 
+			System.out.println("create Selection node " + slot.getAPIName() + ":");
+			for(Slot sb: slot.getChildren()) {
+				System.out.println(sb.getAPIName() + " " + sb.getPriority());
+			}
+			
+			if (slot.getChildren(-1).isEmpty()) {
+				System.out.println("create simple selection node " + slot.getName());
+				return res;
+			}
+
+			System.out.println("create complicated selection node " + slot.getName());
+			SequenceNode node = new SequenceNode();
+			for (Slot wslot : slot.getChildren(-1)) {
 				node.addChild(create(wslot));
+				System.out.println("special child " + wslot.getName());
+			}
+			
 			node.addChild(res);
 			node.setWrapperNode(res);
-			
+			return node;
+
 		}
 
 		// Repetition Node
@@ -49,8 +62,8 @@ public class NodeFactory {
 			return new RepetitionNode(slot);
 		}
 
-		assert false : " slot cant be assigned to a node ";
-		return null;
+		System.out.println("slot " + slot.getName() + "cant be assigned to a regular node: create empty");
+		return new SequenceNode();
 	}
 
 	public static Node createIgnoreArray(Slot slot) {

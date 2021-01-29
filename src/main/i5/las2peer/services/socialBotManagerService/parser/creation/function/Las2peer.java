@@ -12,20 +12,26 @@ import io.swagger.annotations.ApiModelProperty;
 public class Las2peer extends ServiceType {
 
 	@ApiModelProperty(value = "Which intent should activate the service access?", required = true, example = "greet")
-	String intent;
+	String nluIntent;
+	
 	@ApiModelProperty(value = "the service alias", required = true, example = "SBFManager")
 	String serviceAlias;
+	
 	@ApiModelProperty(value = "The function Name", required = true, example = "getBots")
-	String functionName;
-	@ApiModelProperty(value = "URL of the openAPI definition", required = true, example = "https://petstore.swagger.io/v2/swagger.json")
+	String operationName;
+
+	@ApiModelProperty(value = "Response message after successfull service access", required = true, example = "I did the Service access!")
+	String responseMessage;
+	
+	@ApiModelProperty(value = "URL of the OpenAPI definition", required = false)
 	Collection<CreationParameter> parameters;
 
-	public String getIntent() {
-		return intent;
+	public String getNluIntent() {
+		return nluIntent;
 	}
 
-	public void setIntent(String intent) {
-		this.intent = intent;
+	public void setNluIntent(String intent) {
+		this.nluIntent = intent;
 	}
 
 	public Collection<CreationParameter> getParameters() {
@@ -44,13 +50,23 @@ public class Las2peer extends ServiceType {
 		this.serviceAlias = serviceAlias;
 	}
 
-	public String getFunctionName() {
-		return functionName;
+	public String getOperationName() {
+		return operationName;
 	}
 
-	public void setFunctionName(String functionName) {
-		this.functionName = functionName;
+	public void setOperationName(String functionName) {
+		this.operationName = functionName;
 	}
+	
+	
+	public String getResponseMessage() {
+		return responseMessage;
+	}
+
+	public void setResponseMessage(String responseMessage) {
+		this.responseMessage = responseMessage;
+	}
+
 
 	@JsonIgnore
 	public ServiceAccessType getAccessType() {

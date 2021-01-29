@@ -2,6 +2,8 @@ package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
@@ -185,27 +187,36 @@ public class FrameMapper {
 			Slot disSlot = map(disAttr, name + "_" + disAttr.getName());
 			disSlot.setSelection(true);
 			disSlot.setRequired(true);
+			Map<String, Slot> inheritedSlots = new HashMap<>();
+			
 			for (String enu : disAttr.getEnumList()) {
 				Slot enuSlot = new Slot(name + "_" + disAttr.getName() + "_" + enu);
 				enuSlot.setEntity(enu);
 				disSlot.addChild(enuSlot);
 
+				
 				// parent class slots
 				for (ServiceFunctionAttribute subAttr : attr.getChildren(disAttr.getName())) {
 					if (subAttr != disAttr) {
-						Slot subSlot = map(subAttr,
-								name + "_" + disAttr.getName() + "_" + subAttr.getName());
+						Slot subSlot = map(subAttr, name + "_" + disAttr.getName() + "_" + subAttr.getName());
 						subSlot.setPriority(-1);
-						enuSlot.addChild(subSlot);
+						System.out.println(
+								"inherited attribute detected: " + subSlot.getName() + " " + subSlot.getPriority());
+						inheritedSlots.put(subSlot.getName(), subSlot);
 					}
 				}
-
+				
 				// sub class slots
 				for (ServiceFunctionAttribute subAttr : attr.getChildren(enu)) {
 					Slot subSlot = map(subAttr, name + "_" + disAttr.getName() + "_" + enu + "_" + subAttr.getName());
 					enuSlot.addChild(subSlot);
 				}
 
+			}
+			
+			for (Slot subSlot : inheritedSlots.values()) {
+				disSlot.addChild(subSlot);
+				System.out.println("add inherited slot " + subSlot.getName() + " to " + disSlot.getName());
 			}
 
 			slot.addChild(disSlot);

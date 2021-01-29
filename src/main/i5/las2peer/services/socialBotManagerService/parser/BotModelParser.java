@@ -37,6 +37,7 @@ import i5.las2peer.services.socialBotManagerService.parser.drawing.DrawingAlgori
 import i5.las2peer.services.socialBotManagerService.parser.drawing.ScaffoldDrawing;
 import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGDataGroup;
 import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGTrainingData;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import io.swagger.util.Json;
 
 public class BotModelParser {
@@ -110,7 +111,7 @@ public class BotModelParser {
 
 		// VLE Instance
 		String vleName = "vleName";
-		String vleAddress = "http://127.0.0.1:8070/";
+		String vleAddress = "http://127.0.0.1:8080";
 		String seperator = "";
 		BotModelNode vleNode = addNode("Instance");
 		addAttribute(vleNode, "Name", vleName);
@@ -236,7 +237,7 @@ public class BotModelParser {
 				BotModelNode frameNode = addNode("Frame");
 				addAttribute(frameNode, "Intent Keyword", oa.getIntent());
 				addAttribute(frameNode, "Operation Name", oa.getIntent());
-
+				
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "OpenAPI");
 				addAttribute(actionNode, "Function Name", oa.getFunctionName());
@@ -254,12 +255,14 @@ public class BotModelParser {
 			try {
 				Las2peer oa = (Las2peer) function;
 				BotModelNode frameNode = addNode("Frame");
-				addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+				addAttribute(frameNode, "Intent Keyword", oa.getNluIntent());
 
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "Service");
-				addAttribute(actionNode, "Function Name", oa.getFunctionName());
-				addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
+				addAttribute(actionNode, "Function Name", oa.getOperationName());
+				String alias = OpenAPIConnector.getServiceName(oa.getServiceAlias());
+				addAttribute(actionNode, "Service Alias", alias);
+				addAttribute(frameNode, "Success Response", oa.getResponseMessage());
 
 				addEdge(frameNode, actionNode, "triggers");
 				addMessengerEdges(frameNode, "generates");
@@ -349,11 +352,11 @@ public class BotModelParser {
 				try {
 					Las2peer oa = (Las2peer) as.getServiceType();
 					BotModelNode frameNode = addNode("Frame");
-					addAttribute(frameNode, "Intent Keyword", oa.getIntent());
+					addAttribute(frameNode, "Intent Keyword", oa.getNluIntent());
 
 					BotModelNode actionNode = addNode("Bot Action");
 					addAttribute(actionNode, "Action Type", "Service");
-					addAttribute(actionNode, "FunctionName", oa.getFunctionName());
+					addAttribute(actionNode, "FunctionName", oa.getOperationName());
 					addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
 
 					addEdge(frameNode, actionNode, "triggers");

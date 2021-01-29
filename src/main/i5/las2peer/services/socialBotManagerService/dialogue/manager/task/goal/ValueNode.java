@@ -15,6 +15,7 @@ public class ValueNode extends Node implements Fillable {
 	public ValueNode(Slot slot) {
 
 		assert slot != null : "slot parameter is null";
+		assert slot.getParameter() != null : slot.getName() + " no attribute";
 
 		this.slot = slot;
 

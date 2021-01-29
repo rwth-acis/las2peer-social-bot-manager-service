@@ -59,7 +59,7 @@ public class DrawingAlgorithmTest {
     public void randomOrderTest() {
 
 	DrawingAlgorithm algorithm = new SpringEmbedders(model);
-	algorithm.randomOrder();
+	algorithm.randomOrder(4000, 4000);
 	for (BotModelNode node : nodes.values()) {
 	    System.out.println("x: " + node.getLeft() + ", y: " + node.getTop());
 	    assertTrue(node.getLeft() > 0);

@@ -204,7 +204,7 @@ public class GeneratorFunction implements FunctionInterface {
 				}
 			}
 		}
-
+		
 		if (jelement.isJsonArray()) {
 			JsonArray object = jelement.getAsJsonArray();
 
@@ -235,8 +235,8 @@ public class GeneratorFunction implements FunctionInterface {
 							if (jsonPrim.isString())
 								value = jsonPrim.getAsString();
 
-							// entities.put(i, key, value);
-							System.out.println("add entry " + i + " " + key + " " + value);
+							//entities.put(key, value);
+							System.out.println("add entry ae " + i + " " + key + " " + value);
 						}
 					}
 				}

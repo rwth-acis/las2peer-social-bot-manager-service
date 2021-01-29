@@ -134,6 +134,9 @@ public class OpenAPIAction {
 		if(!this.validate())
 			throw new IllegalStateException("Not all required path parameters are filled yet " + this.getFunctionName());
 				
+		if(this.function.getFunctionPath() == null)
+			return "";
+		
 		String methodURL = this.function.getFunctionPath();
 		while (methodURL.length() > 0 && methodURL.charAt(0) == '/')
 			methodURL = methodURL.substring(1);

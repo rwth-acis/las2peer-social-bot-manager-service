@@ -46,7 +46,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://tech4comp.dbis.rwth-aachen.de:31024";
+	private final static String url = "https://a88b55ea28e6.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -130,6 +130,7 @@ public class TelegramChatMediator extends EventChatMediator {
 			path = "/bots/events/telegram/";
 		}
 
+		System.out.println("Setting Webhook");
 		ClientResponse result = client.sendRequest("GET", "setWebhook?url=" + url + path + super.authToken,
 				MediaType.TEXT_PLAIN);
 		System.out.println(result.getResponse());

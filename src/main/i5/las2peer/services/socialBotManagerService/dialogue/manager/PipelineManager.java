@@ -5,10 +5,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.Command;
@@ -36,9 +39,8 @@ import i5.las2peer.services.socialBotManagerService.nlu.FallbackNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
-import i5.las2peer.services.socialBotManagerService.parser.ResponseParser;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
-import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
 
 /**
  * Meta Dialogue Manager that uses different modules for language understanding,
@@ -367,7 +369,8 @@ public class PipelineManager extends MetaDialogueManager {
 
 	}
 
-	protected String handleAction(DialogueAct act, OpenAPIAction action, ChatMessage message, Dialogue dialogue) {
+	protected OpenAPIResponse handleAction(DialogueAct act, OpenAPIAction action, ChatMessage message,
+			Dialogue dialogue) {
 
 		assert action != null : "action is null";
 		assert action.getFunction() != null : "openapi action has no service function";
@@ -378,29 +381,8 @@ public class PipelineManager extends MetaDialogueManager {
 
 		System.out.println("perform action " + action.getFunction().getFunctionName());
 
-		ClientResponse response = OpenAPIConnector.sendRequest(action);
-		if (act.getGoal() == null)
-			return response.getResponse();
-
-		Frame frame = act.getGoal().getFrame();
-
-		// success
-		if (response.getHttpCode() < 300 && response.getHttpCode() >= 200) {
-			act.setIntent(frame.getIntentKeyword() + "_success");
-			if (frame.hasSuccessResponse()) {
-				act.setMessage(frame.getSuccessResponse());
-				return frame.getSuccessResponse();
-			}
-			// error
-		} else {
-			act.setIntent(frame.getIntentKeyword() + "_error");
-			if (frame.hasErrorResponse()) {
-				act.setMessage(frame.getErrorResponse());
-				return frame.getErrorResponse();
-			}
-		}
-
-		return response.getResponse();
+		OpenAPIResponse response = action.execute();
+		return response;
 
 	}
 
@@ -443,33 +425,85 @@ public class PipelineManager extends MetaDialogueManager {
 
 		ResponseMessage res = null;
 		MessageFile file = null;
-
+		
 		// act includes action
 		if (act.hasAction()) {
+
 			OpenAPIAction action = act.getAction();
-			String response = handleAction(act, action, message, dialogue);
+			OpenAPIResponse response = handleAction(act, action, message, dialogue);
+
 			if (response != null) {
 				System.out.println("response parsemode: " + action.getResponseParseMode());
 				switch (action.getResponseParseMode()) {
 				case FILE:
 					file = new MessageFile();
-					file.setData(response);
+					file.setData(response.getMessage());
 					file.setName(act.getFile());
 					break;
 				case MESSAGE_TEXT:
-					act.setMessage(response);
-					break;
-				case JSON_TO_MARKDOWN:
-					ResponseParser parser = new ResponseParser();
-					act.setMessage(parser.toMarkdown(response));
+				 act.setMessage(response.getMessage());
+				 break;
+				//case JSON_TO_MARKDOWN:
+				// ResponseParser parser = new ResponseParser();
+				 //act.setMessage(parser.toMarkdown(response));
 				default:
 					break;
 				}
 			}
+			
+			
+			
+			try {
+			
+			if (act.getGoal() != null) {
+				Frame frame = act.getGoal().getFrame();
+
+				// success
+				if (response.getHttpCode() < 300 && response.getHttpCode() >= 200) {
+					act.setIntent(frame.getIntentKeyword() + "_success");
+
+					// add act elements
+					JsonElement element = response.getAsJSON();
+					if (element != null && element.isJsonObject()) {
+						JsonObject object = (JsonObject) element;
+						for (Entry<String, JsonElement> entry : object.entrySet()) {
+							String key = entry.getKey();
+							JsonElement value = entry.getValue();
+							if (value.isJsonPrimitive()) {
+								act.addEntity(key, value.getAsString());
+							}
+						}
+					}
+
+					if (frame.hasSuccessResponse()) {
+						String successMessage = frame.getSuccessResponse();
+						if (act.getEntities() != null)
+							for (Entry<String, String> entry : act.getEntities().entrySet()) {
+								successMessage = successMessage.replaceAll("#" + entry.getKey(), entry.getValue());
+							}
+						act.setMessage(successMessage);
+					}
+
+					// error
+				} else {
+					act.setIntent(frame.getIntentKeyword() + "_error");
+					if (frame.hasErrorResponse()) {
+						act.setMessage(frame.getErrorResponse());
+					}
+				}
+			}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				 act.setMessage(response.getMessage());
+			}
+						
 		}
 
 		// nlg modules
-		if (nlgs != null) {
+		if (nlgs != null)
+
+		{
 			List<LanguageGenerator> nlgList = new ArrayList<>(nlgs.values());
 			int i = 0;
 			while (res == null && i < nlgList.size()) {
@@ -514,7 +548,7 @@ public class PipelineManager extends MetaDialogueManager {
 	@Override
 	public Collection<String> getNLGIntents() {
 		Collection<String> res = new ArrayList<>();
-		
+
 		Dialogue dialogue = new Dialogue(messenger);
 		for (AbstractDialogueManager manager : dialogue.getManagers()) {
 			if (manager.getNLGIntents() != null)

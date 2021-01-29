@@ -1293,7 +1293,7 @@ public class BotParser {
 						// AgentOperationFailedException should be handled separately
 						botAgent = BotAgent.createBotAgent(botPass);
 						botAgent.unlock(botPass);
-						botAgent.setLoginName("bot" + botName);
+						botAgent.setLoginName(botName);
 						Context.getCurrent().storeAgent(botAgent);
 					}
 					botAgent.unlock(botPass);
@@ -1308,7 +1308,7 @@ public class BotParser {
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
 				bot.setId(botAgent.getIdentifier());
-				bot.setName(botAgent.getLoginName());
+				bot.setName(botName);
 				botAgents.put(botName, botAgent);
 			}
 			if (subVal.getName().contentEquals("Description"))
