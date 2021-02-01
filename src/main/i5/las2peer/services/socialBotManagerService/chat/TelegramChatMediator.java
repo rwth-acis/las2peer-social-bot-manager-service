@@ -21,11 +21,13 @@ import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardRemove;
 import com.pengrad.telegrambot.request.GetFile;
+import com.pengrad.telegrambot.request.GetMe;
 import com.pengrad.telegrambot.request.SendChatAction;
 import com.pengrad.telegrambot.request.SendDocument;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
 import com.pengrad.telegrambot.response.GetFileResponse;
+import com.pengrad.telegrambot.response.GetMeResponse;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
@@ -46,7 +48,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://a88b55ea28e6.ngrok.io";
+	private final static String url = "https://84d862867b54.ngrok.io";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -134,6 +136,20 @@ public class TelegramChatMediator extends EventChatMediator {
 		ClientResponse result = client.sendRequest("GET", "setWebhook?url=" + url + path + super.authToken,
 				MediaType.TEXT_PLAIN);
 		System.out.println(result.getResponse());
+	}
+
+	public String getBotName() {
+
+		GetMe request = new GetMe();
+		GetMeResponse response = bot.execute(request);
+		if (response.isOk() && response.user() != null) {
+			
+			String username = response.user().username();
+			System.out.println("request botname: " + username);
+			return username;
+		}
+		
+		return null;
 	}
 
 	/**

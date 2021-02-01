@@ -22,6 +22,8 @@ import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 
 public class Bot {
 
@@ -128,12 +130,12 @@ public class Bot {
 		this.nlus.put(id, rasa);
 		return rasa;
 	}
-	
+
 	public LanguageUnderstander addRasaServer(LanguageUnderstander nlu) {
 		this.nlus.put(String.valueOf(this.nlus.size()), nlu);
 		return nlu;
 	}
-	
+
 	public LanguageGenerator addNLGModule(NLUKnowledge nlu) {
 		LanguageGenerator lgen = new TableLanguageGenerator();
 		this.nlgs.put(nlu.getName(), lgen);
@@ -410,8 +412,34 @@ public class Bot {
 		this.creationFunctions.put(name, creationFunction);
 	}
 
+	public JSONObject toJSON() {
 
+		JSONObject res = new JSONObject();
+		res.put("botName", this.getName());
 
+		Messenger m = this.getMessenger(ChatService.TELEGRAM);
+		if (m != null)
+			res.put("telegram", m.getName());
 
+		JSONArray messengersJSON = new JSONArray();
+		res.put("messengers", messengersJSON);
+		for (Messenger messenger : this.getMessengers().values()) {
+			JSONObject messengerJSON = new JSONObject();
+			messengerJSON.put("messengerType", messenger.getChatService());
+			messengerJSON.put("messengerName", messenger.getName());
+			messengersJSON.add(messengerJSON);
+		}
+
+		JSONArray functionsJSON = new JSONArray();
+		res.put("functions", functionsJSON);
+		for (CreationFunction function : this.getCreationFunctions()) {
+			JSONObject functionJSON = new JSONObject();
+			functionJSON.put("functionName", function.getName());
+			functionJSON.put("functionType", function.getType());
+			functionsJSON.add(functionJSON);
+		}
+
+		return res;
+	}
 
 }

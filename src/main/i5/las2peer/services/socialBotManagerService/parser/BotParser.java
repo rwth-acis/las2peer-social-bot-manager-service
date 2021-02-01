@@ -89,10 +89,12 @@ public class BotParser {
 		return instance;
 	}
 
-	public VLE parseNodesAndEdges(BotModel model, BotConfiguration config, Map<String, BotAgent> botAgents,
+	public Bot parseNodesAndEdges(BotModel model, BotConfiguration config, Map<String, BotAgent> botAgents,
 			Map<String, BotModelNode> nodes, Map<String, BotModelEdge> edges, SQLDatabase database)
 			throws ParseBotException, IOException, DeploymentException {
 
+		Bot newBot = null;
+		
 		Map<String, VLE> vles = new HashMap<String, VLE>();
 		Map<String, Messenger> messengers = new HashMap<String, Messenger>();
 		Map<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
@@ -171,6 +173,7 @@ public class BotParser {
 			case "Bot":
 				Bot bot = addBot(model, elem, botAgents);
 				bots.put(entry.getKey(), bot);
+				newBot = bot;
 				break;
 
 			case "Messenger":
@@ -931,7 +934,7 @@ public class BotParser {
 
 		}
 
-		return vle;
+		return newBot;
 	}
 
 	private Service addService(String key, BotModelNode elem, BotConfiguration config, VLE vle)

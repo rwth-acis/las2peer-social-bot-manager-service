@@ -129,6 +129,9 @@ public class Messenger {
 			break;
 		case TELEGRAM:
 			this.chatMediator = new TelegramChatMediator(token);
+			String username = ((TelegramChatMediator) this.chatMediator).getBotName();					
+			if(username != null)
+				this.name = username;
 			break;
 		case ROCKET_CHAT:
 			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));

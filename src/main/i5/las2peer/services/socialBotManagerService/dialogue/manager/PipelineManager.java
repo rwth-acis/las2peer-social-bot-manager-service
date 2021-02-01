@@ -461,16 +461,20 @@ public class PipelineManager extends MetaDialogueManager {
 				// success
 				if (response.getHttpCode() < 300 && response.getHttpCode() >= 200) {
 					act.setIntent(frame.getIntentKeyword() + "_success");
-
+					System.out.println("frame was successful");
+					
 					// add act elements
 					JsonElement element = response.getAsJSON();
-					if (element != null && element.isJsonObject()) {
+					System.out.println(element.toString());
+					if (element != null && element.isJsonObject()) {						
 						JsonObject object = (JsonObject) element;
 						for (Entry<String, JsonElement> entry : object.entrySet()) {
 							String key = entry.getKey();
 							JsonElement value = entry.getValue();
+							System.out.println("entry: " + key);
 							if (value.isJsonPrimitive()) {
 								act.addEntity(key, value.getAsString());
+								System.out.println("add " + value.getAsString());
 							}
 						}
 					}

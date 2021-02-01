@@ -53,7 +53,6 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.grizzly.http.util.URLDecoder;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -466,26 +465,8 @@ public class SocialBotManagerService extends RESTService {
 					Bot bot = vle.getBotByName(name);
 					if (bot != null) {
 
-						JSONObject res = new JSONObject();
-						res.put("botName", bot.getName());
-
-						JSONArray messengersJSON = new JSONArray();
-						res.put("messengers", messengersJSON);
-						for (Messenger messenger : bot.getMessengers().values()) {
-							JSONObject messengerJSON = new JSONObject();
-							messengerJSON.put("messengerName", messenger.getName());
-							messengersJSON.add(messengerJSON);
-						}
-
-						JSONArray functionsJSON = new JSONArray();
-						res.put("functions", functionsJSON);
-						for (CreationFunction function : bot.getCreationFunctions()) {
-							JSONObject functionJSON = new JSONObject();
-							functionJSON.put("functionName", function.getName());
-							functionJSON.put("functionType", function.getType());
-							functionsJSON.add(functionJSON);
-						}
-
+						JSONObject res = bot.toJSON();
+						
 						String botMessage = "My Information about *" + bot.getName() + "* \n";
 
 						botMessage = botMessage + "\nMessenger: \n";
@@ -2008,21 +1989,38 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("create new Bot from botModel");
 				BotResource br = new BotResource();
 				Response response = br.init(botModel);
+				
+				
+				
+				BotParser bp = BotParser.getInstance();		
+				Bot resBot = null;
+				LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
+				LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();				
+				try {
+					resBot = bp.parseNodesAndEdges(botModel, SocialBotManagerService.getConfig(),
+							SocialBotManagerService.getBotAgents(), nodes, edges, null);
+					
+				} catch (ParseBotException | IOException | DeploymentException e) {
+					e.printStackTrace();
+					return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+				} catch (Exception e) {
+					e.printStackTrace();
+					return Response.serverError().build();
+				} catch (AssertionError e) {
+					e.printStackTrace();
+				}
+				
+				JSONObject logData = new JSONObject();
+				logData.put("status", "initialized");
+				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
+				
+				if(resBot != null)
+				return Response.ok().entity(resBot.toJSON().toJSONString()).build();
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			try {
-
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
-				String res = gson.toJson(botModel);
-				return Response.ok().entity(res).build();
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
+		
 			return Response.serverError().entity("bot creation failed").build();
 
 		}
