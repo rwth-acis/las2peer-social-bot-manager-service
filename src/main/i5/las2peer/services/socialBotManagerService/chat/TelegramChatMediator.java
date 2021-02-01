@@ -48,7 +48,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://84d862867b54.ngrok.io";
+	private final static String url = "https://tech4comp.dbis.rwth-aachen.de:31024";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -230,12 +230,13 @@ public class TelegramChatMediator extends EventChatMediator {
 		request.parseMode(ParseMode.Markdown);
 
 		if (response.hasButtons()) {
-
+			
 			int numButton = response.getButtons().size();
 			if (numButton == 1) {
 				String[] buttons = new String[1];
 				buttons[0] = response.getButtons().get(0);
 				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
+				keyboard.oneTimeKeyboard(true);
 				request.replyMarkup(keyboard);
 
 			} else if (numButton == 2) {
@@ -243,6 +244,7 @@ public class TelegramChatMediator extends EventChatMediator {
 				buttons[0] = response.getButtons().get(0);
 				buttons[1] = response.getButtons().get(1);
 				ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons);
+				keyboard.oneTimeKeyboard(true);
 				request.replyMarkup(keyboard);
 
 			} else {
@@ -285,13 +287,14 @@ public class TelegramChatMediator extends EventChatMediator {
 								buttons[row][col] = "";
 						}
 					}
-
+					
 					boolean resize = false;
 					boolean oneTime = true;
 					boolean selective = true;
-
+					
 					ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup(buttons, resize, oneTime, selective);
 					request.replyMarkup(keyboard);
+					
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -339,14 +342,15 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
 		SendDocument request = new SendDocument(channel, bytes);
-
+		
 		if (caption != null && !caption.contentEquals(""))
 			request.caption(caption);
 		if (name != null && !name.contentEquals(""))
 			request.fileName(name);
 
+		request.replyMarkup(new ReplyKeyboardRemove());
 		BaseResponse res = bot.execute(request);
-		System.out.println(String.valueOf(res.isOk()) + res.errorCode() + res.description());
+		System.out.println(String.valueOf(res.isOk()) + " " + res.errorCode() + " " + res.description());
 	}
 
 	private MessageFile getFile(String fileId) {

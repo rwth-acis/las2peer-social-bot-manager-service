@@ -52,6 +52,15 @@ public class TableLanguageGenerator extends LanguageGenerator {
 				res = res.replaceAll("#" + entity.getKey(), entity.getValue());				
 			}
 		}
+		
+		if (act.getExpected() != null && act.getExpected().getEnums() != null) {
+			String enums = "";
+			for(String enu : act.getExpected().getEnums()) {
+				enums = enums + enu + ", ";
+			}
+			res = res.replaceAll("#enums", enums);		
+		}
+		
 		System.out.println("response:" + res);
 		ResponseMessage message = new ResponseMessage(res);
 		return message;

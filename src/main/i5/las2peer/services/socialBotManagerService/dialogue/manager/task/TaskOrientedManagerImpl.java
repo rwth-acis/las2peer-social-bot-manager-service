@@ -65,18 +65,18 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 				rep.close();
 				if (goal.isFull())
 					return gen.getReqConfAct(goal);
-				
+
 				// ask if optional slots should be filled
 				if (!goal.isFull() && goal.isReady()) {
-					if(goal.getFrame().getName().contentEquals("createbot")) {
+					if (goal.getFrame().getName().contentEquals("createbot")) {
 						return perform();
 					}
-					
+
 					DialogueAct act = gen.getReqOptionalAct(goal);
 					this.optional = true;
 					return act;
 				}
-				System.out.println("request next slot because deny proceed");				
+				System.out.println("request next slot because deny proceed");
 				return requestNextSlot();
 			}
 		}
@@ -99,21 +99,21 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 			}
 
 			// Nothing was filled, request again
-			if (!filled) {				
+			if (!filled) {
 				return requestNextSlot();
 			}
 
 			// arrays
 			if (node != null && node.getSlot().isArray()) {
-				
+
 				if (node instanceof RepeatingNode) {
 					RepeatingNode rep = (RepeatingNode) node;
 					System.out.println("repeating node " + node.getAPIName() + " size " + rep.size() + " min "
 							+ rep.getMinItems());
 					if (rep.getMinItems() > rep.size())
-						return requestNextSlot();					
+						return requestNextSlot();
 				}
-				
+
 				return gen.getReqConfArrayAct(node);
 
 			} else if (!optional && goal.isReady()) {
@@ -226,7 +226,7 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 	private DialogueAct requestNextSlot() {
 		assert goal != null : "goal is null";
 		assert !goal.isFull() : "goal is already full";
-		
+
 		Node nextNode = goal.next();
 		System.out.println("request next node " + nextNode.getClass());
 		// Request to fill value
@@ -240,12 +240,14 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 			RepetitionNode rep = (RepetitionNode) nextNode;
 
 			// min values not reached yet
-			//System.out.println("min values = " + rep.getSlot().getParameter().getMinItems() + " , size "
-			//		+ rep.getValueChildren().size());
-			//if (rep.getSlot().getParameter().getMinItems() > rep.getValueChildren().size()) {
-			//	rep.extend();
-			//	return requestNextSlot();
-			//}
+			// System.out.println("min values = " +
+			// rep.getSlot().getParameter().getMinItems() + " , size "
+			// + rep.getValueChildren().size());
+			// if (rep.getSlot().getParameter().getMinItems() >
+			// rep.getValueChildren().size()) {
+			// rep.extend();
+			// return requestNextSlot();
+			// }
 
 			// ask if should repeat
 			return gen.getReqConfArrayAct(rep);
@@ -259,8 +261,19 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 		DialogueAct act = new DialogueAct();
 		act.setGoal(goal);
 		act.setAction(goal.getOpenAPIAction());
-		if (goal.getFrame().getFile() != null)
-			act.setFile(goal.getFrame().getFile());
+		if (goal.getFrame().getFile() != null) {
+			String fileName = goal.getFrame().getFile();
+			act.setFile(fileName);
+			System.out.println(fileName);
+			if (fileName.contains("#botName")) {
+				System.out.println("botName detected");
+				Fillable fill = goal.getFillable("botName");
+				System.out.println(fill.getValue());
+				if (fill.getValue() != null)
+					act.setFile(fill.getValue() + ".json");
+			}
+
+		}
 		this.reset();
 		return act;
 
