@@ -69,14 +69,14 @@ public class MoodleForumMediator extends ChatMediator {
 				JSONObject actor = (JSONObject) json.get("actor");
 				JSONObject account = (JSONObject) actor.get("account");
 				
-				JSONObject context = (JSONObject) json.get("context");
-				JSONObject extensions = (JSONObject) context.get("extensions");
-				JSONObject courseInfo = (JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
-				String courseid = courseInfo.getString("courseid");
-				
 				String message = description.getString("en-US");
 				String userid = account.getString("name");
 				try {
+					JSONObject context = (JSONObject) json.get("context");
+					JSONObject extensions = (JSONObject) context.get("extensions");
+					JSONObject courseInfo = (JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
+					String courseid = Integer.toString(courseInfo.getNumber("courseid").intValue());
+					
 					String discussionid = obj.getString("id").split("d=")[1].split("#")[0];
 					String postid = obj.getString("id").split("#p")[1].split("#")[0];
 					String parentid = obj.getString("id").split("#parent=")[1];
