@@ -156,8 +156,8 @@ public class SocialBotManagerService extends RESTService {
 
 	private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
     private static HashMap<String, String> rasaIntents = new HashMap<String, String>();
+    private static HashMap<String, String> courseMap = null;
     
-
 	private static BotConfiguration config;
 
 	private static HashMap<String, BotAgent> botAgents;
@@ -1335,33 +1335,66 @@ public class SocialBotManagerService extends RESTService {
 		return true;
 	}
 	
+	public void setCourseMap(JSONObject map) {
+		if (courseMap == null) {
+			courseMap = new HashMap<String, String>();
+		}
+		for (String key : map.keySet()) {
+			courseMap.put(key, map.getAsString(key));
+		}
+		System.out.println("Bot: Got courses: " + courseMap.toString());
+	}
+	
 	public void getXapiStatements(ArrayList<String> statements) {
 		System.out.println("Bot: Got " + statements.size() + " statements!");
 		System.out.println(statements.toString());
+		
+		HashMap<String, ArrayList<String>> statementsPerCourse = new HashMap<String, ArrayList<String>>();
+		Collections.reverse(statements);
+		for (String statement : statements) {
+			try {
+				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+				JSONObject obj = (JSONObject) parser.parse(statement);
+				JSONObject context = (JSONObject) obj.get("context");
+				JSONObject extensions = (JSONObject) context.get("extensions");
+				JSONObject courseInfo = (JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
+				String courseid = Integer.toString(courseInfo.getAsNumber("courseid").intValue());
+				
+				if (!statementsPerCourse.containsKey(courseid)) {
+					statementsPerCourse.put(courseid, new ArrayList<String>());
+				}
+				statementsPerCourse.get(courseid).add(statement);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("\u001B[33mDebug --- Partition: " + statementsPerCourse.toString() + "\u001B[0m");
+		
+		
 		// Check if any bots take xAPI statements first
 		HashMap<String, VLE> vles = config.getVLEs();
 		for (Entry<String, VLE> vleEntry : vles.entrySet()) {
-			//System.out.println("Debug --- VLE: " + vleEntry.getValue().getName());
 			HashMap<String, Bot> bots = vleEntry.getValue().getBots();
 			
 			for (Entry<String, Bot> botEntry : bots.entrySet()) {
-				//System.out.println("Debug --- Bots: " + botEntry.getValue().getName());
 				HashMap<String, Messenger> messengers = botEntry.getValue().getMessengers();
-				
+				String botName = botEntry.getValue().getName();
 				for (Entry<String, Messenger> messengerEntry : messengers.entrySet()) {
-					//System.out.println("Debug --- Messengers: " + messengerEntry.getValue().getName());
 					ChatMediator mediator = messengerEntry.getValue().getChatMediator();
-					//System.out.println("Debug --- Mediator: " + mediator.getClass());
-					//System.out.println("Debug --- Instance: " + (mediator instanceof MoodleForumMediator));
 					if (mediator instanceof MoodleForumMediator) {
 						MoodleForumMediator moodleMediator = (MoodleForumMediator) mediator;
-						Collections.reverse(statements);
-						moodleMediator.handle(statements);
+						if (courseMap != null && courseMap.containsKey(botName)) {
+							if (statementsPerCourse.containsKey(courseMap.get(botName))) {
+								System.out.println("\u001B[33mDebug --- Statement: " + statementsPerCourse.get(courseMap.get(botName)) + "\u001B[0m");
+								moodleMediator.handle(statementsPerCourse.get(courseMap.get(botName)));
+							}
+						} else {
+							moodleMediator.handle(statements);
+						}
 					}
 				}
 			}
 		}
-		
 	}
 
 	private boolean checkIfCondition(IfThenBlock itb, String text) {
