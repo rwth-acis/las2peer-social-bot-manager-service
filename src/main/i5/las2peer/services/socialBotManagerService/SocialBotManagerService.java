@@ -765,12 +765,26 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(messageInfo.getMessage().getEmail());
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
+			body.put("courseid", messageInfo.getMessage().getChannel());
 			body.put("user", messageInfo.getMessage().getUser());
             body.put("intent", messageInfo.getIntent().getKeyword());
             for(Entity entityName : messageInfo.getIntent().getEntities()){
             	body.put(entityName.getEntityName(), entityName.getValue());
               //  body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
             }
+            
+            
+            JSONArray entities = new JSONArray();
+            for(Entity entityName : messageInfo.getIntent().getEntities()){
+            	JSONObject entity = new JSONObject();
+            	entity.put("entityName", entityName.getEntityName());
+            	entity.put("value", entityName.getValue());
+            	entity.put("confidence", entityName.getConfidence());
+            	
+            	entities.add(entity);
+            }
+            body.put("entities", entities);
+            
             if (!messageInfo.getIntent().getEntities().isEmpty()) {
             	body.put("firstEntity", messageInfo.getIntent().getFirstEntity().getEntityName());
             }

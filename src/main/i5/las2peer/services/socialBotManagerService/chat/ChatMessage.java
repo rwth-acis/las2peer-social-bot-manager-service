@@ -2,7 +2,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 public class ChatMessage {
 	private String channel;
-	private String subchannel;
+	private String course;
 	private String user;
 	private int role;
 	private String email;
@@ -12,6 +12,13 @@ public class ChatMessage {
 		this.channel = channel;
 		this.user = user;
 		this.text = text;
+	}
+	
+	public ChatMessage(String channel, String user, String text, String course) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text;
+		this.course = course;
 	}
 
 	public void setText(String text) {
@@ -44,5 +51,9 @@ public class ChatMessage {
 
 	public void setRole(int role) {
 		this.role = role;
+	}
+
+	public String getCourse() {
+		return course;
 	}
 }
