@@ -29,7 +29,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNLU;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -134,7 +134,7 @@ public class Messenger {
 				this.name = username;
 			break;
 		case ROCKET_CHAT:
-			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+			this.chatMediator = new RocketChatMediator(token, database, new RasaNLU("rasaUrl"));
 			break;
 		default:
 			throw new ParseBotException("Unimplemented chat service: " + chatService);
@@ -261,7 +261,7 @@ public class Messenger {
 					// System.out.println("Intent : " +
 					// bot.getRasaServer(currentNluModel.get(message.getChannel()))
 					// .getIntent(message.getText()));
-					intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
+					intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).parse(message.getText());
 
 				}
 				System.out.println(intent.getKeyword());

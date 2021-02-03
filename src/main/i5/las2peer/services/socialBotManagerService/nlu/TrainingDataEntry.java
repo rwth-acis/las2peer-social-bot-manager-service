@@ -1,23 +1,28 @@
-package i5.las2peer.services.socialBotManagerService.parser.training;
+package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+
+import javax.validation.constraints.Size;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class DataGroup {
+public class TrainingDataEntry {
+
+	public static final int MINSIZE = 3;
 
 	@ApiModelProperty(dataType = "string", value = "The intent", required = true)
 	String intent;
+
+	@Size(min = MINSIZE)
 	@ApiModelProperty(value = "example of an utterance", required = true)
 	List<String> examples;
 
-	DataGroup() {
+	public TrainingDataEntry() {
 		this.examples = new ArrayList<>();
 	}
 
-	public DataGroup(String intentKeyword, List<String> responseMessages) {
+	public TrainingDataEntry(String intentKeyword, List<String> responseMessages) {
 		this();
 		this.intent = intentKeyword;
 		this.examples = responseMessages;
@@ -47,6 +52,35 @@ public class DataGroup {
 		assert examples != null;
 		for (String example : examples)
 			this.addExample(example);
+	}
+
+	public boolean validate() {
+		return this.validate(MINSIZE);
+	}
+
+	public boolean validate(int minsize) {
+
+		if (this.examples == null) {
+			System.out.println("validation failed: no examples");
+			return false;
+		}
+
+		if (this.examples.size() < minsize) {
+			System.out.println("validation failed: not enough examples");
+			return false;
+		}
+
+		if (this.intent == null) {
+			System.out.println("validation failed: no intent");
+			return false;
+		}
+
+		if (this.intent.length() < 2) {
+			System.out.println("validation failed: intent to short");
+			return false;
+		}
+
+		return true;
 	}
 
 	public String toMarkdown() {

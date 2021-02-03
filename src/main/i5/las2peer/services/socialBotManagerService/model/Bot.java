@@ -19,7 +19,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.nlg.TableLanguageGe
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventToMessageTrigger;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNLU;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
 import net.minidev.json.JSONArray;
@@ -114,14 +114,14 @@ public class Bot {
 		this.botServiceFunctions.put(name, serviceFunction);
 	}
 
-	public RasaNlu getRasaServer(String id) {
-		if (this.nlus.get(id) instanceof RasaNlu)
-			return (RasaNlu) this.nlus.get(id);
+	public RasaNLU getRasaServer(String id) {
+		if (this.nlus.get(id) instanceof RasaNLU)
+			return (RasaNLU) this.nlus.get(id);
 		return null;
 	}
 
-	public RasaNlu addRasaServer(NLUKnowledge nlu) {
-		RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
+	public RasaNLU addRasaServer(NLUKnowledge nlu) {
+		RasaNLU rasa = NLUGenerator.createRasaNLU(nlu);
 		String id = nlu.getId();
 		if (id == null)
 			id = String.valueOf(this.nlus.size());

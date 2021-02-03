@@ -57,7 +57,7 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNLU;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {
@@ -70,12 +70,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
 	private HashSet<String> activeSubscriptions = null;
 	private Map<String, StatefulResponse> states = new HashMap<>();
-	private RasaNlu rasa;
+	private RasaNLU rasa;
 	private SQLDatabase database;
 	private Thread checkRooms = null;
 	private boolean shouldCheckRooms = false;
 
-	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
+	public RocketChatMediator(String authToken, SQLDatabase database, RasaNLU rasa) {
 		super(authToken);
 		this.database = database;
 		String[] auth = authToken.split(":");

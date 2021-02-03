@@ -769,10 +769,8 @@ public class BotParser {
 					if (incomingMessages.get(target) != null) {
 						IncomingMessage message = incomingMessages.get(target);
 						ArrayList<String> list = new ArrayList<String>();
-						list.addAll(message.getResponseMessages());
-						nlu.addTrainingData(message.getIntentKeyword(), list);
-
-						nlu.addIntent(message.getIntentKeyword());
+						list.addAll(message.getResponseMessages());						
+						nlu.addTrainingData(message.getIntentKeyword(), list);						
 					}
 				}
 

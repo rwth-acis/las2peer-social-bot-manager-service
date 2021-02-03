@@ -6,15 +6,15 @@ import java.sql.SQLException;
 
 import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNLU;
 
 public class DataAsking extends StatefulResponse {
 
-	private RasaNlu rasa;
+	private RasaNLU rasa;
 	private String email;
 	private SQLDatabase database;
 
-	public DataAsking(RasaNlu rasa, SQLDatabase database, String email) {
+	public DataAsking(RasaNLU rasa, SQLDatabase database, String email) {
 		this.rasa = rasa;
 		this.database = database;
 		this.email = email;
@@ -27,7 +27,7 @@ public class DataAsking extends StatefulResponse {
 
 	@Override
 	public StatefulResponse getNext(String userMsg) {
-		if (rasa.getIntent(userMsg).getKeyword().equals("positive")) {
+		if (rasa.parse(userMsg).getKeyword().equals("positive")) {
 			updateDataProvided(true);
 			return new DataAskingAcceptedResponse(this.database, this.email);
 		} else {

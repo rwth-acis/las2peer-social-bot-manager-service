@@ -109,8 +109,9 @@ import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.nlu.NLUGenerator;
-import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
-import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaNLU;
+import i5.las2peer.services.socialBotManagerService.nlu.RasaTrainer;
+import i5.las2peer.services.socialBotManagerService.nlu.TrainingData;
 import i5.las2peer.services.socialBotManagerService.parser.BotModelInfo;
 import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
@@ -122,7 +123,6 @@ import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Sl
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.parameter.CreationParameter;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
-import i5.las2peer.services.socialBotManagerService.parser.training.TrainingData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -172,7 +172,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private int BOT_ROUTINE_PERIOD = 5; // 1 second
 
-	private TrainingHelper nluTrain = null;
+	private RasaTrainer nluTrain = null;
 	private Thread nluTrainThread = null;
 	private static final L2pLogger logger = L2pLogger.getInstance(SocialBotManagerService.class.getName());
 
@@ -263,7 +263,7 @@ public class SocialBotManagerService extends RESTService {
 
 			// added to have a way to access the intents of the rasa server
 			// this.rasaIntents.put(url.split("://")[1], intents);
-			this.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
+			this.nluTrain = new RasaTrainer(url, config, markdownTrainingData);
 			this.nluTrainThread = new Thread(this.nluTrain);
 			this.nluTrainThread.start();
 			// TODO: Create a member for this thread, make another REST method to check
@@ -277,10 +277,10 @@ public class SocialBotManagerService extends RESTService {
 			LanguageUnderstander lu = getConfig().getNLUs().get(url);
 
 			if (lu != null)
-				lu.addIntents(td.intents());
+				lu.addTrainingData(td);
 			else {
-				LanguageUnderstander nlu = new RasaNlu(url);
-				nlu.addIntents(td.intents());
+				LanguageUnderstander nlu = new RasaNLU(url);
+				lu.addTrainingData(td);
 				getConfig().addNLU(nlu);
 			}
 
@@ -466,7 +466,7 @@ public class SocialBotManagerService extends RESTService {
 					if (bot != null) {
 
 						JSONObject res = bot.toJSON();
-						
+
 						String botMessage = "My Information about *" + bot.getName() + "* \n";
 
 						botMessage = botMessage + "\nMessenger: \n";
@@ -886,7 +886,7 @@ public class SocialBotManagerService extends RESTService {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					
+
 					// Identify bot
 					Collection<VLE> vles = getConfig().getVLEs().values();
 					Bot bot = null;
@@ -1886,7 +1886,7 @@ public class SocialBotManagerService extends RESTService {
 					return Response.ok().entity("I did not create a new NLU module, because a module with the URL "
 							+ nlu.getUrl() + " already exists 😉").build();
 
-				RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
+				RasaNLU rasa = NLUGenerator.createRasaNLU(nlu);
 				getConfig().addNLU(rasa);
 
 				if (getConfig().getNLU(nlu.getName()) == null)
@@ -1912,22 +1912,22 @@ public class SocialBotManagerService extends RESTService {
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
-		public Response trainNLU(TrainingData training,
+		public Response trainNLU(TrainingData trainingData,
 				@ApiParam(hidden = true) @QueryParam("botEventId") String botEventId) {
 
 			try {
-				System.out.println("received event id: " + botEventId);
-				Collection<String> intents = training.intents();
-				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
 
-				if (lu == null)
+				System.out.println("received event id: " + botEventId);
+				LanguageUnderstander nlu = getConfig().getNLU(trainingData.getModuleName());
+				System.out.println("found nlu " + nlu.getName() + " size: " + nlu.getTrainingData().size());
+
+				if (nlu == null)
 					return Response.serverError().entity("nlu module not found").build();
 
-				lu.addIntents(intents);
-				System.out.println(training.toMarkdown());
-				TrainingHelper nluTrain = new TrainingHelper(Context.get(), botEventId, lu.getUrl(), null,
-						training.toMarkdown());
-				nluTrain.setDefaultConfig();
+				System.out.println("train nlu module " + nlu.getTrainingData().size() + " " + trainingData.size());
+				trainingData.addAll(nlu.getTrainingData());
+				System.out.println("new size " + trainingData.size());
+				RasaTrainer nluTrain = new RasaTrainer(Context.get(), botEventId, nlu, trainingData);
 				Thread nluThread = new Thread(nluTrain);
 				nluThread.start();
 
@@ -1989,17 +1989,15 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("create new Bot from botModel");
 				BotResource br = new BotResource();
 				Response response = br.init(botModel);
-				
-				
-				
-				BotParser bp = BotParser.getInstance();		
+
+				BotParser bp = BotParser.getInstance();
 				Bot resBot = null;
 				LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
-				LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();				
+				LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
 				try {
 					resBot = bp.parseNodesAndEdges(botModel, SocialBotManagerService.getConfig(),
 							SocialBotManagerService.getBotAgents(), nodes, edges, null);
-					
+
 				} catch (ParseBotException | IOException | DeploymentException e) {
 					e.printStackTrace();
 					return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -2009,18 +2007,18 @@ public class SocialBotManagerService extends RESTService {
 				} catch (AssertionError e) {
 					e.printStackTrace();
 				}
-				
+
 				JSONObject logData = new JSONObject();
 				logData.put("status", "initialized");
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
-				
-				if(resBot != null)
-				return Response.ok().entity(resBot.toJSON().toJSONString()).build();
+
+				if (resBot != null)
+					return Response.ok().entity(resBot.toJSON().toJSONString()).build();
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		
+
 			return Response.serverError().entity("bot creation failed").build();
 
 		}
@@ -2114,8 +2112,7 @@ public class SocialBotManagerService extends RESTService {
 
 							BotResource br = new BotResource();
 							Response response = br.init(newModel);
-							
-							
+
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -2374,7 +2371,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 		}
-		
+
 		@GET
 		@Path("/info/operations")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -2385,12 +2382,12 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				String address = "";
 				for (VLE vle : getConfig().getVLEs().values()) {
-					if(vle.getName().contentEquals("VLECreation"))
+					if (vle.getName().contentEquals("VLECreation"))
 						address = vle.getAddress();
 				}
-				if(address.contentEquals("") || address.contentEquals("http://127.0.0.1:8070/"))
+				if (address.contentEquals("") || address.contentEquals("http://127.0.0.1:8070/"))
 					address = "http://127.0.0.1:8080";
-				
+
 				Collection<String> functions = OpenAPIConnector.getOperationNames(serviceAlias, address);
 				JSONArray array = new JSONArray();
 				for (String function : functions) {
@@ -2536,7 +2533,7 @@ public class SocialBotManagerService extends RESTService {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(botName);
 					if (bot != null) {
-						
+
 						for (LanguageUnderstander nlu : bot.getNLUs().values()) {
 							res.addAll(nlu.getIntents());
 						}
@@ -2652,7 +2649,7 @@ public class SocialBotManagerService extends RESTService {
 					return Response.ok().entity("I did not create a new NLU module, because a module with the URL "
 							+ nlu.getUrl() + " already exists 😉").build();
 
-				RasaNlu rasa = NLUGenerator.createRasaNLU(nlu);
+				RasaNLU rasa = NLUGenerator.createRasaNLU(nlu);
 				getConfig().addNLU(rasa);
 
 				if (getConfig().getNLU(nlu.getName()) == null)
@@ -2705,37 +2702,37 @@ public class SocialBotManagerService extends RESTService {
 			return Response.ok().entity("upload meta model failed").build();
 
 		}
-
+		
 		@POST
 		@Path("/trainAndLoad")
 		@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
-		@Produces(MediaType.TEXT_PLAIN)
-		@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "train nlu model")
+		@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "train and load")
 		// TODO: Just an adapter, since the Rasa server doesn't support
 		// "Access-Control-Expose-Headers"
 		// and the model file name is returned as a response header... Remove and just
 		// use Rasa's
 		// API directly once that's fixed. The whole `TrainingHelper` class can be
 		// deleted then as well.
-		public Response trainAndLoad(@ApiParam(value = "nluModel", required = true) String nluModel) {
+		public Response trainAndLoad(@ApiParam(value = "body", required = true) String body) {
 			System.out.println("train and load");
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
-			if (sbfservice.nluTrainThread != null && sbfservice.nluTrainThread.isAlive())
+			
+			Thread nluTrainThread = null;
+			if (nluTrainThread != null && nluTrainThread.isAlive())
 				return Response.status(Status.SERVICE_UNAVAILABLE).entity("Training still in progress.").build();
 
 			try {
-				System.out.println(nluModel);
-				JSONObject bodyJson = (JSONObject) p.parse(nluModel);
+				System.out.println(body);
+				JSONObject bodyJson = (JSONObject) p.parse(body);
 				String url = bodyJson.getAsString("url");
 				String config = bodyJson.getAsString("config");
 				String markdownTrainingData = bodyJson.getAsString("markdownTrainingData");
 
 				// added to have a way to access the intents of the rasa server
 				// this.rasaIntents.put(url.split("://")[1], intents);
-				sbfservice.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
-				sbfservice.nluTrainThread = new Thread(sbfservice.nluTrain);
-				sbfservice.nluTrainThread.start();
+				RasaTrainer nluTrain = new RasaTrainer(url, config, markdownTrainingData);
+				nluTrainThread = new Thread(nluTrain);
+				nluTrainThread.start();
 				// TODO: Create a member for this thread, make another REST method to check
 				// whether
 				// training was successful.
@@ -2747,10 +2744,10 @@ public class SocialBotManagerService extends RESTService {
 				LanguageUnderstander lu = getConfig().getNLUs().get(url);
 
 				if (lu != null)
-					lu.addIntents(td.intents());
+					lu.addTrainingData(td);
 				else {
-					LanguageUnderstander nlu = new RasaNlu(url);
-					nlu.addIntents(td.intents());
+					LanguageUnderstander nlu = new RasaNLU(url);
+					lu.addTrainingData(td);
 					getConfig().addNLU(nlu);
 				}
 
@@ -2765,43 +2762,5 @@ public class SocialBotManagerService extends RESTService {
 			return Response.ok("Training started.").build();
 		}
 
-		/**
-		 * @return ok
-		 */
-		@POST
-		@Path("/nlu/train")
-		@Consumes(MediaType.APPLICATION_JSON)
-		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "Create Nlu Model", notes = "creates the nlu model.")
-		public Response trainNLU(TrainingData training,
-				@ApiParam(hidden = true) @QueryParam("botEventId") String botEventId) {
-
-			try {
-				System.out.println("received event id: " + botEventId);
-				Collection<String> intents = training.intents();
-				LanguageUnderstander lu = getConfig().getNLU(training.getNluName());
-
-				if (lu == null)
-					return Response.serverError().entity("nlu module not found").build();
-
-				lu.addIntents(intents);
-				lu.addTrainingData(training);
-				TrainingHelper nluTrain = new TrainingHelper(Context.get(), botEventId, lu.getUrl(), null,
-						lu.getTrainingData().toMarkdown());
-				nluTrain.setDefaultConfig();
-				Thread nluThread = new Thread(nluTrain);
-				nluThread.start();
-
-				return Response.ok().entity(
-						"I started the NLU training for you 😄 \n I will notify you as soon as the training is finished")
-						.build();
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return Response.serverError().entity("nlu creation failed").build();
-
-		}
 	}
 }
