@@ -22,10 +22,18 @@ import java.util.OptionalLong;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.java_websocket.util.Base64;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,6 +45,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.io.Files;
 import com.rocketchat.common.data.lightdb.document.UserDocument;
 import com.rocketchat.common.data.model.ErrorObject;
+import com.rocketchat.common.data.model.Room;
 import com.rocketchat.common.data.model.UserObject;
 import com.rocketchat.common.listener.ConnectListener;
 import com.rocketchat.common.listener.SubscribeListener;
@@ -103,49 +112,33 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
 		String newText = text.replace("\\n", "\n");
-		room.uploadFile(f, f.getName(), newText, new FileListener() {
-
-			@Override
-			public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
-				// TODO Auto-generated method stub
+		Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
+		try {
+			FileDataBodyPart filePart = new FileDataBodyPart("file", f);
+			FormDataMultiPart mp = new FormDataMultiPart();
+			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "x").field("description", "")
+					.bodyPart(filePart);
+			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
+					.post(Entity.entity(multipart, multipart.getMediaType()));
+			System.out.println(response.getEntity().toString());
+			mp.close();
+			multipart.close();
+		try {
+				java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-
-			@Override
-			public void onUploadError(ErrorObject arg0, IOException arg1) {
-				room.sendMessage(arg0.getMessage());
-				room.sendMessage(arg0.getReason());
-				try {
-					java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+			try  {
+				java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+			} catch (IOException g) {
+				// TODO Auto-generated catch block
+				g.printStackTrace();
 			}
-
-			@Override
-			public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void onUploadStarted(String arg0, String arg1, String arg2) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1, String arg2, String arg3,
-					String arg4) {
-				try {
-					java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
-
+		}
 	}
 	
 	@Override
@@ -162,50 +155,34 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}		
+		Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
+		try {
+			FileDataBodyPart filePart = new FileDataBodyPart("file", file);
+			FormDataMultiPart mp = new FormDataMultiPart();
+			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "").field("description", "")
+					.bodyPart(filePart);
+			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
+					.post(Entity.entity(multipart, multipart.getMediaType()));;
+			System.out.println(response.getEntity().toString());
+			mp.close();
+			multipart.close();
+			try {
+				java.nio.file.Files.deleteIfExists(Paths.get(fileName));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+			try {
+				java.nio.file.Files.deleteIfExists(Paths.get(fileName));
+			} catch (IOException f) {
+				// TODO Auto-generated catch block
+				f.printStackTrace();
+			}
 		}
-		room.uploadFile(file, file.getName() , newText, new FileListener() {
-
-			@Override
-			public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			public void onUploadError(ErrorObject arg0, IOException arg1) {
-				room.sendMessage(arg0.getMessage());
-				room.sendMessage(arg0.getReason());
-				try {
-					java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-
-			@Override
-			public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void onUploadStarted(String arg0, String arg1, String arg2) {
-				// TODO Auto-generated method stub
-				
-
-			}
-
-			@Override
-			public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1, String arg2, String arg3,
-					String arg4) {
-				try {
-					java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
 	}
 
 	@Override
@@ -219,6 +196,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 		}
 		sendingMessage.put(channel, true);
+		
+		
+		
+		
 		room.getMembers(new GetMembersListener() {
 
 			@Override
