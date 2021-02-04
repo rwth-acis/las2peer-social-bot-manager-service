@@ -448,6 +448,7 @@ public class Messenger {
 									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
 									// check whether a file url is attached to the chat response and try to send it to the user
 									if(!response.getFileURL().equals("")) {
+										String fileName ="";
 										try {
 											// Replacable variable in url menteeEmail
 											String urlEmail = response.getFileURL().replace("menteeEmail", message.getEmail());
@@ -465,7 +466,7 @@ public class Messenger {
 											}
 											// parse the file name from the header field
 											System.out.println(fieldValue);
-											String fileName = "pdf.pdf";
+											 fileName = "pdf.pdf";
 											if(!fieldValue.equals("pdf.pdf")) {
 												fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10, fieldValue.length() - 1);
 											} else {
@@ -492,6 +493,7 @@ public class Messenger {
 										}
 										catch(Exception e){
 											System.out.println("Could not extract File for reason " + e);
+											java.nio.file.Files.deleteIfExists(Paths.get(fileName));
 											this.chatMediator.sendMessageToChannel(message.getChannel(), response.getErrorMessage());
 										}
 									}
