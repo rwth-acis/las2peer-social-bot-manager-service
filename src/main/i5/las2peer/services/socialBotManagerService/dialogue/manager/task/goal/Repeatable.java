@@ -1,6 +1,6 @@
-package i5.las2peer.services.socialBotManagerService.parser.openapi;
+package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
-public interface RepeatingNode {
+public interface Repeatable {
 
 	public int size();
 	

@@ -102,11 +102,9 @@ public class IncomingMessage implements MessengerElement {
 	}
 
 	public ArrayList<ChatResponse> getResponseArray() {
-		if (responses.isEmpty()) {
-			return null;
-		} else {
+		
 			return responses;
-		}
+		
 	}
 
 	public void setTriggeredFunction(ServiceFunction triggeredFunction) {

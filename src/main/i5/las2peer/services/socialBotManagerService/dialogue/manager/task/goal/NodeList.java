@@ -39,7 +39,7 @@ public class NodeList extends ArrayList<Node> {
 	 * 
 	 * @return list of nodes that have a filled value (non-empty nodes)
 	 */
-	public List<Fillable> getFilledValues() {
+	public List<Fillable> getFilledNode() {
 
 		List<Fillable> res = new ArrayList<Fillable>();
 		for (Node node : this) {

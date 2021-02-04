@@ -8,6 +8,7 @@ import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActGenerato
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Node;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Repeatable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.RepetitionNode;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
@@ -15,7 +16,6 @@ import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
-import i5.las2peer.services.socialBotManagerService.parser.openapi.RepeatingNode;
 
 public class TaskOrientedManagerImpl extends TaskOrientedManager {
 
@@ -106,8 +106,8 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 			// arrays
 			if (node != null && node.getSlot().isArray()) {
 
-				if (node instanceof RepeatingNode) {
-					RepeatingNode rep = (RepeatingNode) node;
+				if (node instanceof Repeatable) {
+					Repeatable rep = (Repeatable) node;
 					System.out.println("repeating node " + node.getAPIName() + " size " + rep.size() + " min "
 							+ rep.getMinItems());
 					if (rep.getMinItems() > rep.size())

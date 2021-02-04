@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.MultiValueNode;
+import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Repeatable;
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
 import i5.las2peer.services.socialBotManagerService.model.Domain;
@@ -52,7 +54,7 @@ public class DialogueActGenerator {
 		DialogueAct act = new DialogueAct();
 		act.setIntent(goal.getFrame().getReqConfIntent());
 		act.setIntentType(DialogueActType.REQCONF_FRAME);
-		List<Fillable> values = goal.getAll().getFilledValues();
+		List<Fillable> values = goal.getAll().getFilledNode();
 		for (Fillable node : values)
 			act.addEntity(node.getSlot().getDisplayName(), node.getValue());
 
@@ -99,10 +101,43 @@ public class DialogueActGenerator {
 		act.setIntent(slot.getRequestIntent());
 		act.setIntentType(DialogueActType.REQUEST_SLOT);
 		act.addEntity("name", slot.getDisplayName());
+
+		// variables
 		if (slot.getParameter().getDescription() != null)
 			act.addEntity("description", slot.getParameter().getDescription());
 		if (slot.getParameter().getExample() != null)
 			act.addEntity("example", slot.getParameter().getExample());
+
+		if (goal != null) {
+			System.out.println("#variables for already filled values");
+			for (Entry<String, String> entry : goal.getFilledValues().entrySet()) {
+				act.addEntity("value_" + entry.getKey(), entry.getValue());
+			}
+
+		}
+
+		// repeatable
+		if (node instanceof Repeatable) {
+
+			Repeatable rep = (Repeatable) node;
+			act.addEntity("needed", String.valueOf(rep.getNeeded()));
+			act.addEntity("size", String.valueOf(rep.size()));
+			if (rep.size() >= 1) {
+				act.setIntent(slot.getRequestIntent() + "_next");
+				if (rep.size() >= 1 && rep.getNeeded() < 1)
+					act.setIntent(slot.getRequestIntent() + "_additional");
+
+				if (node instanceof MultiValueNode) {
+					System.out.println("#instance of multi value node");
+					MultiValueNode mv = (MultiValueNode) node;
+					String values = "";
+					for (String value : mv.getValues()) {
+						values = values + value + ", ";
+					}
+					act.addEntity("values", values);
+				}
+			}
+		}
 
 		// expected input
 		ExpectedInput input = new ExpectedInput();
@@ -131,7 +166,7 @@ public class DialogueActGenerator {
 					enumList = node.getSlot().getParameter().getUpdatedEnumList(parameters);
 
 				} else {
-					//slot.update();
+					// slot.update();
 					enumList = slot.getEnumList();
 				}
 
@@ -218,6 +253,25 @@ public class DialogueActGenerator {
 		act.addEntity(new Entity("name", name));
 		act.setIntentType(DialogueActType.REQCONF_SLOT_PROCEED);
 		act.setIntent(node.getReqConfProceed());
+
+		// repeatable
+		if (node instanceof Repeatable) {
+
+			Repeatable rep = (Repeatable) node;
+			act.addEntity("needed", String.valueOf(rep.getNeeded()));
+			act.addEntity("size", String.valueOf(rep.size()));
+
+			if (node instanceof MultiValueNode) {
+				System.out.println("#instance of multi value node");
+				MultiValueNode mv = (MultiValueNode) node;
+				String values = "";
+				for (String value : mv.getValues()) {
+					values = values + value + ", ";
+				}
+				act.addEntity("values", values);
+
+			}
+		}
 
 		ExpectedInput input = new ExpectedInput();
 		input.setIntend(node.getReqConfProceed());

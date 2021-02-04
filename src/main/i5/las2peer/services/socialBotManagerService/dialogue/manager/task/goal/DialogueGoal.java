@@ -346,6 +346,17 @@ public class DialogueGoal {
 		return this.root.getAll();
 	}
 
+	public Map<String, String> getFilledValues() {
+		Map<String, String> res = new HashMap<>();
+		for (Fillable fill : this.getAll().getFillableNodes()) {
+			if (fill.isFilled())
+				res.put(fill.getAPIName(), fill.getValue());
+		}
+
+		return res;
+
+	}
+
 	public OpenAPIAction getOpenAPIAction() {
 
 		ServiceFunction function = this.getFrame().getServiceFunction();

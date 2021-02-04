@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
-import i5.las2peer.services.socialBotManagerService.parser.openapi.RepeatingNode;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
-public class MultiValueNode extends Node implements Fillable, RepeatingNode {
+public class MultiValueNode extends Node implements Fillable, Repeatable {
 
 	private Slot slot;
 	private List<String> values;
