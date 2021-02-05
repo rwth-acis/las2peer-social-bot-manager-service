@@ -482,6 +482,7 @@ public class Slot {
 
 		if (!this.hasParameter())
 			return new ArrayList<>();
+				
 		return this.getParameter().getUpdatedEnumList(parameters);
 
 	}

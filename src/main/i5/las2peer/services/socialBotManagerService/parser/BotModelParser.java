@@ -19,6 +19,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelLabel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
+import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.nlu.FallbackNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
@@ -111,7 +112,11 @@ public class BotModelParser {
 
 		// VLE Instance
 		String vleName = "vleName";
-		String vleAddress = "http://127.0.0.1:8080";
+		String vleAddress = "http://127.0.0.1:8080";		
+		VLE creationVLE = config.getVLEofBot("CreationBot");
+		if(creationVLE != null && creationVLE.getAddress() != null)
+			vleAddress = creationVLE.getAddress();		
+		
 		String seperator = "";
 		BotModelNode vleNode = addNode("Instance");
 		addAttribute(vleNode, "Name", vleName);
@@ -256,6 +261,7 @@ public class BotModelParser {
 				Las2peer oa = (Las2peer) function;
 				BotModelNode frameNode = addNode("Frame");
 				addAttribute(frameNode, "Intent Keyword", oa.getNluIntent());
+				addAttribute(frameNode, "Operation Name", oa.getNluIntent());
 
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "Service");

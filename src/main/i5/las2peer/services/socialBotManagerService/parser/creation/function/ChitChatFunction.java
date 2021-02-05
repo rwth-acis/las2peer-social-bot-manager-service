@@ -10,7 +10,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel(parent = Function.class, value = "ChitChat")
+@ApiModel(parent = Function.class, value = "Chat Function")
 public class ChitChatFunction extends Function {
 
 	@ApiModelProperty(required = true)

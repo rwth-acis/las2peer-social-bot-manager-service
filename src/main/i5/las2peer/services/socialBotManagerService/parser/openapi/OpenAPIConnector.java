@@ -496,14 +496,17 @@ public class OpenAPIConnector {
 		switch (serviceAlias) {
 
 		case "i5.las2peer.services.weatherService.WeatherService":
+		case "WeatherService":
 			name = "weather";
 			break;
 
 		case "i5.las2peer.services.weatherService.CoronaService":
+		case "CoronaService":
 			name = "corona";
 			break;
 
 		case "i5.las2peer.services.socialBotManagerService.SocialBotManagerService":
+		case "SocialBotManagerService":
 			name = "sbfmanager";
 			break;
 

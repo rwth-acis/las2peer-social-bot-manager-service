@@ -55,7 +55,11 @@ public class RasaNLU extends LanguageUnderstander {
 
 	@Override
 	public Collection<String> getIntents() {
-		return this.Intents;
+		
+		if (this.Intents != null && !this.Intents.isEmpty())
+			return this.Intents;
+		
+		return this.data.getIntents();
 	}
 
 	public Intent getIntent(String input) {

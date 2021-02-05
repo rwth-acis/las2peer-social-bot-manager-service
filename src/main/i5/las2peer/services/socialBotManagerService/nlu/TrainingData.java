@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -81,6 +82,14 @@ public class TrainingData {
 		if (entry.validate())
 			this.entries.add(entry);
 
+	}
+
+	public Collection<String> getIntents() {
+		Collection<String> res = new HashSet<>();
+		for (TrainingDataEntry entry : this.entries) {
+			res.add(entry.getIntent());
+		}
+		return res;
 	}
 
 	public int size() {

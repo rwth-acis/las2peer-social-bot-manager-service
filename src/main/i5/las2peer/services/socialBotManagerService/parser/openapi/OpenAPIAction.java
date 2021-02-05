@@ -1,5 +1,6 @@
 package i5.las2peer.services.socialBotManagerService.parser.openapi;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,6 +38,10 @@ public class OpenAPIAction {
 	 */
 	public OpenAPIAction(ServiceFunction sf) {
 		this((FunctionInterface) sf);
+	}
+	
+	public OpenAPIAction(URL fullURL) {
+		this(new ServiceFunction(fullURL));
 	}
 	
 	public OpenAPIAction(FunctionInterface sf) {

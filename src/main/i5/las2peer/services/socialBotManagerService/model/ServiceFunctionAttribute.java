@@ -315,6 +315,9 @@ public class ServiceFunctionAttribute {
 	 */
 	public List<String> getUpdatedEnumList(Map<String, String> parameters) {
 
+		if(this.fillingFunction == null)
+			return this.enumList;
+		
 		if (parameters == null)
 			parameters = new HashMap<>();
 

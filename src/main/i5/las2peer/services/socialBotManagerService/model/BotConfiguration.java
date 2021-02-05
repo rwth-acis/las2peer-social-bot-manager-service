@@ -86,5 +86,20 @@ public class BotConfiguration {
 
 		return bots;
 	}
+	
+	public VLE getVLEofBot(String botName) {
+		
+		if(this.vles == null)
+			return null;
+		
+		for(VLE vle :this.vles.values()) {
+			Bot bot = vle.getBotByName(botName);
+			if(bot != null)
+				return vle;
+		}
+		System.out.println("no vle for " + botName + " found");	
+		return null;		
+		
+	}
 
 }

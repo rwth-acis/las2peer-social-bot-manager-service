@@ -161,13 +161,14 @@ public class DialogueActGenerator {
 
 				List<String> enumList = new ArrayList<>();
 				if (slot.hasDynamicEnums()) {
-
+					
+					System.out.println("slot " + slot.getAPIName() + " has dynamic enums");
 					Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
 					enumList = node.getSlot().getParameter().getUpdatedEnumList(parameters);
 
 				} else {
-					// slot.update();
-					enumList = slot.getEnumList();
+					slot.update();
+					enumList = slot.getUpdatedEnumList(null);
 				}
 
 				if (enumList != null)

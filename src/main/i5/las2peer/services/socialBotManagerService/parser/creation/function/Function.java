@@ -10,13 +10,13 @@ import io.swagger.annotations.ApiModelProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = ChitChatFunction.class, name = "ChitChat"),
+@JsonSubTypes({ @JsonSubTypes.Type(value = ChitChatFunction.class, name = "Chat Function"),
 		@JsonSubTypes.Type(value = AccessServiceFunction.class, name = "AccessService")})
 @ApiModel(discriminator = "type", subTypes = { ChitChatFunction.class, AccessServiceFunction.class,
 		Notification.class })
 public abstract class Function {
-	@ApiModelProperty(dataType = "string", allowableValues = "AccessService, ChitChat", required = true, value = "Which function should your bot do? \n*AccessService*: The bot lets the user access a web service. \n"
-			+ "*ChitChat*: The bot has a casual conversation with the user.")
+	@ApiModelProperty(dataType = "string", allowableValues = "AccessService, Chat Function", required = true, value = "Which function should your bot do? \n*AccessService*: The bot lets the user access a web service. \n"
+			+ "*Chat Function*: The bot has a casual conversation with the user.")
 	private FunctionType type;
 	
 	public FunctionType getType() {

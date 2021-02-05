@@ -270,9 +270,9 @@ public class DialogueGoal {
 		for (ServiceFunctionAttribute slotAttr : attr.getRetrieveFunction().getFrameGeneratedAttributes()) {
 
 			Fillable input = null;
-			if (this.contains(slotAttr.getSlotID()))
+			if (slotAttr.getSlotID() != null && this.contains(slotAttr.getSlotID()))
 				input = this.getFillable(slotAttr.getSlotID());
-			else if (this.contains(slotAttr.getSlotName()))
+			else if (slotAttr.getSlotName() != null && this.contains(slotAttr.getSlotName()))
 				input = this.getFillable(slotAttr.getSlotName());
 
 			assert input != null : "cant find " + slotAttr.getSlotID() + " in " + this.getFrame().getName();

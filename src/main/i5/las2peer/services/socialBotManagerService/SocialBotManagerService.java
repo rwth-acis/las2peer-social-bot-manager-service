@@ -53,6 +53,7 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.grizzly.http.util.URLDecoder;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -122,7 +123,9 @@ import i5.las2peer.services.socialBotManagerService.parser.creation.function.Fun
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.parameter.CreationParameter;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -2385,9 +2388,13 @@ public class SocialBotManagerService extends RESTService {
 					if (vle.getName().contentEquals("VLECreation"))
 						address = vle.getAddress();
 				}
+								
 				if (address.contentEquals("") || address.contentEquals("http://127.0.0.1:8070/"))
 					address = "http://127.0.0.1:8080";
-
+				
+				else if (address.endsWith("/"))
+					address = address.substring(0, address.length()-1);
+				
 				Collection<String> functions = OpenAPIConnector.getOperationNames(serviceAlias, address);
 				JSONArray array = new JSONArray();
 				for (String function : functions) {
@@ -2446,6 +2453,56 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@GET
+		@Path("/info/services")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
+		public Response getServices() {
+
+			try {
+
+				BotConfiguration config = getConfig();
+				VLE vle = config.getVLEofBot("CreationBot");
+
+				if (vle == null)
+					return Response.serverError().entity("No VLE found").build();
+
+				String address = vle.getAddress();
+				if (address.endsWith("/"))
+					address = address.substring(0, address.length() - 1);
+
+				address = address + "/las2peer/getOtherNodesInfo";
+				URL url = new URL(address);
+				OpenAPIAction action = new OpenAPIAction(url);
+				OpenAPIResponse response = action.execute();
+				JsonElement json = response.getAsJSON();
+				Collection<String> names = OpenAPIConnector.searchValuesByKey(json, "service-name");
+				Collection<String> parsedNames = new LinkedList<>();
+				for (String name : names) {
+					if (!name.contains("MobSOSDataProcessingService") && !name.contains("SocialBotManagerService")) {
+						System.out.println("service-name: " + name);
+						String[] splitted = name.split("\\.");
+						if(splitted.length > 1)
+							parsedNames.add(splitted[splitted.length - 1]);
+						else
+							parsedNames.add(name);
+					}
+				}
+
+				JSONArray res = new JSONArray();
+				for (String name : parsedNames) {
+					res.add(name);
+				}
+
+				return Response.ok().entity(res).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.serverError().entity("I have no idea what services are in here").build();
+			}
+
+		}
+
+		@GET
 		@Path("/test/{testarrParam}")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
@@ -2494,7 +2551,7 @@ public class SocialBotManagerService extends RESTService {
 		@Consumes(MediaType.TEXT_PLAIN)
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
+		@ApiOperation(value = "getBotModel", notes = "get NLU model Intents")
 		public Response getBotModel(@PathParam("botName") String name) {
 
 			try {
@@ -2702,7 +2759,7 @@ public class SocialBotManagerService extends RESTService {
 			return Response.ok().entity("upload meta model failed").build();
 
 		}
-		
+
 		@POST
 		@Path("/trainAndLoad")
 		@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
@@ -2716,7 +2773,7 @@ public class SocialBotManagerService extends RESTService {
 		public Response trainAndLoad(@ApiParam(value = "body", required = true) String body) {
 			System.out.println("train and load");
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			
+
 			Thread nluTrainThread = null;
 			if (nluTrainThread != null && nluTrainThread.isAlive())
 				return Response.status(Status.SERVICE_UNAVAILABLE).entity("Training still in progress.").build();
