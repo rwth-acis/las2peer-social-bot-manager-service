@@ -332,6 +332,7 @@ public class DialogueActGenerator {
 
 		DialogueAct act = new DialogueAct();
 		act.setIntentType(DialogueActType.ERROR_NLU);
+		act.setIntent("error_nlu");
 		return act;
 	}
 

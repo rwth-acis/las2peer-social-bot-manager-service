@@ -146,7 +146,7 @@ public class OpenAPIConnector {
 
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
-		client.setLogin(loginName, password);
+		//client.setLogin(loginName, password);
 
 		return sendRequest(client, action);
 	}
@@ -174,7 +174,7 @@ public class OpenAPIConnector {
 
 			String loginName = "alice";
 			String password = "pwalice";
-			client.setLogin(loginName, password);
+		//	client.setLogin(loginName, password);
 			response = sendRequest(client, action);
 
 		}

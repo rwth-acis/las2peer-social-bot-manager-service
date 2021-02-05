@@ -26,7 +26,7 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 	protected ResponseMessage getErrorNLU(DialogueAct act) {
 		assert act != null;
 
-		String message = "I am sorry. Currently my language understanding is not working. Please use explicit commands";
+		String message = "I am sorry. Currently my language understanding is not working. Please use explicit commands /start";
 		ResponseMessage res = new ResponseMessage(message);
 		return res;
 	}
