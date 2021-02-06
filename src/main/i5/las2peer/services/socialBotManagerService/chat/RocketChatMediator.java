@@ -1,4 +1,4 @@
- package i5.las2peer.services.socialBotManagerService.chat;
+package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -13,11 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -29,8 +27,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
@@ -38,14 +36,8 @@ import org.java_websocket.util.Base64;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import org.apache.commons.io.FileUtils;
-
-
-
-import com.google.common.io.Files;
 import com.rocketchat.common.data.lightdb.document.UserDocument;
 import com.rocketchat.common.data.model.ErrorObject;
-import com.rocketchat.common.data.model.Room;
 import com.rocketchat.common.data.model.UserObject;
 import com.rocketchat.common.listener.ConnectListener;
 import com.rocketchat.common.listener.SubscribeListener;
@@ -68,7 +60,6 @@ import com.rocketchat.core.model.TokenObject;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
-import i5.las2peer.services.socialBotManagerService.chat.state.StatefulResponse;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
@@ -82,7 +73,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private String token;
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
 	private HashSet<String> activeSubscriptions = null;
-	private Map<String, StatefulResponse> states = new HashMap<>();
 	private RasaNlu rasa;
 	private SQLDatabase database;
 	private Thread checkRooms = null;
@@ -104,6 +94,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.connect(this);
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		this.rasa = rasa;
+		messageCollector.setDomain(url);
 	}
 
 	@Override
@@ -124,7 +115,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			System.out.println(response.getEntity().toString());
 			mp.close();
 			multipart.close();
-		try {
+			try {
 				java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -132,7 +123,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
-			try  {
+			try {
 				java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
 			} catch (IOException g) {
 				// TODO Auto-generated catch block
@@ -140,9 +131,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 		}
 	}
-	
+
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+			OptionalLong id) {
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
 		String newText = "";
@@ -155,7 +147,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
 		Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
 		try {
@@ -164,7 +156,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "").field("description", "")
 					.bodyPart(filePart);
 			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
-					.post(Entity.entity(multipart, multipart.getMediaType()));;
+					.post(Entity.entity(multipart, multipart.getMediaType()));
+			;
 			System.out.println(response.getEntity().toString());
 			mp.close();
 			multipart.close();
@@ -190,16 +183,13 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
-		if(sendingMessage.get(channel) != null) {
-			while(sendingMessage.get(channel) == true) {
-				
+		if (sendingMessage.get(channel) != null) {
+			while (sendingMessage.get(channel) == true) {
+
 			}
 		}
 		sendingMessage.put(channel, true);
-		
-		
-		
-		
+
 		room.getMembers(new GetMembersListener() {
 
 			@Override
@@ -436,7 +426,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		}
 		return writer.toString();
 	}
-	
+
 	protected String getFileBase64(String userId, String file) {
 		System.out.println(userId);
 		MiniClient textClient = new MiniClient();
@@ -514,111 +504,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		// Creating Logical ChatRooms using factory class
 	}
 
-	protected Boolean checkUserProvidedData(String email) {
-		Boolean dataProvided = null;
-		PreparedStatement stmt = null;
-		Connection conn = null;
-		ResultSet rs = null;
-		try {
-			conn = database.getDataSource().getConnection();
-			stmt = conn.prepareStatement("SELECT data_provided FROM users WHERE email=?");
-			stmt.setString(1, email);
-			rs = stmt.executeQuery();
-			while (rs.next()) {
-				dataProvided = rs.getBoolean(1);
-				if (rs.wasNull()) {
-					dataProvided = null;
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (rs != null)
-					rs.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (stmt != null)
-					stmt.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (conn != null)
-					conn.close();
-			} catch (Exception e) {
-			}
-			;
-		}
-		return dataProvided;
-	}
-
-	protected Boolean checkUserExist(String email) {
-		int count = 0;
-		PreparedStatement stmt = null;
-		Connection conn = null;
-		ResultSet rs = null;
-		try {
-			conn = database.getDataSource().getConnection();
-			stmt = conn.prepareStatement("SELECT Count(*) FROM users WHERE email=?");
-			stmt.setString(1, email);
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				count = rs.getInt(1);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (rs != null)
-					rs.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (stmt != null)
-					stmt.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (conn != null)
-					conn.close();
-			} catch (Exception e) {
-			}
-			;
-		}
-		return count > 0;
-	}
-
-	private void addNewUser(String email) {
-		PreparedStatement stmt = null;
-		Connection conn = null;
-		try {
-			conn = database.getDataSource().getConnection();
-			stmt = conn.prepareStatement("INSERT into users (email, role) values (?, 3)");
-			stmt.setString(1, email);
-			stmt.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (stmt != null)
-					stmt.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (conn != null)
-					conn.close();
-			} catch (Exception e) {
-			}
-			;
-		}
-	}
-
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(message.getRoomId());
@@ -627,35 +512,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				String email = getStudentEmail(message.getSender().getUserName());
 				System.out.println("Email: " + email);
 				System.out.println("Message: " + message.getMessage());
-				if (!checkUserExist(email)) {
-					System.out.println("Add new user: " + email);
-					addNewUser(email);
-				}
 
-				Boolean dataProvided = checkUserProvidedData(email);
-				System.out.println(dataProvided);
-
-				StatefulResponse statefulResponse = states.get(email);
-
-				int role = getStudentRole(email);
-
-				/*if (statefulResponse == null && dataProvided == null) {
-				
-					DataAsking userDataQuestion = new DataAsking(rasa, database, email);
-					room.sendMessage(userDataQuestion.getResponse());
-					states.put(email, userDataQuestion);
-					return;
-				}
-				
-				if (statefulResponse != null) {
-					statefulResponse = statefulResponse.getNext(message.getMessage());
-					states.put(email, statefulResponse);
-					if (statefulResponse != null) {
-						room.sendMessage(statefulResponse.getResponse());
-						return;
-					}
-				}
-				*/
 				Type type = message.getMsgType();
 				if (type.equals(Type.ATTACHMENT)) {
 					System.out.println("Handling attachement");
@@ -663,299 +520,23 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					String fileType = j.getJSONObject("file").getString("type");
 					String fileName = j.getJSONObject("file").getString("name");
 					System.out.println(j);
-					if (fileType.equals("text/plain") || fileType.equals("application/pdf") || fileType.equals("image/png")) {
-						String file = j.getJSONArray("attachments").getJSONObject(0)
-								.getString("title_link").substring(1);
+					if (fileType.equals("text/plain") || fileType.equals("application/pdf")
+							|| fileType.equals("image/png")) {
+						String file = j.getJSONArray("attachments").getJSONObject(0).getString("title_link")
+								.substring(1);
 						JSONObject bodyJSON = new JSONObject();
 						String fileBody = getFileBase64(client.getMyUserId(), file);
-						messageCollector.handle(message, fileBody, fileName, fileType, role, getStudentEmail(message.getSender().getUserName()));
+						messageCollector.handle(message, fileBody, fileName, fileType, 0,
+								getStudentEmail(message.getSender().getUserName()));
 					} else {
-						messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
+						messageCollector.handle(message, 0, getStudentEmail(message.getSender().getUserName()));
 					}
 				} else {
-					messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
-				}
-			}
-		}
-	}		
-
-		
-		/*
-		 * @Override
-	public void onMessage(String arg0, RocketChatMessage message) {
-		ChatRoom room = client.getChatRoomFactory().getChatRoomById(message.getRoomId());
-		synchronized (room) {
-			if (!message.getSender().getUserId().equals(client.getMyUserId())) {
-				String email = getStudentEmail(message.getSender().getUserName());
-				System.out.println("Email: " + email);
-				System.out.println("Message: " + message.getMessage());
-				if (!checkUserExist(email)) {
-					System.out.println("Add new user: " + email);
-					addNewUser(email);
-				}
-
-				Boolean dataProvided = checkUserProvidedData(email);
-				System.out.println(dataProvided);
-
-				StatefulResponse statefulResponse = states.get(email);
-
-				int role = getStudentRole(email);
-
-				/*if (statefulResponse == null && dataProvided == null) {
-				
-					DataAsking userDataQuestion = new DataAsking(rasa, database, email);
-					room.sendMessage(userDataQuestion.getResponse());
-					states.put(email, userDataQuestion);
-					return;
-				}
-				
-				if (statefulResponse != null) {
-					statefulResponse = statefulResponse.getNext(message.getMessage());
-					states.put(email, statefulResponse);
-					if (statefulResponse != null) {
-						room.sendMessage(statefulResponse.getResponse());
-						return;
-					}
-				}
-				
-				Type type = message.getMsgType();
-				if (type.equals(Type.ATTACHMENT)) {
-					try {
-						new Thread(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									System.out.println("Handling attachement");
-									JSONObject j = message.getRawJsonObject();
-									String fileType = j.getJSONObject("file").getString("type");
-									String fileName = j.getJSONObject("file").getString("name");
-									if (fileType.equals("text/plain") || fileType.equals("application/pdf")) {
-										String file = j.getJSONArray("attachments").getJSONObject(0)
-												.getString("title_link").substring(1);
-										JSONObject bodyJSON = new JSONObject();
-										String body = "";
-										if (fileType.equals("text/plain")) {
-											body = getTxtFile(client.getMyUserId(), file);
-											bodyJSON = new JSONObject(Collections.singletonMap("text",
-													StringEscapeUtils.escapeJson(body)));
-										} else if (fileType.equals("application/pdf")) { // fileType.equals("application/pdf")
-											byte[] content = getPDFFile(client.getMyUserId(), file);
-											body = Base64.encodeBytes(content);
-											bodyJSON.put("text", body);
-										}
-
-										bodyJSON.put("type", fileType);
-
-										int numWords = countWords(body);
-										if (numWords < 350) {
-											room.sendMessage("Der Text muss mindestens 350 Woerter enthalten (aktuell: "
-													+ numWords + ").");
-										} else {
-
-											MiniClient c = new MiniClient();
-											c.setConnectorEndpoint("https://las2peer.tech4comp.dbis.rwth-aachen.de");
-											HashMap<String, String> headers = new HashMap<String, String>();
-											// TODO
-											String ending = ".txt";
-											File tempFile = null;
-
-											if (role < 3) {
-												int taskNumber = Integer.parseInt(fileName.replaceAll("[^0-9]", ""));
-												String expertLabel = "t" + String.valueOf(taskNumber);
-												if ((role % 2) == (taskNumber % 2)) {
-													room.sendMessage(
-															"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
-													ending = ".pdf";
-													tempFile = new File(message.getRoomId() + ending);
-													FileWriter writer = new FileWriter(tempFile);
-													writer.write("Wip...");
-													writer.close();
-													String topic = expertLabel;
-													bodyJSON.put("topic", topic);
-													bodyJSON.put("wordSpec", 1200);
-													ClientResponse result = c.sendRequest("POST",
-															"tmitocar/" + message.getRoomId() + "/" + expertLabel
-																	+ "/template_ul.md",
-															bodyJSON.toString(), MediaType.APPLICATION_JSON,
-															MediaType.TEXT_HTML, headers);
-													System.out.println("Submitted text: " + result.getHttpCode());
-													boolean isActive = true;
-													while (isActive) {
-														result = c.sendRequest("GET",
-																"tmitocar/" + message.getRoomId() + "/status", "");
-														isActive = result.getResponse().toLowerCase().contains("true");
-														// isActive = Boolean.parseBoolean(result.getResponse());
-														System.out.println(isActive);
-														try {
-															Thread.sleep(1000);
-														} catch (Exception e) {
-															e.printStackTrace();
-														}
-													}
-													result = c.sendRequest("GET",
-															"tmitocar/" + message.getRoomId() + "/compare/"
-																	+ expertLabel,
-															"", MediaType.TEXT_HTML, "application/pdf", headers);
-
-													tempFile = new File(message.getRoomId() + ending);
-													Files.write(result.getRawResponse(), tempFile);
-												} else {
-													room.sendMessage(
-															"Tut mir Leid, deine Abgabe kann ich leider nicht auswerten. Hast du mir die richtige Datei geschickt?");
-												}
-											}
-											/*else if (role == 2) {
-												room.sendMessage(
-														"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
-											
-												ending = ".png";
-												ClientResponse result = c.sendRequest("POST",
-														"tmitocar/" + message.getRoomId(), bodyJSON.toString(),
-														MediaType.APPLICATION_JSON, "text/html", headers);
-											
-												System.out.println("Submitted text: " + result.getHttpCode());
-												boolean isActive = true;
-												while (isActive) {
-													result = c.sendRequest("GET",
-															"tmitocar/" + message.getRoomId() + "/status", "");
-													isActive = result.getResponse().toLowerCase().contains("true");
-													// isActive = Boolean.parseBoolean(result.getResponse());
-													System.out.println(isActive);
-													try {
-														Thread.sleep(1000);
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-												}
-												result = c.sendRequest("GET", "tmitocar/" + message.getRoomId(), "",
-														MediaType.TEXT_HTML, "image/png", headers);
-												InputStream in = new ByteArrayInputStream(result.getRawResponse());
-												BufferedImage bImageFromConvert = ImageIO.read(in);
-												tempFile = new File(message.getRoomId() + ending);
-												ImageIO.write(bImageFromConvert, "png", tempFile);
-											} 
-											
-											else if (role == 3) {
-												room.sendMessage(
-														"Danke für deine Abgabe. Ich leite sie an das Analysesystem 'T-MITOCAR' weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
-
-												ending = ".pdf";
-												tempFile = new File(message.getRoomId() + ending);
-
-												FileWriter writer = new FileWriter(tempFile);
-												writer.write("Wip...");
-												writer.close();
-												String expertLabel = "tudmzexpert20200524";
-												String topic = "Medienkompetenz";
-												bodyJSON.put("topic", topic);
-												ClientResponse result = c.sendRequest("POST",
-														"tmitocar/" + message.getRoomId() + "/" + expertLabel
-																+ "/template_ddmz.md",
-														bodyJSON.toString(), MediaType.APPLICATION_JSON,
-														MediaType.TEXT_HTML, headers);
-												System.out.println("Submitted text: " + result.getHttpCode());
-												boolean isActive = true;
-												while (isActive) {
-													result = c.sendRequest("GET",
-															"tmitocar/" + message.getRoomId() + "/status", "");
-													isActive = result.getResponse().toLowerCase().contains("true");
-													// isActive = Boolean.parseBoolean(result.getResponse());
-													System.out.println(isActive);
-													try {
-														Thread.sleep(1000);
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-												}
-												result = c.sendRequest("GET",
-														"tmitocar/" + message.getRoomId() + "/compare/" + expertLabel,
-														"", MediaType.TEXT_HTML, "application/pdf", headers);
-
-												tempFile = new File(message.getRoomId() + ending);
-												Files.write(result.getRawResponse(), tempFile);
-											} else {
-												room.sendMessage(
-														"Ich kann dir leider kein Feedback geben. Du erfÃ¼llst nicht die notwendingen Bedingungen. Prüfe deine Email Adresse oder deine Kursberechtigungen.");
-											}
-											if (tempFile != null) {
-												room.uploadFile(tempFile, message.getRoomId() + ending, "",
-														new FileListener() {
-
-															@Override
-															public void onSendFile(RocketChatMessage arg0,
-																	ErrorObject arg1) {
-																// TODO Auto-generated method stub
-																if (role != 3) {
-																	room.sendMessage(
-																			"Ich würde mich freuen, wenn du mir sagst, wie du damit zurecht gekommen bist. Damit das einfacher geht, habe ich hier 9 Fragen zusammengestellt: https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/595521?lang=de");
-																}
-															}
-
-															@Override
-															public void onUploadError(ErrorObject arg0,
-																	IOException arg1) {
-																room.sendMessage(arg0.getMessage());
-																room.sendMessage(arg0.getReason());
-															}
-
-															@Override
-															public void onUploadProgress(int arg0, String arg1,
-																	String arg2, String arg3) {
-																// TODO Auto-generated method stub
-
-															}
-
-															@Override
-															public void onUploadStarted(String arg0, String arg1,
-																	String arg2) {
-																// TODO Auto-generated method stub
-
-															}
-
-															@Override
-															public void onUploadComplete(int arg0,
-																	com.rocketchat.core.model.FileObject arg1,
-																	String arg2, String arg3, String arg4) {
-																if (role != 3) {
-																	room.sendMessage(
-																			"In dieser PDF-Datei ist das Feedback zu deinem Text. Die Datei enthält Graphendarstellungen und auch eine kurze Erklärung dazu."
-																					+ "Dankeschön!");
-																} else {
-																	room.sendMessage(
-																			"Ich habe deinen Text mit dem Mustertext zum Thema Medienkompetenz verglichen. Deine Auswertung erhältst du in der folgenden Datei.");
-																}
-
-															}
-														});
-											}
-										}
-									} else {
-										room.sendMessage(
-												"Der Typ `" + fileType + "` wird momentan nicht unterstuetzt.");
-									}
-									try {
-										Thread.sleep(500);
-									} catch (InterruptedException e) {
-										e.printStackTrace();
-									}
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-								System.out.println("Intent processing finished.");
-							}
-						}).start();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				} else {
-					messageCollector.handle(message, role, getStudentEmail(message.getSender().getUserName()));
+					messageCollector.handle(message, 0, getStudentEmail(message.getSender().getUserName()));
 				}
 			}
 		}
 	}
-		*/
-	
-	
 
 	@Override
 	public void close() {
