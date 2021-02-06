@@ -108,7 +108,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		try {
 			FileDataBodyPart filePart = new FileDataBodyPart("file", f);
 			FormDataMultiPart mp = new FormDataMultiPart();
-			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "x").field("description", "")
+			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
 					.bodyPart(filePart);
 			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
 					.post(Entity.entity(multipart, multipart.getMediaType()));
@@ -133,49 +133,16 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
-			OptionalLong id) {
-		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
-		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
-		String newText = "";
-		System.out.println(fileBody);
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, OptionalLong id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
-		System.out.println(decodedBytes);
 		File file = new File(fileName);
 		try {
 			FileUtils.writeByteArrayToFile(file, decodedBytes);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
-		try {
-			FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-			FormDataMultiPart mp = new FormDataMultiPart();
-			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "").field("description", "")
-					.bodyPart(filePart);
-			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
-					.post(Entity.entity(multipart, multipart.getMediaType()));
-			;
-			System.out.println(response.getEntity().toString());
-			mp.close();
-			multipart.close();
-			try {
-				java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
-			try {
-				java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-			} catch (IOException f) {
-				// TODO Auto-generated catch block
-				f.printStackTrace();
-			}
-		}
+		}		
+		sendFileMessageToChannel(channel,file,"",id);
 	}
 
 	@Override
