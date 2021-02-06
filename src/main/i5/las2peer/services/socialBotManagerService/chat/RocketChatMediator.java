@@ -117,7 +117,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		try {
 			FileDataBodyPart filePart = new FileDataBodyPart("file", f);
 			FormDataMultiPart mp = new FormDataMultiPart();
-			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "x").field("description", "")
+			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
 					.bodyPart(filePart);
 			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
 					.post(Entity.entity(multipart, multipart.getMediaType()));
@@ -143,12 +143,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	
 	@Override
 	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, OptionalLong id) {
-		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
-		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
-		String newText = "";
-		System.out.println(fileBody);
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
-		System.out.println(decodedBytes);
 		File file = new File(fileName);
 		try {
 			FileUtils.writeByteArrayToFile(file, decodedBytes);
@@ -156,33 +151,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
-		Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
-		try {
-			FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-			FormDataMultiPart mp = new FormDataMultiPart();
-			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", "").field("description", "")
-					.bodyPart(filePart);
-			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
-					.post(Entity.entity(multipart, multipart.getMediaType()));;
-			System.out.println(response.getEntity().toString());
-			mp.close();
-			multipart.close();
-			try {
-				java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
-			try {
-				java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-			} catch (IOException f) {
-				// TODO Auto-generated catch block
-				f.printStackTrace();
-			}
-		}
+		sendFileMessageToChannel(channel,file,"",id);
 	}
 
 	@Override
@@ -764,7 +733,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												String expertLabel = "t" + String.valueOf(taskNumber);
 												if ((role % 2) == (taskNumber % 2)) {
 													room.sendMessage(
-															"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
+															"Danke fÃ¼r deine Abgabe. Ich leite sie an das Analysesystem â€œT-MITOCARâ€� weiter und gebe dir gleich deine RÃ¼ckmeldung. Das dÃ¼rfte nur ein paar Sekunden dauern.");
 													ending = ".pdf";
 													tempFile = new File(message.getRoomId() + ending);
 													FileWriter writer = new FileWriter(tempFile);
@@ -806,7 +775,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 											}
 											/*else if (role == 2) {
 												room.sendMessage(
-														"Danke für deine Abgabe. Ich leite sie an das Analysesystem “T-MITOCAR” weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Sekunden dauern.");
+														"Danke fÃ¼r deine Abgabe. Ich leite sie an das Analysesystem â€œT-MITOCARâ€� weiter und gebe dir gleich deine RÃ¼ckmeldung. Das dÃ¼rfte nur ein paar Sekunden dauern.");
 											
 												ending = ".png";
 												ClientResponse result = c.sendRequest("POST",
@@ -837,7 +806,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 											
 											else if (role == 3) {
 												room.sendMessage(
-														"Danke für deine Abgabe. Ich leite sie an das Analysesystem 'T-MITOCAR' weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
+														"Danke fÃ¼r deine Abgabe. Ich leite sie an das Analysesystem 'T-MITOCAR' weiter und gebe dir gleich deine RÃ¼ckmeldung. Das dÃ¼rfte nur ein paar Minuten dauern.");
 
 												ending = ".pdf";
 												tempFile = new File(message.getRoomId() + ending);
@@ -875,7 +844,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 												Files.write(result.getRawResponse(), tempFile);
 											} else {
 												room.sendMessage(
-														"Ich kann dir leider kein Feedback geben. Du erfÃ¼llst nicht die notwendingen Bedingungen. Prüfe deine Email Adresse oder deine Kursberechtigungen.");
+														"Ich kann dir leider kein Feedback geben. Du erfÃƒÂ¼llst nicht die notwendingen Bedingungen. PrÃ¼fe deine Email Adresse oder deine Kursberechtigungen.");
 											}
 											if (tempFile != null) {
 												room.uploadFile(tempFile, message.getRoomId() + ending, "",
@@ -887,7 +856,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 																// TODO Auto-generated method stub
 																if (role != 3) {
 																	room.sendMessage(
-																			"Ich würde mich freuen, wenn du mir sagst, wie du damit zurecht gekommen bist. Damit das einfacher geht, habe ich hier 9 Fragen zusammengestellt: https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/595521?lang=de");
+																			"Ich wÃ¼rde mich freuen, wenn du mir sagst, wie du damit zurecht gekommen bist. Damit das einfacher geht, habe ich hier 9 Fragen zusammengestellt: https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/595521?lang=de");
 																}
 															}
 
@@ -918,11 +887,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 																	String arg2, String arg3, String arg4) {
 																if (role != 3) {
 																	room.sendMessage(
-																			"In dieser PDF-Datei ist das Feedback zu deinem Text. Die Datei enthält Graphendarstellungen und auch eine kurze Erklärung dazu."
-																					+ "Dankeschön!");
+																			"In dieser PDF-Datei ist das Feedback zu deinem Text. Die Datei enthÃ¤lt Graphendarstellungen und auch eine kurze ErklÃ¤rung dazu."
+																					+ "DankeschÃ¶n!");
 																} else {
 																	room.sendMessage(
-																			"Ich habe deinen Text mit dem Mustertext zum Thema Medienkompetenz verglichen. Deine Auswertung erhältst du in der folgenden Datei.");
+																			"Ich habe deinen Text mit dem Mustertext zum Thema Medienkompetenz verglichen. Deine Auswertung erhÃ¤ltst du in der folgenden Datei.");
 																}
 
 															}
