@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -17,8 +16,6 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
@@ -28,9 +25,6 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
 
 public class Messenger {
 	private String name;
@@ -104,12 +98,13 @@ public class Messenger {
 		if (state != null) {
 			if (state.getFollowingMessages() == null) {
 				System.out.println("Conversation flow ended now");
-			} else	if(state.getFollowingMessages().get("") != null) {
+			} else if (state.getFollowingMessages().get("") != null) {
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
 
-			} else {}
+			} else {
+			}
 		}
 	}
 
@@ -159,15 +154,17 @@ public class Messenger {
 					}
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
-				} else {		
-					System.out.println(message.getFileName()+ " + " + message.getFileBody());
-					if(bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
-						intent = bot.getRasaServer(currentNluModel.get(message.getChannel())).getIntent(message.getText());
+				} else {
+					System.out.println(message.getFileName() + " + " + message.getFileBody());
+					if (bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
+						intent = bot.getRasaServer(currentNluModel.get(message.getChannel()))
+								.getIntent(message.getText());
 					} else {
-						// if the given id is not fit to any server, pick the first one. (In case someone specifies only one server and does not give an ID)
+						// if the given id is not fit to any server, pick the first one. (In case someone specifies only
+						// one server and does not give an ID)
 						intent = bot.getFirstRasaServer().getIntent(message.getText());
 					}
-				 
+
 				}
 				System.out.println(intent.getKeyword());
 				String triggeredFunctionId = null;
@@ -179,12 +176,15 @@ public class Messenger {
 					// add file case to default if part
 					if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
 						if (state == null) {
-							if(message.getFileName() != null){
-								// check whether incoming message with intent expects file or without intent, such that you can send a file regardless the intent
-								if(this.knownIntents.get(intent.getKeyword()) != null && this.knownIntents.get(intent.getKeyword()).expectsFile()) {
+							if (message.getFileName() != null) {
+								// check whether incoming message with intent expects file or without intent, such that
+								// you can send a file regardless the intent
+								if (this.knownIntents.get(intent.getKeyword()) != null
+										&& this.knownIntents.get(intent.getKeyword()).expectsFile()) {
 									state = this.knownIntents.get(intent.getKeyword());
 									// get("0") refers to an empty intent that is accessible from the start state
-								} else if(this.knownIntents.get("0") != null && this.knownIntents.get("0").expectsFile()) {
+								} else if (this.knownIntents.get("0") != null
+										&& this.knownIntents.get("0").expectsFile()) {
 									state = this.knownIntents.get("0");
 								} else {
 									state = this.knownIntents.get("default");
@@ -193,13 +193,13 @@ public class Messenger {
 							} else {
 								state = this.knownIntents.get(intent.getKeyword());
 								// Incoming Message which expects file should not be chosen when no file was sent
-								if(state.expectsFile()) {
+								if (state.expectsFile()) {
 									state = this.knownIntents.get("default");
 								}
-								System.out.println(
-										intent.getKeyword() + " detected with " + intent.getConfidence() + " confidence.");
+								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
+										+ " confidence.");
 								stateMap.put(message.getChannel(), state);
-								}
+							}
 						} else {
 							// any is a static forward
 							// TODO include entities of intents
@@ -212,24 +212,16 @@ public class Messenger {
 								stateMap.put(message.getChannel(), state);
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
 								System.out.println("try follow up message");
-								// check ratings
-								String keyword = intent.getKeyword();
-								String txt = message.getText();
-								if (keyword.equals("highrating")
-										&& (txt.equals("1") || txt.equals("2") || txt.equals("3"))) {
-									keyword = "lowrating";
-								} else if (keyword.equals("lowrating") && (txt.equals("4") || txt.equals("5"))) {
-									keyword = "highrating";
-								}
-								// check if a file was received during a conversation and search for a follow up incoming message which expects a file.
-								if(message.getFileBody() != null) {
-									if(state.getFollowingMessages().get(intent.getKeyword()).expectsFile()) {
+								// check if a file was received during a conversation and search for a follow up
+								// incoming message which expects a file.
+								if (message.getFileBody() != null) {
+									if (state.getFollowingMessages().get(intent.getKeyword()).expectsFile()) {
 										state = state.getFollowingMessages().get(intent.getKeyword());
 										stateMap.put(message.getChannel(), state);
 									} else {
 										state = this.knownIntents.get("default");
 									}
-										
+
 								} else {
 									state = state.getFollowingMessages().get(intent.getKeyword());
 									stateMap.put(message.getChannel(), state);
@@ -239,102 +231,58 @@ public class Messenger {
 										+ intent.getConfidence() + " confidence.");
 								// try any
 								if (state.getFollowingMessages().get("any") != null) {
-									String tmp = message.getText().replaceAll("[^0-9]", "");
-									if (tmp.length() > 0 && state.getIntentKeyword().contains("showtasks")) {
-										// try to get tasknumber
-										int t = Integer.parseInt(tmp);
-										if ((message.getRole() % 2) == (t % 2) && t < 9) {
-											state = knownIntents.get("t" + tmp);
-										} else {
-											state = state.getFollowingMessages().get("any");
-										}
-									} else if (state.getIntentKeyword().contains("functions")) {
-										if (message.getText().equals("a") || message.getText().equals("a)")
-												|| message.getText().contains("anzeigen")) {
-											state = knownIntents.get("showtasks" + message.getRole());
-										} else if (message.getText().equals("b") || message.getText().equals("b)")
-												|| message.getText().contains("abgeben")) {
-											state = knownIntents.get("submission");
-										} else if (message.getText().equals("c") || message.getText().equals("c)")
-												|| message.getText().contains("Feedback")) {
-											state = knownIntents.get("userfeedback");
-										}
-									} else {
-										state = state.getFollowingMessages().get("any");
-									}
+									state = state.getFollowingMessages().get("any");
 									stateMap.put(message.getChannel(), state);
-								} else  // tud
-								if ((intent.getKeyword().equals("zeige") || intent.getKeyword().equals("hast")
-										|| intent.getKeyword().equals("will"))
+								} else if (intent.getEntities().size() > 0
 										&& !this.triggeredFunction.containsKey(message.getChannel())) {
-									if (intent.getEntity("muster") != null) {
-										state = this.knownIntents.get("mustertext");
-									} else if (intent.getEntity("video") != null) {
-										state = this.knownIntents.get("video");
-									} else if (intent.getEntity("help") != null) {
-										state = this.knownIntents.get("help");
-									} else if (intent.getEntity("pause") != null) {
-										state = this.knownIntents.get("pause");
-									} else if (intent.getEntity("upload") != null) {
-										state = this.knownIntents.get("upload");
-									} else if (intent.getEntity("schreibaufgabe") != null) {
-										state = this.knownIntents.get("beschreibung");
-									} else {
-										state = this.knownIntents.get("default");
-									}
-								}
-
-								// ul
-								else if (intent.getEntities().size() > 0 && !this.triggeredFunction.containsKey(message.getChannel())) {
 									Collection<Entity> entities = intent.getEntities();
-								//	System.out.println("try to use entity...");
+									// System.out.println("try to use entity...");
 									for (Entity e : entities) {
 										System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
 										state = this.knownIntents.get(e.getEntityName());
 										stateMap.put(message.getChannel(), state);
 									}
-									// In a conversation state, if no fitting intent was found and an empty leadsTo label is found
-								} else if(state.getFollowingMessages().get("") != null){
+									// In a conversation state, if no fitting intent was found and an empty leadsTo
+									// label is found
+								} else if (state.getFollowingMessages().get("") != null) {
 									System.out.println("Empty leadsTo");
-									if(message.getFileBody() != null) {
-										if(state.getFollowingMessages().get("").expectsFile()) {
+									if (message.getFileBody() != null) {
+										if (state.getFollowingMessages().get("").expectsFile()) {
 											state = state.getFollowingMessages().get("");
 										} else {
 											state = this.knownIntents.get("default");
 										}
-										
+
 									} else {
 										state = state.getFollowingMessages().get("");
 										stateMap.put(message.getChannel(), state);
 									}
-									
-								} 
-								else {
+
+								} else {
 									state = this.knownIntents.get("default");
 								}
 							}
 						}
-					} else{
+					} else {
 						System.out.println(
 								intent.getKeyword() + " not detected with " + intent.getConfidence() + " confidence.");
 						state = this.knownIntents.get("default");
-					//	System.out.println(state.getIntentKeyword() + " set");
+						// System.out.println(state.getIntentKeyword() + " set");
 					}
-					// If a user sends a file, without wanting to use intent extraction on the name, then intent extraction will still be done, but the result ignored in this case
-				} else if(message.getFileName() != null) {
-					if(this.knownIntents.get("0").expectsFile()) {
+					// If a user sends a file, without wanting to use intent extraction on the name, then intent
+					// extraction will still be done, but the result ignored in this case
+				} else if (message.getFileName() != null) {
+					if (this.knownIntents.get("0").expectsFile()) {
 						state = this.knownIntents.get("0");
 						System.out.println(state.getResponse(random));
 					} else {
 						// if no Incoming Message is fitting, return default message
 						intent = new Intent("default", "", "");
 					}
-					// Default message if the message does not contain a file or the Intent was too low  
+					// Default message if the message does not contain a file or the Intent was too low
 				} else if (intent.getConfidence() < 0.40f) {
 					intent = new Intent("default", "", "");
 				}
-
-				
 
 				Boolean contextOn = false;
 				// No matching intent found, perform default action
@@ -362,145 +310,76 @@ public class Messenger {
 						}
 						if (response != null) {
 							if (response.getResponse() != "") {
-								if (intent.getEntity("schreibaufgabe") != null
-										|| intent.getKeyword().equals("beschreibung")) {
-									File f = new File("Schreibauftrag.pdf");
-									this.chatMediator.sendFileMessageToChannel(message.getChannel(), f,
-											response.getResponse());
-								} else if (intent.getEntity("muster") != null
-										|| intent.getKeyword().equals("mustertext")) {
-									File f = new File("Mustertext.pdf");
-									this.chatMediator.sendFileMessageToChannel(message.getChannel(), f,
-											response.getResponse());
-								} else if (state.getIntentKeyword().equals("suggestMaterial")) {
-									// chatbot wl
-									String text = message.getText();
-									String[] words = text.split(",");
-									MiniClient client = new MiniClient();
-									client.setConnectorEndpoint("http://137.226.232.175:32303");
 
-									HashMap<String, String> headers = new HashMap<String, String>();
-									int counter = 0;
-									String s = "";
-									for (int i = 0; i < words.length; i++) {
-										JSONObject body = new JSONObject();
-										JSONArray terms = new JSONArray();
-										terms.add(words[i].trim());
-										body.put("terms", terms);
-										ClientResponse r = client.sendRequest("POST", "materials", body.toJSONString(),
-												"application/json", "application/json", headers);
+								String split = "";
+								// allows users to use linebreaks \n during the modeling for chat responses
+								for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
+									System.out.println(i);
+									split += response.getResponse().split("\\\\n")[i] + " \n ";
+								}
+								System.out.println(split);
+								this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+								// check whether a file url is attached to the chat response and try to send it to
+								// the user
+								if (!response.getFileURL().equals("")) {
+									String fileName = "";
+									try {
+										// Replacable variable in url menteeEmail
+										String urlEmail = response.getFileURL().replace("menteeEmail",
+												message.getEmail());
+										System.out.println(urlEmail);
+										URL url = new URL(urlEmail);
+										HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+										// Header for l2p services
+										httpConn.addRequestProperty("Authorization", "Basic " + Base64.getEncoder()
+												.encodeToString((bot.getName() + ":actingAgent").getBytes()));
 
-										JSONParser p = new JSONParser();
-										JSONObject result = (JSONObject) p.parse(r.getResponse());
-										if (result.keySet().size() > 1) {
-											counter++;
-											JSONArray materials = (JSONArray) result.get("@graph");
-											for (Object j : materials) {
-												JSONObject jo = (JSONObject) j;
-												s += "\\n" + words[i] + ": [" + jo.getAsString("title") + "]("
-														+ jo.getAsString("link") + ")";
+										String fieldValue = httpConn.getHeaderField("Content-Disposition");
+										System.out.println(fieldValue);
+										if (fieldValue == null || !fieldValue.contains("filename=\"")) {
+											System.out.println("No file name available :(");
+											fieldValue = "pdf.pdf";
+										}
+										// parse the file name from the header field
+										System.out.println(fieldValue);
+										fileName = "pdf.pdf";
+										if (!fieldValue.equals("pdf.pdf")) {
+											fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10,
+													fieldValue.length() - 1);
+										} else {
+											// check if name is part of url
+											if (urlEmail.contains(".pdf") || urlEmail.contains(".png")
+													|| urlEmail.contains(".svg") || urlEmail.contains(".json")
+													|| urlEmail.contains(".txt")) {
+												fileName = urlEmail.split("/")[urlEmail.split("/").length - 1];
 											}
 										}
-									}
-									// response = response.replace("$X", "" + s);
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											response.getResponse().replace("$X", "" + s));
-								} else if (state.getIntentKeyword().equals("liste")) {
-									String text = message.getText();
-									String[] words = text.split(",");
-									JSONArray wordsCleaned = new JSONArray();
-									for (int i = 0; i < words.length; i++) {
-										wordsCleaned.add(words[i].trim());
-									}
-									MiniClient client = new MiniClient();
-									client.setConnectorEndpoint("http://137.226.232.175:32303");
-
-									HashMap<String, String> headers = new HashMap<String, String>();
-
-									JSONObject body = new JSONObject();
-									body.put("terms", wordsCleaned);
-									ClientResponse r = client.sendRequest("POST", "compare", body.toJSONString(),
-											"application/json", "application/json", headers);
-
-									JSONParser p = new JSONParser();
-									JSONObject result = (JSONObject) p.parse(r.getResponse());
-
-									// response = response.replace("$X", result.getAsString("matchCount"));
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											response.getResponse().replace("$X", result.getAsString("matchCount")));
-								} else if (state.getIntentKeyword().equals("showtasks")) {
-									if (message.getRole() % 2 == 1) {
-										state = this.knownIntents.get("showtasks1");
-									} else {
-										state = this.knownIntents.get("showtasks2");
-									}
-									response = state.getResponse(this.random);
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											response.getResponse());
-								} else {
-									String split = "";
-									// allows users to use linebreaks \n during the modeling for chat responses
-									for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
-										System.out.println(i);
-										split += response.getResponse().split("\\\\n")[i] + " \n ";
-									}
-									System.out.println(split);
-									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
-									// check whether a file url is attached to the chat response and try to send it to the user
-									if(!response.getFileURL().equals("")) {
-										String fileName ="";
-										try {
-											// Replacable variable in url menteeEmail
-											String urlEmail = response.getFileURL().replace("menteeEmail", message.getEmail());
-											System.out.println(urlEmail);
-											URL url = new URL(urlEmail);
-											HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-											// Header for l2p services
-											httpConn.addRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString((bot.getName()+":actingAgent").getBytes()));
-											
-											String fieldValue = httpConn.getHeaderField("Content-Disposition");
-											System.out.println(fieldValue);
-											if (fieldValue == null || ! fieldValue.contains("filename=\"")) {
-											  System.out.println("No file name available :(");
-											  fieldValue = "pdf.pdf";
-											}
-											// parse the file name from the header field
-											System.out.println(fieldValue);
-											 fileName = "pdf.pdf";
-											if(!fieldValue.equals("pdf.pdf")) {
-												fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10, fieldValue.length() - 1);
-											} else {
-												// check if name is part of url
-												if(urlEmail.contains(".pdf") || urlEmail.contains(".png") || urlEmail.contains(".svg") || urlEmail.contains(".json") || urlEmail.contains(".txt") ) {
-													fileName = urlEmail.split("/")[urlEmail.split("/").length-1];
-												}
-											}
-											InputStream in =(InputStream) httpConn.getInputStream();
-											FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-											int file_size = httpConn.getContentLength();
-											if(file_size < 1 ) {
-												file_size = 2048;
-											}
-											System.out.println("fiule size is " + file_size);
-											byte dataBuffer[] = new byte[file_size];
-										    int bytesRead;
-										    while ((bytesRead = in.read(dataBuffer, 0, file_size)) != -1) {
-										        fileOutputStream.write(dataBuffer, 0, bytesRead);
-										    }
-											fileOutputStream.close();							
-											this.chatMediator.sendFileMessageToChannel(message.getChannel(), new File(fileName) , "");
-								
+										InputStream in = httpConn.getInputStream();
+										FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+										int file_size = httpConn.getContentLength();
+										if (file_size < 1) {
+											file_size = 2048;
 										}
-										catch(Exception e){
-											System.out.println("Could not extract File for reason " + e);
-											java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-											this.chatMediator.sendMessageToChannel(message.getChannel(), response.getErrorMessage());
+										System.out.println("file size is " + file_size);
+										byte dataBuffer[] = new byte[file_size];
+										int bytesRead;
+										while ((bytesRead = in.read(dataBuffer, 0, file_size)) != -1) {
+											fileOutputStream.write(dataBuffer, 0, bytesRead);
 										}
+										fileOutputStream.close();
+										this.chatMediator.sendFileMessageToChannel(message.getChannel(),
+												new File(fileName), "");
+
+									} catch (Exception e) {
+										System.out.println("Could not extract File for reason " + e);
+										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
+										this.chatMediator.sendMessageToChannel(message.getChannel(),
+												response.getErrorMessage());
 									}
-									if (response.getTriggeredFunctionId() != null) {
-										this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
-										contextOn = true;
-									}
+								}
+								if (response.getTriggeredFunctionId() != null) {
+									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+									contextOn = true;
 								}
 							} else {
 								if (response.getTriggeredFunctionId() != "") {
