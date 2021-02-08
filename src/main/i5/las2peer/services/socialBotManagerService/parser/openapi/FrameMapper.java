@@ -75,11 +75,8 @@ public class FrameMapper {
 		for (ServiceFunctionAttribute attr : frameAction.getAllAttributes()) {
 
 			if (attr.hasDynamicEnums()) {
-				System.out.println("mapping attribute " + attr.getName() + " is dynamic");
-
-				System.out.println(
-						"attr: size:" + attr.getAllAttributes().size() + " open" + attr.getOpenAttributes().size());
-
+				System.out.println("mapping attribute " + attr.getName() + " is dynamic " + attr.getOpenAttributes().size());
+				
 				for (ServiceFunctionAttribute addAttr : attr.getOpenAttributes()) {
 
 					if (addAttr.isFrameGenerated()) {
@@ -103,8 +100,7 @@ public class FrameMapper {
 						helperAttr.setContent(null);
 						addAttr.setSlotID(helperAttr.getId());
 						additionalAttrs.add(helperAttr);
-						System.out.println("new helper attribute " + helperAttr.getName() + " " + helperAttr.getId());
-						System.out.println("info attribute " + addAttr.getName() + " filled by " + addAttr.getSlotID());
+						System.out.println("new helper attribute " + helperAttr.getName());						
 					}
 
 				}
@@ -114,9 +110,7 @@ public class FrameMapper {
 
 		// map additional attributes
 		for (ServiceFunctionAttribute attr : additionalAttrs) {
-
 			Slot slot = map(attr, attr.getName());
-			System.out.println("mapping additional attr " + attr.getId());
 			frame.addSlot(slot);
 		}
 
@@ -141,8 +135,7 @@ public class FrameMapper {
 	public Slot map(ServiceFunctionAttribute attr, String name) {
 
 		assert attr != null : "map attr with slot: attr is null";
-		System.out.println("mapping: " + attr.getName() + " ");
-
+		
 		if (attr.isArray() && attr.getName().contains("amples")) {
 			System.out.println("set min items " + attr.getName());
 			attr.setMinItems(3);
@@ -180,7 +173,7 @@ public class FrameMapper {
 		// selection
 		if (attr.hasDiscriminator()) {
 
-			System.out.println(" dis: " + attr.getDiscriminator() + " " + attr.getDiscriminatorAttribute().getName());
+			//System.out.println(" dis: " + attr.getDiscriminator() + " " + attr.getDiscriminatorAttribute().getName());
 
 			slot.setSelection(false);
 			ServiceFunctionAttribute disAttr = attr.getDiscriminatorAttribute();
@@ -200,8 +193,8 @@ public class FrameMapper {
 					if (subAttr != disAttr) {
 						Slot subSlot = map(subAttr, name + "_" + disAttr.getName() + "_" + subAttr.getName());
 						subSlot.setPriority(-1);
-						System.out.println(
-								"inherited attribute detected: " + subSlot.getName() + " " + subSlot.getPriority());
+					//	System.out.println(
+					//			"inherited attribute detected: " + subSlot.getName() + " " + subSlot.getPriority());
 						inheritedSlots.put(subSlot.getName(), subSlot);
 					}
 				}
@@ -216,7 +209,7 @@ public class FrameMapper {
 			
 			for (Slot subSlot : inheritedSlots.values()) {
 				disSlot.addChild(subSlot);
-				System.out.println("add inherited slot " + subSlot.getName() + " to " + disSlot.getName());
+				//System.out.println("add inherited slot " + subSlot.getName() + " to " + disSlot.getName());
 			}
 
 			slot.addChild(disSlot);

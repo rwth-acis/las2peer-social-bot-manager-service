@@ -277,7 +277,7 @@ public class DialogueGoal {
 
 			assert input != null : "cant find " + slotAttr.getSlotID() + " in " + this.getFrame().getName();
 
-			if (!input.isFilled()) {
+			if (input != null && !input.isFilled()) {
 				System.out.println("found: " + input.getAPIName());
 				return (Node) input;
 			}
@@ -424,8 +424,9 @@ public class DialogueGoal {
 
 			if (node instanceof Fillable) {
 				Fillable fillable = (Fillable) node;
-				if (fillable.getSlot().getEnumList() != null) {
-					for (String enu : fillable.getSlot().getEnumList()) {
+				Collection<String> enumList = fillable.getSlot().getEnumList();
+				if (enumList != null) {
+					for (String enu : enumList) {
 						if (utterance.toLowerCase().contains(enu.toLowerCase())) {
 							System.out.println("found" + enu + " in " + fillable.getName());
 							Entity entity = new Entity(fillable.getName(), enu);
@@ -440,8 +441,9 @@ public class DialogueGoal {
 				for (Node subNode : sn.getChildren()) {
 					if (subNode instanceof Fillable) {
 						Fillable fillable = (Fillable) subNode;
-						if (fillable.getSlot().getEnumList() != null) {
-							for (String enu : fillable.getSlot().getEnumList()) {
+						Collection<String> enumList = fillable.getSlot().getEnumList();
+						if (enumList != null) {
+							for (String enu : enumList) {
 								if (utterance.toLowerCase().contains(enu.toLowerCase())) {
 									System.out.println("found" + enu + " in " + fillable.getName());
 									Entity entity = new Entity(fillable.getName(), enu);

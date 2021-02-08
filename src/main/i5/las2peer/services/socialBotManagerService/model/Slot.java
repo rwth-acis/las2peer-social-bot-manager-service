@@ -106,7 +106,12 @@ public class Slot {
 			this.inputType = InputType.Free;
 
 		if (this.getInputType() == InputType.Enum) {
+
+			if (this.getParameter().hasDynamicEnums())
+				return true;
+
 			List<String> enumList = this.getParameter().getEnumList();
+
 			if (enumList.isEmpty())
 				return true;
 
@@ -117,12 +122,12 @@ public class Slot {
 
 		if (!this.inputType.validate(value))
 			return false;
-		
+
 		if (this.hasParameter() && this.parameter.getInput() != null) {
-			if(!this.parameter.getInput().validate(value))
+			if (!this.parameter.getInput().validate(value))
 				return false;
 		}
-		
+
 		return true;
 	}
 
@@ -181,10 +186,10 @@ public class Slot {
 		if (this.getParameter() != null && this.getParameter().getEntity() != null)
 			return this.getParameter().getEntity();
 
-		if (this.getEnumList() != null)
-			return this.getName();
+		// if (this.getEnumList() != null)
+		return this.getName();
 
-		return null;
+		// return null;
 	}
 
 	public void setEntity(String entity) {
@@ -240,16 +245,16 @@ public class Slot {
 	 * @return
 	 */
 	public List<Slot> getChildren(int i) {
-		if(i != 0)
-		System.out.println("get Children of priority " + i);
+		if (i != 0)
+			System.out.println("get Children of priority " + i);
 		List<Slot> res = new ArrayList<>();
-		
+
 		for (Slot child : this.children) {
 			System.out.println(child.getName() + " " + child.getPriority());
 			if (child.getPriority() == i)
 				res.add(child);
 		}
-		
+
 		return res;
 	}
 
@@ -346,7 +351,9 @@ public class Slot {
 	}
 
 	public List<String> getEnumList() {
-		return this.getParameter().getUpdatedEnumList();
+		
+			return this.getParameter().getUpdatedEnumList();
+		
 	}
 
 	public boolean hasEnumList() {
@@ -478,11 +485,15 @@ public class Slot {
 		return this.parameter.hasDynamicEnums();
 	}
 
+	public List<String> getUpdatedEnumList() {
+		return this.getUpdatedEnumList(new HashMap<>());
+	}
+
 	public List<String> getUpdatedEnumList(Map<String, String> parameters) {
 
 		if (!this.hasParameter())
 			return new ArrayList<>();
-				
+
 		return this.getParameter().getUpdatedEnumList(parameters);
 
 	}
@@ -560,19 +571,6 @@ public class Slot {
 
 		ServiceFunctionAttribute attr = this.getParameter();
 		return attr.getOpenAttributes();
-	}
-
-	/**
-	 * Update dynamic enums of this slot
-	 */
-	public void update() {
-
-		if (!this.hasDynamicEnums())
-			return;
-
-		List<String> list = this.parameter.getUpdatedEnumList();
-		assert list != null;
-		System.out.println("slot " + this.getName() + " updated list: " + list.size());
 	}
 
 	public String prettyPrint(int i) {

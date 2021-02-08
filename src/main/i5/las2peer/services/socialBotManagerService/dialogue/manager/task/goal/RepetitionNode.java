@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
@@ -25,23 +26,22 @@ public class RepetitionNode extends Node implements Slotable {
 		this.open = true;
 		this.valueChildren = new ArrayList<Node>();
 
-		System.out.println("Repetition Node: " + slot.getName() + ", enumlist: " + (this.slot.hasEnumList() && !this.slot.getEnumList().isEmpty()));
-		if (this.slot.hasEnumList() && !this.slot.getEnumList().isEmpty())
-			extendEnums();
+		Collection<String> enumList = this.slot.getEnumList();
+		if (enumList != null && !enumList.isEmpty())
+			extendEnums(enumList);
 		else
 			extend();
 
 		invariant();
 	}
 
-	private void extendEnums() {
+	private void extendEnums(Collection<String> enumList) {
 		invariant();
 		assert this.slot.hasEnumList();
 
-		System.out.println("Repetition Node " + this.getName() + " with enum list detected");
 		String key = this.slot.getParameter().getContentFill();
 		assert key != null;
-		for (String value : this.slot.getEnumList()) {
+		for (String value : enumList) {
 			extend();
 			Node node = this.valueChildren.get(this.valueChildren.size() - 1);
 			NodeList nodes = node.getAll();
@@ -97,45 +97,35 @@ public class RepetitionNode extends Node implements Slotable {
 
 	public boolean isFilled() {
 		invariant();
-		
+
 		if (this.valueChildren.isEmpty())
 			return false;
-		
+
 		return true;
 	}
 
 	@Override
 	public boolean isReady() {
 		invariant();
-		
+
 		if (!this.getSlot().isRequired()) {
-			System.out.println(this.getName() + " ready cause not required");
-			return true; 
-			
+			return true;
 		}
-		
+
 		if (this.open == true) {
-			System.out.println(this.getName() + " not ready cause still open");
 			return false;
-			
 		}
 
 		if (!this.isFilled()) {
-			System.out.println(this.getName() + " not ready cause not filled yet");
 			return false;
 		}
 
 		for (Node node : this.valueChildren) {
 			if (!node.isReady()) {
-				if(node instanceof Fillable)
-					System.out.println(this.getName() + " not ready cause child " + ((Fillable) node).getName()+ " not ready yet");
-				else 
-					System.out.println(this.getName() + " not ready cause child not ready yet");
 				return false;
 			}
 		}
 
-		System.out.println("node " + this.getName() + "ready");
 		return true;
 	}
 
@@ -143,21 +133,15 @@ public class RepetitionNode extends Node implements Slotable {
 	public boolean isFull() {
 		invariant();
 		if (this.open == true) {			
-			System.out.println(this.getName() +  " not full because open");
 			return false;
 		}
 
-		if (!this.isFilled()) {
-			System.out.println(this.getName() + " not full because not filled");
+		if (!this.isFilled()) {			
 			return false;
 		}
 
 		for (Node node : this.valueChildren) {
-			if (!node.isFull()) {
-				if(node instanceof Fillable)
-					System.out.println(this.getName() +  "not full not full child " + ((Fillable) node).getName());
-				else
-					System.out.println(this.getName() +  "not full not full child");
+			if (!node.isFull()) {				
 				return false;
 			}
 		}
@@ -204,7 +188,7 @@ public class RepetitionNode extends Node implements Slotable {
 		for (Node node : this.valueChildren) {
 			if (!node.isReady()) {
 				return node.next();
-			}			
+			}
 		}
 
 		return this;
@@ -217,7 +201,7 @@ public class RepetitionNode extends Node implements Slotable {
 		nodes.addAll(this.valueChildren.get(this.valueChildren.size() - 1).getAll());
 		return nodes;
 	}
-	
+
 	public int size() {
 		return this.valueChildren.size();
 	}
@@ -244,7 +228,7 @@ public class RepetitionNode extends Node implements Slotable {
 		}
 		if (!ar.isEmpty())
 			res.put(this.getAPIName(), ar);
-		
+
 		return res;
 	}
 

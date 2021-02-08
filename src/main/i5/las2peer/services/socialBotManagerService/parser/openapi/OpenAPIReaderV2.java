@@ -182,7 +182,7 @@ public class OpenAPIReaderV2 {
 	 */
 	private static Operation getOperationByOperationId(Swagger openAPI, String operationId) {
 
-		System.out.println("get Operation by Id: " + operationId);
+		System.out.println(operationId);
 
 		for (Path pathItem : openAPI.getPaths().values()) {
 			if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
@@ -201,7 +201,6 @@ public class OpenAPIReaderV2 {
 
 	private static String getMethodByOperationId(Swagger openAPI, String operationId) {
 
-		System.out.println("find http method for operationId: " + operationId);
 		for (Path pathItem : openAPI.getPaths().values()) {
 			if (pathItem.getGet() != null && pathItem.getGet().getOperationId().equals(operationId))
 				return "get";
@@ -346,7 +345,7 @@ public class OpenAPIReaderV2 {
 			Map<String, Property> properties = model.getProperties();
 			for (Map.Entry<String, Property> pair : properties.entrySet()) {
 
-				System.out.println("property: " + pair.getKey() + ", dis: " + dis);
+				//System.out.println("property: " + pair.getKey() + ", dis: " + dis);
 				String name = pair.getKey();
 				Property property = pair.getValue();
 
@@ -478,9 +477,9 @@ public class OpenAPIReaderV2 {
 	private static Swagger processModel(String modelUri) throws Exception {
 
 		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUri, null, true);
-		System.out.println(swaggerParseResult.getSwagger());
+		//System.out.println(swaggerParseResult.getSwagger());
 		Swagger swagger = swaggerParseResult.getSwagger();
-		System.out.println("read model " + modelUri + " " + swagger);
+		//System.out.println("read model " + modelUri + " " + swagger);
 
 		return swagger;
 	}

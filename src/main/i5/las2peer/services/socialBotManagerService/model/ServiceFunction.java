@@ -367,7 +367,6 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 		if (this.serviceName == null && function.serviceName != null)
 			this.serviceName = function.serviceName;
 
-		System.out.println("merge function " + function.getFunctionName());
 		if (!this.getBasePath().startsWith("http") && function.getBasePath().startsWith("http"))
 			this.setBasePath(function.getBasePath());
 
@@ -383,11 +382,11 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 
 		for (ServiceFunctionAttribute mergeAttr : function.getAttributes()) {
 			if (this.getAttribute(mergeAttr.getIdName()) != null) {
-				System.out.println("attribute identified: " + mergeAttr.getIdName());
+				//System.out.println("attribute identified: " + mergeAttr.getIdName());
 				ServiceFunctionAttribute myAttr = this.getAttribute(mergeAttr.getIdName());
 				myAttr.merge(mergeAttr);
 			} else {
-				System.out.println("cant merge attribute: " + mergeAttr.getIdName());
+				System.out.println("!cant merge attribute: " + mergeAttr.getIdName());
 			}
 		}
 

@@ -34,8 +34,8 @@ import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceEvent;
+import i5.las2peer.services.socialBotManagerService.nlu.ConfirmationNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
-import i5.las2peer.services.socialBotManagerService.nlu.FallbackNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.IntentType;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
@@ -77,7 +77,7 @@ public class PipelineManager extends MetaDialogueManager {
 		if (message.hasCommand())
 			info = handleCommandUnderstanding(message);
 		else
-			info = handleUnderstanding(message, nlus);
+			info = handleUnderstanding(dialogue, message, nlus);
 		assert info != null;
 
 		// Management
@@ -203,15 +203,22 @@ public class PipelineManager extends MetaDialogueManager {
 
 	}
 
-	protected MessageInfo handleUnderstanding(ChatMessage message, Map<String, LanguageUnderstander> nlus) {
+	protected MessageInfo handleUnderstanding(Dialogue dialogue, ChatMessage message, Map<String, LanguageUnderstander> nlus) {
 
 		assert message != null : "message is null";
 		assert message.getChannel() != null : "message has no channel";
 		assert message.getText() != null : "message has no text";
 		assert nlus != null : "nlus is null";
 
-		// try registered nlu modules
 		Intent intent = null;
+		
+		// intern confirmation nlu
+		if(dialogue.hasExpected() && dialogue.getExpected().getType() == InputType.Confirmation) {
+			ConfirmationNLU nlu = new ConfirmationNLU();
+			intent = nlu.parse(message);
+		}			
+		
+		// try registered nlu modules		
 		List<LanguageUnderstander> nluList = new ArrayList<>(nlus.values());
 		int i = 0;
 		while (intent == null && i < nluList.size()) {
@@ -223,13 +230,6 @@ public class PipelineManager extends MetaDialogueManager {
 				e.printStackTrace();
 			}
 			i++;
-		}
-
-		// use fallback nlu
-		if (intent == null) {
-			LanguageUnderstander fallbackNLU = new FallbackNLU();
-			System.out.println("Intent extraction with default nlu: " + message.getChannel());
-			intent = fallbackNLU.parse(message);
 		}
 
 		if (intent != null)

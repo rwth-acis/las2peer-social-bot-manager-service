@@ -161,14 +161,14 @@ public class DialogueActGenerator {
 
 				List<String> enumList = new ArrayList<>();
 				if (slot.hasDynamicEnums()) {
-					
+
 					System.out.println("slot " + slot.getAPIName() + " has dynamic enums");
 					Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
 					enumList = node.getSlot().getParameter().getUpdatedEnumList(parameters);
 
 				} else {
-					slot.update();
-					enumList = slot.getUpdatedEnumList(null);
+
+					enumList = slot.getEnumList();
 				}
 
 				if (enumList != null)
@@ -177,28 +177,34 @@ public class DialogueActGenerator {
 			}
 		}
 
-		if (slot.getParameter().getRetrieveFunction() != null) {
-			Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
-			OpenAPIAction action = new OpenAPIAction(slot.getParameter().getRetrieveFunction(), parameters);
-			OpenAPIResponse response = action.execute();
-			if (response.isSuccess()) {
-				Map<String, String> entities = GeneratorFunction.getEntities(response.getAsJSON());
-				for (Entry<String, String> en : entities.entrySet())
-					act.addEntity(en.getKey(), en.getValue());
-			}
+		try {
+			if (slot.getParameter().getRetrieveFunction() != null) {
+				Map<String, String> parameters = goal.getFunctionParametersOfNode(node);
+				OpenAPIAction action = new OpenAPIAction(slot.getParameter().getRetrieveFunction(), parameters);
 
-			if (input.getEnums() == null || input.getEnums().isEmpty())
-				if (slot.getParameter().getContentFill() != null
-						&& !slot.getParameter().getContentFill().contentEquals("")) {
-					if (slot.getParameter().getContentURLKey() != null) {
-						Collection<String> enumList = OpenAPIConnector.searchValuesByKey(response.getAsJSON(),
-								slot.getParameter().getContentURLKey());
-						if (enumList != null)
-							for (String enu : enumList)
-								input.addEnum(enu);
-					}
+				OpenAPIResponse response = action.execute();
+				if (response.isSuccess()) {
+					Map<String, String> entities = GeneratorFunction.getEntities(response.getAsJSON());
+					for (Entry<String, String> en : entities.entrySet())
+						act.addEntity(en.getKey(), en.getValue());
 				}
 
+				if (input.getEnums() == null || input.getEnums().isEmpty())
+					if (slot.getParameter().getContentFill() != null
+							&& !slot.getParameter().getContentFill().contentEquals("")) {
+						if (slot.getParameter().getContentURLKey() != null) {
+							Collection<String> enumList = OpenAPIConnector.searchValuesByKey(response.getAsJSON(),
+									slot.getParameter().getContentURLKey());
+							if (enumList != null)
+								for (String enu : enumList)
+									input.addEnum(enu);
+						}
+					}
+
+			}
+			
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
 		}
 
 		if (slot.getInputType() == InputType.File && slot.getParameter().getFile() != null)

@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.swagger.annotations.ApiModelProperty;
 
 public class TrainingData {
@@ -84,6 +86,7 @@ public class TrainingData {
 
 	}
 
+	@JsonIgnore
 	public Collection<String> getIntents() {
 		Collection<String> res = new HashSet<>();
 		for (TrainingDataEntry entry : this.entries) {

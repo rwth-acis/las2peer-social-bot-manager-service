@@ -9,14 +9,14 @@ import java.util.List;
  * This LanguageUnderstander knows basic intents that are needed for dialogue
  * management.
  */
-public class FallbackNLU extends LanguageUnderstander {
+public class ConfirmationNLU extends LanguageUnderstander {
 
 	final private Collection<String> intents = new HashSet<>();
 	final private List<String> confirms = new ArrayList<>();
 	final private List<String> denys = new ArrayList<>();
 	final private List<String> greets = new ArrayList<>();
 
-	public FallbackNLU() {
+	public ConfirmationNLU() {
 		
 		intents.add("confirm");
 		intents.add("deny");

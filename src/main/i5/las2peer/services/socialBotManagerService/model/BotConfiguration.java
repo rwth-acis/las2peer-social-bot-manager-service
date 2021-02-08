@@ -14,7 +14,7 @@ public class BotConfiguration {
 	private Map<String, VLE> vles;
 
 	private Map<String, LanguageUnderstander> nlus;
-	
+
 	private BotModelInfo botModelInfo;
 
 	public BotConfiguration() {
@@ -40,7 +40,7 @@ public class BotConfiguration {
 
 	public LanguageUnderstander getNLU(String name) {
 		assert name != null;
-		
+
 		for (LanguageUnderstander lu : this.getNLUs().values()) {
 			if (lu.getName().contentEquals(name))
 				return lu;
@@ -51,14 +51,24 @@ public class BotConfiguration {
 
 	public Map<String, LanguageUnderstander> getNLUs() {
 
+		Map<String, LanguageUnderstander> res = new HashMap<>();
+		res.putAll(this.nlus);
 		for (Entry<String, VLE> vleEntry : this.getVLEs().entrySet()) {
 			VLE vle = vleEntry.getValue();
 			for (LanguageUnderstander nlu : vle.getNLUs()) {
-				this.nlus.put(nlu.getUrl(), nlu);
+				res.put(nlu.getUrl(), nlu);
 			}
 		}
 
-		return nlus;
+		return res;
+	}
+
+	public void removeNLU(String name) {
+		
+		LanguageUnderstander nlu = this.getNLU(name);
+		if(nlu != null && this.nlus != null)
+			this.nlus.remove(nlu.getUrl());
+		
 	}
 
 	public void setNLUs(Map<String, LanguageUnderstander> nlus) {
@@ -76,7 +86,7 @@ public class BotConfiguration {
 	public void setBotModelInfo(BotModelInfo botModelInfo) {
 		this.botModelInfo = botModelInfo;
 	}
-	
+
 	public Collection<Bot> getActiveBots() {
 
 		Collection<Bot> bots = new HashSet<>();
@@ -86,20 +96,20 @@ public class BotConfiguration {
 
 		return bots;
 	}
-	
+
 	public VLE getVLEofBot(String botName) {
-		
-		if(this.vles == null)
+
+		if (this.vles == null)
 			return null;
-		
-		for(VLE vle :this.vles.values()) {
+
+		for (VLE vle : this.vles.values()) {
 			Bot bot = vle.getBotByName(botName);
-			if(bot != null)
+			if (bot != null)
 				return vle;
 		}
-		System.out.println("no vle for " + botName + " found");	
-		return null;		
-		
+		System.out.println("no vle for " + botName + " found");
+		return null;
+
 	}
 
 }

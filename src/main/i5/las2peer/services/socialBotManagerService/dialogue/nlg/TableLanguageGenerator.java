@@ -79,8 +79,6 @@ public class TableLanguageGenerator extends LanguageGenerator {
 		assert !intent.equals("") : "add nlg entry. empty intent";
 		assert !message.equals("") : "add nlg entry. empty message";
 		
-		System.out.println("add nlg entry " + intent + " " + message);
-		
 		if (this.table.containsKey(intent)) {
 			List<String> values = table.get(intent);
 			values.add(message);

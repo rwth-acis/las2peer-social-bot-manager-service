@@ -410,8 +410,6 @@ public class BotParser {
 					if (bsfList.get(target) != null) {
 						ServiceFunction sf = bsfList.get(target);
 						sf.setService(service);
-						System.out.println(
-								"set service " + service.getServiceAlias() + " to function " + sf.getFunctionName());
 						assert sf.getService() == service;
 					}
 					// Event
@@ -563,11 +561,9 @@ public class BotParser {
 					}
 					// Action Parameter uses IntentEntity
 				} else if (sfaList.containsKey(source)) {
-					ServiceFunctionAttribute sfa = sfaList.get(source);
-					System.out.println("paramter uses something " + sfa.getName());
+					ServiceFunctionAttribute sfa = sfaList.get(source);					
 					if (intentEntities.containsKey(target)) {
-						IntentEntity entity = intentEntities.get(target);
-						System.out.println("paramter has entity " + entity.getEntityKeyword());
+						IntentEntity entity = intentEntities.get(target);						
 						sfa.setEntity(entity);
 					}
 
@@ -577,16 +573,14 @@ public class BotParser {
 
 					// Intent Entity
 					if (intentEntities.containsKey(target)) {
-						IntentEntity entity = intentEntities.get(target);
-						System.out.println("selection uses entity " + entity.getEntityKeyword());
+						IntentEntity entity = intentEntities.get(target);						
 						selection.setDynamicEntity(entity);
 
 					}
 
 					// Action
 					else if (bsfList.containsKey(target)) {
-						ServiceFunction function = bsfList.get(target);
-						System.out.println("selection uses Action " + function.getFunctionName() + " " + value);
+						ServiceFunction function = bsfList.get(target);						
 						GeneratorFunction generator = new GeneratorFunction(DialogueActType.SELECTION,
 								ResponseParseMode.MESSAGE_TEXT, function, value);
 						selection.setGeneratorFunction(generator);
@@ -637,14 +631,12 @@ public class BotParser {
 					// ...Frame
 					if (frames.containsKey(target)) {
 						Frame frame = frames.get(target);
-						messenger.addFrame(frame);
-						System.out.println("messenger generates frame");
+						messenger.addFrame(frame);						
 					}
 					// ...Selection
 					if (selections.containsKey(target)) {
 						Selection selection = selections.get(target);
-						messenger.addSelection(selection);
-						System.out.println("messenger generates selection");
+						messenger.addSelection(selection);					
 					}
 
 					// Frame generates
@@ -666,8 +658,7 @@ public class BotParser {
 					// ... Action Attribute
 					if (sfaList.containsKey(target)) {
 						ServiceFunctionAttribute attr = sfaList.get(target);
-						attr.setSlotName(value);
-						System.out.println("attr: " + attr.getName() + " has slotName: " + attr.getSlotName());
+						attr.setSlotName(value);						
 					}
 
 					// Slot generates
@@ -711,14 +702,12 @@ public class BotParser {
 							attribute.setFillingFunctionKey(value);
 
 						// ...Intent entity
-					} else if (intentEntities.containsKey(target)) {
-						System.out.println("action generates entity");
+					} else if (intentEntities.containsKey(target)) {						
 						IntentEntity entity = intentEntities.get(target);
 						entity.setKey(value);
 						entity.setFunction(mergedFunction);
 
-					} else if (selections.containsKey(target)) {
-						System.out.println("action generates selection");
+					} else if (selections.containsKey(target)) {				
 						Selection selection = selections.get(target);
 						GeneratorFunction gf = new GeneratorFunction(DialogueActType.SELECTION,
 								ResponseParseMode.MESSAGE_TEXT, mergedFunction, "");
@@ -821,8 +810,7 @@ public class BotParser {
 					}
 
 					// Frame triggers...
-				} else if (frames.get(source) != null) {
-					System.out.println("Frame triggers action");
+				} else if (frames.get(source) != null) {				
 					Frame frame = frames.get(source);
 
 					// ...Bot Action
@@ -832,8 +820,7 @@ public class BotParser {
 
 						// automatic
 						if (frame.getSlots().isEmpty()) {
-							FrameMapper mapper = new FrameMapper();
-							System.out.println("automatic frame mapping");
+							FrameMapper mapper = new FrameMapper();						
 							try {
 								frame = mapper.map(botFunction, frame);
 							} catch (Error e) {
@@ -849,19 +836,16 @@ public class BotParser {
 					if (responses.get(target) != null) {
 						ChatResponse response = responses.get(target);
 						IncomingMessage im = new IncomingMessage("selection_" + value, "0");
-						im.addResponse(response);
-						System.out.println("Selection add Message " + value + " " + im);
+						im.addResponse(response);						
 						selection.addElement(value, im);
 					}
 					if (incomingMessages.get(target) != null) {
-						IncomingMessage message = incomingMessages.get(target);
-						System.out.println("Selection add Message " + value + " " + message);
+						IncomingMessage message = incomingMessages.get(target);						
 						selection.addElement(value, message);
 					}
 					// .. Frame
 					if (frames.get(target) != null) {
-						Frame frame = frames.get(target);
-						System.out.println("Selection add Frame " + value + " " + frame);
+						Frame frame = frames.get(target);						
 						if (value != null && !value.contentEquals(""))
 							selection.addElement(value, frame);
 						else
@@ -870,8 +854,7 @@ public class BotParser {
 					}
 
 					// event triggers
-				} else if (events.get(source) != null) {
-					System.out.println("Eventtriggers chat response");
+				} else if (events.get(source) != null) {				
 					ServiceEvent event = events.get(source);
 					// .. chat response
 					if (responses.get(target) != null) {
@@ -921,17 +904,13 @@ public class BotParser {
 		j.put("botIds", jarr);
 		System.out.println("add bot to monitoring: " + j.toJSONString());
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
-		System.out.println("bot initiated");
-
-		for (ServiceFunctionAttribute sfa : sfaList.values()) {
-			System.out.println(sfa.getId() + " " + sfa.getName() + " " + sfa.getSlotID() + " " + sfa.getFunction());
-		}
+		
 
 		for (Messenger messenger : messengers.values()) {
 			messenger.reset();
-
 		}
-
+		
+		System.out.println("bot initiated");
 		return newBot;
 	}
 
@@ -1019,7 +998,6 @@ public class BotParser {
 			}
 		}
 
-		System.out.println("SERVICE: " + service.getServiceURL());
 		return service;
 	}
 
@@ -1440,8 +1418,7 @@ public class BotParser {
 
 		Service service = new Service(serviceType, alias, functionURL);
 		ServiceFunction sf = new ServiceFunction(key, service, sfName);
-		System.out.println(sf.getFunctionName() + " Service URL " + sf.getBasePath());
-
+		
 		return sf;
 	}
 

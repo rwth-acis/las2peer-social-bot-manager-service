@@ -40,15 +40,13 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 	private void init(Selection selection) {
 
 		assert selection != null;
-		System.out.println("INIT SELECTION MANAGER " + selection.getElements().size() + " generator: " + selection.getGeneratorFunction() != null);
 		this.selection = selection;
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 
 		for (Entry<String, MessengerElement> entry : selection.getElements().entrySet()) {
 			MessengerElement element = entry.getValue();
 			String key = entry.getKey();
-			System.out.println("SELECTION ELEMENT CLASS " + element);
-
+			
 			AbstractDialogueManager manager = generator.generate(element);
 			managers.put(key, manager);
 		}
@@ -63,8 +61,7 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 
 		// first call
 		if (intent.getKeyword().contentEquals(selection.getIntentKeyword())) {
-			System.out.println("SELECTION First call: " + intent.getKeyword());
-			
+					
 			// static
 			DialogueAct act = DialogueActGenerator.getAct(selection);
 			act.setIntentType(DialogueActType.SELECTION);
@@ -97,12 +94,10 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 
 				// start new manager
 				if (manager != null) {
-					System.out.println("selection intent: " + intent.getKeyword() + " on manager " + manager.getClass() + " intent: " + manager.getStartIntent());;
 					this.active = manager;
 					intent = new Intent(manager.getStartIntent(), 1.0f);
 					intent.setIntentType(IntentType.START);
 
-					System.out.println("simple selection fill " + selection.getParameterName() + " " + value );
 					if (selection.fillsParameter()) {
 						if (manager instanceof TaskOrientedManager)
 							((TaskOrientedManager) manager).getDialogueGoal().fill(selection.getParameterName(), value);
@@ -120,7 +115,6 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 
 		// continue
 		if (active != null) {
-			System.out.println("SELECTION third call Selection active: " + active.getStartIntent());
 			return active.handle(intent);
 		}
 
@@ -136,17 +130,13 @@ public class SimpleSelectionManager extends AbstractDialogueManager {
 
 	@Override
 	public void fillRecursive(String attrId, String value) {
-
-		System.out.println("simple selection " + this.getStartIntent() + " try to fill " + attrId + " with " + value);
 		
 		// generated Response function
 		if (this.selection.getGeneratorFunction() != null) {
 			GeneratorFunction function = this.selection.getGeneratorFunction();
 			ServiceFunctionAttribute attr = function.getAttribute(attrId);
 			if (attr != null) {
-				this.responseAction.addParameter(attr, value);
-				System.out.println(
-						"fill recursive " + attr.getName() + " filled in simple selection " + this.getStartIntent());
+				this.responseAction.addParameter(attr, value);				
 			}
 		}
 				

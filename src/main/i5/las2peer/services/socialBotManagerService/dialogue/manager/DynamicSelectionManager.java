@@ -27,7 +27,6 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 
 	private void init(Selection selection) {
 
-		System.out.println("INIT DYNAMIC SELECTION MANAGER ");
 		this.selection = selection;
 		DialogueManagerGenerator generator = new DialogueManagerGenerator();
 
@@ -44,7 +43,6 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 
 		// first call
 		if (intent.getKeyword().contentEquals(selection.getIntentKeyword())) {
-			System.out.println("DYNAMIC SELECTION First call: " + intent.getKeyword() + "message: " + selection.getResponseMessage());
 			assert this.selection != null;
 			assert this.selection.getDynamicEntity() != null;
 			this.selection.getDynamicEntity().invariantDynamic();
@@ -68,7 +66,6 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 		if (intent.getEntity("selection") != null) {
 
 			String value = intent.getEntity("selection").getValue();
-			System.out.println("SELECTION second call selection: " + value);
 			Collection<String> options = selection.getEnums();
 			if (options.contains(value)) {
 				this.value = value;
@@ -85,7 +82,6 @@ public class DynamicSelectionManager extends AbstractDialogueManager {
 			}
 		}
 
-		System.out.println("SELECTION third call Selection active: " + manager.getStartIntent());
 		return manager.handle(intent);
 
 	}

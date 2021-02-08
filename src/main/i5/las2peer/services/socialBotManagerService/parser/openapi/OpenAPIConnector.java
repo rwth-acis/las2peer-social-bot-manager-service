@@ -92,7 +92,6 @@ public class OpenAPIConnector {
 			}
 			action.setService(service);
 			action.setServiceName(baseUrl);
-			System.out.println(action);
 			return action;
 		}
 
@@ -146,7 +145,7 @@ public class OpenAPIConnector {
 
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
-		//client.setLogin(loginName, password);
+		// client.setLogin(loginName, password);
 
 		return sendRequest(client, action);
 	}
@@ -162,29 +161,24 @@ public class OpenAPIConnector {
 		assert action != null : "action parameter is null";
 		assert action.getFunction() != null : "action parameter service function is null";
 
-		System.out.println("perform REST action: " + action.toString());
-
 		MiniClient client = new MiniClient();
 		client.setConnectorEndpoint(action.getBasePath());
 
 		ServiceFunction sf = action.getFunction().asServiceFunction();
-		System.out.println("Action " + sf.getActionType() + " " + sf.getServiceType());
 		ClientResponse response = null;
 		if (sf.getActionType() != ActionType.FUNCTION && sf.getServiceType() == ServiceType.SERVICE) {
 
-			String loginName = "alice";
-			String password = "pwalice";
-		//	client.setLogin(loginName, password);
+			// client.setLogin(loginName, password);
 			response = sendRequest(client, action);
 
 		}
+		
 		if (response == null) {
-			System.out.println("------ resend action");
+			System.out.println("send action without login");			
 			response = sendRequest(client, action);
 			assert response != null;
 		}
 
-		System.out.println("received response " + response);
 		return response;
 	}
 
@@ -445,7 +439,6 @@ public class OpenAPIConnector {
 	public static Collection<String> getFunctionNames(String swaggerURL) {
 
 		assert swaggerURL != null;
-		System.out.println("find functions for " + swaggerURL);
 		String modelUrl = swaggerURL;
 
 		// read function V2
@@ -511,7 +504,7 @@ public class OpenAPIConnector {
 			break;
 
 		}
-		
+
 		return name;
 
 	}
@@ -522,10 +515,9 @@ public class OpenAPIConnector {
 		if (name.contentEquals(""))
 			return null;
 
-		if(address.endsWith("/"))
+		if (address.endsWith("/"))
 			address = address.substring(0, address.length() - 1);
 		String swaggerURL = address + "/" + name + "/swagger.json";
-		System.out.println("Search for " + swaggerURL);
 
 		return getFunctionNames(swaggerURL);
 	}

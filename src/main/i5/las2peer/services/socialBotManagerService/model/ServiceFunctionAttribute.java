@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Fillable;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.Slotable;
 import i5.las2peer.services.socialBotManagerService.dialogue.nlg.MessageFile;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
@@ -132,11 +129,6 @@ public class ServiceFunctionAttribute {
 		}
 		return attributes;
 	}
-
-	/*
-	 * public void setChildAttributes(ArrayList<ServiceFunctionAttribute>
-	 * childAttributes) { this.childAttributes = childAttributes; }
-	 */
 
 	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
 		if (childAttribute == null)
@@ -272,39 +264,38 @@ public class ServiceFunctionAttribute {
 
 		return getUpdatedEnumList();
 	}
-
-	public List<String> update() {
-
-		System.out.println("update: " + this.getName() + ", function:" + this.fillingFunctionKey + " "
-				+ this.fillingFunction + " , (content: " + this.getContent() + ")");
-		if (this.getRetrieveFunction() == null)
-			return null;
-
-		if (this.getRetrieveFunction().hasOpenAttribute()) {
-			System.out.println("retrieve function has open attributes");
-			return null;
-
-		}
-
-		List<String> retrievedEnums = null;
-
-		if (this.contentURL != null) {
-			System.out.println("update by contentURL");
-
-			ServiceFunction action = new ServiceFunction(contentURL);
-			retrievedEnums = (List<String>) OpenAPIConnector.readEnums(action, contentURLKey);
-
-		} else if (this.fillingFunction != null) {
-			System.out.println("update by filling function");
-			retrievedEnums = (List<String>) OpenAPIConnector.readEnums(this.fillingFunction, this.fillingFunctionKey);
-		}
-
-		if (retrievedEnums != null && !retrievedEnums.isEmpty())
-			this.enumList = retrievedEnums;
-
-		return retrievedEnums;
-
-	}
+	/*
+	 * public List<String> update() {
+	 * 
+	 * System.out.println("update: " + this.getName() + ", function:" +
+	 * this.fillingFunctionKey + " " + this.fillingFunction + " , (content: " +
+	 * this.getContent() + ")"); if (this.getRetrieveFunction() == null) return
+	 * null;
+	 * 
+	 * if (this.getRetrieveFunction().hasOpenAttribute()) {
+	 * System.out.println("retrieve function has open attributes"); return null;
+	 * 
+	 * }
+	 * 
+	 * List<String> retrievedEnums = null;
+	 * 
+	 * if (this.contentURL != null) { System.out.println("update by contentURL");
+	 * 
+	 * ServiceFunction action = new ServiceFunction(contentURL); retrievedEnums =
+	 * (List<String>) OpenAPIConnector.readEnums(action, contentURLKey);
+	 * 
+	 * } else if (this.fillingFunction != null) {
+	 * System.out.println("update by filling function"); retrievedEnums =
+	 * (List<String>) OpenAPIConnector.readEnums(this.fillingFunction,
+	 * this.fillingFunctionKey); }
+	 * 
+	 * if (retrievedEnums != null && !retrievedEnums.isEmpty()) this.enumList =
+	 * retrievedEnums;
+	 * 
+	 * return retrievedEnums;
+	 * 
+	 * }
+	 */
 
 	/**
 	 * Get the dynamic enum list for this attribute
@@ -315,9 +306,9 @@ public class ServiceFunctionAttribute {
 	 */
 	public List<String> getUpdatedEnumList(Map<String, String> parameters) {
 
-		if(this.fillingFunction == null)
+		if (this.fillingFunction == null)
 			return this.enumList;
-		
+
 		if (parameters == null)
 			parameters = new HashMap<>();
 
@@ -330,58 +321,20 @@ public class ServiceFunctionAttribute {
 		OpenAPIAction action = new OpenAPIAction(fillingFunction);
 		action.addParameters(parameters);
 
-		List<String> res = (List<String>) OpenAPIConnector.readEnums(action, this.fillingFunctionKey);
-		System.out.println("received enums: " + res);
-		return res;
+		try {
+			List<String> res = (List<String>) OpenAPIConnector.readEnums(action, this.fillingFunctionKey);
+			System.out.println("received enums: " + res);
+			return res;
 
-	}
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}		
 
-	@Deprecated
-	private void update(DialogueGoal goal) {
-
-		assert this.fillingFunction != null;
-		assert this.fillingFunction.hasFrameGeneratedAttribute();
-		System.out.println("update by frame " + goal.getFrame().getName());
-
-		Collection<ServiceFunctionAttribute> attrs = this.fillingFunction.getFrameGeneratedAttributes();
-		OpenAPIAction action = new OpenAPIAction(fillingFunction);
-		for (ServiceFunctionAttribute attr : attrs) {
-			if (attr.isFrameGenerated()) {
-
-				Slotable node = goal.getNode(attr.getSlotName());
-				if (node == null) {
-					System.out.println("no node named " + attr.getSlotID() + " found");
-				} else {
-					if (node instanceof Fillable) {
-						Fillable fill = (Fillable) node;
-						System.out.println("fill " + attr.getName() + " with " + fill.getValue());
-						action.addParameter(attr, fill.getValue());
-					}
-				}
-
-			}
-		}
-
-		List<String> retrievedEnums = (List<String>) OpenAPIConnector.readEnums(action, this.fillingFunctionKey);
-		System.out.println("enums: " + retrievedEnums);
-		if (retrievedEnums != null && !retrievedEnums.isEmpty())
-			this.enumList = retrievedEnums;
 	}
 
 	public List<String> getUpdatedEnumList() {
-
-		System.out.println("get updated enum list " + this.getName());
-		List<String> res = this.update();
-		if (res != null)
-			return res;
-
-		if (this.enumList != null) {
-			System.out.println("return old");
-			return this.enumList;
-			
-		}
-
-		return new ArrayList<String>();
+		return this.getUpdatedEnumList(new HashMap<>());
 	}
 
 	public void setEnumList(List<String> list) {
@@ -532,13 +485,11 @@ public class ServiceFunctionAttribute {
 	}
 
 	public void setSlotID(String slotID) {
-		System.out.println("set slot id " + slotID + " of " + this.getIdName());
 		if (slotID != null)
 			this.slotID = slotID;
 	}
 
 	public void setSlotName(String slotName) {
-		System.out.println("set slot name " + slotName);
 		this.slotName = slotName;
 	}
 
@@ -577,9 +528,6 @@ public class ServiceFunctionAttribute {
 	 */
 	public boolean isOpen() {
 
-		System.out.println("is open? " + this.getName() + ", content:" + this.hasContent() + ", frameg: "
-				+ this.isFrameGenerated());
-
 		if (this.hasContent())
 			return false;
 
@@ -602,8 +550,7 @@ public class ServiceFunctionAttribute {
 	 * @return is filled by frame parameter (true) or not (false)
 	 */
 	public boolean isFrameGenerated() {
-		System.out.println("is frame generated? " + this.getId() + " " + this.getIdName() + " slotID: " + this.slotID
-				+ " slotName: " + this.slotName);
+
 		if (this.slotID != null && !this.slotID.contentEquals(""))
 			return true;
 		if (this.slotName != null && !this.slotName.contentEquals(""))
@@ -614,13 +561,8 @@ public class ServiceFunctionAttribute {
 	public ServiceFunctionAttribute merge(ServiceFunctionAttribute attr) {
 		assert attr != null;
 
-		System.out.println("Merge " + attr.getName() + " into " + this.getName() + " slotId: " + attr.getSlotID());
-		System.out.println("Merge " + attr.getId() + " into " + this.getId() + " format: " + attr.getFormat());
-
-		if (attr.getId() != null && !attr.getId().contentEquals("")) {
+		if (attr.getId() != null && !attr.getId().contentEquals(""))
 			this.id = attr.getId();
-			System.out.println("setting id to " + this.id);
-		}
 
 		if (attr.getParameterType() != null)
 			this.parameterType = attr.getParameterType();
@@ -670,13 +612,13 @@ public class ServiceFunctionAttribute {
 
 	public String prettyPrint(int i) {
 		String res = "";
-		for(int j=0; j<i; j++) {
+		for (int j = 0; j < i; j++) {
 			res = res + "#";
 		}
 		res = res + this.getName() + " " + this.getDiscriminator();
-		for(ServiceFunctionAttribute attr : this.childAttributes)
-			res = res + "\n" + attr.prettyPrint(i+1);
-		
+		for (ServiceFunctionAttribute attr : this.childAttributes)
+			res = res + "\n" + attr.prettyPrint(i + 1);
+
 		return res;
 	}
 

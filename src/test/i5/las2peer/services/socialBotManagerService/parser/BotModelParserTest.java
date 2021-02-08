@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
 import i5.las2peer.services.socialBotManagerService.model.BotModel;
-import i5.las2peer.services.socialBotManagerService.nlu.FallbackNLU;
+import i5.las2peer.services.socialBotManagerService.nlu.ConfirmationNLU;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChitChatFunction;
 
@@ -23,7 +23,7 @@ public class BotModelParserTest {
 		bot.addFunction(function);
 		
 		BotConfiguration config = new BotConfiguration();
-		config.addNLU(new FallbackNLU());
+		config.addNLU(new ConfirmationNLU());
 		BotModelParser parser = new BotModelParser(config);
 		
 		BotModel model = parser.parse(bot);

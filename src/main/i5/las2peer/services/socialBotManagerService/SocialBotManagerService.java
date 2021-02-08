@@ -884,8 +884,6 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
 		public Response telegramEvent(String body, @PathParam("token") String token) {
 
-			System.out.println("Telegram Message received: " + body);
-
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -2231,6 +2229,53 @@ public class SocialBotManagerService extends RESTService {
 			return Response.ok().entity("no bot found").build();
 		}
 
+		@GET
+		@Path("/{botName}/delete")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
+		public Response deleteBot(@PathParam("botName") String botName) {
+
+			try {
+
+				for (VLE vle : getConfig().getVLEs().values()) {
+					Bot bot = vle.getBotByName(botName);
+
+					if (bot != null) {
+						vle.getBots().remove(bot.getId());
+						return Response.ok().entity("bot " + botName + " removed").build();
+					}
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok().entity("failed to remove bot " + botName).build();
+			}
+
+			return Response.ok().entity("no bot named " + botName + " found").build();
+		}
+
+		@GET
+		@Path("/nlu/{nluName}/delete")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
+		public Response deleteNLU(@PathParam("nluName") String nluName) {
+
+			try {
+				System.out.println("remove " + nluName);
+				getConfig().removeNLU(nluName);
+
+				LanguageUnderstander nlu2 = getConfig().getNLU(nluName);
+				if (nlu2 == null)
+					return Response.ok().entity("nlu " + nluName + " removed").build();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+
+			}
+
+			return Response.ok().entity("failed to remove nlu " + nluName).build();
+		}
+
 		@POST
 		@Path("/{botName}/train/nlg")
 		@Produces(MediaType.TEXT_PLAIN)
@@ -2388,13 +2433,13 @@ public class SocialBotManagerService extends RESTService {
 					if (vle.getName().contentEquals("VLECreation"))
 						address = vle.getAddress();
 				}
-								
+
 				if (address.contentEquals("") || address.contentEquals("http://127.0.0.1:8070/"))
 					address = "http://127.0.0.1:8080";
-				
+
 				else if (address.endsWith("/"))
-					address = address.substring(0, address.length()-1);
-				
+					address = address.substring(0, address.length() - 1);
+
 				Collection<String> functions = OpenAPIConnector.getOperationNames(serviceAlias, address);
 				JSONArray array = new JSONArray();
 				for (String function : functions) {
@@ -2482,7 +2527,7 @@ public class SocialBotManagerService extends RESTService {
 					if (!name.contains("MobSOSDataProcessingService") && !name.contains("SocialBotManagerService")) {
 						System.out.println("service-name: " + name);
 						String[] splitted = name.split("\\.");
-						if(splitted.length > 1)
+						if (splitted.length > 1)
 							parsedNames.add(splitted[splitted.length - 1]);
 						else
 							parsedNames.add(name);
@@ -2585,7 +2630,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
 		public Response getBotNLUIntents(@PathParam("botName") String botName) {
-			Collection<String> res = new LinkedList<>();
+			Collection<String> res = new HashSet<>();
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(botName);

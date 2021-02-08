@@ -20,7 +20,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
-import i5.las2peer.services.socialBotManagerService.nlu.FallbackNLU;
+import i5.las2peer.services.socialBotManagerService.nlu.ConfirmationNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
@@ -137,7 +137,7 @@ public class BotModelParser {
 		if (nluName != null)
 			nlu = config.getNLU(nluName);
 		else
-			nlu = new FallbackNLU();
+			nlu = new ConfirmationNLU();
 		assert nlu != null : "no nlu module found for " + bot.getNluModule();
 		String nluID = "0";
 		String nluURL = nlu.getUrl();

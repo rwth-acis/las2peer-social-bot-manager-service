@@ -298,7 +298,7 @@ public class OpenAPIReaderV3 {
 
 	private static OpenApi3 processModel(URI modelUri, boolean validate) throws Exception {
 		OpenApi3 model = new OpenApi3Parser().parse(modelUri, validate);
-		System.out.printf("== Model %s\n", modelUri);
+		//System.out.printf("== Model %s\n", modelUri);
 		if (!validate || model.isValid()) {
 			describeModel(model);
 		} else {
