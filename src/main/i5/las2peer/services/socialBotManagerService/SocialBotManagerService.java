@@ -2509,8 +2509,11 @@ public class SocialBotManagerService extends RESTService {
 				BotConfiguration config = getConfig();
 				VLE vle = config.getVLEofBot("CreationBot");
 
-				if (vle == null)
-					return Response.serverError().entity("No VLE found").build();
+				if (vle == null) {
+					JSONObject obj = new JSONObject();
+					obj.put("error", "no vle of CreationBot found");
+					return Response.serverError().entity(obj).build();					
+				}
 
 				String address = vle.getAddress();
 				if (address.endsWith("/"))
@@ -2524,7 +2527,7 @@ public class SocialBotManagerService extends RESTService {
 				Collection<String> names = OpenAPIConnector.searchValuesByKey(json, "service-name");
 				Collection<String> parsedNames = new LinkedList<>();
 				for (String name : names) {
-					if (!name.contains("MobSOSDataProcessingService") && !name.contains("SocialBotManagerService")) {
+					if (!name.contains("MobSOSDataProcessingService")) {
 						System.out.println("service-name: " + name);
 						String[] splitted = name.split("\\.");
 						if (splitted.length > 1)
@@ -2630,15 +2633,15 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
 		public Response getBotNLUIntents(@PathParam("botName") String botName) {
-			Collection<String> res = new HashSet<>();
+			Collection<String> res = new LinkedList<>();
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(botName);
-					if (bot != null) {
-
+					if (bot != null) {						
 						for (LanguageUnderstander nlu : bot.getNLUs().values()) {
 							res.addAll(nlu.getIntents());
 						}
+						
 					}
 					return Response.ok().entity(res).build();
 				}
