@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.TimeZone;
 
 import org.json.JSONArray;
@@ -37,10 +38,8 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
 					// timestamp
-					DateFormat formatter = new SimpleDateFormat("yyyy-MM-ddThh:mm:ssZ");
-					formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-					cm.setTime(formatter.format(message.getMsgTimestamp()));
-
+					// timestamp
+					cm.setTime(message.getMsgTimestamp().toInstant().toString());
 					// domain
 					cm.setDomain(this.getDomain());
 
@@ -72,12 +71,8 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					System.out.println("Email of user is " + email);
 					cm.setEmail(email);
 					cm.setRole(role);
-
 					// timestamp
-					DateFormat formatter = new SimpleDateFormat("yyyy-MM-ddThh:mm:ssZ");
-					formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-					cm.setTime(formatter.format(message.getMsgTimestamp()));
-
+					cm.setTime(message.getMsgTimestamp().toInstant().toString());
 					// domain
 					cm.setDomain(this.getDomain());
 
