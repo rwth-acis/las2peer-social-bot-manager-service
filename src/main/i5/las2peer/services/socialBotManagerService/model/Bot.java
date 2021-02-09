@@ -310,8 +310,7 @@ public class Bot {
 			for (EventToMessageTrigger event : this.activeTriggers.get(triggerId)) {
 				System.out.println("event: " + event.getEvent().getName());
 				if (event.getEvent().getName().equalsIgnoreCase(eventName))
-					;
-				return event;
+					return event;
 			}
 		}
 

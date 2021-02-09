@@ -2512,7 +2512,7 @@ public class SocialBotManagerService extends RESTService {
 				if (vle == null) {
 					JSONObject obj = new JSONObject();
 					obj.put("error", "no vle of CreationBot found");
-					return Response.serverError().entity(obj).build();					
+					return Response.serverError().entity(obj).build();
 				}
 
 				String address = vle.getAddress();
@@ -2633,17 +2633,22 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
 		public Response getBotNLUIntents(@PathParam("botName") String botName) {
+			System.out.println("get intents of bot " + botName);
 			Collection<String> res = new LinkedList<>();
 			try {
+				System.out.println("vles " + getConfig().getVLEs().size());
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(botName);
-					if (bot != null) {						
+					if (bot != null) {
+						System.out.println("bot " + botName + " found, nlus modules: " + bot.getNLUs().size());
 						for (LanguageUnderstander nlu : bot.getNLUs().values()) {
+							System.out.println(nlu.getName() + " " + nlu.getIntents().size());
 							res.addAll(nlu.getIntents());
-						}
-						
+						}						
 					}
-					return Response.ok().entity(res).build();
+					
+					if (bot != null)
+						return Response.ok().entity(res).build();
 				}
 
 			} catch (Exception e) {
@@ -2724,11 +2729,15 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 				LanguageUnderstander nlu = getConfig().getNLU(name);
-				if (nlu == null)
-					return Response.serverError().entity("no nlu module found with name: " + name).build();
+				if (nlu == null) {
+					JSONObject res = new JSONObject();
+					res.put("error", "no nlu module found with name: " + name);
+					return Response.serverError().entity(res).build();
+				}
 
 				Collection<String> intents = nlu.getIntents();
 				return Response.ok().entity(intents).build();
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
