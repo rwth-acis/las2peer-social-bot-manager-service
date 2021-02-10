@@ -474,7 +474,7 @@ public class SocialBotManagerService extends RESTService {
 
 						botMessage = botMessage + "\nMessenger: \n";
 						for (Messenger messenger : bot.getMessengers().values())
-							botMessage = botMessage + messenger.getName() + ": " + messenger.getChatService().toString()
+							botMessage = botMessage + messenger.getName().replace("_", "\\_") + ": " + messenger.getChatService().toString()
 									+ "; \n";
 
 						botMessage = botMessage + "\nFunctions: \n";
@@ -2406,7 +2406,7 @@ public class SocialBotManagerService extends RESTService {
 
 			try {
 
-				Collection<String> functions = OpenAPIConnector.getFunctionNames(swaggerURL);
+				Collection<String> functions = OpenAPIConnector.getFunctionNameList(swaggerURL);
 				JSONArray array = new JSONArray();
 				for (String function : functions) {
 					array.add(function);
@@ -2440,13 +2440,35 @@ public class SocialBotManagerService extends RESTService {
 				else if (address.endsWith("/"))
 					address = address.substring(0, address.length() - 1);
 
-				Collection<String> functions = OpenAPIConnector.getOperationNames(serviceAlias, address);
+				HashMap<String, String> functions = OpenAPIConnector.getFunctionNameMap(serviceAlias, address);
 				JSONArray array = new JSONArray();
-				for (String function : functions) {
-					array.add(function);
+				String message = "";
+				int limit = 5;
+				for (Entry<String, String> entry : functions.entrySet()) {
+					String name = entry.getKey();
+					String summary = entry.getValue();					
+					array.add(name);					
+					if(summary.length() > 150)
+						summary = summary.substring(0, 150);					
+					if(limit > 0 && !summary.isEmpty()) {
+						limit = limit - 1;
+						message = message + "*" + name + "*: " + summary + "\n";
+					}
 				}
-
-				return Response.ok().entity(array).build();
+				
+				JSONObject res = new JSONObject();
+				res.put("functions", array);				
+				res.put("message", message);
+				
+				String name = OpenAPIConnector.getServiceName(serviceAlias);
+				if (name.contentEquals(""))
+					return null;
+				if (address.endsWith("/"))
+					address = address.substring(0, address.length() - 1);
+				String swaggerURL = address + "/" + name + "/swagger.json";
+				
+				res.put("swagger", swaggerURL);
+				return Response.ok().entity(res).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.serverError().entity("I cant find functions for service alias").build();
@@ -2549,51 +2571,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 		}
-
-		@GET
-		@Path("/test/{testarrParam}")
-		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
-		public Response getTest(@PathParam("testarrParam") String testarrParam) {
-
-			JSONArray res = new JSONArray();
-			JSONObject boj = new JSONObject();
-			boj.put("name", "test");
-			boj.put("type", "Number");
-			res.add(testarrParam);
-			res.add(boj);
-			res.add("HelloWorld");
-			System.out.println("get Test Enum " + res.toJSONString());
-			try {
-				return Response.ok().entity(res).build();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			return Response.serverError().entity("cant retrieve knowledge models").build();
-
-		}
-
-		@POST
-		@Path("/test/{AttrA}/{AttrB}/{AttrC}")
-		@Consumes(MediaType.APPLICATION_JSON)
-		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "getTestArray", notes = "get Test Enum")
-		public Response postTest(@PathParam("AttrA") String attrA, @PathParam("AttrB") String attrB,
-				@PathParam("AttrC") String attrC) {
-
-			String res = "success";
-			try {
-				return Response.ok().entity(res).build();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			return Response.serverError().entity("cant retrieve knowledge models").build();
-
-		}
-
+		
 		@GET
 		@Path("/bot/{botName}/model")
 		@Consumes(MediaType.TEXT_PLAIN)

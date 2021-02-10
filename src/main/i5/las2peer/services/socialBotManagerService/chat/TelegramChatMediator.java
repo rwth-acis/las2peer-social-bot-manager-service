@@ -48,7 +48,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final static String url = "https://477e0f80549b.ngrok.io";
+	private final static String url = "https://auth.tech4comp.dbis.rwth-aachen.de";
 	MiniClient client;
 
 	public TelegramChatMediator(String authToken) {
@@ -226,6 +226,10 @@ public class TelegramChatMediator extends EventChatMediator {
 		String text = response.getMessage();
 
 		System.out.println("send formatted message to telegram channel " + channel + ", size: " + text.length());
+		System.out.println("buttons " + response.getButtons().size());
+		for(String button :response.getButtons()) {
+			System.out.println(button);
+		}
 		SendMessage request = new SendMessage(channel, text);
 		request.parseMode(ParseMode.Markdown);
 

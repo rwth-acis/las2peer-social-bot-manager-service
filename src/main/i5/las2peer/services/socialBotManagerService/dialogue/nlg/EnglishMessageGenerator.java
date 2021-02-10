@@ -271,13 +271,18 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 
 			Map<String, Map<String, String>> mes = act.getContextEntities();
 			for (String context : mes.keySet()) {
-				if (mes.keySet().size() > 1) {
-					message = message + "\n*" + context + "*\n";
-				}
-				for (Entry<String, String> entity : mes.get(context).entrySet()) {
-					if (!entity.getKey().contentEquals("domainName")
-							&& !entity.getKey().contentEquals("domainDescription"))
-						message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+				
+				if (mes.get(context).entrySet().size() > 2) {
+					
+					if (mes.keySet().size() > 1) {
+						message = message + "\n*" + context + "*\n";
+					}
+					
+					for (Entry<String, String> entity : mes.get(context).entrySet()) {
+						if (!entity.getKey().contentEquals("domainName")
+								&& !entity.getKey().contentEquals("domainDescription"))
+							message = message.concat("/" + entity.getKey() + " - " + entity.getValue()).concat("\n");
+					}
 				}
 
 			}

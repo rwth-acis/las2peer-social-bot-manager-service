@@ -141,7 +141,7 @@ public class OpenAPIReaderV2 {
 	 * @param httpMethod
 	 * @return
 	 */
-	private static Operation getOperationByPath(Swagger model, String path, String httpMethod) {
+	public static Operation getOperationByPath(Swagger model, String path, String httpMethod) {
 
 		// Path
 		Path pathItem = model.getPaths().get(path);
@@ -180,7 +180,7 @@ public class OpenAPIReaderV2 {
 	 * @param operationId
 	 * @return
 	 */
-	private static Operation getOperationByOperationId(Swagger openAPI, String operationId) {
+	public static Operation getOperationByOperationId(Swagger openAPI, String operationId) {
 
 		System.out.println(operationId);
 

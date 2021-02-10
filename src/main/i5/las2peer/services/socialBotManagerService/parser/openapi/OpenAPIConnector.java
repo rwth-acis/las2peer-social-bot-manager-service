@@ -24,6 +24,7 @@ import i5.las2peer.services.socialBotManagerService.model.Service;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.ServiceType;
+import io.swagger.models.Operation;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
@@ -172,9 +173,9 @@ public class OpenAPIConnector {
 			response = sendRequest(client, action);
 
 		}
-		
+
 		if (response == null) {
-			System.out.println("send action without login");			
+			System.out.println("send action without login");
 			response = sendRequest(client, action);
 			assert response != null;
 		}
@@ -316,9 +317,8 @@ public class OpenAPIConnector {
 	}
 
 	public static Collection<String> readEnums(OpenAPIAction request, String key) {
-
+		
 		ClientResponse response = sendRequest(request);
-		System.out.println("enum response " + response);
 		if (response == null)
 			return null;
 
@@ -326,7 +326,6 @@ public class OpenAPIConnector {
 			return null;
 
 		JsonElement jsonElement = JsonParser.parseString(response.getResponse());
-
 		if (key != null && !key.contentEquals("")) {
 			Collection<String> res = searchValuesByKey(jsonElement, key);
 			return res;
@@ -342,7 +341,7 @@ public class OpenAPIConnector {
 	}
 
 	public static Collection<String> searchValuesByKey(JsonElement json, String key) {
-
+		
 		if (json.isJsonNull())
 			return null;
 
@@ -353,7 +352,7 @@ public class OpenAPIConnector {
 
 		if (json.isJsonArray()) {
 			JsonArray jsonArray = (JsonArray) json;
-			for (JsonElement element : jsonArray) {
+			for (JsonElement element : jsonArray) {				
 				Collection<String> values = searchValuesByKey(element, key);
 				if (res != null && values != null)
 					res.addAll(values);
@@ -366,6 +365,14 @@ public class OpenAPIConnector {
 				JsonElement element = jsonObject.get(key);
 				if (element.isJsonPrimitive())
 					res.add(element.getAsString());
+				if (element.isJsonArray()) {					
+					JsonArray jsonArray = (JsonArray) element;
+					for (JsonElement subElement : jsonArray) {				
+						if (subElement.isJsonPrimitive())
+							res.add(element.getAsString());
+					}
+					
+				}					
 
 			} else {
 				for (Entry<String, JsonElement> ele : jsonObject.entrySet()) {
@@ -383,7 +390,8 @@ public class OpenAPIConnector {
 
 		assert jsonArray != null : "jsonArray is null";
 		assert jsonArray.isJsonArray() : "jsonArray is no jsonArray";
-
+		System.out.println("read json array " + jsonArray);
+		
 		Collection<String> res = new LinkedList<>();
 		for (JsonElement ele : jsonArray) {
 
@@ -427,7 +435,7 @@ public class OpenAPIConnector {
 			throw new IllegalArgumentException(swaggerURL + " is not valid URL");
 		}
 
-		Collection<String> operationIds = getFunctionNames(swaggerURL);
+		Collection<String> operationIds = getFunctionNameList(swaggerURL);
 		for (String functionName : operationIds) {
 
 		}
@@ -436,7 +444,7 @@ public class OpenAPIConnector {
 
 	}
 
-	public static Collection<String> getFunctionNames(String swaggerURL) {
+	public static Collection<String> getFunctionNameList(String swaggerURL) {
 
 		assert swaggerURL != null;
 		String modelUrl = swaggerURL;
@@ -454,8 +462,8 @@ public class OpenAPIConnector {
 		}
 		JsonElement jsonElement = JsonParser.parseString(jsonString);
 
-		return searchValuesByKey(jsonElement, "operationId");
-
+		return searchValuesByKey(jsonElement, "operationId");	
+				
 	}
 
 	public static Collection<ServiceFunctionAttribute> getParameters(String serviceURL, String functionName) {
@@ -509,7 +517,7 @@ public class OpenAPIConnector {
 
 	}
 
-	public static Collection<String> getOperationNames(String serviceAlias, String address) {
+	public static HashMap<String, String> getFunctionNameMap(String serviceAlias, String address) {
 
 		String name = getServiceName(serviceAlias);
 		if (name.contentEquals(""))
@@ -519,7 +527,34 @@ public class OpenAPIConnector {
 			address = address.substring(0, address.length() - 1);
 		String swaggerURL = address + "/" + name + "/swagger.json";
 
-		return getFunctionNames(swaggerURL);
+		// read function V2
+		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(swaggerURL, null, true);
+		Swagger swagger = swaggerParseResult.getSwagger();
+		assert swagger != null;
+		ObjectMapper mapper = new ObjectMapper();
+		String jsonString = "";
+		try {
+			jsonString = mapper.writeValueAsString(swagger);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		
+		JsonElement jsonElement = JsonParser.parseString(jsonString);		
+		Collection<String> operations = searchValuesByKey(jsonElement, "operationId");
+		HashMap<String, String> res = new HashMap<>();
+		
+		for (String operationID : operations) {
+			Operation operation = OpenAPIReaderV2.getOperationByOperationId(swagger, operationID);
+			String desc = "";
+			if(operation.getDescription() != null)
+				desc = operation.getDescription();
+			if(operation.getSummary() != null && !operation.getSummary().isEmpty())
+				desc = operation.getSummary();
+			
+			res.put(operationID, desc);
+		}
+
+		return res;
 	}
 
 }
