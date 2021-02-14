@@ -56,7 +56,7 @@ public class DialogueActGenerator {
 		act.setIntentType(DialogueActType.REQCONF_FRAME);
 		List<Fillable> values = goal.getAll().getFilledNode();
 		for (Fillable node : values)
-			act.addEntity(node.getSlot().getDisplayName(), node.getValue());
+			act.addEntity(node.getSlot().getDisplayName(), node.getValue().replace("_", "\\_"));
 
 		// expected input
 		ExpectedInput input = new ExpectedInput();

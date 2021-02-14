@@ -2,6 +2,9 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueAct;
 import i5.las2peer.services.socialBotManagerService.dialogue.DialogueActGenerator;
@@ -22,10 +25,12 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 	DialogueGoal goal;
 	DialogueActGenerator gen;
 	boolean optional;
+	Map<String, String> externalFilled;
 
 	public TaskOrientedManagerImpl(DialogueGoal goal) {
 		this.goal = goal;
 		this.gen = new DialogueActGenerator();
+		this.externalFilled = new HashMap<>();
 	}
 
 	@Override
@@ -174,6 +179,8 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 
 				// delete collected information and start all over
 				this.reset();
+				for(Entry<String, String> entry :this.externalFilled.entrySet())
+					goal.fill(entry.getKey(), entry.getValue());				
 				return requestNextSlot();
 			}
 
@@ -342,8 +349,7 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 		assert !attrId.contentEquals("");
 
 		if (this.goal.fill(attrId, value))
-			System.out.println("slot attribute " + attrId + " of frame " + this.goal.getFrame().getIntent()
-					+ " was external filled with " + value);
+			this.externalFilled.put(attrId, value);
 	}
 
 	@Override

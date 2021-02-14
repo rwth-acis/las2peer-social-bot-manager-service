@@ -6,7 +6,7 @@ import java.util.List;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 
 public class IntentEntity {
-	
+
 	/**
 	 * Keyword to identify this entity
 	 */
@@ -19,7 +19,7 @@ public class IntentEntity {
 	public String getEntityKeyword() {
 		return this.entityKeyword;
 	}
-		
+
 	/**
 	 * list contains the values of this entity
 	 */
@@ -46,7 +46,7 @@ public class IntentEntity {
 	public void setKey(String key) {
 		this.generatorKey = key;
 	}
-	
+
 	public void setFunction(ServiceFunction function) {
 		this.enumList = new ArrayList<>();
 		this.generatorFunction = function;
@@ -54,19 +54,15 @@ public class IntentEntity {
 
 	public boolean contains(String value) {
 		
-		if(this.enumList.isEmpty())
-			this.update();
-		
+		this.update();
 		return this.enumList.contains(value);
 	}
 
-	public List<String> getValues() {		
-		if(this.enumList.isEmpty())
-			return getUpdatedValues();
-		
-		return this.enumList;
+	public List<String> getValues() {
+
+		return getUpdatedValues();
 	}
-	
+
 	public List<String> getUpdatedValues() {
 		this.update();
 		return this.enumList;
@@ -74,6 +70,9 @@ public class IntentEntity {
 
 	private void update() {
 
+		if(this.generatorFunction == null)
+			return;
+		
 		System.out.println("update dynamic enum: " + this.entityKeyword);
 		List<String> retrievedEnums = (List<String>) OpenAPIConnector.readEnums(generatorFunction, generatorKey);
 
@@ -81,14 +80,14 @@ public class IntentEntity {
 			this.enumList = retrievedEnums;
 
 	}
-	
+
 	public void invariant() {
-		assert this.entityKeyword != null;		
+		assert this.entityKeyword != null;
 	}
-	
-	public void invariantDynamic() {	
+
+	public void invariantDynamic() {
 		assert this.generatorFunction != null : "generatorFunction is null";
 		assert this.enumList != null : "enumList is null";
-		assert this.generatorKey != null: "generatorKey is null";
+		assert this.generatorKey != null : "generatorKey is null";
 	}
 }

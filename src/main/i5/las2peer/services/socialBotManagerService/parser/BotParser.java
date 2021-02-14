@@ -349,14 +349,17 @@ public class BotParser {
 						}
 						// NLU Servers
 					} else if (nluKnowledge.get(target) != null) {
-						NLUKnowledge nlu = nluKnowledge.get(target);
+						NLUKnowledge nlu = nluKnowledge.get(target);						
 						if (nlu.getType().contentEquals("Generation")) {
 							nlgs.put(target, b.addNLGModule(nlu));
 						} else {
 							if (config.getNLU(nlu.getName()) != null)
 								nlus.put(target, b.addRasaServer(config.getNLU(nlu.getName())));
-							else
+							else {
+								if(nlu.getUrl() == null)
+								throw new ParseBotException("Rasa NLU " + nlu.getName() + " has no valid url");
 								nlus.put(target, b.addRasaServer(nlu));
+							}
 						}
 					}
 					// User Function has...
@@ -1068,11 +1071,9 @@ public class BotParser {
 
 		if (intent != null && opName != null) {
 			Command command = new Command(opName, intent, opDes);
-			selection.setCommand(command);
-			System.out.println("selection add command " + opName);
+			selection.setCommand(command);		
 		}
-
-		System.out.println("added selection with intent " + selection.getIntentKeyword());
+		
 		return selection;
 	}
 

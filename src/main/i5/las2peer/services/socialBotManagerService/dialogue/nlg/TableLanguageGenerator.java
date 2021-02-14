@@ -58,8 +58,8 @@ public class TableLanguageGenerator extends LanguageGenerator {
 			for(String enu : act.getExpected().getEnums()) {
 				enums = enums + enu + ", ";
 			}
-			if(enums.endsWith(","))
-				enums = enums.substring(0, enums.length()-1);
+			if(enums.endsWith(", "))
+				enums = enums.substring(0, enums.length()-2);
 			res = res.replaceAll("#enums", enums);		
 		}
 		

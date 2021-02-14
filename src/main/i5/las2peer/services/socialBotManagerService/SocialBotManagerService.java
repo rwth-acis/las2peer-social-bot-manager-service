@@ -2612,7 +2612,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiOperation(value = "getBotNLUIntents", notes = "get NLU model Intents")
 		public Response getBotNLUIntents(@PathParam("botName") String botName) {
 			System.out.println("get intents of bot " + botName);
-			Collection<String> res = new LinkedList<>();
+			Collection<String> res = new HashSet<>();
 			try {
 				System.out.println("vles " + getConfig().getVLEs().size());
 				for (VLE vle : getConfig().getVLEs().values()) {

@@ -3,6 +3,7 @@ package i5.las2peer.services.socialBotManagerService.nlu;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -12,6 +13,7 @@ public class TrainingDataEntry {
 	public static final int MINSIZE = 3;
 
 	@ApiModelProperty(dataType = "string", value = "The intent", required = true)
+	@Pattern(regexp="[a-zA-Z_]*")
 	String intent;
 
 	@Size(min = MINSIZE)

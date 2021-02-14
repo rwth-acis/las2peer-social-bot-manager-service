@@ -40,6 +40,7 @@ public class Bot {
 	private String botAgent;
 	private String description;
 	private VLE vle;
+	private String creatorChannel;
 
 	/**
 	 * Indicates if this bot is active (value) on a VLE environment (key)
@@ -409,6 +410,14 @@ public class Bot {
 			creationFunction.setName(name);
 		}
 		this.creationFunctions.put(name, creationFunction);
+	}
+	
+	public String getCreatorChannel() {
+		return creatorChannel;
+	}
+
+	public void setCreatorChannel(String creatorChannel) {
+		this.creatorChannel = creatorChannel;
 	}
 
 	public JSONObject toJSON() {
