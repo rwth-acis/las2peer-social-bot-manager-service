@@ -262,6 +262,7 @@ public class BotModelParser {
 				BotModelNode frameNode = addNode("Frame");
 				addAttribute(frameNode, "Intent Keyword", oa.getNluIntent());
 				addAttribute(frameNode, "Operation Name", oa.getNluIntent());
+				addAttribute(frameNode, "Operation Description", oa.getNluIntent());
 
 				BotModelNode actionNode = addNode("Bot Action");
 				addAttribute(actionNode, "Action Type", "Service");

@@ -86,7 +86,6 @@ import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
-import i5.las2peer.services.socialBotManagerService.dialogue.nlg.ResponseMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.EventMessage;
 import i5.las2peer.services.socialBotManagerService.dialogue.notification.TriggerHandler;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
@@ -904,7 +903,7 @@ public class SocialBotManagerService extends RESTService {
 						System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
 
-					if (!bot.isActive(zvle) && !bot.getName().contentEquals("CreationBot")) {
+			/*		if (!bot.isActive(zvle) && !bot.getName().contentEquals("CreationBot")) {
 						System.out.println("bot " + bot.getName() + " is inactive");
 						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 						JSONObject parsedBody;
@@ -926,7 +925,7 @@ public class SocialBotManagerService extends RESTService {
 						}
 
 					} else {
-
+*/
 						// Handle event
 						Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
 						EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
@@ -940,7 +939,7 @@ public class SocialBotManagerService extends RESTService {
 						} catch (ParseException e) {
 							e.printStackTrace();
 						}
-					}
+					//}
 				}
 			}).start();
 

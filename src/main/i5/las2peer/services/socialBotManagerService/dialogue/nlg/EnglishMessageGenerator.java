@@ -251,7 +251,7 @@ public class EnglishMessageGenerator extends DefaultMessageGenerator {
 		if (botDesc != null)
 			message = message + botDesc + "\n";
 
-		if (act.hasEntities() && !act.hasMultiEntities()) {
+		if (act.hasEntities() && !act.hasMultiEntities() && act.getEntities().size() > 2) {
 
 			message = message + "\nI can perform the following operations: \n";
 
