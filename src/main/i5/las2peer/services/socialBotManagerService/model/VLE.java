@@ -167,11 +167,15 @@ public class VLE {
 	public Collection<LanguageUnderstander> getNLUs() {
 
 		Collection<LanguageUnderstander> res = new HashSet<>();
+		if (this.bots == null)
+			return res;
+
 		for (Entry<String, Bot> entry : this.bots.entrySet()) {
 			Bot bot = entry.getValue();
-			for (Entry<String, LanguageUnderstander> nlu : bot.getNLUs().entrySet()) {
-				res.add(nlu.getValue());
-			}
+			if (bot.getNLUs() != null)
+				for (Entry<String, LanguageUnderstander> nlu : bot.getNLUs().entrySet()) {
+					res.add(nlu.getValue());
+				}
 		}
 
 		return res;

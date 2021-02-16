@@ -52,23 +52,28 @@ public class BotConfiguration {
 	public Map<String, LanguageUnderstander> getNLUs() {
 
 		Map<String, LanguageUnderstander> res = new HashMap<>();
-		res.putAll(this.nlus);
-		for (Entry<String, VLE> vleEntry : this.getVLEs().entrySet()) {
-			VLE vle = vleEntry.getValue();
-			for (LanguageUnderstander nlu : vle.getNLUs()) {
-				res.put(nlu.getUrl(), nlu);
+
+		if (this.nlus != null)
+			res.putAll(this.nlus);
+
+		if (this.getVLEs() != null)
+			for (Entry<String, VLE> vleEntry : this.getVLEs().entrySet()) {
+				VLE vle = vleEntry.getValue();
+				for (LanguageUnderstander nlu : vle.getNLUs()) {
+					if (nlu.getUrl() != null)
+						res.put(nlu.getUrl(), nlu);
+				}
 			}
-		}
 
 		return res;
 	}
 
 	public void removeNLU(String name) {
-		
+
 		LanguageUnderstander nlu = this.getNLU(name);
-		if(nlu != null && this.nlus != null)
+		if (nlu != null && this.nlus != null)
 			this.nlus.remove(nlu.getUrl());
-		
+
 	}
 
 	public void setNLUs(Map<String, LanguageUnderstander> nlus) {

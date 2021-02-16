@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.nlu;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,11 +56,14 @@ public class RasaNLU extends LanguageUnderstander {
 
 	@Override
 	public Collection<String> getIntents() {
-		
+
 		if (this.Intents != null && !this.Intents.isEmpty())
 			return this.Intents;
+
+		if (this.data != null && this.data.getIntents() != null)
+			return this.data.getIntents();
 		
-		return this.data.getIntents();
+		return new ArrayList<>();
 	}
 
 	public Intent getIntent(String input) {

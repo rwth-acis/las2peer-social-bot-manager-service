@@ -473,8 +473,8 @@ public class SocialBotManagerService extends RESTService {
 
 						botMessage = botMessage + "\nMessenger: \n";
 						for (Messenger messenger : bot.getMessengers().values())
-							botMessage = botMessage + messenger.getName().replace("_", "\\_") + ": " + messenger.getChatService().toString()
-									+ "; \n";
+							botMessage = botMessage + messenger.getName().replace("_", "\\_") + ": "
+									+ messenger.getChatService().toString() + "; \n";
 
 						botMessage = botMessage + "\nFunctions: \n";
 						for (CreationFunction function : bot.getCreationFunctions())
@@ -903,43 +903,39 @@ public class SocialBotManagerService extends RESTService {
 						System.out.println("cannot relate telegram event to a bot with token: " + token);
 					System.out.println("telegram event: bot identified: " + bot.getName());
 
-			/*		if (!bot.isActive(zvle) && !bot.getName().contentEquals("CreationBot")) {
-						System.out.println("bot " + bot.getName() + " is inactive");
-						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-						JSONObject parsedBody;
-
-						try {
-							parsedBody = (JSONObject) jsonParser.parse(body);
-							JSONObject message = (JSONObject) parsedBody.get("message");
-							JSONObject chat = (JSONObject) message.get("chat");
-							String channel = chat.getAsString("id");
-							Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
-							EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
-							ResponseMessage response = new ResponseMessage("I am inactive 😴");
-							response.setChannel(channel);
-							mediator.sendMessageToChannel(response);
-
-						} catch (ParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-
-					} else {
-*/
-						// Handle event
-						Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
-						EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
-						JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-						JSONObject parsedBody;
-						try {
-							parsedBody = (JSONObject) jsonParser.parse(body);
-							ChatMessage message = mediator.handleEvent(parsedBody);
-							if (message != null)
-								messenger.handleMessage(message);
-						} catch (ParseException e) {
-							e.printStackTrace();
-						}
-					//}
+					/*
+					 * if (!bot.isActive(zvle) && !bot.getName().contentEquals("CreationBot")) {
+					 * System.out.println("bot " + bot.getName() + " is inactive"); JSONParser
+					 * jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE); JSONObject
+					 * parsedBody;
+					 * 
+					 * try { parsedBody = (JSONObject) jsonParser.parse(body); JSONObject message =
+					 * (JSONObject) parsedBody.get("message"); JSONObject chat = (JSONObject)
+					 * message.get("chat"); String channel = chat.getAsString("id"); Messenger
+					 * messenger = bot.getMessenger(ChatService.TELEGRAM); EventChatMediator
+					 * mediator = (EventChatMediator) messenger.getChatMediator(); ResponseMessage
+					 * response = new ResponseMessage("I am inactive 😴");
+					 * response.setChannel(channel); mediator.sendMessageToChannel(response);
+					 * 
+					 * } catch (ParseException e) { // TODO Auto-generated catch block
+					 * e.printStackTrace(); }
+					 * 
+					 * } else {
+					 */
+					// Handle event
+					Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+					EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+					JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					JSONObject parsedBody;
+					try {
+						parsedBody = (JSONObject) jsonParser.parse(body);
+						ChatMessage message = mediator.handleEvent(parsedBody);
+						if (message != null)
+							messenger.handleMessage(message);
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+					// }
 				}
 			}).start();
 
@@ -2445,27 +2441,27 @@ public class SocialBotManagerService extends RESTService {
 				int limit = 5;
 				for (Entry<String, String> entry : functions.entrySet()) {
 					String name = entry.getKey();
-					String summary = entry.getValue();					
-					array.add(name);					
-					if(summary.length() > 150)
-						summary = summary.substring(0, 150);					
-					if(limit > 0 && !summary.isEmpty()) {
+					String summary = entry.getValue();
+					array.add(name);
+					if (summary.length() > 150)
+						summary = summary.substring(0, 150);
+					if (limit > 0 && !summary.isEmpty()) {
 						limit = limit - 1;
 						message = message + "*" + name + "*: " + summary + "\n";
 					}
 				}
-				
+
 				JSONObject res = new JSONObject();
-				res.put("functions", array);				
+				res.put("functions", array);
 				res.put("message", message);
-				
+
 				String name = OpenAPIConnector.getServiceName(serviceAlias);
 				if (name.contentEquals(""))
 					return null;
 				if (address.endsWith("/"))
 					address = address.substring(0, address.length() - 1);
 				String swaggerURL = address + "/" + name + "/swagger.json";
-				
+
 				res.put("swagger", swaggerURL);
 				return Response.ok().entity(res).build();
 			} catch (Exception e) {
@@ -2570,7 +2566,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 		}
-		
+
 		@GET
 		@Path("/bot/{botName}/model")
 		@Consumes(MediaType.TEXT_PLAIN)
@@ -2613,17 +2609,18 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("get intents of bot " + botName);
 			Collection<String> res = new HashSet<>();
 			try {
-				System.out.println("vles " + getConfig().getVLEs().size());
+
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(botName);
 					if (bot != null) {
-						System.out.println("bot " + botName + " found, nlus modules: " + bot.getNLUs().size());
-						for (LanguageUnderstander nlu : bot.getNLUs().values()) {
-							System.out.println(nlu.getName() + " " + nlu.getIntents().size());
-							res.addAll(nlu.getIntents());
-						}						
+
+						if (bot.getNLUs() != null)
+							for (LanguageUnderstander nlu : bot.getNLUs().values()) {
+								if (nlu.getIntents() != null)
+									res.addAll(nlu.getIntents());
+							}
 					}
-					
+
 					if (bot != null)
 						return Response.ok().entity(res).build();
 				}

@@ -90,7 +90,8 @@ public class TrainingData {
 	public Collection<String> getIntents() {
 		Collection<String> res = new HashSet<>();
 		for (TrainingDataEntry entry : this.entries) {
-			res.add(entry.getIntent());
+			if (entry.getIntent() != null)
+				res.add(entry.getIntent());
 		}
 		return res;
 	}
