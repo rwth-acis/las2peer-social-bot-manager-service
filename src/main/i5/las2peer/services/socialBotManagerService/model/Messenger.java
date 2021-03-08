@@ -233,15 +233,6 @@ public class Messenger {
 								if (state.getFollowingMessages().get("any") != null) {
 									state = state.getFollowingMessages().get("any");
 									stateMap.put(message.getChannel(), state);
-								} else if (intent.getEntities().size() > 0
-										&& !this.triggeredFunction.containsKey(message.getChannel())) {
-									Collection<Entity> entities = intent.getEntities();
-									// System.out.println("try to use entity...");
-									for (Entity e : entities) {
-										System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
-										state = this.knownIntents.get(e.getEntityName());
-										stateMap.put(message.getChannel(), state);
-									}
 									// In a conversation state, if no fitting intent was found and an empty leadsTo
 									// label is found
 								} else if (state.getFollowingMessages().get("") != null) {
@@ -256,6 +247,20 @@ public class Messenger {
 									} else {
 										state = state.getFollowingMessages().get("");
 										stateMap.put(message.getChannel(), state);
+									}
+								} else if (intent.getEntities().size() > 0
+										&& !this.triggeredFunction.containsKey(message.getChannel())) {
+									Collection<Entity> entities = intent.getEntities();
+									// System.out.println("try to use entity...");
+									for (Entity e : entities) {
+										System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
+										state = this.knownIntents.get(e.getEntityName());
+										// Dont fully understand the point of this, maybe I added it and forgot...
+										// Added return for a quick fix, will need to check more in detail
+										if (state != null) {
+											stateMap.put(message.getChannel(), state);
+											return;
+										}
 									}
 
 								} else {
