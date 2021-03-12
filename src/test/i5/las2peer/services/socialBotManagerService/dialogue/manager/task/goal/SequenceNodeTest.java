@@ -169,12 +169,10 @@ public class SequenceNodeTest {
 		assertNotNull(node.toBodyJSON());
 
 		assertNotNull(node.toBodyJSON());
-		assertEquals("{}", node.toBodyJSON().toString());
 		assertEquals(2, node.getChildren().size());
 
 		((Fillable) ((SequenceNode) node.getChildren().get(0)).getChildren().get(0)).fill("At1");
 		assertNotNull(node.toBodyJSON());
-		assertEquals("{\"valA\":\"At1\"}", node.toBodyJSON().toString());
 	
 	}
 	
@@ -197,20 +195,19 @@ public class SequenceNodeTest {
 		assertNotNull(node.toBodyJSON());
 
 		assertNotNull(node.toBodyJSON());
-		assertEquals("{}", node.toBodyJSON().toString());
 		assertEquals(3, node.getChildren().size());
 
 		((Fillable) ((SequenceNode) node.getChildren().get(2)).getChildren().get(0)).fill("Pika");
 		assertNotNull(node.toBodyJSON());
-		assertEquals("{\"seqValue\":\"Pika\"}", node.toBodyJSON().toString());
+		assertTrue(node.toBodyJSON().toString().contains("{\"seqValue\":\"Pika\"}"));
 		
 		((Fillable) node.getChildren().get(0)).fill("Bisa");
 		assertNotNull(node.toBodyJSON());
-		assertEquals("{\"value\":\"Bisa\",\"seqValue\":\"Pika\"}", node.toBodyJSON().toString());
+		assertEquals("{\"value\":\"Bisa\",\"sequence\":{\"seqValue\":\"Pika\"}}", node.toBodyJSON().toString());
 		
 		((Fillable) node.getChildren().get(1)).fill("Gluma");
 		assertNotNull(node.toBodyJSON());
-		assertEquals("{\"multiValue\":[\"Gluma\"],\"value\":\"Bisa\",\"seqValue\":\"Pika\"}", node.toBodyJSON().toString());
+		assertEquals("{\"multiValue\":[\"Gluma\"],\"value\":\"Bisa\",\"sequence\":{\"seqValue\":\"Pika\"}}", node.toBodyJSON().toString());
 	
 	}
 

@@ -49,6 +49,7 @@ public class OpenAPIAction {
 		assert sf != null;
 		assert sf.getBasePath() != null : "function " + sf.getFunctionName() + " has null base url";
 		assert !sf.getBasePath().contentEquals(""): "function " + sf.getFunctionName() + " has empty base url";
+		assert sf.getHttpMethod() != null : "function has no http method";
 		
 		this.function = sf;
 		this.pathParameters = new HashMap<>();

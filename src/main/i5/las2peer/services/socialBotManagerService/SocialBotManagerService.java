@@ -117,14 +117,17 @@ import i5.las2peer.services.socialBotManagerService.parser.BotModelParser;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.parser.creation.CreationFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.CreatorBot;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.AccessService;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChatFunction;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.CreatorFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.parameter.CreationParameter;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
+import i5.las2peer.services.socialBotManagerService.parser.test.Composition;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -134,6 +137,7 @@ import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.util.Json;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -1899,6 +1903,23 @@ public class SocialBotManagerService extends RESTService {
 
 		}
 
+		
+		/**
+		 * @return ok
+		 */
+		@POST
+		@Path("/test")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Creates NLU model", notes = "creates the nlu model.")
+		public Response postTest(Composition test) {
+
+			System.out.println("POST TEST" + test.toString());
+			return Response.ok(test.toString()).build();
+
+		}
+		
 		/**
 		 * @return ok
 		 */
@@ -1950,9 +1971,10 @@ public class SocialBotManagerService extends RESTService {
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
 		@ApiOperation(value = "Create bot", notes = "creates the bot.")
-		public Response createBot(i5.las2peer.services.socialBotManagerService.parser.creation.Bot bot) {
+		public Response createBot(CreatorBot bot) {
 
 			System.out.println("CREATEBOT CALLED");
+			Json.prettyPrint(bot);
 			BotModel botModel = null;
 			try {
 
@@ -2025,7 +2047,7 @@ public class SocialBotManagerService extends RESTService {
 		@Consumes(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
 		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
-		public Response addFunction(@PathParam("botName") String name, Function function) {
+		public Response addFunction(@PathParam("botName") String name, CreatorFunction function) {
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(name);
@@ -2079,7 +2101,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
 		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
 		public Response addServiceAccessFunction(@PathParam("botName") String botName,
-				i5.las2peer.services.socialBotManagerService.parser.creation.function.ServiceType function) {
+				AccessService function) {
 			try {
 				for (VLE vle : getConfig().getVLEs().values()) {
 					Bot bot = vle.getBotByName(botName);

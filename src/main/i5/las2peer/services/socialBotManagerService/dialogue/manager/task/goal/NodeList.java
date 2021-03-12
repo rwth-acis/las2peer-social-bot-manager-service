@@ -87,14 +87,14 @@ public class NodeList extends ArrayList<Node> {
 		assert name != null : "name is null";
 
 		for (Node node : this) {
-			if (node instanceof Slotable) {
+			if (node instanceof Slotable && node.getSlot() != null) {
 				Slot slot = ((Slotable) node).getSlot();
 				assert slot != null;
 				assert slot.getAPIName() != null;
 				assert slot.getName() != null;
 				assert slot.getIntents() != null;
 				if (slot.getIntents().contains(name))
-					return ((Slotable) node);
+					return (node);
 			}
 		}
 		return null;
@@ -104,13 +104,13 @@ public class NodeList extends ArrayList<Node> {
 		assert name != null : "name is null";
 
 		for (Node node : this) {
-			if (node instanceof Slotable) {
+			if (node instanceof Slotable && node.getSlot() != null) {
 				Slot slot = ((Slotable) node).getSlot();
 				assert slot != null;
 				assert slot.getAPIName() != null;
 				assert slot.getName() != null;
 				if (name.equalsIgnoreCase(slot.getAPIName()) || name.equalsIgnoreCase(slot.getName()))
-					return ((Slotable) node);
+					return (node);
 			}
 		}
 		return null;
@@ -120,15 +120,15 @@ public class NodeList extends ArrayList<Node> {
 		assert name != null : "name is null";
 
 		for (Node node : this) {
-			if (node instanceof Slotable) {
+			if (node instanceof Slotable && node.getSlot() != null) {
 				Slot slot = ((Slotable) node).getSlot();
 				assert slot != null;
 				assert slot.getAPIName() != null;
 				assert slot.getName() != null;
 				if (name.contentEquals(slot.getID()))
-					return ((Slotable) node);
+					return (node);
 				if (slot.hasParameter() && name.contentEquals(slot.getParameter().getIdName()))
-					return ((Slotable) node);
+					return (node);
 			}
 		}
 		return null;
@@ -180,7 +180,7 @@ public class NodeList extends ArrayList<Node> {
 		List<Slotable> res = new ArrayList<>();
 		for (Node node : this) {
 			if (node instanceof Slotable)
-				res.add((Slotable) node);
+				res.add(node);
 		}
 		return res;
 

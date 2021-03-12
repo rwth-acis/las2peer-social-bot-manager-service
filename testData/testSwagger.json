@@ -1,0 +1,590 @@
+{
+
+    "swagger": "2.0",
+    "info": {
+        "description": "A las2peer Service for demonstration purposes.",
+        "version": "1.0.0",
+        "title": "las2peer Template Service",
+        "termsOfService": "http://your-terms-of-service-url.com",
+        "contact": {
+            "name": "John Doe",
+            "url": "provider.com",
+            "email": "john.doe@provider.com"
+        },
+        "license": {
+            "name": "your software license name",
+            "url": "http://your-software-license-url.com"
+        }
+    },
+    "basePath": "/template/",
+    "paths": {
+        "/path/{pathParameter}": {
+            "get": {
+                "summary": "get with path",
+                "description": "get with Path",
+                "operationId": "getWithPath",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "pathParameter",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored.",
+                        "schema": {
+                            "$ref": "#/definitions/BasicScheme"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/combined/{pathParameter}": {
+            "get": {
+                "summary": "get with combined",
+                "description": "get with combined",
+                "operationId": "getWithCombined",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "pathParameter",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "queryParameter",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/BasicScheme"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/scheme": {
+            "post": {
+                "summary": "post basic scheme",
+                "description": "post Basic Scheme",
+                "operationId": "postBasicScheme",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/BasicScheme"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            },
+            "put": {
+                "summary": "put basic scheme",
+                "description": "put Basic Scheme",
+                "operationId": "putBasicScheme",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/BasicScheme"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/composition": {
+            "post": {
+                "summary": "postComposition",
+                "description": "post Composition",
+                "operationId": "postComposition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/CompositionScheme"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/query": {
+            "get": {
+                "summary": "getWithQuery",
+                "description": "get with Query",
+                "operationId": "getWithQuery",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "stringParameter",
+                        "in": "query",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "numberParameter",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/array": {
+            "post": {
+                "summary": "post array scheme",
+                "description": "post Array Scheme",
+                "operationId": "postArrayScheme",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/CompositionArrayScheme"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/polymorphism": {
+            "post": {
+                "summary": "post polymorph",
+                "description": "post Polymorph",
+                "operationId": "postPolymorph",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/ParentScheme"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/self": {
+            "post": {
+                "summary": "post self composition",
+                "description": "post Self Composition",
+                "operationId": "postSelfComposition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/SelfComposition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data stored."
+                    }
+                },
+                "security": [
+                    {
+                        "defaultProvider": [
+                            "openid",
+                            "email",
+                            "profile"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "securityDefinitions": {
+        "defaultProvider": {
+            "type": "oauth2",
+            "authorizationUrl": "https://api.learning-layers.eu/o/oauth2/authorize",
+            "flow": "implicit",
+            "scopes": {
+                "openid": "Access Identity",
+                "email": "Access E-Mail-Address",
+                "profile": "Access Profile Data"
+            }
+        }
+    },
+    "definitions": {
+        "BasicScheme": {
+            "type": "object",
+            "required": [
+                "arrayParameter",
+                "enumParameter",
+                "numberParameter",
+                "stringParameter"
+            ],
+            "properties": {
+                "stringParameter": {
+                    "type": "string",
+                    "example": "example",
+                    "description": "string description"
+                },
+                "numberParameter": {
+                    "type": "integer",
+                    "format": "int32",
+                    "example": 123,
+                    "description": "number description"
+                },
+                "enumParameter": {
+                    "type": "string",
+                    "example": "A",
+                    "description": "enum description",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "arrayParameter": {
+                    "type": "array",
+                    "example": "example",
+                    "description": "array description",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "CompositionScheme": {
+            "type": "object",
+            "required": [
+                "composition",
+                "stringParameter"
+            ],
+            "properties": {
+                "stringParameter": {
+                    "type": "string",
+                    "example": "example",
+                    "description": "string description"
+                },
+                "composition": {
+                    "$ref": "#/definitions/CompositionSubScheme"
+                }
+            }
+        },
+        "CompositionSubScheme": {
+            "type": "object",
+            "required": [
+                "subParameterOne",
+                "subParameterTwo"
+            ],
+            "properties": {
+                "subParameterOne": {
+                    "type": "string",
+                    "example": "one",
+                    "description": "one description"
+                },
+                "subParameterTwo": {
+                    "type": "string",
+                    "example": "two",
+                    "description": "two description"
+                }
+            }
+        },
+        "CompositionArrayScheme": {
+            "type": "object",
+            "required": [
+                "composition"
+            ],
+            "properties": {
+                "composition": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CompositionSubScheme"
+                    }
+                }
+            }
+        },
+        "Child A": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ParentScheme"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "subParameterOne"
+                    ],
+                    "properties": {
+                        "subParameterOne": {
+                            "type": "string",
+                            "example": "one",
+                            "description": "one description"
+                        }
+                    }
+                }
+            ]
+        },
+        "Child B": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ParentScheme"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "subParameterTwo"
+                    ],
+                    "properties": {
+                        "subParameterTwo": {
+                            "type": "string",
+                            "example": "two",
+                            "description": "two description"
+                        }
+                    }
+                }
+            ]
+        },
+        "ParentScheme": {
+            "type": "object",
+            "required": [
+                "parentParameter",
+                "type"
+            ],
+            "discriminator": "type",
+            "properties": {
+                "parentParameter": {
+                    "type": "string",
+                    "example": "example",
+                    "description": "parameter description"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "Child A",
+                        "Child B"
+                    ]
+                }
+            }
+        },
+        "CCA": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SelfComposition"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "subParameterOne"
+                    ],
+                    "properties": {
+                        "subParameterOne": {
+                            "type": "string",
+                            "example": "one",
+                            "description": "one description"
+                        }
+                    }
+                }
+            ]
+        },
+        "CCB": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SelfComposition"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "subParameterTwo"
+                    ],
+                    "properties": {
+                        "subParameterTwo": {
+                            "type": "string",
+                            "example": "two",
+                            "description": "two description"
+                        },
+                        "composition": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SelfComposition"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "SelfComposition": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "discriminator": "type",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "CCA",
+                        "CCB"
+                    ]
+                }
+            }
+        }
+    }
+
+}

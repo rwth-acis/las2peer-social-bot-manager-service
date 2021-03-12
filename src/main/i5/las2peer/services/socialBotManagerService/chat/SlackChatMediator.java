@@ -18,6 +18,7 @@ import com.slack.api.methods.response.files.FilesUploadResponse;
 import com.slack.api.model.block.ActionsBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
+import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
@@ -56,53 +57,56 @@ public class SlackChatMediator extends EventChatMediator {
 	@Override
 	public ChatMessage handleEvent(JSONObject event) {
 		assert event != null;
-				
+
 		ChatMessage message = new ChatMessage();
-		
+
 		String type = (String) event.get("type");
 		System.out.println("slack event: " + type);
 		switch (type) {
-		
-		case "message":	
+
+		case "message":
 			
+			System.out.println("message event");
 			if (event.get("bot_id") != null)
 				break;
+			System.out.println("parse message");
 			message = this.parseMessage(event);
 			break;
-		
+
 		case "app_mention":
-			
+
 			String channel = (String) event.get("channel");
 			String user = (String) event.get("user");
 			this.sendMessageToChannel(channel, "hello " + user);
 			break;
-			
+
 		case "team_join":
-			
+
 			channel = (String) event.get("channel");
 			this.sendMessageToChannel(channel, "hello");
 			break;
-			
+
 		default:
 			System.out.println("unknown slack event received");
 		}
+
 		return message;
 	}
-	
+
 	public ChatMessage handleAction(JSONArray parsedActions, String channel) {
 		assert parsedActions != null;
 		assert channel != null;
-				
-		for(Object element: parsedActions) {
+
+		for (Object element : parsedActions) {
 			JSONObject action = (JSONObject) element;
 			String type = action.getAsString("type");
-			if(type.contentEquals("button")) {
+			if (type.contentEquals("button")) {
 				String value = action.getAsString("value");
 				ChatMessage message = new ChatMessage(channel, "", value);
-				return message;			
+				return message;
 			}
 		}
-		
+
 		return null;
 	}
 
@@ -159,7 +163,7 @@ public class SlackChatMediator extends EventChatMediator {
 	public ChatMessage parseMessage(JSONObject parsedMessage) {
 
 		System.out.println("parsed message:" + parsedMessage);
-		
+
 		try {
 			String type = parsedMessage.getAsString("type");
 			if (type == null || !type.contentEquals("message"))
@@ -175,7 +179,9 @@ public class SlackChatMediator extends EventChatMediator {
 			}
 
 			ChatMessage message = new ChatMessage(channel, user, text, timestamp);
-			// this.addMessage(message);
+			if(text.startsWith("/") || text.startsWith("!"))
+				message.setCommand(text.substring(1));
+	
 			return message;
 
 		} catch (InvalidChatMessageException e) {
@@ -233,7 +239,7 @@ public class SlackChatMediator extends EventChatMediator {
 		ChatPostMessageResponse response = null;
 
 		try {
-			
+
 			if (responseMessage.hasButtons()) {
 				List<BlockElement> elements = new ArrayList<>();
 				for (String value : responseMessage.getButtons()) {
@@ -247,20 +253,22 @@ public class SlackChatMediator extends EventChatMediator {
 
 				List<LayoutBlock> blocks = new ArrayList<LayoutBlock>();
 				SectionBlock sblock = new SectionBlock();
-				PlainTextObject plainText = new PlainTextObject(text, true);
+				MarkdownTextObject plainText = new MarkdownTextObject(text, true);
+
 				sblock.setText(plainText);
 				blocks.add(sblock);
-				
+
 				ActionsBlock ablock = new ActionsBlock(elements, UUID.randomUUID().toString());
 				blocks.add(ablock);
 
 				response = slack.methods(authToken)
 						.chatPostMessage(req -> req.channel(channel).text(text).mrkdwn(true).blocks(blocks));
 			} else {
-				
-				response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel).text(text).mrkdwn(true));
+
+				response = slack.methods(authToken)
+						.chatPostMessage(req -> req.channel(channel).text(text).mrkdwn(true));
 			}
-			
+
 			if (response.isOk())
 				System.out.println("Slack message sent: " + response.isOk());
 			else
@@ -329,5 +337,5 @@ public class SlackChatMediator extends EventChatMediator {
 	public void setAppID(String appID) {
 		this.appID = appID;
 	}
-	
+
 }

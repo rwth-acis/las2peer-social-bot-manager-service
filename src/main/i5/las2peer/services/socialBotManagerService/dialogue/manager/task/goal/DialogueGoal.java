@@ -26,6 +26,7 @@ public class DialogueGoal {
 		this.root = new RootNode(frame);
 
 		invariant();
+		this.print();
 	}
 
 	/**

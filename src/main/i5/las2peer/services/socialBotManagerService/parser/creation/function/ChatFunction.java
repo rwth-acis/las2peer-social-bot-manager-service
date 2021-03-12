@@ -7,8 +7,8 @@ import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value = "ChatFunction")
-public class ChatFunction {
+@ApiModel(parent = CreatorFunction.class, value = "Chat Function")
+public class ChatFunction extends CreatorFunction{
 
 	@ApiModelProperty(required = true)
 	private List<Message> messages;
@@ -20,6 +20,7 @@ public class ChatFunction {
 	public ChatFunction(String intent, String... responses) {
 		
 		this();
+		this.setType(FunctionType.CHIT_CHAT);
 		this.messages = new ArrayList<>();
 		for (String response : responses) {
 			Message message = new Message();

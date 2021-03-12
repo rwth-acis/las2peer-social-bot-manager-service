@@ -8,18 +8,18 @@ import org.junit.Test;
 import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
 import i5.las2peer.services.socialBotManagerService.model.BotModel;
 import i5.las2peer.services.socialBotManagerService.nlu.ConfirmationNLU;
-import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChitChatFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.CreatorBot;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChatFunction;
 
 public class BotModelParserTest {
 
 	@Test
 	public void parseBotTest() {
 		
-		Bot bot = new Bot();
+		CreatorBot bot = new CreatorBot();
 		bot.setName("TestBot");
 		bot.setDescription("test description");
-		ChitChatFunction function = new ChitChatFunction("greet", "hello", "huhu");
+		ChatFunction function = new ChatFunction("greet", "hello", "huhu", "hi");
 		bot.addFunction(function);
 		
 		BotConfiguration config = new BotConfiguration();

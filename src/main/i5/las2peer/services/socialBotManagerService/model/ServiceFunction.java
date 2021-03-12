@@ -24,6 +24,8 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 	private String produces;
 	private String description;
 	private Set<ServiceFunctionAttribute> attributes;
+	private ServiceFunctionAttribute response;
+
 	private Set<Trigger> trigger;
 
 	private Service service;
@@ -300,6 +302,14 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 	public void setService(Service service) {
 		this.service = service;
 	}
+	
+	public ServiceFunctionAttribute getResponse() {
+		return response;
+	}
+
+	public void setResponse(ServiceFunctionAttribute response) {
+		this.response = response;
+	}
 
 	/**
 	 * 
@@ -390,7 +400,7 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 			}
 		}
 
-		this.invariant();
+		this.invariant();		
 		return this;
 	}
 
@@ -399,7 +409,9 @@ public class ServiceFunction extends TriggerFunction implements FunctionInterfac
 		assert this.name != null : "function has no name";
 		assert this.service != null || this.serviceName != null : "function " + this.name + " has no service";
 		assert this.actionType != null : "function " + this.name + " has no action type";
-
+		assert this.getHttpMethod() != null: "no http method";
+		assert this.getBasePath() != null: "no base path";
+		
 	}
 
 	@Override

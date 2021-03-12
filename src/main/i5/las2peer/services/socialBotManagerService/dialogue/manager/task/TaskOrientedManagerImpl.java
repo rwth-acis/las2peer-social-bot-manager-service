@@ -56,9 +56,10 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 		if (goal.contains(intent)) {
 			slo = goal.getNode(intent);
 			System.out.println("corresponding slot found: " + slo.getAPIName() + " " + slo.getClass());
-		} else
-			System.out.println("naive dm handle: slot not found for intent: " + intent);
-
+		} else {
+			System.out.println("naive dm handle: slot not found for intent: " + intent);			
+		}
+				
 		// Repetition Node
 		if (slo instanceof RepetitionNode) {
 			RepetitionNode rep = (RepetitionNode) slo;
@@ -85,8 +86,8 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 				return requestNextSlot();
 			}
 		}
-
-		// Value Nodes
+				
+		// Value Nodes		
 		Fillable node = (Fillable) slo;
 		DialogueAct act = new DialogueAct();
 		switch (semantic.getIntentType()) {
@@ -272,10 +273,8 @@ public class TaskOrientedManagerImpl extends TaskOrientedManager {
 			String fileName = goal.getFrame().getFile();
 			act.setFile(fileName);
 			System.out.println(fileName);
-			if (fileName.contains("#botName")) {
-				System.out.println("botName detected");
+			if (fileName.contains("#botName")) {				
 				Fillable fill = goal.getFillable("botName");
-				System.out.println(fill.getValue());
 				if (fill.getValue() != null)
 					act.setFile(fill.getValue() + ".json");
 			}

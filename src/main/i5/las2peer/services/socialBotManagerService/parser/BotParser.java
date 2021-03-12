@@ -825,7 +825,7 @@ public class BotParser {
 						if (frame.getSlots().isEmpty()) {
 							FrameMapper mapper = new FrameMapper();						
 							try {
-								frame = mapper.map(botFunction, frame);
+								frame = mapper.receiveAndMap(botFunction, frame);
 							} catch (Error e) {
 								e.printStackTrace();
 							}

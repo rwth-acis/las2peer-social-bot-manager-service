@@ -4,18 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import i5.las2peer.services.socialBotManagerService.model.Slot;
+import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
 import net.minidev.json.JSONObject;
 
 public class SequenceNode extends Node {
 
 	private List<Node> children;
-	private Node wrapper;
-	
+	private Slot slot;
+
 	public SequenceNode(Slot slot) {
 
 		assert slot != null : "slot parameter is null";
 		assert slot.getChildren() != null : "slot has no children";
 
+		this.slot = slot;
 		this.children = new ArrayList<Node>();
 		for (Slot childSlot : slot.getChildren()) {
 			Node node = NodeFactory.create(childSlot);
@@ -29,20 +31,12 @@ public class SequenceNode extends Node {
 		this.children = new ArrayList<Node>();
 	}
 
-	public void setWrapperNode(Node node) {
-		assert node != null;
-		assert this.children.contains(node) : "wrapper node not contained in children";
-
-		System.out.println("wrapper set to " + node.toString());
-		this.wrapper = node;
-	}
-
 	@Override
 	public boolean isFull() {
-		
-		if(this.children.isEmpty())
+
+		if (this.children.isEmpty())
 			return true;
-		
+
 		invariant();
 		for (Node node : this.children) {
 			if (!node.isFull()) {
@@ -55,10 +49,10 @@ public class SequenceNode extends Node {
 	@Override
 	public boolean isReady() {
 		invariant();
-		
-		if(this.children.isEmpty())
+
+		if (this.children.isEmpty())
 			return true;
-		
+
 		for (Node node : this.children) {
 			if (!node.isReady()) {
 				return false;
@@ -70,10 +64,10 @@ public class SequenceNode extends Node {
 	@Override
 	public boolean isConfirmed() {
 		invariant();
-		
-		if(this.children.isEmpty())
+
+		if (this.children.isEmpty())
 			return true;
-		
+
 		for (Node node : this.children) {
 			if (!node.isConfirmed()) {
 				return false;
@@ -102,12 +96,12 @@ public class SequenceNode extends Node {
 		invariant();
 
 		System.out.println("SequenceNode next: " + this.children.size());
-		
-		if(this.children.isEmpty())
+
+		if (this.children.isEmpty())
 			return null;
-		
-		for (Node node : this.children) {			
-			if (node instanceof Slotable && ((Slotable) node).getSlot() != null) {				
+
+		for (Node node : this.children) {
+			if (node instanceof Slotable && ((Slotable) node).getSlot() != null) {
 				Slot slot = ((Slotable) node).getSlot();
 				System.out.println(slot.getName() + " " + slot.getPriority());
 				if (!node.isReady() && slot.getPriority() == -1)
@@ -155,31 +149,44 @@ public class SequenceNode extends Node {
 	public JSONObject toBodyJSON() {
 		invariant();
 
-		if (this.wrapper == null) {
+		if (this.slot != null && this.slot.hasAPIName() && this.slot.getParameterType() == ParameterType.CHILD) {
 
-			// normal sequence
+			JSONObject res = new JSONObject();
+			JSONObject res2 = new JSONObject();
+			for (Node node : this.children) {
+				JSONObject nodeJson = node.toBodyJSON();
+				if (nodeJson != null && !nodeJson.isEmpty())
+					res2.putAll(node.toBodyJSON());
+
+			}
+			res.put(this.slot.getAPIName(), res2);
+			return res;
+
+		} else {
+
 			JSONObject res = new JSONObject();
 			for (Node node : this.children) {
 				JSONObject nodeJson = node.toBodyJSON();
 				if (nodeJson != null && !nodeJson.isEmpty())
 					res.putAll(node.toBodyJSON());
+
 			}
 			return res;
 
-		} else {
-
-			// combiner
-			JSONObject wrapperJson = this.wrapper.toBodyJSON();
-			for (Node node : this.children) {
-				if (node != this.wrapper) {
-					JSONObject nodeJson = node.toBodyJSON();
-					if (nodeJson != null && !nodeJson.isEmpty())
-						wrapperJson.putAll(node.toBodyJSON());
-				}
-			}
-
-			return wrapperJson;
 		}
+
+	}
+
+	@Override
+	public Slot getSlot() {
+		return this.slot;
+	}
+
+	@Override
+	public String getAPIName() {
+		if (getSlot() != null)
+			return slot.getAPIName();
+		return null;
 
 	}
 

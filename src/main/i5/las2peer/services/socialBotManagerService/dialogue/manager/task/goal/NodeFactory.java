@@ -33,24 +33,24 @@ public class NodeFactory {
 		// Selection Node
 		if (slot.hasChildren() && slot.isSelection() && !slot.isArray()) {
 			SelectionNode res = new SelectionNode(slot);
-			
+
 			System.out.println("create Selection node " + slot.getAPIName() + ":");
-			for(Slot sb: slot.getChildren()) {
+			for (Slot sb : slot.getChildren()) {
 				System.out.println(sb.getAPIName() + " " + sb.getPriority());
 			}
-			
+
 			if (slot.getChildren(-1).isEmpty()) {
 				System.out.println("create simple selection node " + slot.getName());
 				return res;
 			}
 
 			System.out.println("create complicated selection node " + slot.getName());
-			SequenceNode node = new SequenceNode();
+			WrapperNode node = new WrapperNode();
 			for (Slot wslot : slot.getChildren(-1)) {
 				node.addChild(create(wslot));
 				System.out.println("special child " + wslot.getName());
 			}
-			
+
 			node.addChild(res);
 			node.setWrapperNode(res);
 			return node;
@@ -72,14 +72,12 @@ public class NodeFactory {
 		assert slot.hasChildren() : "slot has no children";
 
 		// Selection Node
-		if (slot.isSelection()) {
+		if (slot.isSelection())
 			return new SelectionNode(slot);
-		}
 
 		// Sequence Node
-		if (!slot.isSelection()) {
-			return new SequenceNode(slot);
-		}
+		if (!slot.isSelection())
+			return new CombinerNode(slot);
 
 		return null;
 	}

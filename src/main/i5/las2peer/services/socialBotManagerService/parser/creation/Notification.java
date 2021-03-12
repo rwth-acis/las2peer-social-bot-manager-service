@@ -2,12 +2,12 @@ package i5.las2peer.services.socialBotManagerService.parser.creation;
 
 import java.net.URL;
 
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.CreatorFunction;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(parent = Function.class, value = "Notification")
-public class Notification extends Function {
+@ApiModel(parent = CreatorFunction.class, value = "Notification")
+public class Notification extends CreatorFunction {
 
     @ApiModelProperty(value = "The url of the service that should send a notification", required = true, example = "https://petstore3.swagger.io/")
     private URL serviceURL;

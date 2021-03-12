@@ -16,6 +16,7 @@ import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.RefModel;
+import io.swagger.models.Response;
 import io.swagger.models.Swagger;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
@@ -313,8 +314,29 @@ public class OpenAPIReaderV2 {
 				action.setProduces("text/plain");
 		}
 
-		return action;
+		// responses
+		if (operation.getResponses() != null) {
+			for (Entry<String, Response> entry : operation.getResponses().entrySet()) {
+				String key = entry.getKey();
+				Response response = entry.getValue();
+				if (response.getSchema() != null) {
+					Property property = response.getSchema();					
+					
+					if (property instanceof RefProperty) {
+						String ref = ((RefProperty) property).get$ref();
+						String name = ref.substring("#/definitions/".length());
+						ServiceFunctionAttribute attr = new ServiceFunctionAttribute(key, name, ParameterType.BODY);
+						attr = addChildrenAttributes(swagger, name, attr);	
+						
+						if (key.contentEquals("200"))
+							action.setResponse(attr);	
+					}					
+				}
+			}
 
+		}
+
+		return action;
 	}
 
 	private static ServiceFunctionAttribute addChildrenAttributes(Swagger openAPI, String ref,
@@ -345,7 +367,7 @@ public class OpenAPIReaderV2 {
 			Map<String, Property> properties = model.getProperties();
 			for (Map.Entry<String, Property> pair : properties.entrySet()) {
 
-				//System.out.println("property: " + pair.getKey() + ", dis: " + dis);
+				System.out.println("property: " + pair.getKey() + ", dis: " + dis);
 				String name = pair.getKey();
 				Property property = pair.getValue();
 
@@ -477,9 +499,9 @@ public class OpenAPIReaderV2 {
 	private static Swagger processModel(String modelUri) throws Exception {
 
 		SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(modelUri, null, true);
-		//System.out.println(swaggerParseResult.getSwagger());
+		// System.out.println(swaggerParseResult.getSwagger());
 		Swagger swagger = swaggerParseResult.getSwagger();
-		//System.out.println("read model " + modelUri + " " + swagger);
+		// System.out.println("read model " + modelUri + " " + swagger);
 
 		return swagger;
 	}

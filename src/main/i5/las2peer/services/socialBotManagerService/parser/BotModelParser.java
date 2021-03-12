@@ -22,15 +22,14 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.nlu.ConfirmationNLU;
 import i5.las2peer.services.socialBotManagerService.nlu.LanguageUnderstander;
-import i5.las2peer.services.socialBotManagerService.parser.creation.Bot;
+import i5.las2peer.services.socialBotManagerService.parser.creation.CreatorBot;
 import i5.las2peer.services.socialBotManagerService.parser.creation.Message;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.AccessServiceFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.AccessService;
 import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChatFunction;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.ChitChatFunction;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.Las2peer;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.OpenAPI;
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.ServiceType;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.CreatorFunction;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.Las2peerAccessService;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.OpenAPIAccessService;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.ServiceAccessFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.SlackMessenger;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.TelegramMessenger;
@@ -39,7 +38,6 @@ import i5.las2peer.services.socialBotManagerService.parser.drawing.ScaffoldDrawi
 import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGDataGroup;
 import i5.las2peer.services.socialBotManagerService.parser.nlg.NLGTrainingData;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
-import io.swagger.util.Json;
 
 public class BotModelParser {
 
@@ -103,7 +101,7 @@ public class BotModelParser {
 	 * @param bot
 	 * @return
 	 */
-	public BotModel parse(Bot bot) {
+	public BotModel parse(CreatorBot bot) {
 
 		assert bot != null;
 
@@ -154,7 +152,7 @@ public class BotModelParser {
 			this.parse(messenger);
 
 		// Function
-		for (Function function : bot.getFunction())
+		for (CreatorFunction function : bot.getFunction())
 			this.parse(function);
 
 		return this.generate();
@@ -176,6 +174,40 @@ public class BotModelParser {
 		return model;
 	}
 
+	
+	/**
+	 * Adds a function to a model
+	 * 
+	 * @param model
+	 * @param function
+	 * @return
+	 */
+	public void parse(CreatorFunction function) {
+
+		assert this.nodeList != null : "parse function into empty model";
+		assert !this.nodeList.isEmpty() : "parse function into empty model";
+		assert function != null : "function is null";
+
+		// Function
+		System.out.println("parse function of type " + function.getType());
+		switch (function.getType()) {
+
+		case CHIT_CHAT:
+			this.parse((ChatFunction) function);
+			break;
+				
+		case SERVICE_ACCESS:
+			ServiceAccessFunction saf = (ServiceAccessFunction) function;
+			this.parse(saf.getServiceType());
+			break;
+			
+		default:
+			assert false : "no known function" + function.getType();
+			break;
+
+		}
+	}
+	
 	/**
 	 * Adds a function to a model
 	 * 
@@ -229,16 +261,16 @@ public class BotModelParser {
 	 * @param function
 	 * @return
 	 */
-	public void parse(ServiceType function) {
+	public void parse(AccessService function) {
 
 		assert this.nodeList != null : "parse function into empty model";
 		assert !this.nodeList.isEmpty() : "parse function into empty model";
 		assert function != null : "function is null";
 
 		System.out.println(function.getClass());
-		if (function instanceof OpenAPI) {
+		if (function instanceof OpenAPIAccessService) {
 			try {
-				OpenAPI oa = (OpenAPI) function;
+				OpenAPIAccessService oa = (OpenAPIAccessService) function;
 				BotModelNode frameNode = addNode("Frame");
 				addAttribute(frameNode, "Intent Keyword", oa.getIntent());
 				addAttribute(frameNode, "Operation Name", oa.getIntent());
@@ -255,10 +287,10 @@ public class BotModelParser {
 			}
 		}
 
-		else if (function instanceof Las2peer) {
+		else if (function instanceof Las2peerAccessService) {
 
 			try {
-				Las2peer oa = (Las2peer) function;
+				Las2peerAccessService oa = (Las2peerAccessService) function;
 				BotModelNode frameNode = addNode("Frame");
 				addAttribute(frameNode, "Intent Keyword", oa.getNluIntent());
 				addAttribute(frameNode, "Operation Name", oa.getNluIntent());
@@ -281,108 +313,7 @@ public class BotModelParser {
 		}
 
 	}
-
-	/**
-	 * Adds a function to a model
-	 * 
-	 * @param model
-	 * @param function
-	 * @return
-	 */
-	public void parse(Function function) {
-
-		assert this.nodeList != null : "parse function into empty model";
-		assert !this.nodeList.isEmpty() : "parse function into empty model";
-		assert function != null : "function is null";
-
-		// Function
-		System.out.println("parse function of type " + function.getType());
-		switch (function.getType()) {
-
-		case CHIT_CHAT:
-			ChitChatFunction fn = (ChitChatFunction) function;
-			for (Message message : fn.getMessages()) {
-				try {
-					String intent = message.getIntent();
-					if (incomingMessages.containsKey(intent)) {
-
-						BotModelNode inNode = incomingMessages.get(intent);
-						BotModelNode outNode = addNode("Chat Response");
-						addAttribute(outNode, "Message", message.getResponse());
-						addEdge(inNode, outNode, "triggers");
-
-					} else {
-
-						BotModelNode inNode = addNode("Incoming Message");
-						addAttribute(inNode, "Intent Keyword", message.getIntent());
-						addAttribute(inNode, "NLU ID", "0");
-
-						BotModelNode outNode = addNode("Chat Response");
-						addAttribute(outNode, "Message", message.getResponse());
-
-						addEdge(inNode, outNode, "triggers");
-						addMessengerEdges(inNode, "generates");
-
-						incomingMessages.put(intent, inNode);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			break;
-
-		case SERVICE_ACCESS:
-			AccessServiceFunction as = (AccessServiceFunction) function;
-
-			Json.prettyPrint(as);
-			System.out.println(as.getServiceType());
-			if (as.getServiceType() instanceof OpenAPI) {
-				try {
-					OpenAPI oa = (OpenAPI) as.getServiceType();
-					BotModelNode frameNode = addNode("Frame");
-					addAttribute(frameNode, "Intent Keyword", oa.getIntent());
-
-					BotModelNode actionNode = addNode("Bot Action");
-					addAttribute(actionNode, "Action Type", "OpenAPI");
-					addAttribute(actionNode, "FunctionName", oa.getFunctionName());
-					addAttribute(actionNode, "Service Alias", oa.getBaseURL().toString());
-
-					addEdge(frameNode, actionNode, "triggers");
-					addMessengerEdges(frameNode, "generates");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-
-			else if (as.getServiceType() instanceof Las2peer) {
-
-				try {
-					Las2peer oa = (Las2peer) as.getServiceType();
-					BotModelNode frameNode = addNode("Frame");
-					addAttribute(frameNode, "Intent Keyword", oa.getNluIntent());
-
-					BotModelNode actionNode = addNode("Bot Action");
-					addAttribute(actionNode, "Action Type", "Service");
-					addAttribute(actionNode, "FunctionName", oa.getOperationName());
-					addAttribute(actionNode, "Service Alias", oa.getServiceAlias());
-
-					addEdge(frameNode, actionNode, "triggers");
-					addMessengerEdges(frameNode, "generates");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			} else {
-				System.out.println("unknown action type");
-			}
-
-			break;
-		default:
-			assert false : "no known function" + function.getType();
-			break;
-
-		}
-	}
-
+	
 	public void parse(Messenger messenger) {
 
 		assert messenger != null;

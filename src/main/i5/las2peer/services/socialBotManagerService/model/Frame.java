@@ -90,7 +90,7 @@ public class Frame implements MessengerElement, Menuable {
 		this.slots = slots;
 	}
 
-	public void addSlot(Slot slot) {
+	public void addSlot(Slot slot) {		
 		this.slots.put(slot.getName(), slot);
 	}
 
@@ -254,6 +254,8 @@ public class Frame implements MessengerElement, Menuable {
 	public void invariant() {
 		assert this.slots != null : "frame has no slots";
 		assert this.intent != null : "frame intent is null";
+		assert this.serviceFunction != null: "frame has no service function";
+		this.serviceFunction.invariant();
 	}
 
 	public String getSuccessResponse() {

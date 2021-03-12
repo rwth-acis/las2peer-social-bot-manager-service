@@ -8,8 +8,8 @@ import i5.las2peer.services.socialBotManagerService.parser.creation.parameter.Cr
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(parent = ServiceType.class, value = "las2peer")
-public class Las2peer extends ServiceType {
+@ApiModel(parent = AccessService.class, value = "las2peer")
+public class Las2peerAccessService extends AccessService {
 
 	@ApiModelProperty(value = "Which intent should activate the service access?", required = true, example = "greet")
 	String nluIntent;
@@ -22,6 +22,12 @@ public class Las2peer extends ServiceType {
 
 	@ApiModelProperty(value = "Response message after successfull service access", required = true, example = "I did the Service access!")
 	String responseMessage;
+	
+	@ApiModelProperty(required = false)
+	String domain;
+	
+	@ApiModelProperty(required = false)
+	String errorResponse;
 	
 	@ApiModelProperty(value = "URL of the OpenAPI definition", required = false)
 	Collection<CreationParameter> parameters;
@@ -69,8 +75,8 @@ public class Las2peer extends ServiceType {
 
 
 	@JsonIgnore
-	public ServiceAccessType getAccessType() {
-		return ServiceAccessType.las2peer;
+	public String getAccessType() {
+		return "las2peer";
 	}
 
 }

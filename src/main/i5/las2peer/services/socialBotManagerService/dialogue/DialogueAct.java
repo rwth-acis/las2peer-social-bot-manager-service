@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal.DialogueGoal;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
@@ -41,17 +42,17 @@ public class DialogueAct {
 		this.intentType = type;
 		this.intentKeyword = intent;
 		this.message = message;
-	}	
-	
+	}
+
 	public DialogueAct(DialogueActType type, String intent, String message, Map<String, String> entities) {
 		this(type, intent, message);
-		this.setEntities(entities);	
+		this.setEntities(entities);
 	}
 
 	public DialogueAct(String message) {
 		this.message = message;
 	}
-	
+
 	public DialogueAct(String message, ExpectedInput expected) {
 		super();
 		this.message = message;
@@ -168,7 +169,7 @@ public class DialogueAct {
 	public void setEntities(Map<String, String> entities) {
 		this.entities = entities;
 	}
-		
+
 	public void addEntity(Entity entity) {
 		if (!this.hasEntities())
 			this.entities = new HashMap<String, String>();
@@ -211,8 +212,14 @@ public class DialogueAct {
 
 	@Override
 	public String toString() {
-		return "DialogueAct [intentType=" + this.intentType + " intent=" + intentKeyword + ", message=" + message
-				+ ", expected=" + expected + "]";
+		String res = "DialogueAct [intentType=" + this.intentType + " \nintent=" + intentKeyword + "\n, message="
+				+ message + ", expected=" + expected + ",]";
+		if (this.entities != null)
+			for (Entry<String, String> entry : this.entities.entrySet()) {
+				if (entry.getKey() != null && entry.getValue() != null)
+					res = res + "\n" + entry.getKey() + ": " + entry.getValue();
+			}
+		return res;
 	}
 
 }

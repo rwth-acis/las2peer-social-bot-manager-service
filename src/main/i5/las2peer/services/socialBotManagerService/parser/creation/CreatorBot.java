@@ -7,14 +7,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import i5.las2peer.services.socialBotManagerService.parser.creation.function.Function;
+import i5.las2peer.services.socialBotManagerService.parser.creation.function.CreatorFunction;
 import i5.las2peer.services.socialBotManagerService.parser.creation.messenger.Messenger;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value = "Bot", description = "Bot model")
 @XmlRootElement(name = "Bot")
-public class Bot {
+public class CreatorBot {
 
 	@ApiModelProperty(dataType = "string", value = "A name gives your bot personality. It should make him recognizable as a bot.", required = true, example = "Botter")
 	private String name;
@@ -26,7 +26,7 @@ public class Bot {
 	private String nluModule;
 
 	@ApiModelProperty(required = true)
-	private List<Function> function = new ArrayList<Function>();
+	private List<CreatorFunction> function = new ArrayList<CreatorFunction>();
 
 	@ApiModelProperty(required = true)
 	private List<Messenger> messenger = new ArrayList<Messenger>();
@@ -40,11 +40,11 @@ public class Bot {
 		this.name = name;
 	}
 
-	public List<Function> getFunction() {
+	public List<CreatorFunction> getFunction() {
 		return function;
 	}
 
-	public void setFunction(List<Function> function) {
+	public void setFunction(List<CreatorFunction> function) {
 		this.function = function;
 	}
 
@@ -79,7 +79,7 @@ public class Bot {
 		this.nluModule = nluModule;
 	}
 
-	public void addFunction(Function function) {
+	public void addFunction(CreatorFunction function) {
 		if(this.function == null)
 			this.function = new ArrayList<>();
 		this.function.add(function);

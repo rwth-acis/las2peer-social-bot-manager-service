@@ -9,18 +9,18 @@ import io.swagger.annotations.ApiModelProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "accesstype", visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = Las2peer.class, name = "las2peer"),
-		@JsonSubTypes.Type(value = OpenAPI.class, name = "OpenAPI") })
-@ApiModel(discriminator = "accesstype", subTypes = { Las2peer.class, OpenAPI.class })
-public class ServiceType {
+@JsonSubTypes({ @JsonSubTypes.Type(value = Las2peerAccessService.class, name = "las2peer"),
+		@JsonSubTypes.Type(value = OpenAPIAccessService.class, name = "OpenAPI") })
+@ApiModel(discriminator = "accesstype", subTypes = { Las2peerAccessService.class, OpenAPIAccessService.class })
+public class AccessService {
 	@ApiModelProperty(dataType = "string", allowableValues = "las2peer, OpenAPI", required = true, value = "Which type of service the bot should access?")
-	ServiceAccessType accesstype;
+	String accesstype;
 
-	public ServiceAccessType getAccesstype() {
+	public String getAccesstype() {
 		return accesstype;
 	}
 
-	public void setAccesstype(ServiceAccessType accesstype) {
+	public void setAccesstype(String accesstype) {
 		this.accesstype = accesstype;
 	}
 }

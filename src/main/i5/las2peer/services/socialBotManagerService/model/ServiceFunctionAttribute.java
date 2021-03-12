@@ -225,7 +225,7 @@ public class ServiceFunctionAttribute {
 	@Override
 	public String toString() {
 		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
-				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
+				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes.size()
 				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
 				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
 				+ ", contentType=" + contentType + "]";
@@ -261,7 +261,7 @@ public class ServiceFunctionAttribute {
 	}
 
 	public List<String> getEnumList() {
-
+		
 		return getUpdatedEnumList();
 	}
 	/*

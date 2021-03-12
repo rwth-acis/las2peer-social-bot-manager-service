@@ -27,19 +27,43 @@ public class FrameMapper {
 	 * @return new frame
 	 * @throws ParseBotException
 	 */
-	public Frame create(String serviceURL, String operationID) throws ParseBotException {
-
-		assert serviceURL != null;
-		assert operationID != null;
+	public Frame create(ServiceFunction modelAction) throws ParseBotException {
 
 		Frame frame = new Frame();
-		ServiceFunction action = new ServiceFunction();
-		action.setServiceName(serviceURL);
-		action.setFunctionName(operationID);
-		return this.map(action, frame);
+		frame.setServiceFunction(modelAction);
+
+		Frame res = this.receiveAndMap(modelAction, frame);
+		res.invariant();
+		return res;
 
 	}
 
+	public Frame receiveAndMap(ServiceFunction modelAction, Frame frame) throws ParseBotException {
+
+		assert modelAction != null;
+		System.out.println("Mapping service action " + modelAction.getFunctionName());
+
+		// Merge model function definition and swagger received definition
+		ServiceFunction swaggerAction = OpenAPIConnector.readFunction(modelAction);
+		swaggerAction.invariant();
+		ServiceFunction frameAction = swaggerAction.merge(modelAction);
+		frameAction.invariant();
+
+		Frame res = map(frameAction, frame);
+		res.invariant();
+		return res;
+
+	}
+
+	
+	public Frame createAndMap(ServiceFunction function) throws ParseBotException {
+		
+		Frame frame = new Frame();
+		frame.setServiceFunction(function);
+
+		return this.map(function, frame);
+	}
+	
 	/**
 	 * Matches a frame with a service function. Generates missing slots for the
 	 * frame consistent with the service function attributes.
@@ -49,34 +73,32 @@ public class FrameMapper {
 	 * @return matched frame
 	 * @throws ParseBotException
 	 */
-	public Frame map(ServiceFunction modelAction, Frame frame) throws ParseBotException {
+	public Frame map(ServiceFunction function, Frame frame) throws ParseBotException {
 
-		assert modelAction != null;
+		assert function != null;
+		function.invariant();
 		assert frame != null;
 
-		System.out
-				.println("Mapping service action " + modelAction.getFunctionName() + " into frame " + frame.getName());
-
-		// Merge model function definition and swagger received definition
-		ServiceFunction swaggerAction = OpenAPIConnector.readFunction(modelAction);
-		ServiceFunction frameAction = swaggerAction.merge(modelAction);
-		frame.setServiceFunction(frameAction);
-
 		// map regular attributes and slots
-		for (ServiceFunctionAttribute attr : frameAction.getAttributes()) {
+		for (ServiceFunctionAttribute attr : function.getAttributes()) {
 
 			Slot slot = map(attr, attr.getName());
 			frame.addSlot(slot);
 
 		}
 
+		for (Slot slot : frame.getDescendants()) {
+			System.out.println(slot.getName());
+		}
+
 		// collect additional helper attributes
 		Collection<ServiceFunctionAttribute> additionalAttrs = new ArrayList<>();
-		for (ServiceFunctionAttribute attr : frameAction.getAllAttributes()) {
+		for (ServiceFunctionAttribute attr : function.getAllAttributes()) {
 
 			if (attr.hasDynamicEnums()) {
-				System.out.println("mapping attribute " + attr.getName() + " is dynamic " + attr.getOpenAttributes().size());
-				
+				System.out.println(
+						"mapping attribute " + attr.getName() + " is dynamic " + attr.getOpenAttributes().size());
+
 				for (ServiceFunctionAttribute addAttr : attr.getOpenAttributes()) {
 
 					if (addAttr.isFrameGenerated()) {
@@ -100,7 +122,7 @@ public class FrameMapper {
 						helperAttr.setContent(null);
 						addAttr.setSlotID(helperAttr.getId());
 						additionalAttrs.add(helperAttr);
-						System.out.println("new helper attribute " + helperAttr.getName());						
+						System.out.println("new helper attribute " + helperAttr.getName());
 					}
 
 				}
@@ -116,11 +138,12 @@ public class FrameMapper {
 
 		// Fill missing frame definitions
 		if (frame.getIntent() == null)
-			frame.setIntent(frameAction.getFunctionName());
+			frame.setIntent(function.getFunctionName());
 
 		if (frame.getMessage() == null)
-			frame.setMessage(frameAction.getFunctionDescription());
+			frame.setMessage(function.getFunctionDescription());
 
+		frame.setServiceFunction(function);
 		frame.invariant();
 		return frame;
 	}
@@ -135,7 +158,7 @@ public class FrameMapper {
 	public Slot map(ServiceFunctionAttribute attr, String name) {
 
 		assert attr != null : "map attr with slot: attr is null";
-		
+
 		if (attr.isArray() && attr.getName().contains("amples")) {
 			System.out.println("set min items " + attr.getName());
 			attr.setMinItems(3);
@@ -173,7 +196,8 @@ public class FrameMapper {
 		// selection
 		if (attr.hasDiscriminator()) {
 
-			//System.out.println(" dis: " + attr.getDiscriminator() + " " + attr.getDiscriminatorAttribute().getName());
+			System.out.println("attr " + attr.getName() + " has dis " + attr.getDiscriminator() + " "
+					+ attr.getDiscriminatorAttribute().getName());
 
 			slot.setSelection(false);
 			ServiceFunctionAttribute disAttr = attr.getDiscriminatorAttribute();
@@ -181,24 +205,27 @@ public class FrameMapper {
 			disSlot.setSelection(true);
 			disSlot.setRequired(true);
 			Map<String, Slot> inheritedSlots = new HashMap<>();
-			
+
+			assert disAttr != null;
+			assert disAttr.getEnumList() != null;
+
 			for (String enu : disAttr.getEnumList()) {
 				Slot enuSlot = new Slot(name + "_" + disAttr.getName() + "_" + enu);
 				enuSlot.setEntity(enu);
 				disSlot.addChild(enuSlot);
 
-				
 				// parent class slots
 				for (ServiceFunctionAttribute subAttr : attr.getChildren(disAttr.getName())) {
 					if (subAttr != disAttr) {
 						Slot subSlot = map(subAttr, name + "_" + disAttr.getName() + "_" + subAttr.getName());
 						subSlot.setPriority(-1);
-					//	System.out.println(
-					//			"inherited attribute detected: " + subSlot.getName() + " " + subSlot.getPriority());
+						// System.out.println(
+						// "inherited attribute detected: " + subSlot.getName() + " " +
+						// subSlot.getPriority());
 						inheritedSlots.put(subSlot.getName(), subSlot);
 					}
 				}
-				
+
 				// sub class slots
 				for (ServiceFunctionAttribute subAttr : attr.getChildren(enu)) {
 					Slot subSlot = map(subAttr, name + "_" + disAttr.getName() + "_" + enu + "_" + subAttr.getName());
@@ -206,10 +233,11 @@ public class FrameMapper {
 				}
 
 			}
-			
+
 			for (Slot subSlot : inheritedSlots.values()) {
 				disSlot.addChild(subSlot);
-				//System.out.println("add inherited slot " + subSlot.getName() + " to " + disSlot.getName());
+				// System.out.println("add inherited slot " + subSlot.getName() + " to " +
+				// disSlot.getName());
 			}
 
 			slot.addChild(disSlot);

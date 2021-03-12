@@ -11,8 +11,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel(parent = ServiceType.class, value = "OpenAPI")
-public class OpenAPI extends ServiceType {
+@ApiModel(parent = AccessService.class, value = "OpenAPI")
+public class OpenAPIAccessService extends AccessService {
 
 	@ApiModelProperty(value = "Which intent should activate the service access?", required = true, example = "greet")
 	String intent;
@@ -70,8 +70,8 @@ public class OpenAPI extends ServiceType {
 	}
 
 	@JsonIgnore
-	public ServiceAccessType getAccessType() {
-		return ServiceAccessType.OPENAPI;
+	public String getAccessType() {
+		return "OpenAPI";
 	}
 
 }

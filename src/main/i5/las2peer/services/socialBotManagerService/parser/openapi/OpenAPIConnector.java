@@ -93,6 +93,10 @@ public class OpenAPIConnector {
 			}
 			action.setService(service);
 			action.setServiceName(baseUrl);
+			
+			assert action.getHttpMethod() != null;
+			assert action.getBasePath() != null;
+			
 			return action;
 		}
 
@@ -110,6 +114,12 @@ public class OpenAPIConnector {
 		action.setService(service);
 		action.setServiceName(baseUrl);
 		return action;
+	}
+	
+	public static ServiceFunction readFunction(Swagger swagger, String operationId) {
+		
+		ServiceFunction action = OpenAPIReaderV2.readAction(swagger, operationId);		
+		return action;		
 	}
 
 	public static ClientResponse sendRequest(ServiceFunction sf) {

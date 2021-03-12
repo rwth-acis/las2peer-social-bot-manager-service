@@ -152,14 +152,22 @@ public class Slot {
 		return this.name;
 	}
 
+	public boolean hasAPIName() {
+		if (this.hasParameter())
+			return true;
+		return false;
+	}
+
 	/**
 	 * Name corresponding to OpenAPI specification parameter name
 	 * 
 	 * @return
 	 */
 	public String getAPIName() {
+
 		if (this.hasParameter())
 			return this.parameter.getName();
+
 		return this.name;
 	}
 
@@ -351,9 +359,11 @@ public class Slot {
 	}
 
 	public List<String> getEnumList() {
-		
+
+		if (this.parameter != null)
 			return this.getParameter().getUpdatedEnumList();
-		
+		return new ArrayList<>();
+
 	}
 
 	public boolean hasEnumList() {

@@ -11,10 +11,14 @@ public interface Slotable {
 	}
 
 	public default String getAPIName() {
+		if (getSlot() == null)
+			return null;
 		return getSlot().getAPIName();
 	}
 
 	public default String getDisplayName() {
+		if (getSlot() == null)
+			return null;
 		return getSlot().getDisplayName();
 	}
 
@@ -29,13 +33,13 @@ public interface Slotable {
 	public default String getConfirmIntent() {
 		return getSlot().getConfirmIntent();
 	}
-	
+
 	public default String getDenyIntent() {
 		return getSlot().getDenyIntent();
 	}
-	
+
 	public default String getReqConfProceed() {
 		return getSlot().getReqConfIntent();
-	}		
+	}
 
 }

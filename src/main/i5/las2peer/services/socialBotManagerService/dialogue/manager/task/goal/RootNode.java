@@ -154,4 +154,10 @@ public class RootNode extends Node {
 		return res;
 	}
 
+	@Override
+	public Slot getSlot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
