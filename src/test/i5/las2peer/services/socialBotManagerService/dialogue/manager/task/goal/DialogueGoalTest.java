@@ -2,13 +2,13 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
-import i5.las2peer.services.socialBotManagerService.dialogue.manager.task.SlotList;
 import i5.las2peer.services.socialBotManagerService.model.Frame;
 import i5.las2peer.services.socialBotManagerService.model.Slot;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.ParameterType;
@@ -140,44 +140,39 @@ public class DialogueGoalTest {
 	}
 
 	@Test
-	public void testGetRequired() {
-
+	public void testContainsSlot() {
+					
 		DialogueGoal goal = new DialogueGoal(frame);
-		slot1.setSelection(true);
-		slot2.setRequired(true);
-		SlotList slots = frame.getRequired();
-		assertTrue(slots.contains(slot1));
-		assertTrue(slots.contains(slot2));
+		assertTrue(goal.contains(slot1));
+		assertTrue(goal.contains(slot2));
+		assertTrue(goal.contains(slot3));
+		assertTrue(goal.contains(slot4));
+		assertTrue(goal.contains(slot5));
+		
+		assertFalse(goal.contains(new Slot("abc")));
 
 	}
-
+	
 	@Test
-	public void testGetRequiredSelection() {
-
+	public void testContainsString() {
+					
 		DialogueGoal goal = new DialogueGoal(frame);
-		slot3.setRequired(true);
-		slot5.setRequired(true);
-		SlotList slots = frame.getRequired();
-		assertEquals(3, slots.size());
-		assertTrue(slots.contains(slot3));
-		assertTrue(slots.contains(slot5));
-	}
+		assertTrue(goal.contains("s1"));
+		assertTrue(goal.contains("s2"));
+		assertTrue(goal.contains("s3"));
+		assertTrue(goal.contains("s4"));
+		assertTrue(goal.contains("s5"));
+		
+		assertFalse(goal.contains("abc"));
 
-	@Test
-	public void testCreationTest() {
-
-		DialogueGoal goal = new DialogueGoal(frame);
-		slot3.setRequired(true);
-		slot5.setRequired(true);
-		SlotList slots = frame.getRequired();
-		assertEquals(3, slots.size());
-		assertTrue(slots.contains(slot3));
-		assertTrue(slots.contains(slot5));
 	}
 
 	@Test
 	public void toJSONTest() {
 
+		DialogueGoal goal = new DialogueGoal(frame);
+		assertNotNull(goal);
+		
 		JSONObject name = new JSONObject();
 		name.put("name", "Botter");
 
@@ -192,6 +187,7 @@ public class DialogueGoalTest {
 
 		JSONArray mes = new JSONArray();
 		mes.add(sf);
+		
 
 	}
 

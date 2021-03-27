@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.dialogue.manager.task.goal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
@@ -44,7 +45,16 @@ public class ValueNodeTest {
 		assertEquals(slot, node.getSlot());
 
 	}
+		
+	@Test
+	public void isFilledTest() {
 
+		ValueNode node = new ValueNode(slot);
+		node.fill("test");
+		assertTrue(node.isFilled());
+
+	}
+	
 	@Test
 	public void FillTest() {
 
@@ -55,6 +65,16 @@ public class ValueNodeTest {
 
 	}
 
+	@Test
+	public void getIntentsTest() {
+
+		ValueNode node = new ValueNode(slot);
+		assertNotNull(node.getInformIntent());
+		assertTrue(node.getInformIntent().startsWith("inform"));
+		assertNotNull(node.getRequestIntent());
+		assertTrue(node.getRequestIntent().startsWith("request"));
+	}
+	
 	@Test
 	public void toJSONTest() {
 

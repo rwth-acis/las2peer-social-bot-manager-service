@@ -127,7 +127,6 @@ import i5.las2peer.services.socialBotManagerService.parser.creation.parameter.Cr
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIAction;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIConnector;
 import i5.las2peer.services.socialBotManagerService.parser.openapi.OpenAPIResponse;
-import i5.las2peer.services.socialBotManagerService.parser.test.Composition;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -1900,23 +1899,6 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			return Response.serverError().entity("nlu creation failed").build();
-
-		}
-
-		
-		/**
-		 * @return ok
-		 */
-		@POST
-		@Path("/test")
-		@Consumes(MediaType.APPLICATION_JSON)
-		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
-		@ApiOperation(value = "Creates NLU model", notes = "creates the nlu model.")
-		public Response postTest(Composition test) {
-
-			System.out.println("POST TEST" + test.toString());
-			return Response.ok(test.toString()).build();
 
 		}
 		

@@ -88,7 +88,7 @@ public class SequenceNodeTest {
 
 		((Fillable) node.getChildren().get(1)).fill("Bt");
 		assertTrue(node.isReady());
-
+		
 	}
 
 	@Test

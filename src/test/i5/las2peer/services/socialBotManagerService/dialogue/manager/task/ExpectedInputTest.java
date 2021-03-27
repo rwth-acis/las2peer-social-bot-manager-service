@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import i5.las2peer.services.socialBotManagerService.dialogue.ExpectedInput;
 import i5.las2peer.services.socialBotManagerService.dialogue.InputType;
+import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 
 public class ExpectedInputTest {
 
@@ -16,6 +17,23 @@ public class ExpectedInputTest {
 
 	}
 
+	@Test
+	public void testEnums() {
+
+		ExpectedInput exp = new ExpectedInput();
+		exp.setType(InputType.Enum);
+		exp.addEnum("eA");
+		exp.addEnum("eB");
+		exp.addEnum("eC");
+
+		assertTrue(exp.validate(new Intent("", 0), "eA"));
+		assertTrue(exp.validate(new Intent("", 0),"eC"));
+		assertFalse(exp.validate(new Intent("", 0),"hallo"));
+		assertFalse(exp.validate(new Intent("", 0),"je342se"));
+
+	}
+
+	
 	@Test
 	public void testInputNumber() {
 

@@ -108,7 +108,17 @@ public class SelectionNodeTest {
 		assertTrue(node.isReady());
 
 	}
+	
+	@Test
+	public void getIntentsTest() {
 
+		ValueNode node = new ValueNode(slotS);
+		assertNotNull(node.getInformIntent());
+		assertTrue(node.getInformIntent().startsWith("inform"));
+		assertNotNull(node.getRequestIntent());
+		assertTrue(node.getRequestIntent().startsWith("request"));
+	}
+	
 	@Test
 	public void toJSONBodyTest() {
 

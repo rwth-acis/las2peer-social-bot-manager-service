@@ -34,7 +34,7 @@ public class OpenAPIReaderV2Test {
 		String content = "";
 
 		try {
-			content = new String(Files.readAllBytes(Paths.get("testData/testSwagger.json")));
+			content = new String(Files.readAllBytes(Paths.get("testData/testSwaggerAPI.json")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -69,6 +69,36 @@ public class OpenAPIReaderV2Test {
 			assertTrue(flag);
 		}
 
+	}
+	
+	/**
+	 * Test if parsed ServiceFunction includes Body Attribute
+	 */
+	@Test
+	public void readBasicSchemeTest() {
+
+		ServiceFunction function = OpenAPIConnector.readFunction(swagger, "postBasicScheme");
+		assertNotNull(function.getProduces());
+		
+		assertNotNull(function.getConsumes());
+		assertEquals(function.getConsumes(), "application/json");
+		ServiceFunctionAttribute bodyAttr = function.getBodyAttribute();
+		assertEquals(4, bodyAttr.getChildAttributes().size());
+		
+		List<String> parameterNames = new ArrayList<>();
+		parameterNames.add("stringParameter");
+		parameterNames.add("numberParameter");
+		parameterNames.add("enumParameter");
+		parameterNames.add("arrayParameter");
+		for (String parameterName : parameterNames) {
+			boolean flag = false;
+			for (ServiceFunctionAttribute attr : bodyAttr.getChildAttributes()) {
+				if (attr.getName().contentEquals(parameterName))
+					flag = true;
+			}
+			assertTrue(flag);
+		}			
+		
 	}
 
 	/**

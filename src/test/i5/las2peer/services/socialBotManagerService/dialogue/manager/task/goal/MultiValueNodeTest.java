@@ -49,6 +49,16 @@ public class MultiValueNodeTest {
 		assertTrue(node.getValues().contains("world"));
 
 	}
+	
+	@Test
+	public void getIntentsTest() {
+
+		MultiValueNode node = new MultiValueNode(slot);
+		assertNotNull(node.getInformIntent());
+		assertTrue(node.getInformIntent().startsWith("inform"));
+		assertNotNull(node.getRequestIntent());
+		assertTrue(node.getRequestIntent().startsWith("request"));
+	}
 
 	@Test
 	public void toJSONTest() {

@@ -10,7 +10,7 @@ public class BotModel implements Serializable {
 	private BotModelAttribute attributes;
 	private LinkedHashMap<String, BotModelNode> nodes;
 	private LinkedHashMap<String, BotModelEdge> edges;
-
+	
 	public BotModelAttribute getAttributes() {
 		return attributes;
 	}

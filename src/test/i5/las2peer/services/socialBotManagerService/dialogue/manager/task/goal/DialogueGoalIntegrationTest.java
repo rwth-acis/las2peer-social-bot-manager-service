@@ -39,7 +39,7 @@ public class DialogueGoalIntegrationTest {
 		String content = "";
 
 		try {
-			content = new String(Files.readAllBytes(Paths.get("testData/testSwagger.json")));
+			content = new String(Files.readAllBytes(Paths.get("testData/testSwaggerAPI.json")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
