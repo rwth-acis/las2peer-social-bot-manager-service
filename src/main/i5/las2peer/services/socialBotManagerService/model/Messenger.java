@@ -302,18 +302,6 @@ public class Messenger {
                       return;
                     }
                   }
-                } else if (state.getFollowingMessages().get("") != null) {
-                  System.out.println("Empty leadsTo");
-                  if (message.getFileBody() != null) {
-                    if (state.getFollowingMessages().get("").expectsFile()) {
-                      state = state.getFollowingMessages().get("");
-                    } else {
-                      state = this.knownIntents.get("default");
-                    }
-                  } else {
-                    state = state.getFollowingMessages().get("");
-                    stateMap.put(message.getChannel(), state);
-                  }
                 } else {
                   state = this.knownIntents.get("default");
                 }
