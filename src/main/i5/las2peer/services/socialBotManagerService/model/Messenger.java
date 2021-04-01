@@ -269,9 +269,23 @@ public class Messenger {
 							}
 						}
 					} else {
-						System.out.println(
-								intent.getKeyword() + " not detected with " + intent.getConfidence() + " confidence.");
-						state = this.knownIntents.get("default");
+						if (state.getFollowingMessages().get("") != null) {
+							System.out.println("Empty leadsTo");
+							if (message.getFileBody() != null) {
+								if (state.getFollowingMessages().get("").expectsFile()) {
+									state = state.getFollowingMessages().get("");
+								} else {
+									state = this.knownIntents.get("default");
+								}
+							} else {
+								state = state.getFollowingMessages().get("");
+								stateMap.put(message.getChannel(), state);
+							}
+						} else {
+							System.out.println(intent.getKeyword() + " not detected with " + intent.getConfidence()
+									+ " confidence.");
+							state = this.knownIntents.get("default");
+						}
 						// System.out.println(state.getIntentKeyword() + " set");
 					}
 					// If a user sends a file, without wanting to use intent extraction on the name, then intent
@@ -295,7 +309,11 @@ public class Messenger {
 					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
 					contextOn = true;
 				} else {
+					// check if skip is wished or not
 					if (state != null) {
+						if (state.getFollowingMessages().get("skip") != null) {
+							state = state.getFollowingMessages().get("skip");
+						}
 						ChatResponse response = null;
 						// choose a response based on entity value
 						if (intent.getEntitieValues().size() == 1) {
