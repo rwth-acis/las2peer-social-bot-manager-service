@@ -309,7 +309,11 @@ public class Messenger {
 					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
 					contextOn = true;
 				} else {
+					// check if skip is wished or not
 					if (state != null) {
+						if (state.getFollowingMessages().get("skip") != null) {
+							state = state.getFollowingMessages().get("skip");
+						}
 						ChatResponse response = null;
 						// choose a response based on entity value
 						if (intent.getEntitieValues().size() == 1) {
