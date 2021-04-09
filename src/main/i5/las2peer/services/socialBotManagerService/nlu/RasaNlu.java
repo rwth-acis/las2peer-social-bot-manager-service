@@ -46,7 +46,6 @@ public class RasaNlu {
 		try {
 			MiniClient client = new MiniClient();
 			client.setConnectorEndpoint(this.url);
-			System.out.println("Rasa url:" + this.url);
 			JSONObject inputJSON = new JSONObject(
 					Collections.singletonMap("text", StringEscapeUtils.escapeJson(input)));
 			HashMap<String, String> headers = new HashMap<String, String>();
