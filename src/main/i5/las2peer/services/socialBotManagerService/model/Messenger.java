@@ -497,7 +497,7 @@ public class Messenger {
 					}
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
-						bot.getVle().getName(), contextOn));
+						bot.getVle().getName(), contextOn, recognizedEntities.get(message.getChannel())));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
