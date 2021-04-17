@@ -772,6 +772,13 @@ public class SocialBotManagerService extends RESTService {
 				body.put("fileType", messageInfo.getMessage().getFileType());
 
 			}
+			if (messageInfo.getRecognizedEntities() != null) {
+				JSONObject entities = new JSONObject();
+				for (Entity entity : messageInfo.getRecognizedEntities()) {
+					entities.put(entity.getEntityName(), entity.getValue());
+				}
+				body.put("entities", entities);
+			}
 			body.put("msg", messageInfo.getMessage().getText());
 			body.put("contextOn", messageInfo.contextActive());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);

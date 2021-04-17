@@ -67,7 +67,11 @@ public class IncomingMessage {
 	}
 
 	public void addFollowupMessage(String intentKeyword, IncomingMessage msg) {
-		this.followupMessages.put(replaceUmlaute(intentKeyword), msg);
+		String[] intentList = intentKeyword.split(",");
+		for (String intent : intentList) {
+			this.followupMessages.put(replaceUmlaute(intent).replaceAll("\\s+", ""), msg);
+		}
+		// (this.followupMessages.put(replaceUmlaute(intentKeyword), msg);
 	}
 
 	public void addResponse(ChatResponse response) {
