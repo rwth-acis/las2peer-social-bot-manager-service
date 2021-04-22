@@ -90,13 +90,13 @@ public class Messenger {
 	private void addEntityToRecognizedList(String channel, Collection<Entity> entities) {
 
 		Collection<Entity> recognizedEntitiesNew = recognizedEntities.get(channel);
-		System.out.println("now is reco");
-		System.out.println(recognizedEntitiesNew);
+		// System.out.println("now is reco");
+		// System.out.println(recognizedEntitiesNew);
 		for (Entity entity : entities) {
 			recognizedEntitiesNew.add(entity);
 		}
 		System.out.println(recognizedEntitiesNew);
-		System.out.println("finish");
+		// System.out.println("finish");
 		recognizedEntities.put(channel, recognizedEntitiesNew);
 	}
 	// set the context of the specified channel
@@ -178,8 +178,8 @@ public class Messenger {
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
-					System.out.println(message.getFileName() + " + " + message.getFileBody());
-					System.out.println(Intent.replaceUmlaute(message.getText()));
+					// System.out.println(message.getFileName() + " + " + message.getFileBody());
+					// System.out.println(Intent.replaceUmlaute(message.getText()));
 					if (bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
 						intent = bot.getRasaServer(currentNluModel.get(message.getChannel()))
 								.getIntent(Intent.replaceUmlaute(message.getText()));
@@ -309,7 +309,7 @@ public class Messenger {
 							}
 						}
 					} else {
-						if (state.getFollowingMessages().get("") != null) {
+						if (state != null && state.getFollowingMessages().get("") != null) {
 							System.out.println("Empty leadsTo");
 							if (message.getFileBody() != null) {
 								if (state.getFollowingMessages().get("").expectsFile()) {
@@ -335,7 +335,7 @@ public class Messenger {
 				} else if (message.getFileName() != null) {
 					if (this.knownIntents.get("0").expectsFile()) {
 						state = this.knownIntents.get("0");
-						System.out.println(state.getResponse(random));
+						// System.out.println(state.getResponse(random));
 					} else {
 						// if no Incoming Message is fitting, return default message
 						intent = new Intent("default", "", "");
@@ -376,29 +376,29 @@ public class Messenger {
 						}
 						if (response != null) {
 							if (response.getResponse() != "") {
-								System.out.println("1");
+								// System.out.println("1");
 								String split = "";
-								System.out.println("2");
+								// System.out.println("2");
 								// allows users to use linebreaks \n during the modeling for chat responses
 								for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
 									System.out.println(i);
 									split += response.getResponse().split("\\\\n")[i] + " \n ";
 								}
-								System.out.println("3");
+								// System.out.println("3");
 								System.out.println(split);
-								System.out.println("4");
+								// System.out.println("4");
 								if (split.contains("[") && split.contains("]")) {
-									System.out.println("5");
+									// System.out.println("5");
 									String[] entitySplit1 = split.split("\\[");
-									System.out.println("6");
+									// System.out.println("6");
 									ArrayList<String> entitySplit2 = new ArrayList<String>();
 									for (int i = 1; i < entitySplit1.length; i++) {
-										System.out.println("7");
+										// System.out.println("7");
 										entitySplit2.add(entitySplit1[i].split("\\]")[0]);
-										System.out.println(7 + i);
+										// System.out.println(7 + i);
 									}
-									System.out.println(entitySplit2);
-									System.out.println(recognizedEntities.get(message.getChannel()));
+									// System.out.println(entitySplit2);
+									// System.out.println(recognizedEntities.get(message.getChannel()));
 									for (String entityName : entitySplit2) {
 										System.out.println("entity name is " + entityName);
 										for (Entity entity : recognizedEntities.get(message.getChannel())) {
