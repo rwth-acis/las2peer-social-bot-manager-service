@@ -360,11 +360,23 @@ public class Messenger {
 						ChatResponse response = null;
 						// choose a response based on entity value
 						if (intent.getEntitieValues().size() == 1) {
+							boolean foundMatch = false;
+							ArrayList<ChatResponse> emptyResponses = new ArrayList<ChatResponse>();
 							for (ChatResponse res : state.getResponseArray()) {
 								System.out.println(res.getTriggerEntity());
 								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
 									response = res;
+									foundMatch = true;
+									break;
 								}
+								if (res.getTriggerEntity().equals("")) {
+									System.out.println("now empty");
+									emptyResponses.add(res);
+								}
+							}
+							if (!foundMatch && !emptyResponses.isEmpty()) {
+								Random rand = new Random();
+								response = emptyResponses.get(rand.nextInt(emptyResponses.size()));
 							}
 						}
 						if (response == null) {
