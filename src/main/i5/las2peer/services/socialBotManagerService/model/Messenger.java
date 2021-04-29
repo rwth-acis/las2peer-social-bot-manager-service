@@ -48,8 +48,9 @@ public class Messenger {
 	// Is additionally used to check if we are currently communicating with a
 	// service(if set, then yes otherwise no)
 	private HashMap<String, String> triggeredFunction;
-	// dont think i need this one
-	// private HashMap<String, Bool> contextWithService;
+	// Keep up with how many times a default message was given out in a conversation
+	// state
+	private HashMap<String, Integer> defaultAnswered;
 
 	private Random random;
 
@@ -73,6 +74,7 @@ public class Messenger {
 		// Initialize the assessment setup
 		this.currentNluModel = new HashMap<String, String>();
 		this.triggeredFunction = new HashMap<String, String>();
+		this.defaultAnswered = new HashMap<String, Integer>();
 	}
 
 	public String getName() {
@@ -80,11 +82,29 @@ public class Messenger {
 	}
 
 	public void addMessage(IncomingMessage msg) {
-		this.knownIntents.put(msg.getIntentKeyword(), msg);
+		if (msg.getIntentKeyword().contains("defaultX")) {
+			this.knownIntents.put("defaultX", msg);
+		} else
+			this.knownIntents.put(msg.getIntentKeyword(), msg);
 	}
 
 	public ChatMediator getChatMediator() {
 		return this.chatMediator;
+	}
+
+	public IncomingMessage checkDefault(IncomingMessage state, ChatMessage message) {
+		if (this.knownIntents.get("defaultX") != null && Integer.valueOf(
+				this.knownIntents.get("defaultX").getIntentKeyword().split("defaultX")[1]) > this.defaultAnswered
+						.get(message.getChannel())) {
+			IncomingMessage newState = this.knownIntents.get("defaultX");
+			newState.followupMessages = state.followupMessages;
+			state = newState;
+			this.defaultAnswered.put(message.getChannel(), this.defaultAnswered.get(message.getChannel()) + 1);
+		} else {
+			state = this.knownIntents.get("default");
+			this.defaultAnswered.put(message.getChannel(), 0);
+		}
+		return state;
 	}
 
 	private void addEntityToRecognizedList(String channel, Collection<Entity> entities) {
@@ -146,6 +166,9 @@ public class Messenger {
 			try {
 				if (this.currentNluModel.get(message.getChannel()) == null) {
 					this.currentNluModel.put(message.getChannel(), "0");
+				}
+				if (this.defaultAnswered.get(message.getChannel()) == null) {
+					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				Intent intent = null;
 				// Special case: `!` commands
@@ -227,7 +250,7 @@ public class Messenger {
 								state = this.knownIntents.get(intent.getKeyword());
 								// Incoming Message which expects file should not be chosen when no file was
 								// sent
-								if (state != null && state.expectsFile()) {
+								if (state == null || state.expectsFile()) {
 									state = this.knownIntents.get("default");
 								}
 								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
@@ -256,9 +279,10 @@ public class Messenger {
 										stateMap.put(message.getChannel(), state);
 										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 									} else {
-										state = this.knownIntents.get("default");
+										state = checkDefault(state, message);
 									}
-
+								} else if (state.getFollowingMessages().get(intent.getKeyword()).expectsFile()) {
+									state = checkDefault(state, message);
 								} else {
 									state = state.getFollowingMessages().get(intent.getKeyword());
 									stateMap.put(message.getChannel(), state);
@@ -275,7 +299,7 @@ public class Messenger {
 									// In a conversation state, if no fitting intent was found and an empty leadsTo
 									// label is found
 								} else if (state.getFollowingMessages().get("") != null) {
-									System.out.println("Empty leadsTo");
+									System.out.println("Empty leadsTo1");
 									if (message.getFileBody() != null) {
 										if (state.getFollowingMessages().get("").expectsFile()) {
 											state = state.getFollowingMessages().get("");
@@ -284,9 +308,13 @@ public class Messenger {
 										}
 
 									} else {
-										state = state.getFollowingMessages().get("");
-										stateMap.put(message.getChannel(), state);
-										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+										if (!state.getFollowingMessages().get("").expectsFile()) {
+											state = state.getFollowingMessages().get("");
+											stateMap.put(message.getChannel(), state);
+											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+										} else {
+											state = checkDefault(state, message);
+										}
 									}
 								} else if (intent.getEntities().size() > 0
 										&& !this.triggeredFunction.containsKey(message.getChannel())) {
@@ -304,28 +332,36 @@ public class Messenger {
 									}
 
 								} else {
-									state = this.knownIntents.get("default");
+									state = checkDefault(state, message);
 								}
 							}
 						}
 					} else {
 						if (state != null && state.getFollowingMessages().get("") != null) {
-							System.out.println("Empty leadsTo");
+							System.out.println("Empty leadsTo2");
 							if (message.getFileBody() != null) {
 								if (state.getFollowingMessages().get("").expectsFile()) {
 									state = state.getFollowingMessages().get("");
 								} else {
-									state = this.knownIntents.get("default");
+									state = checkDefault(state, message);
 								}
 							} else {
-								state = state.getFollowingMessages().get("");
-								stateMap.put(message.getChannel(), state);
-								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+								if (!state.getFollowingMessages().get("").expectsFile()) {
+									state = state.getFollowingMessages().get("");
+									stateMap.put(message.getChannel(), state);
+									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+								} else {
+									state = checkDefault(state, message);
+								}
 							}
 						} else {
-							System.out.println(intent.getKeyword() + " not detected with " + intent.getConfidence()
-									+ " confidence.");
-							state = this.knownIntents.get("default");
+							if (state != null) {
+								state = checkDefault(state, message);
+							} else {
+								System.out.println(intent.getKeyword() + " not detected with " + intent.getConfidence()
+										+ " confidence.");
+								state = this.knownIntents.get("default");
+							}
 						}
 						// System.out.println(state.getIntentKeyword() + " set");
 					}
@@ -507,6 +543,9 @@ public class Messenger {
 							this.recognizedEntities.remove(message.getChannel());
 						}
 					}
+				}
+				if (!state.getIntentKeyword().contains("defaultX")) {
+					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
 						bot.getVle().getName(), contextOn, recognizedEntities.get(message.getChannel())));
