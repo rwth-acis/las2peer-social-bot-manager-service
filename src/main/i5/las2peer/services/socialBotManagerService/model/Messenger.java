@@ -544,7 +544,7 @@ public class Messenger {
 						}
 					}
 				}
-				if (!state.getIntentKeyword().contains("defaultX")) {
+				if (state == null || !state.getIntentKeyword().contains("defaultX")) {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
