@@ -11,11 +11,21 @@ public class ChatMessage {
 	private String fileBody;
 	private String time;
 	private String domain;
+	private String previousMessage;
+	private String currMessage;
+	private String ts;
 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text;
+	}
+
+	public ChatMessage(String channel, String user, String text, String ts) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text;
+		this.ts = ts;
 	}
 
 	public ChatMessage(String channel, String user, String text, String fileName, String fileType, String body) {
@@ -25,6 +35,15 @@ public class ChatMessage {
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;
+	}
+
+	public ChatMessage(String channel, String user, String text, String ts, String currMessage, String previousMessage, String extra) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text;
+		this.ts = ts;
+		this.previousMessage = previousMessage;
+		this.currMessage = currMessage;
 	}
 
 	public void setText(String text) {
@@ -85,5 +104,29 @@ public class ChatMessage {
 
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+
+	public String getPreviousMessage() {
+		return previousMessage;
+	}
+
+	public void setPreviousMessage(String previousMessage) {
+		this.previousMessage = previousMessage;
+	}
+
+	public String getCurrMessage() {
+		return currMessage;
+	}
+
+	public void setCurrMessage(String currMessage) {
+		this.currMessage = currMessage;
+	}
+
+	public String getTs() {
+		return ts;
+	}
+
+	public void setTs(String ts) {
+		this.ts = ts;
 	}
 }
