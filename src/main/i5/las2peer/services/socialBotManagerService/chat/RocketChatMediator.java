@@ -133,16 +133,17 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+			OptionalLong id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
-		File file = new File(fileName);
+		File file = new File(fileName + "." + fileType);
 		try {
 			FileUtils.writeByteArrayToFile(file, decodedBytes);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
-		sendFileMessageToChannel(channel,file,"",id);
+		}
+		sendFileMessageToChannel(channel, file, "", id);
 	}
 
 	@Override
@@ -461,8 +462,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		textClientHeader.put("X-Auth-Token", token);
 		ClientResponse r = textClient.sendRequest("GET", "api/v1/users.info?username=" + userName, "",
 				MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, textClientHeader);
+		System.out.println("respèone is" + r.getResponse());
 		JSONObject userObject = new JSONObject(r.getResponse());
+		System.out.println("Error now");
 		JSONArray emails = userObject.getJSONObject("user").getJSONArray("emails");
+		System.out.println("Or not");
 		return emails.getJSONObject(0).getString("address");
 	}
 

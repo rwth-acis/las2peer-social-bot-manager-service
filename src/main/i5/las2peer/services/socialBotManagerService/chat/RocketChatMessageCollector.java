@@ -12,8 +12,8 @@ import com.rocketchat.core.model.RocketChatMessage.Type;
 
 public class RocketChatMessageCollector extends ChatMessageCollector {
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
-			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" },
-			{ new String("ö"), "oe" }, { new String("ß"), "ss" } };
+			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
+			{ new String("ß"), "ss" } };
 
 	public static String replaceUmlaute(String orig) {
 		String result = orig;
@@ -37,7 +37,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
-					// timestamp
 					// timestamp
 					cm.setTime(message.getMsgTimestamp().toInstant().toString());
 					// domain
@@ -108,9 +107,7 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setRole(role);
 
 					// timestamp
-					DateFormat formatter = new SimpleDateFormat("yyyy-MM-ddThh:mm:ssZ");
-					formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-					cm.setTime(formatter.format(message.getMsgTimestamp()));
+					cm.setTime(message.getMsgTimestamp().toInstant().toString());
 
 					// domain
 					cm.setDomain(this.getDomain());
