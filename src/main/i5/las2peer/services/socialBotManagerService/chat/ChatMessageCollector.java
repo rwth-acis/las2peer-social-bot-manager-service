@@ -5,6 +5,7 @@ import java.util.Vector;
 public class ChatMessageCollector {
 	Vector<ChatMessage> messages;
 	private boolean connected;
+	private String domain;
 
 	public ChatMessageCollector() {
 		this.messages = new Vector<ChatMessage>();
@@ -12,7 +13,7 @@ public class ChatMessageCollector {
 	}
 
 	public void addMessage(ChatMessage message) {
-	    System.out.println("Message added: Channel: " + message.getChannel() + ", User: " + message.getUser());
+		System.out.println("Message added: Channel: " + message.getChannel() + ", User: " + message.getUser());
 		this.messages.add(message);
 	}
 
@@ -32,5 +33,13 @@ public class ChatMessageCollector {
 
 	public void setConnected(boolean connected) {
 		this.connected = connected;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 }

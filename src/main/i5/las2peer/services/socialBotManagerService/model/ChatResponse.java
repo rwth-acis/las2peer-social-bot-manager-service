@@ -8,14 +8,26 @@ public class ChatResponse {
 	String response;
 	String triggeredFunctionId;
 	String triggerEntity;
-	public ChatResponse(String response) {
+	String fileURL;
+	String errorMessage;
+	public ChatResponse(String response, String fileURL, String errorMessage) {
 		this.response = response;
+		this.fileURL = fileURL;
+		this.errorMessage  = errorMessage;
 		this.triggerEntity = "";
 		
 	}
     public String getResponse(){
         return this.response;
     }
+    
+	public String getFileURL() {
+		return fileURL;
+	}
+	
+	public String getErrorMessage() {
+		return errorMessage;
+	}
     
     public void setTriggeredFunctionId(String functionId){
         this.triggeredFunctionId = functionId;
