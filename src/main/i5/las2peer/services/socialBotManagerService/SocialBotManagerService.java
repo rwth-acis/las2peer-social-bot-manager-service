@@ -9,10 +9,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.sql.Blob;
@@ -624,7 +627,16 @@ public class SocialBotManagerService extends RESTService {
 		public Response triggerIntent(String body, @PathParam("botName") String name) {
 			Gson gson = new Gson();
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
-
+			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			try {
+				JSONObject cleanedJson = (JSONObject) parser.parse(body);
+				cleanedJson.put("user", encryptThisString(cleanedJson.getAsString("user")));
+				cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
+				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
+				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 			// If no action should be triggered, just return
