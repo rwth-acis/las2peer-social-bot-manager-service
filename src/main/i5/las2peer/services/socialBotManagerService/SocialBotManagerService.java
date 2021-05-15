@@ -629,7 +629,10 @@ public class SocialBotManagerService extends RESTService {
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			try {
-				JSONObject cleanedJson = (JSONObject) parser.parse(body);
+				System.out.println("cleaning now");
+				JSONObject message = (JSONObject) parser.parse(body);
+				JSONObject cleanedJson = (JSONObject) message.get("message");
+				System.out.println("cleaning now1");
 				cleanedJson.put("user", encryptThisString(cleanedJson.getAsString("user")));
 				cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
 				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
