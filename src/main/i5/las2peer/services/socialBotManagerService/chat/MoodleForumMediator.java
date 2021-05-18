@@ -12,10 +12,10 @@ import java.util.Arrays;
 
 public class MoodleForumMediator extends ChatMediator {
 	private final static String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
-	private final static HashSet<String> ignoreIds = new HashSet<String>(Arrays.asList("148", "75"));
+	private final static HashSet<String> ignoreIds = new HashSet<String>(Arrays.asList("148", "75"));//TODO: remove now that these are automatically defined
 	private MoodleForumMessageCollector messageCollector = new MoodleForumMessageCollector();
 	private HashMap<String, MessageTree> discussions = new HashMap<String, MessageTree>();
-	private String signature = "<pre><i>This message was sent by an assistant chatbot. Please consider to fill in a survey about its performance under <a href=' https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/253638?lang=en'>this link</a>.</i></pre>";
+	//private String signature = "<pre><i>This message was sent by an assistant chatbot. Please consider to fill in a survey about its performance under <a href=' https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/253638?lang=en'>this link</a>.</i></pre>";
 	
 	public MoodleForumMediator(String authToken) {
 		super(authToken);
@@ -27,28 +27,38 @@ public class MoodleForumMediator extends ChatMediator {
 		try {
 			// Get sequence IDs and find origin post
 			HashMap<String,String> args = new HashMap<String,String>();
-			args.put("message", text + signature);
+			boolean shouldPost = false;
+			args.put("message", text);
 			args.put("subject", "Bot response");
 			
 			String originpid = id.get();
-			//System.out.println("\u001B[33mDebug --- Origin PID: " + originpid + "\u001B[0m");
 			if (discussions.containsKey(channel)) {
 				MessageTree originPost = discussions.get(channel).searchPost(originpid);
 				if (originPost != null) {
 					String postid = originPost.getSequenceTail().getPostId();
 					args.put("postid", postid); 
-					String res = sendRequest(domainName, "mod_forum_add_discussion_post", args);
+					shouldPost = true;
 					System.out.println("\u001B[33mDebug --- Post found in tree: " + postid + "\u001B[0m");
 				} else {
 					args.put("postid", originpid);
-					String res = sendRequest(domainName, "mod_forum_add_discussion_post", args);
+					shouldPost = true;
 					System.out.println("Debug --- Post not in tree: " + originpid);
 				}
 			} else {
 				args.put("postid", originpid);
-				String res = sendRequest(domainName, "mod_forum_add_discussion_post", args);
+				shouldPost = true;
 				System.out.println("Debug --- No discussion tree: " + originpid);
-			}	
+			}
+			if (shouldPost) {
+				String res = sendRequest(domainName, "mod_forum_add_discussion_post", args);
+				JSONObject respObj = new JSONObject(res);
+				JSONObject postObj = (JSONObject) respObj.get("post");
+				String botid = postObj.getString("id");
+				if (!ignoreIds.contains(botid)) {
+					ignoreIds.add(botid);
+				}
+			}
+				
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,23 +72,31 @@ public class MoodleForumMediator extends ChatMediator {
 			String verbID = verb.getString("id");
 			
 			// If the statement is about forum activity
-			if (verbID.contains("replied")) {
+			if (verbID.contains("replied") || verbID.contains("posted")) {
 				JSONObject obj = (JSONObject) json.get("object");
 				JSONObject definition = (JSONObject) obj.get("definition");
 				JSONObject description = (JSONObject) definition.get("description");
 				JSONObject actor = (JSONObject) json.get("actor");
 				JSONObject account = (JSONObject) actor.get("account");
 				
+				JSONObject context = (JSONObject) json.get("context");
+				JSONObject extensions = (JSONObject) context.get("extensions");
+				
 				String message = description.getString("en-US");
 				String userid = account.getString("name");
 				try {
-
-					
 					String discussionid = obj.getString("id").split("d=")[1].split("#")[0];
-					String postid = obj.getString("id").split("#p")[1].split("#")[0];
-					String parentid = obj.getString("id").split("#parent=")[1];
+					String postid;
+					String parentid;
+					if (verbID.contains("replied")) {
+						postid = obj.getString("id").split("#p")[1];
+						parentid = Integer.toString(((JSONObject) extensions.get("\"https://tech4comp.de/xapi/context/extensions/postParentID")).getInt("parentid"));
+					} else {
+						postid = Integer.toString(((JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/rootPostID")).getInt("rootpostid"));
+						parentid = null;
+					}
 					
-					if (parentid.equals("null") && !discussions.containsKey(discussionid)) {
+					if (parentid == null && !discussions.containsKey(discussionid)) {
 						MessageTree newPost = new MessageTree(postid, userid, null);
 						discussions.put(discussionid, newPost);
 						if (!ignoreIds.contains(userid)) {
