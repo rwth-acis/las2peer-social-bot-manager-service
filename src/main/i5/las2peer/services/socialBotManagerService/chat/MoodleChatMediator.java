@@ -89,6 +89,15 @@ public class MoodleChatMediator extends ChatMediator {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	
+
+	@Override
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+			Optional<String> id) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	@Override
 	public void close() {

@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
-
-
 public class Intent {
 	private String intentKeyword;
 	private float confidence;
@@ -17,8 +15,8 @@ public class Intent {
 	private HashMap<String, Entity> entities;
 
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
-			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
-			{ new String("ß"), "ss" } };
+			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" },
+			{ new String("ö"), "oe" }, { new String("ß"), "ss" } };
 
 	public static String replaceUmlaute(String orig) {
 		String result = orig;
@@ -40,19 +38,19 @@ public class Intent {
 		JSONArray entities = (JSONArray) json.get("entities");
 		HashMap<String, Entity> entitiesMap = new HashMap<String, Entity>();
 
-		entities.forEach(
-			o ->
-			{
-				Entity entity = new Entity((JSONObject)o);
-				if (!entitiesMap.containsKey(entity.getEntityName())) {
-					entitiesMap.put(entity.getEntityName(), entity);
-				}
+		entities.forEach(o -> {
+			Entity entity = new Entity((JSONObject) o);
+			// System.out.println("Entity "+ entity.getEntityName() + "extracted with value
+			// " + entity.getValue());
+			if (!entitiesMap.containsKey(entity.getEntityName())) {
+				entitiesMap.put(entity.getEntityName(), entity);
 			}
-		);
+		});
 		this.entities = entitiesMap;
 	}
 
-	// Constructor for bypassing intent extraction. Used for '!'-commands, for example.
+	// Constructor for bypassing intent extraction. Used for '!'-commands, for
+	// example.
 	public Intent(String intentKeyword, String entityName, String entityValue) {
 		this.intentKeyword = replaceUmlaute(intentKeyword);
 		this.confidence = 1.0f;
@@ -68,7 +66,6 @@ public class Intent {
 		return this.confidence;
 	}
 
-    
 	public Entity getEntity(String entity) {
 		return this.entities.get(entity);
 	}
@@ -90,17 +87,6 @@ public class Intent {
             extractedEntitieValues.add(value);
         }
         return extractedEntitieValues;
-    }
-    
-    // Returns the name of the entity with the highest confidence
-    public Entity getFirstEntity() {
-    	Entity result = null;
-    	for (Entry<String, Entity> entry : entities.entrySet()) {
-    		if (result == null || entry.getValue().getConfidence() > result.getConfidence()) {
-    			result = entry.getValue();
-    		}
-    	}
-    	return result;
     }
 
 	public Collection<Entity> getEntities() {

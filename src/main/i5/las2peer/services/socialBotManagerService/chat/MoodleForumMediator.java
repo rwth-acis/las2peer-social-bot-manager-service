@@ -85,6 +85,7 @@ public class MoodleForumMediator extends ChatMediator {
 				String message = description.getString("en-US");
 				String userid = account.getString("name");
 				try {
+					// Determine discussion id, post id, and parent post id
 					String discussionid = obj.getString("id").split("d=")[1].split("#")[0];
 					String postid;
 					String parentid;
@@ -100,7 +101,7 @@ public class MoodleForumMediator extends ChatMediator {
 						MessageTree newPost = new MessageTree(postid, userid, null);
 						discussions.put(discussionid, newPost);
 						if (!ignoreIds.contains(userid)) {
-							this.messageCollector.handle(discussionid, postid, message);
+							this.messageCollector.handle(postid, userid, message);
 						}
 					} else if (discussions.containsKey(discussionid) && !discussions.get(discussionid).containsPost(postid)) {
 						
@@ -110,13 +111,13 @@ public class MoodleForumMediator extends ChatMediator {
 							// Add message to collector with post ID of the original post
 							String originid = discussions.get(discussionid).searchPost(postid).getOriginPid();
 							if (!ignoreIds.contains(userid)) {
-								this.messageCollector.handle(discussionid, originid, message);
+								this.messageCollector.handle(originid, userid, message);
 							}
 						
 						// If no parent could be found (for example, if parent message was not received by the service)
 						} else {
 							if (!ignoreIds.contains(userid)) {
-								this.messageCollector.handle(discussionid, postid, message);
+								this.messageCollector.handle(postid, userid, message);
 							}
 							System.out.println("Error: Origin post not found (postid = " + postid + ")");
 						}
@@ -126,7 +127,7 @@ public class MoodleForumMediator extends ChatMediator {
 						if (!ignoreIds.contains(userid) && !discussions.containsKey(discussionid)) {
 							//MessageTree newPost = new MessageTree(postid, userid, null);
 							//discussions.put(discussionid, newPost);
-							this.messageCollector.handle(discussionid, postid, message);
+							this.messageCollector.handle(postid, userid, message);
 						}
 						System.out.println("Error: Discussion tree not initialized (postid = " + postid + ")");
 					}
@@ -143,6 +144,14 @@ public class MoodleForumMediator extends ChatMediator {
 
 	}
 	
+	
+	@Override
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+			Optional<String> id) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public Vector<ChatMessage> getMessages() {
 		return this.messageCollector.getMessages();
