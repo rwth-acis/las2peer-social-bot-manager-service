@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Vector;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ public class MoodleForumMediator extends ChatMediator {
 	private final static HashSet<String> ignoreIds = new HashSet<String>(Arrays.asList("148", "75"));//TODO: remove now that these are automatically defined
 	private MoodleForumMessageCollector messageCollector = new MoodleForumMessageCollector();
 	private HashMap<String, MessageTree> discussions = new HashMap<String, MessageTree>();
+	
 	//private String signature = "<pre><i>This message was sent by an assistant chatbot. Please consider to fill in a survey about its performance under <a href=' https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/253638?lang=en'>this link</a>.</i></pre>";
 	
 	public MoodleForumMediator(String authToken) {
@@ -28,32 +30,38 @@ public class MoodleForumMediator extends ChatMediator {
 			// Get sequence IDs and find origin post
 			HashMap<String,String> args = new HashMap<String,String>();
 			boolean shouldPost = false;
+			boolean noDiscussion = true;
 			args.put("message", text);
 			args.put("subject", "Bot response");
 			
-			String originpid = id.get();
-			if (discussions.containsKey(channel)) {
-				MessageTree originPost = discussions.get(channel).searchPost(originpid);
-				if (originPost != null) {
-					String postid = originPost.getSequenceTail().getPostId();
-					args.put("postid", postid); 
-					shouldPost = true;
-					System.out.println("\u001B[33mDebug --- Post found in tree: " + postid + "\u001B[0m");
-				} else {
-					args.put("postid", originpid);
-					shouldPost = true;
-					System.out.println("Debug --- Post not in tree: " + originpid);
+			for (Entry<String, MessageTree> entry : discussions.entrySet()) {
+				MessageTree discussion = entry.getValue();
+				if (discussion.containsPost(channel)) {
+					noDiscussion = false;
+					MessageTree originPost = discussion.searchPost(channel);
+					if (originPost != null) {
+						String postid = originPost.getSequenceTail().getPostId();
+						args.put("postid", postid); 
+						shouldPost = true;
+						System.out.println("\u001B[33mDebug --- Post found in tree: " + postid + "\u001B[0m");
+					} else {
+						args.put("postid", channel);
+						shouldPost = true;
+						System.out.println("Debug --- Post not in tree: " + channel);
+					}
 				}
-			} else {
-				args.put("postid", originpid);
+			}
+			if (noDiscussion) {
+				args.put("postid", channel);
 				shouldPost = true;
-				System.out.println("Debug --- No discussion tree: " + originpid);
+				System.out.println("Debug --- No discussion tree: " + channel);
 			}
 			if (shouldPost) {
 				String res = sendRequest(domainName, "mod_forum_add_discussion_post", args);
 				JSONObject respObj = new JSONObject(res);
 				JSONObject postObj = (JSONObject) respObj.get("post");
-				String botid = postObj.getString("id");
+				JSONObject authorObj = (JSONObject) postObj.get("author");
+				String botid = Integer.toString(authorObj.getInt("id"));
 				if (!ignoreIds.contains(botid)) {
 					ignoreIds.add(botid);
 				}

@@ -58,7 +58,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -644,7 +643,7 @@ public class SocialBotManagerService extends RESTService {
 				cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
 				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
-			} catch (ParseException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
@@ -1812,33 +1811,38 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	public static String encryptThisString(String input) {
-		try {
-			// getInstance() method is called with algorithm SHA-384
-			MessageDigest md = MessageDigest.getInstance("SHA-384");
+		if (input != null) {
+			try {
+				// getInstance() method is called with algorithm SHA-384
+				MessageDigest md = MessageDigest.getInstance("SHA-384");
 
-			// digest() method is called
-			// to calculate message digest of the input string
-			// returned as array of byte
-			byte[] messageDigest = md.digest(input.getBytes());
+				// digest() method is called
+				// to calculate message digest of the input string
+				// returned as array of byte
+				byte[] messageDigest = md.digest(input.getBytes());
 
-			// Convert byte array into signum representation
-			BigInteger no = new BigInteger(1, messageDigest);
+				// Convert byte array into signum representation
+				BigInteger no = new BigInteger(1, messageDigest);
 
-			// Convert message digest into hex value
-			String hashtext = no.toString(16);
+				// Convert message digest into hex value
+				String hashtext = no.toString(16);
 
-			// Add preceding 0s to make it 32 bit
-			while (hashtext.length() < 32) {
-				hashtext = "0" + hashtext;
+				// Add preceding 0s to make it 32 bit
+				while (hashtext.length() < 32) {
+					hashtext = "0" + hashtext;
+				}
+
+				// return the HashText
+				return hashtext;
 			}
 
-			// return the HashText
-			return hashtext;
+			// For specifying wrong message digest algorithms
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException(e);
+			}
 		}
-
-		// For specifying wrong message digest algorithms
-		catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
+		else {
+			return null;
 		}
 	}
 }
