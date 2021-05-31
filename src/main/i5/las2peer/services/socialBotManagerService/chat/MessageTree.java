@@ -12,10 +12,14 @@ public class MessageTree {
 	private MessageTree parent;
 	private boolean linked; // Tells us whether the post has a child of the same sequence
 	private ArrayList<MessageTree> children;
-	private static HashSet<String> ignoreIds;
+	private static HashSet<String> ignoreIds = new HashSet<String>();
 	
-	public static void setIgnoreIds(HashSet<String> ids) {
-		ignoreIds = ids;
+	public static void setIgnoreId(String id) {
+		ignoreIds.add(id);
+	}
+	
+	public static boolean hasIgnoreId(String id) {
+		return ignoreIds.contains(id);
 	}
 	
 	public String getUserId() {

@@ -13,15 +13,11 @@ import java.util.Arrays;
 
 public class MoodleForumMediator extends ChatMediator {
 	private final static String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
-	private final static HashSet<String> ignoreIds = new HashSet<String>(Arrays.asList("148", "75"));//TODO: remove now that these are automatically defined
 	private MoodleForumMessageCollector messageCollector = new MoodleForumMessageCollector();
 	private HashMap<String, MessageTree> discussions = new HashMap<String, MessageTree>();
 	
-	//private String signature = "<pre><i>This message was sent by an assistant chatbot. Please consider to fill in a survey about its performance under <a href=' https://limesurvey.tech4comp.dbis.rwth-aachen.de/index.php/253638?lang=en'>this link</a>.</i></pre>";
-	
 	public MoodleForumMediator(String authToken) {
 		super(authToken);
-		MessageTree.setIgnoreIds(ignoreIds);
 	}
 	
 	@Override
@@ -49,6 +45,7 @@ public class MoodleForumMediator extends ChatMediator {
 						shouldPost = true;
 						System.out.println("Debug --- Post not in tree: " + channel);
 					}
+					break;
 				}
 			}
 			if (noDiscussion) {
@@ -62,9 +59,7 @@ public class MoodleForumMediator extends ChatMediator {
 				JSONObject postObj = (JSONObject) respObj.get("post");
 				JSONObject authorObj = (JSONObject) postObj.get("author");
 				String botid = Integer.toString(authorObj.getInt("id"));
-				if (!ignoreIds.contains(botid)) {
-					ignoreIds.add(botid);
-				}
+				MessageTree.setIgnoreId(botid);
 			}
 				
 		} catch (Exception e) {
@@ -99,7 +94,7 @@ public class MoodleForumMediator extends ChatMediator {
 					String parentid;
 					if (verbID.contains("replied")) {
 						postid = obj.getString("id").split("#p")[1];
-						parentid = Integer.toString(((JSONObject) extensions.get("\"https://tech4comp.de/xapi/context/extensions/postParentID")).getInt("parentid"));
+						parentid = Integer.toString(((JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/postParentID")).getInt("parentid"));
 					} else {
 						postid = Integer.toString(((JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/rootPostID")).getInt("rootpostid"));
 						parentid = null;
@@ -108,7 +103,7 @@ public class MoodleForumMediator extends ChatMediator {
 					if (parentid == null && !discussions.containsKey(discussionid)) {
 						MessageTree newPost = new MessageTree(postid, userid, null);
 						discussions.put(discussionid, newPost);
-						if (!ignoreIds.contains(userid)) {
+						if (!MessageTree.hasIgnoreId(userid)) {
 							this.messageCollector.handle(postid, userid, message);
 						}
 					} else if (discussions.containsKey(discussionid) && !discussions.get(discussionid).containsPost(postid)) {
@@ -118,13 +113,13 @@ public class MoodleForumMediator extends ChatMediator {
 						if (discussions.get(discussionid).insertPost(postid, userid, parentid)) {
 							// Add message to collector with post ID of the original post
 							String originid = discussions.get(discussionid).searchPost(postid).getOriginPid();
-							if (!ignoreIds.contains(userid)) {
+							if (!MessageTree.hasIgnoreId(userid)) {
 								this.messageCollector.handle(originid, userid, message);
 							}
 						
 						// If no parent could be found (for example, if parent message was not received by the service)
 						} else {
-							if (!ignoreIds.contains(userid)) {
+							if (!MessageTree.hasIgnoreId(userid)) {
 								this.messageCollector.handle(postid, userid, message);
 							}
 							System.out.println("Error: Origin post not found (postid = " + postid + ")");
@@ -132,7 +127,7 @@ public class MoodleForumMediator extends ChatMediator {
 						
 					// If discussion does not exist (for example, because the service stopped), 
 					} else {
-						if (!ignoreIds.contains(userid) && !discussions.containsKey(discussionid)) {
+						if (!MessageTree.hasIgnoreId(userid) && !discussions.containsKey(discussionid)) {
 							//MessageTree newPost = new MessageTree(postid, userid, null);
 							//discussions.put(discussionid, newPost);
 							this.messageCollector.handle(postid, userid, message);

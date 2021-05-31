@@ -147,6 +147,7 @@ public class Messenger {
 			} else if (state.getFollowingMessages().get("") != null) {
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
+				System.out.println("1");
 				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(), Optional.of(userid));
 			} else {
 			}
@@ -489,7 +490,7 @@ public class Messenger {
 									}
 
 								}
-								this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+								this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
 								// check whether a file url is attached to the chat response and try to send it
 								// to
 								// the user
@@ -553,8 +554,6 @@ public class Messenger {
 									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
 									contextOn = true;
 								}
-								System.out.println(split);
-								this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
 							} else {
 								if (response.getTriggeredFunctionId() != "") {
 									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
