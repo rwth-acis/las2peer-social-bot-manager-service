@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Vector;
-import java.io.File;
 
 public abstract class ChatMediator {
 	protected String authToken;
@@ -45,6 +44,14 @@ public abstract class ChatMediator {
 
 	public void sendFileMessageToChannel(String channel, File f, String text) {
 		sendFileMessageToChannel(channel, f, text, Optional.empty());
+	}
+
+	// Used to send files and takes care of converting base64 to file
+	public abstract void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+		Optional<String> id);
+
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType) {
+		sendFileMessageToChannel(channel, fileBody, fileName, fileType, Optional.empty());
 	}
 
 	/**
@@ -89,10 +96,11 @@ public abstract class ChatMediator {
 		StringBuilder result = new StringBuilder();
 		boolean first = true;
 		for (Map.Entry<String, String> entry : params.entrySet()) {
-			if (first)
+			if (first) {
 				first = false;
-			else
-				result.append("&");
+			} else {
+				result.append("&");	
+			}
 			result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
 			result.append("=");
 			result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));

@@ -1,22 +1,16 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.Vector;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.TimeZone;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MoodleChatMediator extends ChatMediator {
@@ -73,7 +67,6 @@ public class MoodleChatMediator extends ChatMediator {
 				String userid = Integer.toString(messageObj.getInt("useridfrom"));
 				String text = messageObj.getString("fullmessage");
 				long timecreated = messageObj.getLong("timecreated");
-				System.out.println("Debug --- Last: " + lastUpdated + " Current: " + timecreated);
 				if (lastUpdated < timecreated) {
 					ChatMessage message = new ChatMessage(userid, userid, text);
 					messages.add(message);
@@ -87,7 +80,6 @@ public class MoodleChatMediator extends ChatMediator {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("Debug --- Exception found!");
 		}
 		return messages;
 	}
@@ -96,6 +88,15 @@ public class MoodleChatMediator extends ChatMediator {
 	public String getChannelByEmail(String email) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	
+
+	@Override
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+			Optional<String> id) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override

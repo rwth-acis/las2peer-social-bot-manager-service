@@ -5,14 +5,11 @@ import java.util.Vector;
 public class ChatMessageCollector {
 	Vector<ChatMessage> messages;
 	private boolean connected;
-	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
-			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" },
-			{ new String("ö"), "oe" }, { new String("ß"), "ss" } };
+	private String domain;	
 
-	public ChatMessageCollector() {
-		this.messages = new Vector<ChatMessage>();
-		setConnected(true);
-	}
+	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
+			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
+			{ new String("ß"), "ss" } };
 
 	public static String replaceUmlaute(String orig) {
 		String result = orig;
@@ -24,8 +21,13 @@ public class ChatMessageCollector {
 		return result;
 	}
 
+	public ChatMessageCollector() {
+		this.messages = new Vector<ChatMessage>();
+		setConnected(true);
+	}
+
 	public void addMessage(ChatMessage message) {
-	    System.out.println("Message added: Channel: " + message.getChannel() + ", User: " + message.getUser());
+		System.out.println("Message added: Channel: " + message.getChannel() + ", User: " + message.getUser());
 		this.messages.add(message);
 	}
 
@@ -45,5 +47,13 @@ public class ChatMessageCollector {
 
 	public void setConnected(boolean connected) {
 		this.connected = connected;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 }

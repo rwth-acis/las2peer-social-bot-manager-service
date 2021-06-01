@@ -2,24 +2,24 @@ package i5.las2peer.services.socialBotManagerService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import i5.las2peer.api.p2p.ServiceNameVersion;
 import i5.las2peer.connectors.webConnector.WebConnector;
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.p2p.LocalNode;
 import i5.las2peer.p2p.LocalNodeManager;
 import i5.las2peer.security.UserAgentImpl;
 import i5.las2peer.testing.MockAgentFactory;
 
-public class TrainingDataTest {
-	
+/**
+ * Example Test Class demonstrating a basic JUnit test structure.
+ *
+ */
+public class ServiceTest {
+
 	private static LocalNode node;
 	private static WebConnector connector;
 	private static ByteArrayOutputStream logStream;
@@ -28,8 +28,14 @@ public class TrainingDataTest {
 	private static final String testPass = "adamspass";
 
 	private static final String mainPath = "SBFManager/";
-	
-	
+
+	/**
+	 * Called before a test starts.
+	 * 
+	 * Sets up the node, initializes connector and adds user agent that can be used throughout the test.
+	 * 
+	 * @throws Exception
+	 */
 	@Before
 	public void startServer() throws Exception {
 		// start node
@@ -52,7 +58,11 @@ public class TrainingDataTest {
 		connector.start(node);
 	}
 
-	
+	/**
+	 * Called after the test has finished. Shuts down the server and prints out the connector log file for reference.
+	 * 
+	 * @throws Exception
+	 */
 	@After
 	public void shutDownServer() throws Exception {
 		if (connector != null) {
@@ -70,24 +80,14 @@ public class TrainingDataTest {
 			logStream = null;
 		}
 	}
-	
+
+	/**
+	 * 
+	 * Tests the validation method.
+	 * 
+	 */
 	@Test
-	public void storeData() {
-		String testString = "test";
-		
-		// Connect to service
-		MiniClient c = new MiniClient();
-		c.setLogin(testAgent.getIdentifier(), testPass);
-		c.setConnectorEndpoint(connector.getHttpEndpoint());
-		
-		// Store test string
-		ClientResponse response = c.sendRequest("POST", mainPath + "training/test", testString, new HashMap<String, String>());
-		System.out.println(response.getResponse());
-		Assert.assertEquals("bad request", 200, response.getHttpCode());
-		
-		// Check data can be fetched successfully
-		response = c.sendRequest("GET", mainPath + "training/test", "");
-		Assert.assertEquals("bad request", 200, response.getHttpCode());
-		System.out.println(response.getResponse());
+	public void testMethod() {
+
 	}
 }

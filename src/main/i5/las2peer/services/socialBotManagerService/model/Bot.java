@@ -76,7 +76,11 @@ public class Bot {
     
 	public RasaNlu getRasaServer(String id) {
 		return this.rasaServers.get(id);
-	}    
+	}   
+	
+	public RasaNlu getFirstRasaServer() {
+	return (RasaNlu) this.rasaServers.values().toArray()[0];
+	}
     
 	public void addRasaServer(String id, String Url) {
 		this.rasaServers.put(id, new RasaNlu(Url));

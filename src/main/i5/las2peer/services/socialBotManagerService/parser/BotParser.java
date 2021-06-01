@@ -77,7 +77,6 @@ public class BotParser {
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
-		HashMap<String, Bot> statementBots = new HashMap<String, Bot>();
         
         HashMap<String, NLUKnowledge> nluKnowledge = new HashMap<String, NLUKnowledge>();
 
@@ -506,6 +505,8 @@ public class BotParser {
 
 	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
 		String message = null;
+		String fileURL = null;
+		String errorMessage = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -514,14 +515,24 @@ public class BotParser {
 			String name = subVal.getName();
 			if (name.contentEquals("Message")) {
 				message = subVal.getValue();
+			} else if (name.contentEquals("FileURL")) {
+				fileURL = subVal.getValue();
+			} else if (name.contentEquals("ErrorMessage")) {
+				errorMessage = subVal.getValue();
 			}
 		}
 
 		if (message == null) {
 			throw new ParseBotException("Response is missing Message");
+		} 
+		if (fileURL == null) {
+			throw new ParseBotException("Response is missing Message");
+		}
+		if (errorMessage == null) {
+			throw new ParseBotException("Response is missing Message");
 		}
 
-		return new ChatResponse(message);
+		return new ChatResponse(message, fileURL, errorMessage);
 	}
     
 	private NLUKnowledge addNLUKnowledge(String key, BotModelNode elem, BotConfiguration config)
@@ -554,6 +565,7 @@ public class BotParser {
 			throws ParseBotException {
 		String intentKeyword = null;
         String NluID = null;
+        Boolean containsFile = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -564,6 +576,8 @@ public class BotParser {
 				intentKeyword = subVal.getValue();
 			} else if (name.contentEquals("NLU ID")){
                 NluID = subVal.getValue();
+            } else if (name.contentEquals("IsFile")){
+                containsFile = Boolean.valueOf(subVal.getValue());
             }
 		}
 
@@ -573,8 +587,11 @@ public class BotParser {
 			throw new ParseBotException("Incoming Message is missing NluID");
 		} 
 
-
-		return new IncomingMessage(intentKeyword, NluID);
+		if(intentKeyword.equals("")) {
+			intentKeyword = "0";
+		}
+		
+		return new IncomingMessage(intentKeyword, NluID, containsFile);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
