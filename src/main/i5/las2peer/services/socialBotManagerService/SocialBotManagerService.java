@@ -698,6 +698,26 @@ public class SocialBotManagerService extends RESTService {
 			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
 		}
 
+		@DELETE
+		@Path("/{botAgentId}")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot deactivated") })
+		@ApiOperation(value = "Deactivate bot for unit", notes = "Deactivates a bot for a unit.")
+		public Response deactivateBot(@PathParam("botAgentId") String bot) {
+			Collection<VLE> vles = getConfig().getVLEs().values();
+			for (VLE vle : vles) {
+				System.out.println(vle.getBots().keySet());
+				Bot b = vle.getBots().get(bot);
+				if (b != null) {
+					System.out.println("deactivating");
+					b.deactivate();
+					return Response.ok().entity(bot + " deactivated.").build();
+				}
+			}
+
+			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
+		}
+
 		@GET
 		@Path("/{botName}/generators")
 		@Produces(MediaType.APPLICATION_JSON)

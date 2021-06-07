@@ -162,6 +162,10 @@ public class Messenger {
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
+		if (!bot.isActive()) {
+			System.out.println("stop right here");
+			this.chatMediator.close();
+		}
 		for (ChatMessage message : newMessages) {
 			try {
 				if (this.currentNluModel.get(message.getChannel()) == null) {
