@@ -714,6 +714,7 @@ public class SocialBotManagerService extends RESTService {
 				Bot b = vle.getBots().get(bot);
 				if (b != null) {
 					if (b.deactivateAllWithCheck((ArrayList<String>) body.get("messengerNames"))) {
+						vle.getBots().remove(bot);
 						return Response.ok().entity(bot + " deactivated.").build();
 					} else {
 						return Response.status(HttpURLConnection.HTTP_NOT_ACCEPTABLE).entity(bot + " not deactivated.")
