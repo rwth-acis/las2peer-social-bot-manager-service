@@ -408,13 +408,26 @@ public class SlackChatMediator extends ChatMediator {
 
 		if(o.containsKey("subtype")){
 			if(o.getAsString("subtype").equals("message_changed")){
-				System.out.println("message subtype message_changed recognized...");
 				JSONParser parser = new JSONParser();
+				System.out.println("message subtype message_changed recognized...");
+
 				try{
 					String currMessage = o.getAsString("message");
 					String prevMessage = o.getAsString("previous_message");
 
 					JSONObject currMessageJson = (JSONObject) parser.parse(currMessage);
+
+					System.out.println("now checking who edited answer...");
+					if(currMessageJson.containsKey("subtype")){
+						// check if the bot edited an answer
+						System.out.println("subtype: " + currMessageJson.getAsString("subtype"));
+						if(currMessageJson.getAsString("subtype").equals("bot_message")){
+							System.out.println("bot changed answer, ignore");
+							throw new InvalidChatMessageException();
+						}
+					}
+					System.out.println("user edited answer");
+					// user edited an answer
 					user = currMessageJson.getAsString("user");
 					text = currMessageJson.getAsString("text");
 

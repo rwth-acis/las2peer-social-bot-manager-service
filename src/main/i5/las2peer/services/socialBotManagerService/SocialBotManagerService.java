@@ -1995,6 +1995,8 @@ public class SocialBotManagerService extends RESTService {
 					code = HttpURLConnection.HTTP_OK,
 					message = "triggered chat message") })
 	public Response testRoute(@PathParam("token") String token,@PathParam("email") String email, String input){
+		// This function is a proof of concept. It is not the best in terms of run time, but optimization would require bigger changes
+		// in the code structure. To make it faster, the channel could be saved in a db once at first access, so the expensive API do not have to be called everytime.
 		try{
 			SlackChatMediator chatMediator = new SlackChatMediator(token);
 			System.out.println("slack mediator initialized");

@@ -129,4 +129,11 @@ public class ChatMessage {
 	public void setTs(String ts) {
 		this.ts = ts;
 	}
+
+	public boolean hasTs(){
+		if(this.getTs() != null){
+			return true;
+		}
+		return false;
+	}
 }
