@@ -35,7 +35,6 @@ public class Bot {
 		active = new HashMap<String, Boolean>();
 		this.messengers = new HashMap<String, Messenger>();
 		this.rasaServers = new HashMap<String, RasaNlu>();
-		this.isActive = true;
 	}
 
 	public String getName() {
@@ -156,6 +155,27 @@ public class Bot {
 		for (String k : this.active.keySet()) {
 			this.active.put(k, false);
 		}
+	}
+
+	public boolean deactivateAllWithCheck(ArrayList<String> messengerNames) {
+		int correctEntries = 0;
+		for (String name : messengerNames) {
+			for (Messenger m : this.messengers.values()) {
+				if (name.toLowerCase().equals(m.getName().toLowerCase())) {
+					correctEntries++;
+				}
+			}
+		}
+		if (correctEntries < this.messengers.size()) {
+			return false;
+		}
+		for (Messenger m : this.messengers.values()) {
+			m.close();
+		}
+		for (String k : this.active.keySet()) {
+			this.active.put(k, false);
+		}
+		return true;
 	}
 
 	public int countActive() {
