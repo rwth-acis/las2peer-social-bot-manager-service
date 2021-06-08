@@ -18,8 +18,6 @@ public class Bot {
 	private VLE vle;
 	private HashMap<String, Boolean> active;
 
-	private Boolean isActive;
-
 	private HashMap<String, ServiceFunction> botServiceFunctions;
 	private HashSet<Trigger> triggerList;
 	private HashMap<String, ContentGenerator> generatorList;
@@ -181,13 +179,5 @@ public class Bot {
 
 	public void setBotAgent(String botAgent) {
 		this.botAgent = botAgent;
-	}
-
-	public boolean isActive() {
-		return this.isActive;
-	}
-
-	public void deactivate() {
-		this.isActive = false;
 	}
 }
