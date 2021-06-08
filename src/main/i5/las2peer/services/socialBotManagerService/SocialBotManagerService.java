@@ -1983,6 +1983,7 @@ public class SocialBotManagerService extends RESTService {
 		catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
+	}
 
 	@POST
 	@Path("/sendMessageToSlack/{token}/{email}")
