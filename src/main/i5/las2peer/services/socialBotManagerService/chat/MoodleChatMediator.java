@@ -15,7 +15,7 @@ import org.json.JSONObject;
 
 public class MoodleChatMediator extends ChatMediator {
 	private static final String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
-	private static final String botId = "148";
+	private static String botId;
 	private long lastUpdated;
 	
 	
@@ -26,9 +26,22 @@ public class MoodleChatMediator extends ChatMediator {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		Instant instant = timestamp.toInstant();
 		lastUpdated = instant.getEpochSecond();
+		botId = getBotId();
 
 	}
-	
+
+	protected String getBotId() {
+		HashMap<String,String> args = new HashMap<String,String>();
+		try {
+			String response = sendRequest(domainName, "core_webservice_get_site_info", args);
+			JSONObject json = new JSONObject(response);
+			return Integer.toString(json.getInt("userid"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+
 	@Override
 	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		HashMap<String,String> args = new HashMap<String,String>();
@@ -94,7 +107,7 @@ public class MoodleChatMediator extends ChatMediator {
 
 	@Override
 	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
-			Optional<String> id) {
+			String text, Optional<String> id) {
 		// TODO Auto-generated method stub
 		
 	}

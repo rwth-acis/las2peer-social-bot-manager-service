@@ -78,9 +78,7 @@ import i5.las2peer.logging.bot.BotMessage;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMessageCollector;
-import i5.las2peer.services.socialBotManagerService.chat.MoodleForumMediator;
+import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
@@ -427,6 +425,7 @@ public class SocialBotManagerService extends RESTService {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
+				e.printStackTrace();
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
 			// initialized = true;
@@ -728,6 +727,49 @@ public class SocialBotManagerService extends RESTService {
 			} else {
 				return Response.ok().entity(new HashMap<String, ContentGenerator>()).build();
 			}
+		}
+
+		@POST
+		@Path("/events/telegram/{token}")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(value = "Receive an Telegram event")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+		public Response telegramEvent(String body, @PathParam("token") String token) {
+
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+
+					// Identify bot
+					Collection<VLE> vles = getConfig().getVLEs().values();
+					Bot bot = null;
+
+					for (VLE vle : vles) {
+						Bot teleBot = vle.getBotByServiceToken(token, ChatService.TELEGRAM);
+						if (teleBot != null) {
+							bot = teleBot;
+						}
+					}
+					if (bot == null)
+						System.out.println("cannot relate telegram event to a bot with token: " + token);
+					System.out.println("telegram event: bot identified: " + bot.getName());
+
+					// Handle event
+					Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+					EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+					JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					JSONObject parsedBody;
+					try {
+						parsedBody = (JSONObject) jsonParser.parse(body);
+						mediator.handleEvent(parsedBody);
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}).start();
+
+			return Response.status(200).build();
 		}
 	}
 
@@ -1135,15 +1177,16 @@ public class SocialBotManagerService extends RESTService {
 			user = body.getAsString("user");
 		}
         System.out.println(channel);
-		chat.sendMessageToChannel(channel, text, Optional.of(user));
 		if (text != null) {
 			chat.sendMessageToChannel(channel, text);
 		}
 		if (body.containsKey("fileBody")) {
 			chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
-					body.getAsString("fileType"));
+					body.getAsString("fileType"), "");
 		}
 	}
+
+
 
 	@Api(
 			value = "Model Resource")
@@ -1374,11 +1417,12 @@ public class SocialBotManagerService extends RESTService {
 		
 		HashMap<String, ArrayList<String>> statementsPerCourse = new HashMap<String, ArrayList<String>>();
 		Collections.reverse(statements);
-		for (String statement : statements) {
+		for (String statementObj : statements) {
 			try {
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-				JSONObject obj = (JSONObject) parser.parse(statement);
-				JSONObject context = (JSONObject) obj.get("context");
+				JSONObject obj = (JSONObject) parser.parse(statementObj);
+				JSONObject statement = (JSONObject) obj.get("statement");
+				JSONObject context = (JSONObject) statement.get("context");
 				JSONObject extensions = (JSONObject) context.get("extensions");
 				JSONObject courseInfo = (JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
 				String courseid = Integer.toString(courseInfo.getAsNumber("courseid").intValue());
@@ -1386,7 +1430,7 @@ public class SocialBotManagerService extends RESTService {
 				if (!statementsPerCourse.containsKey(courseid)) {
 					statementsPerCourse.put(courseid, new ArrayList<String>());
 				}
-				statementsPerCourse.get(courseid).add(statement);
+				statementsPerCourse.get(courseid).add(statement.toString());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

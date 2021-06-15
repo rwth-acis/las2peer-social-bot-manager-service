@@ -7,6 +7,7 @@ import java.util.HashSet;
 
 import javax.websocket.DeploymentException;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
@@ -143,6 +144,14 @@ public class Bot {
 		// something on this. Might need to make ChatMediator
 		// methods synchronized?
 		return this.messengers.get(name);
+	}
+
+	public Messenger getMessenger(ChatService chatservice) {
+		for (Messenger messenger : this.messengers.values()) {
+			if (messenger.getChatService() == chatservice)
+				return messenger;
+		}
+		return null;
 	}
 	
 	public HashMap<String, Messenger> getMessengers() {

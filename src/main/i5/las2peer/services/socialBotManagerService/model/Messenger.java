@@ -17,12 +17,7 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
-import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
-import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.MoodleForumMediator;
-import i5.las2peer.services.socialBotManagerService.chat.MoodleChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -32,9 +27,15 @@ import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 public class Messenger {
 	private String name;
 
+	// URL of the social bot manager service (used for setting up the webhook)
+	private String url;
+
 	private ChatMediator chatMediator;
-	// private RasaNlu rasa;
-	// private RasaNlu rasaAssessment;
+
+	/**
+	 * The messenger application provider this object corresponds to
+	 */
+	private ChatService chatService;
 
 	// Key: intent keyword
 	private HashMap<String, IncomingMessage> knownIntents;
@@ -56,22 +57,38 @@ public class Messenger {
 
 	private Random random;
 
-	public Messenger(String id, String chatService, String token, SQLDatabase database)
+	public Messenger(String id, String chatService, String token, String url, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
 //        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
-		if (chatService.contentEquals("Slack")) {
-			this.chatMediator = new SlackChatMediator(token);
-		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-		} else if (chatService.contentEquals("Moodle Forum")) {
-			this.chatMediator = new MoodleForumMediator(token);
-		} else if (chatService.contentEquals("Moodle Chat")) {
-			this.chatMediator = new MoodleChatMediator(token);
-		} else { // TODO: Implement more backends
-			throw new ParseBotException("Unimplemented chat service: " + chatService);
+
+		// Chat Mediator
+		this.chatService = ChatService.fromString(chatService);
+		System.out.println("Messenger: " + chatService.toString());
+		switch (this.chatService) {
+			case SLACK:
+				this.chatMediator = new SlackChatMediator(token);
+				break;
+			case TELEGRAM:
+				this.chatMediator = new TelegramChatMediator(token, url);
+				String username = ((TelegramChatMediator) this.chatMediator).getBotName();
+				if(username != null)
+					this.name = username;
+				break;
+			case ROCKET_CHAT:
+				this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+				break;
+			case MOODLE_CHAT:
+				this.chatMediator = new MoodleChatMediator(token);
+				break;
+			case MOODLE_FORUM:
+				this.chatMediator = new MoodleForumMediator(token);
+				break;
+			default:
+				throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
+
 		this.name = id;
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
@@ -85,6 +102,10 @@ public class Messenger {
 
 	public String getName() {
 		return name;
+	}
+
+	public ChatService getChatService() {
+		return chatService;
 	}
 
 	public void addMessage(IncomingMessage msg) {
@@ -498,8 +519,11 @@ public class Messenger {
 									String fileName = "";
 									try {
 										// Replacable variable in url menteeEmail
-										String urlEmail = response.getFileURL().replace("menteeEmail",
-												message.getEmail());
+										String urlEmail = response.getFileURL();
+										if (message.getEmail() != null) {
+											urlEmail = response.getFileURL().replace("menteeEmail",
+													message.getEmail());
+										}
 										System.out.println(urlEmail);
 										URL url = new URL(urlEmail);
 										HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -545,6 +569,7 @@ public class Messenger {
 
 									} catch (Exception e) {
 										System.out.println("Could not extract File for reason " + e);
+										e.printStackTrace();
 										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
 										this.chatMediator.sendMessageToChannel(message.getChannel(),
 												response.getErrorMessage());

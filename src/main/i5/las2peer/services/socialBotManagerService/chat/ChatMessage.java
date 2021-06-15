@@ -2,7 +2,6 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 public class ChatMessage {
 	private String channel;
-	private String course;
 	private String user;
 	private int role;
 	private String email;
@@ -18,18 +17,29 @@ public class ChatMessage {
 		this.user = user;
 		this.text = text;
 	}
-	
-	public ChatMessage(String channel, String user, String text, String course) {
+
+	public ChatMessage(String channel, String user, String text, String time) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text;
-		this.course = course;
+		this.time = time;
 	}
 
 	public ChatMessage(String channel, String user, String text, String fileName, String fileType, String body) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text + fileName;
+		this.fileName = fileName;
+		this.fileType = fileType;
+		this.fileBody = body;
+	}
+
+	public ChatMessage(String channel, String user, String text, String time, String fileName, String fileType,
+					   String body) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text + fileName;
+		this.time = time;
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;

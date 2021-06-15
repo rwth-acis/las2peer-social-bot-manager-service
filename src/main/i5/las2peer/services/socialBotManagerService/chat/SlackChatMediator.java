@@ -246,39 +246,6 @@ public class SlackChatMediator extends ChatMediator {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-	}
-
-	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
-	Optional<String> id) {
-		byte[] decodedBytes = Base64.getDecoder().decode(fileBody);
-		File file = new File(fileName);
-		try {
-			FileUtils.writeByteArrayToFile(file, decodedBytes);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		ArrayList<String> channels = new ArrayList<String>();
-		channels.add(channel);
-
-		FilesUploadResponse response2;
-		try {
-			response2 = slack.methods(authToken).filesUpload(req -> req.channels(channels).file(file)
-					.content("Pretty stuff").filename(fileName).title(fileName));
-			System.out.println("File sent: " + response2.isOk());
-		} catch (IOException | SlackApiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {
-			Files.deleteIfExists(Paths.get(fileName));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	@Override

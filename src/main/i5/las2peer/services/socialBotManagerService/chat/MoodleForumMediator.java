@@ -149,7 +149,7 @@ public class MoodleForumMediator extends ChatMediator {
 	
 	
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, String text,
 			Optional<String> id) {
 		// TODO Auto-generated method stub
 		
