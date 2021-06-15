@@ -55,10 +55,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
+import i5.las2peer.api.ServiceException;
 import i5.las2peer.api.execution.InternalServiceException;
 import i5.las2peer.api.execution.ServiceAccessDeniedException;
 import i5.las2peer.api.execution.ServiceInvocationFailedException;
@@ -67,8 +69,17 @@ import i5.las2peer.api.execution.ServiceNotAuthorizedException;
 import i5.las2peer.api.execution.ServiceNotAvailableException;
 import i5.las2peer.api.execution.ServiceNotFoundException;
 import i5.las2peer.api.logging.MonitoringEvent;
+import i5.las2peer.api.persistency.Envelope;
+import i5.las2peer.api.persistency.EnvelopeAccessDeniedException;
+import i5.las2peer.api.persistency.EnvelopeNotFoundException;
+import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
+import i5.las2peer.api.security.AgentAccessDeniedException;
+import i5.las2peer.api.security.AgentAlreadyExistsException;
+import i5.las2peer.api.security.AgentException;
+import i5.las2peer.api.security.AgentLockedException;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.api.security.AgentOperationFailedException;
+import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.logging.L2pLogger;
@@ -99,6 +110,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.tools.CryptoException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -145,6 +157,7 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
+	private String address;
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
@@ -164,6 +177,7 @@ public class SocialBotManagerService extends RESTService {
 	private Thread nluTrainThread = null;
 	private static final L2pLogger logger = L2pLogger.getInstance(SocialBotManagerService.class.getName());
 	private Context l2pcontext = null;
+	private static BotAgent restarterBot = null;
 
 	public Context getL2pcontext() {
 		return l2pcontext;
@@ -328,14 +342,63 @@ public class SocialBotManagerService extends RESTService {
 		SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
 
 		@GET
+		@Path("/restart")
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "List of bots") })
-		@ApiOperation(
-				value = "Get all bots",
-				notes = "Returns a list of all registered bots.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of bots") })
+		@ApiOperation(value = "Restart all bots automatically", notes = "Returns a list of all registered bots.")
+		public Response restartBots() {
+			// works only after service start
+			if (restarterBot == null) {
+				try {
+					try {
+						System.out.println("ok");
+						restarterBot = (BotAgent) Context.getCurrent()
+								.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName("restarterBot"));
+						System.out.println("ok2");
+						// if bot didn't exist before, no need to try to restart the previous bots, as
+						// the bot will have no way of accessing the envelope
+						restarterBot.unlock("123");
+						Envelope env = null;
+						HashMap<String, BotModel> models = null;
+						try {
+							// try to add project to project list (with service group agent)
+							env = Context.get().requestEnvelope("restarterBot", restarterBot);
+
+							models = (HashMap<String, BotModel>) env.getContent();
+							for (Entry<String, BotModel> entry : models.entrySet()) {
+								init(entry.getValue());
+							}
+
+							System.out.println("lets goo");
+						} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
+								| EnvelopeOperationFailedException e) {
+							System.out.println("no bot models found in storage");
+						}
+
+					} catch (Exception e) {
+						System.out.println("error?" + e.toString());
+						// here, we assume that this is the first time the service is started
+						restarterBot = BotAgent.createBotAgent("123");
+						restarterBot.unlock("123");
+						restarterBot.setLoginName("restarterBot");
+						Context.getCurrent().storeAgent(restarterBot);
+						System.out.println("restarter bot stored");
+					}
+					// restarterBot.unlock("123");
+					// Context.getCurrent().registerReceiver(restarterBot);
+				} catch (AgentException | CryptoException e2) {
+					// TODO Errorhandling
+					e2.printStackTrace();
+					System.out.println("ok34");
+				}
+			}
+			return Response.ok().entity("vleList").build();
+		}
+
+		@GET
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of bots") })
+		@ApiOperation(value = "Get all bots", notes = "Returns a list of all registered bots.")
 		public Response getBots() {
 			JSONObject vleList = new JSONObject();
 			// Iterate through VLEs
@@ -417,15 +480,67 @@ public class SocialBotManagerService extends RESTService {
 			String returnString = "";
 			LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
 			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
+			System.out.println(SocialBotManagerService.getBotAgents().keySet());
+			Set<String> list = SocialBotManagerService.getBotAgents().keySet();
+			ArrayList<String> oldArray = new ArrayList<String>();
+			// do agentid here maybe instead of loginname, as some people use the same login
+			// name
+			for (String entry : list) {
+				oldArray.add(entry);
+			}
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
+			ArrayList<String> newArray = new ArrayList<String>();
+			for (String entry : list) {
+				newArray.add(entry);
+			}
+			if (!newArray.isEmpty()) {
+				newArray.removeAll(oldArray);
+			}
+			System.out.println(newArray.toString() + "  "
+					+ SocialBotManagerService.getBotAgents().get(newArray.get(0)).getIdentifier());
 			// initialized = true;
 			JSONObject logData = new JSONObject();
 			logData.put("status", "initialized");
+			Envelope env = null;
+			HashMap<String, BotModel> old = null;
+			try {
+				restarterBot = (BotAgent) Context.getCurrent()
+						.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName("restarterBot"));
+				restarterBot.unlock("123");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			try {
+				// try to add project to project list (with service group agent)
+				env = Context.get().requestEnvelope("restarterBot", restarterBot);
+
+				old = (HashMap<String, BotModel>) env.getContent();
+				old.put(SocialBotManagerService.getBotAgents().get(newArray.get(0)).getIdentifier(), botModel);
+				env.setContent(botModel);
+				Context.get().storeEnvelope(env, restarterBot);
+			} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException | EnvelopeOperationFailedException e) {
+				try {
+					env = Context.get().createEnvelope("restarterBot", restarterBot);
+					env.setPublic();
+					old = new HashMap<String, BotModel>();
+					old.put(SocialBotManagerService.getBotAgents().get(newArray.get(0)).getIdentifier(), botModel);
+
+					env.setContent(old);
+					Context.get().storeEnvelope(env, restarterBot);
+				} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+
+			}
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 
 			return Response.ok().entity(returnString).build();
@@ -1422,6 +1537,23 @@ public class SocialBotManagerService extends RESTService {
 	private class RoutineThread implements Runnable {
 		@Override
 		public void run() {
+//			System.out.println("bob is " + restarterBot);
+
+			if (restarterBot == null) {
+				MiniClient clientRestart = new MiniClient();
+				System.out.println(address);
+				clientRestart.setConnectorEndpoint(address);
+				clientRestart.setLogin("alice", "pwalice");
+				HashMap<String, String> headers = new HashMap<String, String>();
+				try {
+					ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "", headers);
+					restarterBot = BotAgent.createBotAgent("qaa");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+			}
+
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
