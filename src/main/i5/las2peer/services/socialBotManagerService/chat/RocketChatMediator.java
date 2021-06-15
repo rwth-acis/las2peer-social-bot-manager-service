@@ -513,9 +513,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public void close() {
 		shouldCheckRooms = false;
 		checkRooms = null;
-		activeSubscriptions = new HashSet<String>();
+		activeSubscriptions = null;
 		System.out.println("Thread stopped");
 		client.disconnect();
-		client = null;
+		// client = null;
 	}
 }

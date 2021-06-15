@@ -698,6 +698,34 @@ public class SocialBotManagerService extends RESTService {
 			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
 		}
 
+		// the body needs to contain the names of all the messenger elements which the
+		// bot uses with "messengerNames" as the attribute name
+		@DELETE
+		@Path("/{botAgentId}")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot deactivated"),
+				@ApiResponse(code = HttpURLConnection.HTTP_NOT_ACCEPTABLE, message = "Messenger names do not all match!") })
+		@ApiOperation(value = "Deactivate bot for unit", notes = "Deactivates a bot for a unit.")
+		public Response deactivateBotAll(@PathParam("botAgentId") String bot, JSONObject body) {
+			Collection<VLE> vles = getConfig().getVLEs().values();
+			for (VLE vle : vles) {
+				System.out.println(vle.getBots().keySet());
+				Bot b = vle.getBots().get(bot);
+				if (b != null) {
+					if (b.deactivateAllWithCheck((ArrayList<String>) body.get("messengerNames"))) {
+						vle.getBots().remove(bot);
+						return Response.ok().entity(bot + " deactivated.").build();
+					} else {
+						return Response.status(HttpURLConnection.HTTP_NOT_ACCEPTABLE).entity(bot + " not deactivated.")
+								.build();
+					}
+				}
+			}
+
+			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
+		}
+
 		@GET
 		@Path("/{botName}/generators")
 		@Produces(MediaType.APPLICATION_JSON)

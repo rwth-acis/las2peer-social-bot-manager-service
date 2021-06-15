@@ -25,9 +25,8 @@ public class Bot {
 	private HashMap<String, Messenger> messengers;
 
 	private String botAgent;
-    
-    private HashMap<String, RasaNlu> rasaServers; 
-    
+
+	private HashMap<String, RasaNlu> rasaServers;
 
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
@@ -35,7 +34,7 @@ public class Bot {
 		generatorList = new HashMap<String, ContentGenerator>();
 		active = new HashMap<String, Boolean>();
 		this.messengers = new HashMap<String, Messenger>();
-        this.rasaServers = new HashMap<String, RasaNlu>();
+		this.rasaServers = new HashMap<String, RasaNlu>();
 	}
 
 	public String getName() {
@@ -73,18 +72,18 @@ public class Bot {
 	public void addBotServiceFunction(String name, ServiceFunction serviceFunction) {
 		this.botServiceFunctions.put(name, serviceFunction);
 	}
-    
+
 	public RasaNlu getRasaServer(String id) {
 		return this.rasaServers.get(id);
-	}   
-	
-	public RasaNlu getFirstRasaServer() {
-	return (RasaNlu) this.rasaServers.values().toArray()[0];
 	}
-    
+
+	public RasaNlu getFirstRasaServer() {
+		return (RasaNlu) this.rasaServers.values().toArray()[0];
+	}
+
 	public void addRasaServer(String id, String Url) {
 		this.rasaServers.put(id, new RasaNlu(Url));
-	}    
+	}
 
 	public HashSet<Trigger> getTriggerList() {
 		return triggerList;
@@ -101,7 +100,7 @@ public class Bot {
 	public HashMap<String, ContentGenerator> getGeneratorList() {
 		return generatorList;
 	}
-    
+
 	public void setGeneratorList(HashMap<String, ContentGenerator> generatorList) {
 		this.generatorList = generatorList;
 	}
@@ -156,6 +155,27 @@ public class Bot {
 		for (String k : this.active.keySet()) {
 			this.active.put(k, false);
 		}
+	}
+
+	public boolean deactivateAllWithCheck(ArrayList<String> messengerNames) {
+		int correctEntries = 0;
+		for (String name : messengerNames) {
+			for (Messenger m : this.messengers.values()) {
+				if (name.toLowerCase().equals(m.getName().toLowerCase())) {
+					correctEntries++;
+				}
+			}
+		}
+		if (correctEntries < this.messengers.size()) {
+			return false;
+		}
+		for (Messenger m : this.messengers.values()) {
+			m.close();
+		}
+		for (String k : this.active.keySet()) {
+			this.active.put(k, false);
+		}
+		return true;
 	}
 
 	public int countActive() {
