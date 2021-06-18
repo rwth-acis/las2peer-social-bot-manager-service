@@ -74,6 +74,7 @@ import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
+import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
@@ -696,7 +697,7 @@ public class SocialBotManagerService extends RESTService {
 				// set email, since it is not passed on in body
 				chatMessage.setEmail(user);
 				// adjust triggered function id
-				MessageInfo messageInfo = new MessageInfo(chatMessage, intent, "", name, instanceAlias, true);
+				MessageInfo messageInfo = new MessageInfo(chatMessage, intent, "", name, instanceAlias, true, new ArrayList<>());
 
 
 				//this.triggeredFunction.get(message.getChannel());
@@ -735,8 +736,8 @@ public class SocialBotManagerService extends RESTService {
 									}
 								}
 							}
-							MessageInfo newMessageInfo = new MessageInfo(chatMessage, intent, triggerdFunctionId, name, instanceAlias, true);
-
+							MessageInfo newMessageInfo = new MessageInfo(chatMessage, intent, triggerdFunctionId, name, instanceAlias, true, new ArrayList<>());
+							System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " " + newMessageInfo.getTriggeredFunctionId());
 							try {
 								sbf.performIntentTrigger(vle, botAgent, newMessageInfo);
 							} catch (Exception e) {
@@ -784,7 +785,9 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject cleanedJson = (JSONObject) message.get("message");
 				System.out.println("cleaning now1");
 				cleanedJson.put("user", encryptThisString(cleanedJson.getAsString("user")));
-				cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
+				if(cleanedJson.containsKey("email")){
+					cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
+				}
 				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
 			} catch (ParseException e) {
@@ -926,7 +929,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(messageInfo.getMessage().getEmail());
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
-			body.put("ts", messageInfo.getMessage().getTs());
+			body.put("time", messageInfo.getMessage().getTime());
 			body.put("intent", messageInfo.getIntent().getKeyword());
 			for (Entity entityName : messageInfo.getIntent().getEntities()) {
 				body.put(entityName.getEntityName(), entityName.getValue());
@@ -1983,6 +1986,7 @@ public class SocialBotManagerService extends RESTService {
 		catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
+	}
 
 	@POST
 	@Path("/sendMessageToSlack/{token}/{email}")
@@ -2009,75 +2013,44 @@ public class SocialBotManagerService extends RESTService {
 				String msgtext = bodyInput.getAsString("msg");
 				System.out.println("Using token " + token);
 				System.out.println("Using email " + email);
-				String urlParameters = "token=" + token + "&email=" + email ;
-				byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
-				int postDataLength = postData.length;
-				String request = "https://slack.com/api/users.lookupByEmail";
-				URL url = new URL( request );
-				HttpURLConnection conn= (HttpURLConnection) url.openConnection();
-				conn.setDoOutput(true);
-				conn.setInstanceFollowRedirects(false);
-				conn.setRequestMethod("POST");
-				conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-				conn.setRequestProperty("charset", "utf-8");
-				conn.setRequestProperty("Content-Length", Integer.toString(postDataLength ));
-				conn.setUseCaches(false);
-				try(DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-					wr.write( postData );
-				}
 
-				InputStream stream = conn.getInputStream();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"), 8);
-				String result = reader.readLine();
-				System.out.println(result);
-				JSONObject resultJ = (JSONObject) p.parse(result);
-				System.out.println(resultJ);
-				String user = resultJ.getAsString("user");
-				System.out.println(user);
-				JSONObject userJson = (JSONObject) p.parse(user);
-				String userId = userJson.getAsString("id");
+				String channel = chatMediator.getChannelByEmail(email);
+				chatMediator.sendMessageToChannel(channel, msgtext);
 
-				System.out.println("\nFound userid: " + userId + "\n");
-				// search channel with id
-				urlParameters = "token=" + token+ "&types=" + "im";
-				postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
-				postDataLength = postData.length;
-				request = "https://slack.com/api/conversations.list";
-				url = new URL( request );
-				conn= (HttpURLConnection) url.openConnection();
-				conn.setDoOutput(true);
-				conn.setInstanceFollowRedirects(false);
-				conn.setRequestMethod("POST");
-				conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-				conn.setRequestProperty("charset", "utf-8");
-				conn.setRequestProperty("Content-Length", Integer.toString(postDataLength ));
-				conn.setUseCaches(false);
-				try(DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-					wr.write( postData );
-				}
+			} catch (Exception e){
+				e.printStackTrace();
+				return Response.ok("Sending message failed.").build();
+			}
 
-				stream = conn.getInputStream();
-				reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"), 8);
-				result = reader.readLine();
-				p = new JSONParser();
-				resultJ = (JSONObject) p.parse(result);
-				String channels = resultJ.getAsString("channels");
-				System.out.println(channels);
-				JSONArray channelsA = (JSONArray) p.parse(channels);
-				String foundChannelId = null;
-				for(Object o : channelsA){
-					if(((JSONObject) o).containsKey("user")){
-						if(((JSONObject) o).getAsString("user").equals(userId)){
-							foundChannelId = ((JSONObject) o).getAsString("id");
-							chatMediator.sendMessageToChannel(foundChannelId, msgtext);
-							return Response.ok("Sent message successfully.").build();
-						}
-					}
-				}
+		} catch(Exception e){
+			e.printStackTrace();
+		}
 
-				if (foundChannelId == null){
-					return Response.ok("Channel not found.").build();
-				}
+		return Response.ok().build();
+
+	}
+
+	@POST
+	@Path("/sendMessageToRocketChat/{token}/{email}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(
+			value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "triggered chat message") })
+	public Response sendMessageToRocketChat(@PathParam("token") String token,@PathParam("email") String email, String input){
+		try{
+			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
+			System.out.println("rocket chat mediator initialized");
+
+			try{
+				JSONParser p = new JSONParser();
+				JSONObject bodyInput = (JSONObject) p.parse(input);
+				String msgtext = bodyInput.getAsString("msg");
+				String channel = chatMediator.getChannelByEmail(email);
+				chatMediator.sendMessageToChannel(channel, msgtext);
 
 			} catch (Exception e){
 				e.printStackTrace();

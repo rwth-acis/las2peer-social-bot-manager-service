@@ -400,7 +400,7 @@ public class SlackChatMediator extends ChatMediator {
 		String user = o.getAsString("user");
 		String text = o.getAsString("text");
 		// used to identity the message (in case it gets edited)
-		String ts = o.getAsString("ts");
+		String time = o.getAsString("ts");
 
 		//System.out.println(user);
 		//System.out.println(channel);
@@ -433,7 +433,7 @@ public class SlackChatMediator extends ChatMediator {
 
 					//System.out.println("creating new chat message: c: " + channel + " u: " + user + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " + ts);
 
-					return new ChatMessage(channel, user, text, ts, currMessage, prevMessage, "");
+					return new ChatMessage(channel, user, text, time, currMessage, prevMessage, "");
 				} catch(Exception e){
 					e.printStackTrace();
 				}
@@ -480,7 +480,7 @@ public class SlackChatMediator extends ChatMediator {
 			throw new InvalidChatMessageException();
 		}
 
-		return new ChatMessage(channel, user, text, ts);
+		return new ChatMessage(channel, user, text, time);
 	}
 
 	@Override

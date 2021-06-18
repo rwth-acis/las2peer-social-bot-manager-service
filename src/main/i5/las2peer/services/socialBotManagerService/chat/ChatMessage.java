@@ -13,7 +13,6 @@ public class ChatMessage {
 	private String domain;
 	private String previousMessage;
 	private String currMessage;
-	private String ts;
 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
@@ -21,11 +20,11 @@ public class ChatMessage {
 		this.text = text;
 	}
 
-	public ChatMessage(String channel, String user, String text, String ts) {
+	public ChatMessage(String channel, String user, String text, String time) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text;
-		this.ts = ts;
+		this.time = time;
 	}
 
 	public ChatMessage(String channel, String user, String text, String fileName, String fileType, String body) {
@@ -37,11 +36,11 @@ public class ChatMessage {
 		this.fileBody = body;
 	}
 
-	public ChatMessage(String channel, String user, String text, String ts, String currMessage, String previousMessage, String extra) {
+	public ChatMessage(String channel, String user, String text, String time, String currMessage, String previousMessage, String extra) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text;
-		this.ts = ts;
+		this.time = time;
 		this.previousMessage = previousMessage;
 		this.currMessage = currMessage;
 	}
@@ -122,16 +121,8 @@ public class ChatMessage {
 		this.currMessage = currMessage;
 	}
 
-	public String getTs() {
-		return ts;
-	}
-
-	public void setTs(String ts) {
-		this.ts = ts;
-	}
-
-	public boolean hasTs(){
-		if(this.getTs() != null){
+	public boolean hasTime(){
+		if(this.getTime() != null){
 			return true;
 		}
 		return false;

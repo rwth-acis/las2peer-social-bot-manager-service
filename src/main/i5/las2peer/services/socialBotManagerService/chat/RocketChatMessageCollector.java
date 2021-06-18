@@ -80,7 +80,27 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			} else {
+			}else if(type.equals(Type.MESSAGE_EDITED)){
+				try {
+					System.out.println("Handling edited message.");
+					JSONArray emails = message.getSender().getEmails();
+					// System.out.println(emails.toString());
+					String rid = message.getRoomId();
+					String user = message.getSender().getUserName();
+					String msg = replaceUmlaute(message.getMessage());
+					ChatMessage cm = new ChatMessage(rid, user, msg);
+					// timestamp
+					cm.setTime(message.getMsgTimestamp().toInstant().toString());
+					// domain
+					cm.setDomain(this.getDomain());
+
+					this.addMessage(cm);
+					System.out.println("Edited message added.");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else {
 				System.out.println("Unsupported type: " + type.toString());
 			}
 		} else {
