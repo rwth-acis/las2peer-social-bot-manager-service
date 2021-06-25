@@ -157,7 +157,11 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
-	private String address;
+	private String address; // address of running webconnector
+	private String restarterBotName; // name of restarterBot
+	private static String restarterBotNameStatic;
+	private String restarterBotPW; // PW of restarterBot
+	private static String restarterBotPWStatic; // PW of restarterBot
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
@@ -190,6 +194,8 @@ public class SocialBotManagerService extends RESTService {
 	public SocialBotManagerService() {
 		super();
 		setFieldValues(); // This sets the values of the configuration file
+		restarterBotNameStatic = restarterBotName;
+		restarterBotPWStatic = restarterBotPW;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
 			@Override
 			public X509Certificate[] getAcceptedIssuers() {
@@ -351,25 +357,25 @@ public class SocialBotManagerService extends RESTService {
 			if (restarterBot == null) {
 				try {
 					try {
-						System.out.println("ok");
-						restarterBot = (BotAgent) Context.getCurrent()
-								.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName("restarterBot"));
-						System.out.println("ok2");
+						System.out.println(
+								"Trying to fetch restarter bot" + restarterBotNameStatic + restarterBotPWStatic);
+						restarterBot = (BotAgent) Context.getCurrent().fetchAgent(
+								Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
 						// if bot didn't exist before, no need to try to restart the previous bots, as
 						// the bot will have no way of accessing the envelope
-						restarterBot.unlock("123");
+						restarterBot.unlock(restarterBotPWStatic);
 						Envelope env = null;
 						HashMap<String, BotModel> models = null;
 						try {
 							// try to add project to project list (with service group agent)
-							env = Context.get().requestEnvelope("restarterBot", restarterBot);
+							env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
 
 							models = (HashMap<String, BotModel>) env.getContent();
 							for (Entry<String, BotModel> entry : models.entrySet()) {
 								init(entry.getValue());
 							}
 
-							System.out.println("lets goo");
+							System.out.println("Restarting Complete");
 						} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
 								| EnvelopeOperationFailedException e) {
 							System.out.println("no bot models found in storage");
@@ -378,9 +384,9 @@ public class SocialBotManagerService extends RESTService {
 					} catch (Exception e) {
 						System.out.println("error?" + e.toString());
 						// here, we assume that this is the first time the service is started
-						restarterBot = BotAgent.createBotAgent("123");
-						restarterBot.unlock("123");
-						restarterBot.setLoginName("restarterBot");
+						restarterBot = BotAgent.createBotAgent(restarterBotPWStatic);
+						restarterBot.unlock(restarterBotPWStatic);
+						restarterBot.setLoginName(restarterBotNameStatic);
 						Context.getCurrent().storeAgent(restarterBot);
 						System.out.println("restarter bot stored");
 					}
@@ -389,7 +395,6 @@ public class SocialBotManagerService extends RESTService {
 				} catch (AgentException | CryptoException e2) {
 					// TODO Errorhandling
 					e2.printStackTrace();
-					System.out.println("ok34");
 				}
 			}
 			return Response.ok().entity("vleList").build();
@@ -488,57 +493,67 @@ public class SocialBotManagerService extends RESTService {
 			for (String entry : list) {
 				oldArray.add(entry);
 			}
+			String botToken = "";
+			for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
+				if (entry.getValue().getType().equals("Messenger")) {
+					for (Entry<String, BotModelNodeAttribute> subEntry : entry.getValue().getAttributes().entrySet()) {
+						BotModelNodeAttribute subElem = subEntry.getValue();
+						BotModelValue subVal = subElem.getValue();
+						if (subVal.getName().equals("Authentication Token")) {
+							botToken = subVal.getValue();
+						}
+					}
+				}
+			}
+			if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
+					&& !restarterBotPWStatic.equals("")) {
+				try {
+					restarterBot = (BotAgent) Context.getCurrent()
+							.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
+					restarterBot.unlock(restarterBotPWStatic);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			Envelope env = null;
+			HashMap<String, BotModel> old = null;
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
-			ArrayList<String> newArray = new ArrayList<String>();
-			for (String entry : list) {
-				newArray.add(entry);
-			}
-			if (!newArray.isEmpty()) {
-				newArray.removeAll(oldArray);
-			}
-			System.out.println(newArray.toString() + "  "
-					+ SocialBotManagerService.getBotAgents().get(newArray.get(0)).getIdentifier());
 			// initialized = true;
 			JSONObject logData = new JSONObject();
 			logData.put("status", "initialized");
-			Envelope env = null;
-			HashMap<String, BotModel> old = null;
-			try {
-				restarterBot = (BotAgent) Context.getCurrent()
-						.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName("restarterBot"));
-				restarterBot.unlock("123");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			try {
-				// try to add project to project list (with service group agent)
-				env = Context.get().requestEnvelope("restarterBot", restarterBot);
-
-				old = (HashMap<String, BotModel>) env.getContent();
-				old.put(SocialBotManagerService.getBotAgents().get(newArray.get(0)).getIdentifier(), botModel);
-				env.setContent(botModel);
-				Context.get().storeEnvelope(env, restarterBot);
-			} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException | EnvelopeOperationFailedException e) {
+			env = null;
+			old = null;
+			if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
+					&& !restarterBotPWStatic.equals("")) {
 				try {
-					env = Context.get().createEnvelope("restarterBot", restarterBot);
-					env.setPublic();
-					old = new HashMap<String, BotModel>();
-					old.put(SocialBotManagerService.getBotAgents().get(newArray.get(0)).getIdentifier(), botModel);
-
+					// try to add project to project list (with service group agent)
+					env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
+					old = (HashMap<String, BotModel>) env.getContent();
+					old.put(botToken, botModel);
 					env.setContent(old);
 					Context.get().storeEnvelope(env, restarterBot);
-				} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (Exception e2) {
-					e2.printStackTrace();
-				}
+				} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
+						| EnvelopeOperationFailedException e) {
+					try {
+						env = Context.get().createEnvelope(restarterBotNameStatic, restarterBot);
+						env.setPublic();
+						old = new HashMap<String, BotModel>();
+						old.put(botToken, botModel);
+						System.out.println(botToken);
+						env.setContent(old);
+						Context.get().storeEnvelope(env, restarterBot);
+					} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (Exception e2) {
+						e2.printStackTrace();
+					}
 
 			}
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
@@ -1546,8 +1561,13 @@ public class SocialBotManagerService extends RESTService {
 				clientRestart.setLogin("alice", "pwalice");
 				HashMap<String, String> headers = new HashMap<String, String>();
 				try {
-					ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "", headers);
-					restarterBot = BotAgent.createBotAgent("qaa");
+					System.out.println(restarterBotName + restarterBotPW);
+					if (restarterBotName != null && restarterBotPW != null && !restarterBotName.equals("")
+							&& !restarterBotPW.equals("")) {
+						ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "",
+								headers);
+					}
+					restarterBot = BotAgent.createBotAgent("restarterBot");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

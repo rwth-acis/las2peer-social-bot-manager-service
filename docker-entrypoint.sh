@@ -24,6 +24,9 @@ set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
 set_in_service_config databaseUser ${DATABASE_USER}
 set_in_service_config databasePassword ${DATABASE_PASSWORD}
+set_in_service_config address ${ADDRESS}
+set_in_service_config restarterBotName ${RESTARTERBOTNAME}
+set_in_service_config restarterBotPW ${RESTARTERBOTPW}
 
 
 # ensure the database is ready
