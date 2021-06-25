@@ -840,11 +840,41 @@ public class SocialBotManagerService extends RESTService {
 		public Response deactivateBotAll(@PathParam("botAgentId") String bot, JSONObject body) {
 			Collection<VLE> vles = getConfig().getVLEs().values();
 			for (VLE vle : vles) {
-				System.out.println(vle.getBots().keySet());
 				Bot b = vle.getBots().get(bot);
 				if (b != null) {
-					if (b.deactivateAllWithCheck((ArrayList<String>) body.get("messengerNames"))) {
+					ArrayList messengers = (ArrayList) body.get("messengerNames");
+					if (b.deactivateAllWithCheck(messengers)) {
 						vle.getBots().remove(bot);
+						if (restarterBot != null) {
+							Envelope env = null;
+							HashMap<String, BotModel> old = null;
+							if (restarterBotNameStatic != null && restarterBotPWStatic != null
+									&& !restarterBotNameStatic.equals("") && !restarterBotPWStatic.equals("")) {
+								try {
+									restarterBot = (BotAgent) Context.getCurrent().fetchAgent(Context.getCurrent()
+											.getUserAgentIdentifierByLoginName(restarterBotNameStatic));
+									restarterBot.unlock(restarterBotPWStatic);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+							try {
+								// try to add project to project list (with service group agent)
+								env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
+								old = (HashMap<String, BotModel>) env.getContent();
+								for (Object object : messengers) {
+									HashMap<String, String> jsonObject = (HashMap<String, String>) object;
+									if (old.containsKey(jsonObject.get("authToken"))) {
+										old.remove(jsonObject.get("authToken"));
+									}
+								}
+								env.setContent(old);
+								Context.get().storeEnvelope(env, restarterBot);
+							} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
+									| EnvelopeOperationFailedException e) {
+								e.printStackTrace();
+							}
+						}
 						return Response.ok().entity(bot + " deactivated.").build();
 					} else {
 						return Response.status(HttpURLConnection.HTTP_NOT_ACCEPTABLE).entity(bot + " not deactivated.")
