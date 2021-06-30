@@ -48,7 +48,7 @@ CREATE TABLE `users`  (
 DROP TABLE IF EXISTS `models`;
 CREATE TABLE `models`  (
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `model` BLOB NULL DEFAULT NULL,
+  `model` MEDIUMBLOB NULL DEFAULT NULL,
   PRIMARY KEY (`name`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
