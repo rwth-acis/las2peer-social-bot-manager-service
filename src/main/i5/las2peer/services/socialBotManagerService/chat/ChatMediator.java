@@ -1,5 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import net.minidev.json.JSONObject;
+
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -23,6 +25,18 @@ public abstract class ChatMediator {
 	 * @param id An ID for the sent chat message, e.g. to be able to recognize replies to it later on.
 	 */
 	public abstract void sendMessageToChannel(String channel, String text, OptionalLong id);
+
+	public abstract void sendAttachmentMessageToChannel(String channel, String attachments, OptionalLong id);
+
+	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+		sendAttachmentMessageToChannel(channel, attachments, OptionalLong.empty());
+	}
+
+	public abstract void sendBlocksMessageToChannel(String channel, String blocks, OptionalLong id);
+
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		sendBlocksMessageToChannel(channel, blocks, OptionalLong.empty());
+	}
 
 	/**
 	 * Sends a chat message to a channel.
@@ -63,7 +77,6 @@ public abstract class ChatMediator {
 	 * @return If user was found, their IM channel ID, null otherwise.
 	 */
 	public abstract String getChannelByEmail(String email);
-
 	protected String getDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
 		StringBuilder result = new StringBuilder();
 		boolean first = true;

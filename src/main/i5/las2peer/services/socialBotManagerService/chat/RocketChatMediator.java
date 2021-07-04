@@ -97,6 +97,23 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		messageCollector.setDomain(url);
 	}
 
+	public RocketChatMediator(String authToken, SQLDatabase database) {
+		super(authToken);
+		this.database = database;
+		String[] auth = authToken.split(":");
+		username = auth[0];
+		password = auth[1];
+		if (activeSubscriptions == null) {
+			activeSubscriptions = new HashSet<String>();
+		}
+		client = new RocketChatAPI(url);
+		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
+		client.setPingInterval(15000);
+		client.connect(this);
+		RocketChatAPI.LOGGER.setLevel(Level.OFF);
+		messageCollector.setDomain(url);
+	}
+
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
 
@@ -474,6 +491,14 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public void onGetSubscriptions(List<SubscriptionObject> subscriptions, ErrorObject error) {
 		// Creating Logical ChatRooms using factory class
 	}
+
+
+
+	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, OptionalLong id){}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, OptionalLong id){}
 
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {
