@@ -1214,9 +1214,9 @@ public class SocialBotManagerService extends RESTService {
 			// work
 			MiniClient client = new MiniClient();
 			client.setConnectorEndpoint(vle.getAddress());
-			client.setLogin("alice", "pwalice");
+			//client.setLogin("alice", "pwalice");
 			System.out.println(botAgent.getLoginName() + "    pass " + botPass);
-			//client.setLogin(botAgent.getLoginName(), botPass);
+			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
 			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
