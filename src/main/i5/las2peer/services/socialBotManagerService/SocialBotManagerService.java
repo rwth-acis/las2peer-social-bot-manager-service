@@ -827,20 +827,32 @@ public class SocialBotManagerService extends RESTService {
 			//body.put("courseid", messageInfo.getMessage().getCourse());
 			body.put("user", messageInfo.getMessage().getUser());
             body.put("intent", messageInfo.getIntent().getKeyword());
-            
+
             if (messageInfo.getMessage().getFileBody() != null) {
 				body.put("fileBody", messageInfo.getMessage().getFileBody());
 				body.put("fileName", messageInfo.getMessage().getFileName());
 				body.put("fileType", messageInfo.getMessage().getFileType());
 			}
 
+            // Insert entities detected from the message
             JSONObject entities = new JSONObject();
-            for(Entity entityName : messageInfo.getIntent().getEntities()){
-            	JSONObject entity = new JSONObject();
-            	entity.put("value", entityName.getValue());
-            	entity.put("confidence", entityName.getConfidence());
-            	entities.put(entityName.getEntityName(), entity);
-            }	
+            for(Entity entityName : messageInfo.getIntent().getEntities()) {
+				body.put(entityName.getEntityName(), entityName.getValue());// Kept for compatibility reasons
+				JSONObject entity = new JSONObject();
+				entity.put("value", entityName.getValue());
+				entity.put("confidence", entityName.getConfidence());
+				entities.put(entityName.getEntityName(), entity);
+			}
+
+			// Insert entities that was passed over from previous message
+			if (messageInfo.getRecognizedEntities() != null) {
+				for (Entity entityName : messageInfo.getRecognizedEntities()) {
+					JSONObject entity = new JSONObject();
+					entity.put("value", entityName.getValue());
+					entity.put("confidence", entityName.getConfidence());
+				}
+			}
+
             body.put("entities", entities);
             body.put("msg", messageInfo.getMessage().getText());
             body.put("contextOn", messageInfo.contextActive());
