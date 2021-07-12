@@ -819,12 +819,9 @@ public class SocialBotManagerService extends RESTService {
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
 			// TODO: Handle multiple messengers
-			// why the remove email?
-			// body.remove("email");
 			System.out.println(messageInfo.getMessage().getEmail());
 			body.put("email", messageInfo.getMessage().getEmail());
-			body.put("channel", messageInfo.getMessage().getChannel());	
-			//body.put("courseid", messageInfo.getMessage().getCourse());
+			body.put("channel", messageInfo.getMessage().getChannel());
 			body.put("user", messageInfo.getMessage().getUser());
             body.put("intent", messageInfo.getIntent().getKeyword());
 
