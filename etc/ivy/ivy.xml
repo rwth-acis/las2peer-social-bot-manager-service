@@ -17,7 +17,7 @@
         <dependency org="javax.websocket" name="javax.websocket-api" rev="1.1" conf="bundle->*" />
         <!-- TODO: These are service dependencies, but websockets don't work if imported as such -->
         <dependency org="org.glassfish.tyrus.bundles" name="tyrus-standalone-client" rev="1.13" conf="platform->*" />
-        <dependency org="com.github.seratch" name="jslack" rev="1.8.1" conf="bundle->*" />
+        <dependency org="com.github.seratch" name="jslack" rev="3.4.2" conf="bundle->*" />
         <dependency org="com.rocketchat.common" name="rocketchat-common" rev="0.7.1" conf="bundle->*" />
         <dependency org="com.rocketchat.core" name="rocketchat-core" rev="0.7.1" conf="bundle->*" />
         <dependency org="com.rocketchat.livechat" name="rocketchat-livechat" rev="0.7.1" conf="bundle->*" />
