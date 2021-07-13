@@ -32,7 +32,6 @@ CREATE TABLE `attributes`  (
 -- ----------------------------
 -- Table structure for users
 -- ----------------------------
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`  (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `email` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -45,7 +44,6 @@ CREATE TABLE `users`  (
 -- ----------------------------
 -- Table structure for models
 -- ----------------------------
-DROP TABLE IF EXISTS `models`;
 CREATE TABLE `models`  (
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `model` MEDIUMBLOB NULL DEFAULT NULL,
@@ -55,7 +53,6 @@ CREATE TABLE `models`  (
 -- ----------------------------
 -- Table structure for training data
 -- ----------------------------
-DROP TABLE IF EXISTS `training`;
 CREATE TABLE `training`  (
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `data` LONGTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,

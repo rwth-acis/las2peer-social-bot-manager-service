@@ -33,8 +33,30 @@ while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER}
 done
 echo "${DATABASE_HOST}:${DATABASE_PORT} is available. Continuing..."
 
+# Check if all tables are present
+if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.attributes" > /dev/null 2>&1;
+ then
+    echo "ERROR: Table 'attributes' is not available."
+fi
+
+if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.users" > /dev/null 2>&1;
+ then
+    echo "ERROR: Table 'users' is not available."
+fi
+
+if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.models" > /dev/null 2>&1;
+ then
+    echo "ERROR: Table 'models' is not available."
+fi
+
+if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.training" > /dev/null 2>&1;
+ then
+    echo "ERROR: Table 'training' is not available."
+fi
+
 # Create and migrate the database on first run
-if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.MESSAGE" > /dev/null 2>&1; then
+if ! ( mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.attributes" > /dev/null 2>&1 ) && ! ( mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.users" > /dev/null 2>&1 ) && ! ( mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.models" > /dev/null 2>&1) && ! (mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.training" > /dev/null 2>&1 )
+ then
     echo "Creating database schema..."
     mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
 fi
