@@ -1024,6 +1024,7 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject entity = new JSONObject();
 					entity.put("value", entityName.getValue());
 					entity.put("confidence", entityName.getConfidence());
+					entities.put(entityName.getEntityName(), entity);
 				}
 			}
 			if ((messageInfo.getMessage().getPreviousMessage() != null) && (messageInfo.getMessage().getCurrMessage() != null)) {
