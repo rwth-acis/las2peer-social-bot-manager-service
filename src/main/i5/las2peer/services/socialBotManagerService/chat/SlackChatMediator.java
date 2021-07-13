@@ -8,17 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-<<<<<<< HEAD
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.OptionalLong;
-import java.util.Vector;
-=======
 import java.util.*;
->>>>>>> develop
 
 import javax.websocket.DeploymentException;
 
@@ -284,8 +274,8 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 
-	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, OptionalLong id) {
+//	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
 		//System.out.println("sending blocks now...");
 
 		List<LayoutBlock> lb = parseBlocks(blocks);
@@ -295,7 +285,7 @@ public class SlackChatMediator extends ChatMediator {
 				.blocks(lb);
 
 		if (id.isPresent()) {
-			msg.id(id.getAsLong());
+			msg.id(Long.parseLong(id.get()));
 		}
 		String message = msg.build().toJSONString();
 		//System.out.println("message after adding blocks: " + message);
@@ -337,8 +327,8 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 
-	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments, OptionalLong id) {
+//	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
 		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		try {
 			JSONArray attachment = (JSONArray) parser.parse(attachments);
@@ -362,7 +352,7 @@ public class SlackChatMediator extends ChatMediator {
 					.attachments(attachmentList);
 
 			if (id.isPresent()) {
-				msg.id(id.getAsLong());
+				msg.id(Long.parseLong(id.get()));
 			}
 			String message = msg.build().toJSONString();
 			System.out.println("message after adding attachments: " + message);
@@ -442,8 +432,10 @@ public class SlackChatMediator extends ChatMediator {
 					text = currMessageJson.getAsString("text");
 
 					//System.out.println("creating new chat message: c: " + channel + " u: " + user + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " + ts);
-
-					return new ChatMessage(channel, user, text, time, currMessage, prevMessage, "");
+					ChatMessage msg = new ChatMessage(channel, user, text, time);
+					msg.setCurrMessage(currMessage);
+					msg.setPreviousMessage(prevMessage);
+					return msg;
 				} catch(Exception e){
 					e.printStackTrace();
 				}

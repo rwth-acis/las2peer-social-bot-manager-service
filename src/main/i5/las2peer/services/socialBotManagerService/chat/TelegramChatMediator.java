@@ -236,6 +236,16 @@ public class TelegramChatMediator extends EventChatMediator {
 		return data;
 	}
 
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+
+	}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		super.sendBlocksMessageToChannel(channel, blocks);
+	}
+
 	/**
 	 * Shows an indication to the user about what the next bots action is
 	 * 
@@ -249,5 +259,7 @@ public class TelegramChatMediator extends EventChatMediator {
 		BaseResponse response = this.bot.execute(typingAction);
 		return response.isOk();
 	}
+
+
 
 }

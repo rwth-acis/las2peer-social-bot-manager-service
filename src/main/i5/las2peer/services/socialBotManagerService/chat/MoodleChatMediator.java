@@ -113,6 +113,16 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+
+	}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		super.sendBlocksMessageToChannel(channel, blocks);
+	}
+
+	@Override
 	public void close() {
 		// TODO Auto-generated method stub
 

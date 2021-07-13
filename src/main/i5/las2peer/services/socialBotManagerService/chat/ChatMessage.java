@@ -45,14 +45,6 @@ public class ChatMessage {
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;
-		
-	public ChatMessage(String channel, String user, String text, String time, String currMessage, String previousMessage, String extra) {
-		this.channel = channel;
-		this.user = user;
-		this.text = text;
-		this.time = time;
-		this.previousMessage = previousMessage;
-		this.currMessage = currMessage;
 	}
 
 	public void setText(String text) {

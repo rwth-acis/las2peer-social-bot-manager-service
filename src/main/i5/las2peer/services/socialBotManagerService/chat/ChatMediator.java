@@ -1,14 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-<<<<<<< HEAD
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-=======
-import net.minidev.json.JSONObject;
-
->>>>>>> develop
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,10 +12,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.*;
 
 public abstract class ChatMediator {
 	protected String authToken;
@@ -38,16 +30,18 @@ public abstract class ChatMediator {
 	 */
 	public abstract void sendMessageToChannel(String channel, String text, Optional<String> id);
 
-	public abstract void sendAttachmentMessageToChannel(String channel, String attachments, OptionalLong id);
+	//Leo: commented this out because it still isn't used elsewhere
 
-	public void sendAttachmentMessageToChannel(String channel, String attachments) {
-		sendAttachmentMessageToChannel(channel, attachments, OptionalLong.empty());
-	}
-
-	public abstract void sendBlocksMessageToChannel(String channel, String blocks, OptionalLong id);
+//	public abstract void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id);
+//
+//	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+//		sendAttachmentMessageToChannel(channel, attachments, Optional.empty());
+//	}
+//
+	public abstract void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id);
 
 	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		sendBlocksMessageToChannel(channel, blocks, OptionalLong.empty());
+		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
 	}
 
 	/**
@@ -134,7 +128,6 @@ public abstract class ChatMediator {
 	 * @return If user was found, their IM channel ID, null otherwise.
 	 */
 	public abstract String getChannelByEmail(String email);
-<<<<<<< HEAD
 
 	public Boolean hasToken(String token) {
 		return (this.authToken.equals(token));
@@ -163,8 +156,6 @@ public abstract class ChatMediator {
 		return response.toString();
 	}
 	
-=======
->>>>>>> develop
 	protected String getDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
 		StringBuilder result = new StringBuilder();
 		boolean first = true;
