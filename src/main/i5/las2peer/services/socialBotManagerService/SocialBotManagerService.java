@@ -1426,11 +1426,10 @@ public class SocialBotManagerService extends RESTService {
 			if (text != null) {
 				chat.sendMessageToChannel(channel, text);
 			}
-			//Leo: sending files is implemented already
-//			if(body.containsKey("attachments")){
-//				System.out.println("body has attachments");
-//				chat.sendAttachmentMessageToChannel(channel, attachments);
-//			}
+			if(body.containsKey("attachments")){
+				System.out.println("body has attachments");
+				chat.sendAttachmentMessageToChannel(channel, attachments);
+			}
 			if(body.containsKey("blocks")){
 				System.out.println("body has blocks");
 				chat.sendBlocksMessageToChannel(channel, blocks);

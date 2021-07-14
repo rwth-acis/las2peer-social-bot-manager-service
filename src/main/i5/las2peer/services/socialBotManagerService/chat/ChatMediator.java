@@ -32,12 +32,12 @@ public abstract class ChatMediator {
 
 	//Leo: commented this out because it still isn't used elsewhere
 
-//	public abstract void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id);
-//
-//	public void sendAttachmentMessageToChannel(String channel, String attachments) {
-//		sendAttachmentMessageToChannel(channel, attachments, Optional.empty());
-//	}
-//
+	public abstract void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id);
+
+	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+		sendAttachmentMessageToChannel(channel, attachments, Optional.empty());
+	}
+
 	public abstract void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id);
 
 	public void sendBlocksMessageToChannel(String channel, String blocks) {

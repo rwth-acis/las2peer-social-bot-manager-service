@@ -490,11 +490,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 
 
 	//Leo: sending of file messages is already implemented
-//	@Override
-//	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id){}
-//
-//	@Override
-//	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id){}
+	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id){}
 
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {

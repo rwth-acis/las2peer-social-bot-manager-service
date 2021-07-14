@@ -177,6 +177,16 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 
 	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
+
+	}
+
+	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+		super.sendAttachmentMessageToChannel(channel, attachments);
+	}
+
+	@Override
 	public void close() {
 		// TODO Auto-generated method stub
 

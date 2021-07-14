@@ -246,6 +246,16 @@ public class TelegramChatMediator extends EventChatMediator {
 		super.sendBlocksMessageToChannel(channel, blocks);
 	}
 
+	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
+
+	}
+
+	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+		super.sendAttachmentMessageToChannel(channel, attachments);
+	}
+
 	/**
 	 * Shows an indication to the user about what the next bots action is
 	 * 
