@@ -11,15 +11,13 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
-import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
-import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -29,16 +27,21 @@ import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 public class Messenger {
 	private String name;
 
+	// URL of the social bot manager service (used for setting up the webhook)
+	private String url;
+
 	private ChatMediator chatMediator;
-	// private RasaNlu rasa;
-	// private RasaNlu rasaAssessment;
+
+	/**
+	 * The messenger application provider this object corresponds to
+	 */
+	private ChatService chatService;
 
 	// Key: intent keyword
 	private HashMap<String, IncomingMessage> knownIntents;
 
 	// Used for keeping conversation state per channel
 	private HashMap<String, IncomingMessage> stateMap;
-
 	// Used for keeping remembering entities during conversation state per channel
 	private HashMap<String, Collection<Entity>> recognizedEntities;
 	// Used for keeping context between assessment and non-assessment states
@@ -54,18 +57,38 @@ public class Messenger {
 
 	private Random random;
 
-	public Messenger(String id, String chatService, String token, SQLDatabase database)
+	public Messenger(String id, String chatService, String token, String url, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
 //        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
-		if (chatService.contentEquals("Slack")) {
-			this.chatMediator = new SlackChatMediator(token);
-		} else if (chatService.contentEquals("Rocket.Chat")) {
-			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-		} else { // TODO: Implement more backends
-			throw new ParseBotException("Unimplemented chat service: " + chatService);
+
+		// Chat Mediator
+		this.chatService = ChatService.fromString(chatService);
+		System.out.println("Messenger: " + chatService.toString());
+		switch (this.chatService) {
+			case SLACK:
+				this.chatMediator = new SlackChatMediator(token);
+				break;
+			case TELEGRAM:
+				this.chatMediator = new TelegramChatMediator(token, url);
+				String username = ((TelegramChatMediator) this.chatMediator).getBotName();
+				if(username != null)
+					this.name = username;
+				break;
+			case ROCKET_CHAT:
+				this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+				break;
+			case MOODLE_CHAT:
+				this.chatMediator = new MoodleChatMediator(token);
+				break;
+			case MOODLE_FORUM:
+				this.chatMediator = new MoodleForumMediator(token);
+				break;
+			default:
+				throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
+
 		this.name = id;
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
@@ -79,6 +102,10 @@ public class Messenger {
 
 	public String getName() {
 		return name;
+	}
+
+	public ChatService getChatService() {
+		return chatService;
 	}
 
 	public void addMessage(IncomingMessage msg) {
@@ -136,9 +163,8 @@ public class Messenger {
 	 * { return chatMediator.getEmail(channel); };
 	 */
 
-	public void setContextToBasic(String channel) {
+	public void setContextToBasic(String channel, String userid) {
 		triggeredFunction.remove(channel);
-
 		IncomingMessage state = this.stateMap.get(channel);
 		if (state != null) {
 			if (state.getFollowingMessages() == null) {
@@ -146,14 +172,14 @@ public class Messenger {
 			} else if (state.getFollowingMessages().get("") != null) {
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
-				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse());
-
+				System.out.println("1");
+				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(), Optional.of(userid));
 			} else {
 			}
 		}
 	}
 
-	public String getContext(String channel) {
+	public String getContext(String channel, String user) {
 		return this.triggeredFunction.get(channel);
 	}
 
@@ -168,9 +194,26 @@ public class Messenger {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
+				// // If a channel/user pair still isn't assigned to a state, assign it to null
+				// if (this.stateMap.get(message.getChannel()) == null) {
+				// 	HashMap<String, IncomingMessage> initMap = new HashMap<String, IncomingMessage>();
+				// 	initMap.put(message.getUser(), null);
+				// 	this.stateMap.put(message.getChannel(), initMap);
+				// }
+				
+				// If a channel/user pair still isn't assigned to a NLU Model, assign it to the Model 0 
 				if (this.currentNluModel.get(message.getChannel()) == null) {
 					this.currentNluModel.put(message.getChannel(), "0");
 				}
+				
+				// If channel/user pair is not assigned to a triggered function, assign it to null 
+//				if (this.triggeredFunction.get(message.getChannel()) == null) {
+//					HashMap<String, String> initMap = new HashMap<String, String>();
+//					initMap.put(message.getUser(), null);
+//					this.triggeredFunction.put(message.getChannel(), initMap);
+//				}
+				
+				
 				if (this.defaultAnswered.get(message.getChannel()) == null) {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
@@ -265,6 +308,7 @@ public class Messenger {
 						} else {
 							// any is a static forward
 							// TODO include entities of intents
+							// If there is no next state, stay in the same state
 							if (state.getFollowingMessages() == null || state.getFollowingMessages().isEmpty()) {
 								System.out.println("no follow up messages");
 								state = this.knownIntents.get(intent.getKeyword());
@@ -293,6 +337,9 @@ public class Messenger {
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 								}
 							} else {
+								//System.out.println("\u001B[33mDebug --- Followups: " + state.getFollowingMessages() + "\u001B[0m");
+								//System.out.println("\u001B[33mDebug --- Emptiness: " + state.getFollowingMessages().keySet().isEmpty() + "\u001B[0m");
+								//System.out.println("\u001B[33mDebug --- State: " + state.getIntentKeyword() + "\u001B[0m");
 								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
 										+ intent.getConfidence() + " confidence.");
 								// try any
@@ -387,7 +434,6 @@ public class Messenger {
 				}
 
 				Boolean contextOn = false;
-				// No matching intent found, perform default action
 				if (this.triggeredFunction.containsKey(message.getChannel())) {
 					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
 					contextOn = true;
@@ -421,12 +467,17 @@ public class Messenger {
 						}
 						if (response == null) {
 							response = state.getResponse(this.random);
+							if (response == null && state.getTriggeredFunctionId() != "") {
+								this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
+								contextOn = true;
+							}
 						}
 						if (state.getNluID() != "") {
 							System.out.println("New NluId is : " + state.getNluID());
 							this.currentNluModel.put(message.getChannel(), state.getNluID());
 						}
 						if (response != null) {
+							System.out.println("Debug - Response : " + response.getResponse());
 							if (response.getResponse() != "") {
 								// System.out.println("1");
 								String split = "";
@@ -464,7 +515,7 @@ public class Messenger {
 									}
 
 								}
-								this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+								this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
 								// check whether a file url is attached to the chat response and try to send it
 								// to
 								// the user
@@ -472,8 +523,11 @@ public class Messenger {
 									String fileName = "";
 									try {
 										// Replacable variable in url menteeEmail
-										String urlEmail = response.getFileURL().replace("menteeEmail",
-												message.getEmail());
+										String urlEmail = response.getFileURL();
+										if (message.getEmail() != null) {
+											urlEmail = response.getFileURL().replace("menteeEmail",
+													message.getEmail());
+										}
 										System.out.println(urlEmail);
 										URL url = new URL(urlEmail);
 										HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -519,6 +573,7 @@ public class Messenger {
 
 									} catch (Exception e) {
 										System.out.println("Could not extract File for reason " + e);
+										e.printStackTrace();
 										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
 										this.chatMediator.sendMessageToChannel(message.getChannel(),
 												response.getErrorMessage());

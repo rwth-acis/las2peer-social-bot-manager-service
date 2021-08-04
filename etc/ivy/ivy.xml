@@ -29,5 +29,6 @@
         	<exclude module="asm-commons"/>
         </dependency>
         <dependency org="commons-codec" name="commons-codec" rev="1.13" conf="bundle->*" />
+        <dependency org="com.github.pengrad" name="java-telegram-bot-api" rev="4.9.0" conf="bundle->*"/>
     </dependencies>
 </ivy-module>

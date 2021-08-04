@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.Collections;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -72,10 +73,7 @@ import i5.las2peer.logging.bot.BotMessage;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
-import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
-import i5.las2peer.services.socialBotManagerService.chat.SlackChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
@@ -95,6 +93,7 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
+import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
@@ -149,8 +148,9 @@ public class SocialBotManagerService extends RESTService {
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
 	private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
-	private static HashMap<String, String> rasaIntents = new HashMap<String, String>();
-
+    private static HashMap<String, String> rasaIntents = new HashMap<String, String>();
+    private static HashMap<String, String> courseMap = null;
+    
 	private static BotConfiguration config;
 
 	private static HashMap<String, BotAgent> botAgents;
@@ -420,6 +420,7 @@ public class SocialBotManagerService extends RESTService {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
 			} catch (ParseBotException | IOException | DeploymentException e) {
+				e.printStackTrace();
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
 			// initialized = true;
@@ -790,7 +791,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
-			} catch (ParseException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
@@ -904,6 +905,49 @@ public class SocialBotManagerService extends RESTService {
 				return Response.ok().entity(new HashMap<String, ContentGenerator>()).build();
 			}
 		}
+
+		@POST
+		@Path("/events/telegram/{token}")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(value = "Receive an Telegram event")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+		public Response telegramEvent(String body, @PathParam("token") String token) {
+
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+
+					// Identify bot
+					Collection<VLE> vles = getConfig().getVLEs().values();
+					Bot bot = null;
+
+					for (VLE vle : vles) {
+						Bot teleBot = vle.getBotByServiceToken(token, ChatService.TELEGRAM);
+						if (teleBot != null) {
+							bot = teleBot;
+						}
+					}
+					if (bot == null)
+						System.out.println("cannot relate telegram event to a bot with token: " + token);
+					System.out.println("telegram event: bot identified: " + bot.getName());
+
+					// Handle event
+					Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+					EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+					JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					JSONObject parsedBody;
+					try {
+						parsedBody = (JSONObject) jsonParser.parse(body);
+						mediator.handleEvent(parsedBody);
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}).start();
+
+			return Response.status(200).build();
+		}
 	}
 
 	public void checkRoutineTrigger(VLE vle, JSONObject j, BotAgent botAgent, String botFunctionId, JSONObject context)
@@ -952,38 +996,46 @@ public class SocialBotManagerService extends RESTService {
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
 			// TODO: Handle multiple messengers
-			// why the remove email?
-			// body.remove("email");
 			System.out.println(messageInfo.getMessage().getEmail());
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
+			body.put("user", messageInfo.getMessage().getUser());
+            body.put("intent", messageInfo.getIntent().getKeyword());
 			body.put("time", messageInfo.getMessage().getTime());
-			body.put("intent", messageInfo.getIntent().getKeyword());
-			for (Entity entityName : messageInfo.getIntent().getEntities()) {
-				body.put(entityName.getEntityName(), entityName.getValue());
-				// body.put(entityName, messageInfo.getIntent().getEntity(entityName).getValue());
-			}
-			if (messageInfo.getMessage().getFileBody() != null) {
+            if (messageInfo.getMessage().getFileBody() != null) {
 				body.put("fileBody", messageInfo.getMessage().getFileBody());
 				body.put("fileName", messageInfo.getMessage().getFileName());
 				body.put("fileType", messageInfo.getMessage().getFileType());
-
 			}
+
+            // Insert entities detected from the message
+            JSONObject entities = new JSONObject();
+            for(Entity entityName : messageInfo.getIntent().getEntities()) {
+				body.put(entityName.getEntityName(), entityName.getValue());// Kept for compatibility reasons
+				JSONObject entity = new JSONObject();
+				entity.put("value", entityName.getValue());
+				entity.put("confidence", entityName.getConfidence());
+				entities.put(entityName.getEntityName(), entity);
+			}
+
+			// Insert entities that was passed over from previous message
 			if (messageInfo.getRecognizedEntities() != null) {
-				JSONObject entities = new JSONObject();
-				for (Entity entity : messageInfo.getRecognizedEntities()) {
-					entities.put(entity.getEntityName(), entity.getValue());
+				for (Entity entityName : messageInfo.getRecognizedEntities()) {
+					JSONObject entity = new JSONObject();
+					entity.put("value", entityName.getValue());
+					entity.put("confidence", entityName.getConfidence());
+					entities.put(entityName.getEntityName(), entity);
 				}
-				body.put("entities", entities);
 			}
 			if ((messageInfo.getMessage().getPreviousMessage() != null) && (messageInfo.getMessage().getCurrMessage() != null)) {
 				// if a message has been edited
 				body.put("previousMessage", messageInfo.getMessage().getPreviousMessage());
 				body.put("currMessage", messageInfo.getMessage().getCurrMessage());
-			}
+			}			
 
-			body.put("msg", messageInfo.getMessage().getText());
-			body.put("contextOn", messageInfo.contextActive());
+            body.put("entities", entities);
+            body.put("msg", messageInfo.getMessage().getText());
+            body.put("contextOn", messageInfo.contextActive());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -1247,6 +1299,8 @@ public class SocialBotManagerService extends RESTService {
 			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
+			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string is"
+                    		+ ":" + triggeredBody.toJSONString());
 			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
 					triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
 			System.out.println("Connect Success");
@@ -1282,7 +1336,7 @@ public class SocialBotManagerService extends RESTService {
 					triggerChat(chat, triggeredBody);
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						System.out.println("Closed Context");
-						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"));
+						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"), triggeredBody.getAsString("user"));
 					}
 				} catch (ParseException e) {
 					e.printStackTrace();
@@ -1317,6 +1371,8 @@ public class SocialBotManagerService extends RESTService {
 		String attachments = body.getAsString("attachments");
 		String blocks = body.getAsString("blocks");
 		String channel = null;
+		String user = "";
+        
 		System.out.println(body);
 		if(body.containsKey("contactList")){
 			// Send normal message to users on contactlist
@@ -1380,10 +1436,12 @@ public class SocialBotManagerService extends RESTService {
 			}
 			if (body.containsKey("fileBody")) {
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
-						body.getAsString("fileType"));
+						"", body.getAsString("fileType"));
 			}
 		}
 	}
+
+
 
 	@Api(
 			value = "Model Resource")
@@ -1597,6 +1655,69 @@ public class SocialBotManagerService extends RESTService {
 		}
 		return true;
 	}
+	
+	public void setCourseMap(JSONObject map) {
+		if (courseMap == null) {
+			courseMap = new HashMap<String, String>();
+		}
+		for (String key : map.keySet()) {
+			courseMap.put(key, map.getAsString(key));
+		}
+		System.out.println("Bot: Got courses: " + courseMap.toString());
+	}
+	
+	public void getXapiStatements(ArrayList<String> statements) {
+		System.out.println("Bot: Got " + statements.size() + " statements!");
+		System.out.println(statements.toString());
+		
+		HashMap<String, ArrayList<String>> statementsPerCourse = new HashMap<String, ArrayList<String>>();
+		Collections.reverse(statements);
+		for (String statementObj : statements) {
+			try {
+				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+				JSONObject obj = (JSONObject) parser.parse(statementObj);
+				JSONObject statement = (JSONObject) obj.get("statement");
+				JSONObject context = (JSONObject) statement.get("context");
+				JSONObject extensions = (JSONObject) context.get("extensions");
+				JSONObject courseInfo = (JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
+				String courseid = Integer.toString(courseInfo.getAsNumber("courseid").intValue());
+				
+				if (!statementsPerCourse.containsKey(courseid)) {
+					statementsPerCourse.put(courseid, new ArrayList<String>());
+				}
+				statementsPerCourse.get(courseid).add(statement.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("\u001B[33mDebug --- Partition: " + statementsPerCourse.toString() + "\u001B[0m");
+		
+		
+		// Check if any bots take xAPI statements first
+		HashMap<String, VLE> vles = config.getVLEs();
+		for (Entry<String, VLE> vleEntry : vles.entrySet()) {
+			HashMap<String, Bot> bots = vleEntry.getValue().getBots();
+			
+			for (Entry<String, Bot> botEntry : bots.entrySet()) {
+				HashMap<String, Messenger> messengers = botEntry.getValue().getMessengers();
+				String botName = botEntry.getValue().getName();
+				for (Entry<String, Messenger> messengerEntry : messengers.entrySet()) {
+					ChatMediator mediator = messengerEntry.getValue().getChatMediator();
+					if (mediator instanceof MoodleForumMediator) {
+						MoodleForumMediator moodleMediator = (MoodleForumMediator) mediator;
+						if (courseMap != null && courseMap.containsKey(botName)) {
+							if (statementsPerCourse.containsKey(courseMap.get(botName))) {
+								System.out.println("\u001B[33mDebug --- Statement: " + statementsPerCourse.get(courseMap.get(botName)) + "\u001B[0m");
+								moodleMediator.handle(statementsPerCourse.get(courseMap.get(botName)));
+							}
+						} else {
+							moodleMediator.handle(statements);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	private boolean checkIfCondition(IfThenBlock itb, String text) {
 		String conditionType = itb.getConditionType();
@@ -1648,6 +1769,7 @@ public class SocialBotManagerService extends RESTService {
 	private class RoutineThread implements Runnable {
 		@Override
 		public void run() {
+			// System.out.println("Debug --- Running");
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
@@ -1986,33 +2108,38 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	public static String encryptThisString(String input) {
-		try {
-			// getInstance() method is called with algorithm SHA-384
-			MessageDigest md = MessageDigest.getInstance("SHA-384");
+		if (input != null) {
+			try {
+				// getInstance() method is called with algorithm SHA-384
+				MessageDigest md = MessageDigest.getInstance("SHA-384");
 
-			// digest() method is called
-			// to calculate message digest of the input string
-			// returned as array of byte
-			byte[] messageDigest = md.digest(input.getBytes());
+				// digest() method is called
+				// to calculate message digest of the input string
+				// returned as array of byte
+				byte[] messageDigest = md.digest(input.getBytes());
 
-			// Convert byte array into signum representation
-			BigInteger no = new BigInteger(1, messageDigest);
+				// Convert byte array into signum representation
+				BigInteger no = new BigInteger(1, messageDigest);
 
-			// Convert message digest into hex value
-			String hashtext = no.toString(16);
+				// Convert message digest into hex value
+				String hashtext = no.toString(16);
 
-			// Add preceding 0s to make it 32 bit
-			while (hashtext.length() < 32) {
-				hashtext = "0" + hashtext;
+				// Add preceding 0s to make it 32 bit
+				while (hashtext.length() < 32) {
+					hashtext = "0" + hashtext;
+				}
+
+				// return the HashText
+				return hashtext;
 			}
 
-			// return the HashText
-			return hashtext;
+			// For specifying wrong message digest algorithms
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException(e);
+			}
 		}
-
-		// For specifying wrong message digest algorithms
-		catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
+		else {
+			return null;
 		}
 	}
 

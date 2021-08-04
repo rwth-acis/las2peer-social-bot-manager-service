@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS `attributes`  (
 -- ----------------------------
 -- Table structure for users
 -- ----------------------------
+
 CREATE TABLE IF NOT EXISTS `users`  (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `email` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `users`  (
 -- ----------------------------
 -- Table structure for models
 -- ----------------------------
+=======
 CREATE TABLE IF NOT EXISTS `models`  (
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `model` MEDIUMBLOB NULL DEFAULT NULL,

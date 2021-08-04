@@ -3,6 +3,8 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import i5.las2peer.services.socialBotManagerService.chat.ChatMediator;
+import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import net.minidev.json.JSONObject;
 
 public class VLE {
@@ -116,5 +118,17 @@ public class VLE {
 
 	public void addRoutine(String name, VLERoutine routine) {
 		this.routines.put(name, routine);
+	}
+
+	public Bot getBotByServiceToken(String token, ChatService service) {
+		for (Bot bot : bots.values()) {
+			if (bot.getMessenger(service) != null) {
+				ChatMediator mediator = bot.getMessenger(service)
+						.getChatMediator();
+				if (mediator.hasToken(token))
+					return bot;
+			}
+		}
+		return null;
 	}
 }

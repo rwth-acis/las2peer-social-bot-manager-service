@@ -80,10 +80,10 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
 		if (id.isPresent()) {
-			msg.id(id.getAsLong());
+			msg.id(Long.parseLong(id.get()));
 		}
 		String message = msg.build().toJSONString();
 		try {
@@ -274,8 +274,8 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 
-	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, OptionalLong id) {
+//	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
 		//System.out.println("sending blocks now...");
 
 		List<LayoutBlock> lb = parseBlocks(blocks);
@@ -285,7 +285,7 @@ public class SlackChatMediator extends ChatMediator {
 				.blocks(lb);
 
 		if (id.isPresent()) {
-			msg.id(id.getAsLong());
+			msg.id(Long.parseLong(id.get()));
 		}
 		String message = msg.build().toJSONString();
 		//System.out.println("message after adding blocks: " + message);
@@ -327,8 +327,8 @@ public class SlackChatMediator extends ChatMediator {
 	}
 
 
-	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments, OptionalLong id) {
+//	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
 		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		try {
 			JSONArray attachment = (JSONArray) parser.parse(attachments);
@@ -352,7 +352,7 @@ public class SlackChatMediator extends ChatMediator {
 					.attachments(attachmentList);
 
 			if (id.isPresent()) {
-				msg.id(id.getAsLong());
+				msg.id(Long.parseLong(id.get()));
 			}
 			String message = msg.build().toJSONString();
 			System.out.println("message after adding attachments: " + message);
@@ -432,8 +432,10 @@ public class SlackChatMediator extends ChatMediator {
 					text = currMessageJson.getAsString("text");
 
 					//System.out.println("creating new chat message: c: " + channel + " u: " + user + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " + ts);
-
-					return new ChatMessage(channel, user, text, time, currMessage, prevMessage, "");
+					ChatMessage msg = new ChatMessage(channel, user, text, time);
+					msg.setCurrMessage(currMessage);
+					msg.setPreviousMessage(prevMessage);
+					return msg;
 				} catch(Exception e){
 					e.printStackTrace();
 				}
@@ -542,7 +544,7 @@ public class SlackChatMediator extends ChatMediator {
 		}
 	}
 	@Override
-	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
 		ArrayList<String> channels = new ArrayList<String>();
 		channels.add(channel);
 		FilesUploadResponse response2;
@@ -556,39 +558,6 @@ public class SlackChatMediator extends ChatMediator {
 		}
 		try {
 			Files.deleteIfExists(Paths.get(f.getName()));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
-			OptionalLong id) {
-		byte[] decodedBytes = Base64.getDecoder().decode(fileBody);
-		File file = new File(fileName);
-		try {
-			FileUtils.writeByteArrayToFile(file, decodedBytes);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		ArrayList<String> channels = new ArrayList<String>();
-		channels.add(channel);
-
-		FilesUploadResponse response2;
-		try {
-			response2 = slack.methods(authToken).filesUpload(req -> req.channels(channels).file(file)
-					.content("Pretty stuff").filename(fileName).title(fileName));
-			System.out.println("File sent: " + response2.isOk());
-		} catch (IOException | SlackApiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {
-			Files.deleteIfExists(Paths.get(fileName));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

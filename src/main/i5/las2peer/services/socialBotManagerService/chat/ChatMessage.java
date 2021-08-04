@@ -36,13 +36,15 @@ public class ChatMessage {
 		this.fileBody = body;
 	}
 
-	public ChatMessage(String channel, String user, String text, String time, String currMessage, String previousMessage, String extra) {
+	public ChatMessage(String channel, String user, String text, String time, String fileName, String fileType,
+					   String body) {
 		this.channel = channel;
 		this.user = user;
-		this.text = text;
+		this.text = text + fileName;
 		this.time = time;
-		this.previousMessage = previousMessage;
-		this.currMessage = currMessage;
+		this.fileName = fileName;
+		this.fileType = fileType;
+		this.fileBody = body;
 	}
 
 	public void setText(String text) {
