@@ -515,7 +515,7 @@ public class Messenger {
 									}
 
 								}
-								this.chatMediator.sendMessageToChannel(message.getChannel(), split, Optional.of(message.getUser()));
+								this.chatMediator.sendMessageToChannel(message.getChannel(), split);
 								// check whether a file url is attached to the chat response and try to send it
 								// to
 								// the user
