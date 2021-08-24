@@ -14,6 +14,7 @@ import javax.websocket.DeploymentException;
 
 import com.github.seratch.jslack.api.model.*;
 import com.github.seratch.jslack.api.model.block.ActionsBlock;
+import com.github.seratch.jslack.api.model.block.DividerBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.OptionObject;
 import com.github.seratch.jslack.api.model.block.composition.PlainTextObject;
@@ -125,8 +126,6 @@ public class SlackChatMediator extends ChatMediator {
 		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		try {
 			JSONArray block = (JSONArray) parser.parse(blocks);
-			ArrayList<BlockElement> bList = new ArrayList<>();
-			ArrayList<OptionObject> oList = new ArrayList<>();
 			JSONObject elementJson = new JSONObject();
 			JSONObject optionJson = new JSONObject();
 			JSONObject eTextJson = new JSONObject();
@@ -137,7 +136,13 @@ public class SlackChatMediator extends ChatMediator {
 			PlainTextObject tempPlainText = new PlainTextObject();
 			String eTextString = "";
 			for (int i = 0; i < block.size(); i++) {
+				ArrayList<BlockElement> bList = new ArrayList<>();
+				ArrayList<OptionObject> oList = new ArrayList<>();
+
 				JSONObject o = (JSONObject) block.get(i);
+
+				String type = o.getAsString("type");
+
 				//System.out.println(o.toString());
 				if (o.containsKey("text")) {
 					textString = o.getAsString("text");
@@ -156,6 +161,12 @@ public class SlackChatMediator extends ChatMediator {
 					//System.out.println(sectionBlock);
 
 					lb.add(sectionBlock);
+				}
+				if(type.equals("divider")){
+					DividerBlock dividerBlock = DividerBlock.builder()
+							.build();
+
+					lb.add(dividerBlock);
 				}
 				if (o.containsKey("elements")) {
 					elements = o.getAsString("elements");
@@ -190,10 +201,16 @@ public class SlackChatMediator extends ChatMediator {
 								optionJson = (JSONObject) optionsJson.get(z);
 								String value = optionJson.getAsString("value");
 								String optionString = optionJson.getAsString("text");
+								String descriptionString = optionJson.getAsString("description");
 								JSONObject currOptionsJSON = (JSONObject) parser.parse(optionString);
+								JSONObject currDescriptionJSON = (JSONObject) parser.parse(descriptionString);
 
 								PlainTextObject oTempPlainText = PlainTextObject.builder()
 										.text(currOptionsJSON.getAsString("text"))
+										.build();
+
+								PlainTextObject dTempPlainText = PlainTextObject.builder()
+										.text(currDescriptionJSON.getAsString("text"))
 										.build();
 
 								//System.out.println("text" + oTempPlainText);
@@ -201,6 +218,7 @@ public class SlackChatMediator extends ChatMediator {
 								OptionObject oTempOptionObject = OptionObject.builder()
 										.value(currOptionsJSON.getAsString("value"))
 										.text(oTempPlainText)
+										.description(dTempPlainText)
 										.value(value)
 										.build();
 
@@ -253,16 +271,17 @@ public class SlackChatMediator extends ChatMediator {
 
 				}
 
-			}
+				//System.out.println("blist: " + bList);
+				if(!bList.isEmpty()){
+					ActionsBlock tempActionsBlockElement = ActionsBlock.builder()
+							.elements(bList)
+							.build();
 
-			//System.out.println("blist: " + bList);
-			if(!bList.isEmpty()){
-				ActionsBlock tempActionsBlockElement = ActionsBlock.builder()
-						.elements(bList)
-						.build();
+					//System.out.println("tempactions: " + tempActionsBlockElement);
+					lb.add(tempActionsBlockElement);
 
-				//System.out.println("tempactions: " + tempActionsBlockElement);
-				lb.add(tempActionsBlockElement);
+				}
+
 
 			}
 
