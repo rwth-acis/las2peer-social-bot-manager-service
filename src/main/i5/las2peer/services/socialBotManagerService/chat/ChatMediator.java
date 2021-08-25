@@ -1,18 +1,15 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import org.apache.commons.io.FileUtils;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Vector;
 
 public abstract class ChatMediator {
 	protected String authToken;
@@ -38,10 +35,10 @@ public abstract class ChatMediator {
 		sendAttachmentMessageToChannel(channel, attachments, Optional.empty());
 	}
 
-	public abstract void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id);
+	public abstract void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id);
 
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		sendBlocksMessageToChannel(channel, blocks, authToken, Optional.empty());
 	}
 
 	/**
@@ -170,6 +167,10 @@ public abstract class ChatMediator {
 			result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
 		}
 		return result.toString();
+	}
+
+	public String getAuthToken() {
+		return authToken;
 	}
 
 	public abstract void close();

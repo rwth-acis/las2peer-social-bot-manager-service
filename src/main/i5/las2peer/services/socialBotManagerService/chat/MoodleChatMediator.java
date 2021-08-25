@@ -1,17 +1,16 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.File;
-import java.io.IOException;
-
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Vector;
-
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.TimeZone;
+import java.util.Vector;
 
 public class MoodleChatMediator extends ChatMediator {
 	private static final String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
@@ -113,13 +112,13 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public  void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id){
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
 	}
 
 	@Override

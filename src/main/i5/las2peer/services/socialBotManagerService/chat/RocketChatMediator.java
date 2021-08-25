@@ -1,36 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
-import org.java_websocket.util.Base64;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import com.rocketchat.common.data.lightdb.document.UserDocument;
 import com.rocketchat.common.data.model.ErrorObject;
 import com.rocketchat.common.data.model.UserObject;
@@ -52,11 +21,34 @@ import com.rocketchat.core.model.RocketChatMessage.Type;
 import com.rocketchat.core.model.RoomObject;
 import com.rocketchat.core.model.SubscriptionObject;
 import com.rocketchat.core.model.TokenObject;
-
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.java_websocket.util.Base64;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {
@@ -528,13 +520,13 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public  void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id){
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
 	}
 
 	@Override

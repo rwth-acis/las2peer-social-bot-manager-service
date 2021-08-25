@@ -1,68 +1,9 @@
 package i5.las2peer.services.socialBotManagerService;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.io.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.Collections;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.websocket.DeploymentException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import com.google.gson.Gson;
-
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
-import i5.las2peer.api.execution.InternalServiceException;
-import i5.las2peer.api.execution.ServiceAccessDeniedException;
-import i5.las2peer.api.execution.ServiceInvocationFailedException;
-import i5.las2peer.api.execution.ServiceMethodNotFoundException;
-import i5.las2peer.api.execution.ServiceNotAuthorizedException;
-import i5.las2peer.api.execution.ServiceNotAvailableException;
-import i5.las2peer.api.execution.ServiceNotFoundException;
+import i5.las2peer.api.execution.*;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.api.security.AgentOperationFailedException;
@@ -77,39 +18,45 @@ import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
-import i5.las2peer.services.socialBotManagerService.model.ActionType;
-import i5.las2peer.services.socialBotManagerService.model.Bot;
-import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
-import i5.las2peer.services.socialBotManagerService.model.BotModel;
-import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
-import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
-import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
-import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
-import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
-import i5.las2peer.services.socialBotManagerService.model.Messenger;
-import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
-import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
-import i5.las2peer.services.socialBotManagerService.model.Trigger;
-import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
-import i5.las2peer.services.socialBotManagerService.model.VLE;
-import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
-import i5.las2peer.services.socialBotManagerService.model.Messenger;
+import i5.las2peer.services.socialBotManagerService.model.*;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Contact;
-import io.swagger.annotations.Info;
-import io.swagger.annotations.License;
-import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.annotations.*;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.websocket.DeploymentException;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.*;
+import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  * las2peer-SocialBotManager-Service
@@ -1294,9 +1241,9 @@ public class SocialBotManagerService extends RESTService {
 			// work
 			MiniClient client = new MiniClient();
 			client.setConnectorEndpoint(vle.getAddress());
-			//client.setLogin("alice", "pwalice");
+			client.setLogin("alice", "pwalice");
 			System.out.println(botAgent.getLoginName() + "    pass " + botPass);
-			client.setLogin(botAgent.getLoginName(), botPass);
+			//client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string is"
@@ -1432,7 +1379,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			if(body.containsKey("blocks")){
 				System.out.println("body has blocks");
-				chat.sendBlocksMessageToChannel(channel, blocks);
+				chat.sendBlocksMessageToChannel(channel, blocks, chat.getAuthToken());
 			}
 			if (body.containsKey("fileBody")) {
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),

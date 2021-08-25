@@ -1,15 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.Vector;
-
-import javax.ws.rs.core.MediaType;
-import org.apache.commons.io.IOUtils;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -18,18 +8,22 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.File;
 import com.pengrad.telegrambot.model.request.ChatAction;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardRemove;
-import com.pengrad.telegrambot.request.GetFile;
-import com.pengrad.telegrambot.request.GetMe;
-import com.pengrad.telegrambot.request.SendChatAction;
-import com.pengrad.telegrambot.request.SendDocument;
-import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.*;
 import com.pengrad.telegrambot.response.BaseResponse;
 import com.pengrad.telegrambot.response.GetFileResponse;
 import com.pengrad.telegrambot.response.GetMeResponse;
-
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
+import org.apache.commons.io.IOUtils;
+
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import java.util.Vector;
 
 /**
  * The TelegramChatMediator handles the communication with the Telegram
@@ -237,13 +231,13 @@ public class TelegramChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id){
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
 	}
 
 	@Override

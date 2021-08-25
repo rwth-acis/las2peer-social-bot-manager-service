@@ -3,13 +3,11 @@ package i5.las2peer.services.socialBotManagerService.chat;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Vector;
 
 public class MoodleForumMediator extends ChatMediator {
 	private final static String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
@@ -167,13 +165,13 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public  void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id){
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
 	}
 
 	@Override
