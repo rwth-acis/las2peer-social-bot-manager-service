@@ -307,58 +307,7 @@ public class SlackChatMediator extends ChatMediator {
 			System.out.println(res);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-
-
-
-
-
-//		List<LayoutBlock> lb = parseBlocks(blocks);
-//		MessageBuilder msg = Message.builder()
-//				.id(System.currentTimeMillis())
-//				.channel(channel)
-//				.blocks(lb);
-//
-//		if (id.isPresent()) {
-//			msg.id(Long.parseLong(id.get()));
-//		}
-//		String message = msg.build().toJSONString();
-//		//System.out.println("message after adding blocks: " + message);
-//
-//		try {
-//			// make sure that the bot's name and profile pic is used
-//			String userId = (slack.methods().authTest(req -> req.token(authToken))).getUserId();
-//			String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile()
-//					.getImageOriginal();
-//			String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
-//
-//			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
-//					// ID
-//					.blocks(lb).iconUrl(url).username(name));
-//			System.out.println("Block sent: " + response.isOk());
-//		} catch (Exception e) {
-//			this.messageCollector.setConnected(false);
-//			this.reconnect();
-//			rtm.sendMessage(message);
-//			System.out.println("Sent message with Exception: " + e.getMessage());
-//			if (e.getMessage().toLowerCase().equals("timeout")) {
-//				// TODO recursive call not the best idea
-//				sendBlocksMessageToChannel(channel, blocks, id);
-//			}
-//		}
-//		try {
-//			// get the users email address if not done at the beginning (should only happen if a new user joined the
-//			// space)
-//			if (usersByChannel.get(channel) == null) {
-//				String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
-//						.getChannel().getUser();
-//				usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
-//						.getProfile().getEmail());
-//			}
-//		} catch (Exception e) {
-//			System.out.println("Could not extract Email for reason + " + e);
-//		}
-
+		} 
 	}
 
 
