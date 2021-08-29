@@ -9,6 +9,8 @@ import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class Bot {
@@ -170,12 +172,15 @@ public class Bot {
 		}
 	}
 
-	public boolean deactivateAllWithCheck(ArrayList<String> messengerNames) {
+	public boolean deactivateAllWithCheck(ArrayList messengerNames) {
 		int correctEntries = 0;
-		for (String name : messengerNames) {
+		for (Object object : messengerNames) {
+			HashMap<String, String> list = (HashMap<String, String>) object;
 			for (Messenger m : this.messengers.values()) {
-				if (name.toLowerCase().equals(m.getName().toLowerCase())) {
-					correctEntries++;
+				if (list.get("name").toLowerCase().equals(m.getName().toLowerCase())) {
+					if (m.getChatMediator().checkToken(list.get("authToken"))) {
+						correctEntries++;
+					}
 				}
 			}
 		}
