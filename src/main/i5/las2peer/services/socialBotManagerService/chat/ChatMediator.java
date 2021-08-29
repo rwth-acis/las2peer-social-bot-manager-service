@@ -176,5 +176,14 @@ public abstract class ChatMediator {
 		return result.toString();
 	}
 
+	// used to check whether given token is the real one
+	public boolean checkToken(String authToken) {
+		System.out.println(authToken + "  " + this.authToken);
+		if (authToken.equals(this.authToken)) {
+			return true;
+		} else
+			return false;
+	}
+
 	public abstract void close();
 }
