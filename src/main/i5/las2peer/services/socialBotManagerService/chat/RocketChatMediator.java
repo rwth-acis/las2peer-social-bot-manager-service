@@ -12,12 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.OptionalLong;
-import java.util.Vector;
+import java.util.*;
 import java.util.logging.Level;
 
 import javax.ws.rs.client.Client;
@@ -97,8 +92,25 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		messageCollector.setDomain(url);
 	}
 
+	public RocketChatMediator(String authToken, SQLDatabase database) {
+		super(authToken);
+		this.database = database;
+		String[] auth = authToken.split(":");
+		username = auth[0];
+		password = auth[1];
+		if (activeSubscriptions == null) {
+			activeSubscriptions = new HashSet<String>();
+		}
+		client = new RocketChatAPI(url);
+		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
+		client.setPingInterval(15000);
+		client.connect(this);
+		RocketChatAPI.LOGGER.setLevel(Level.OFF);
+		messageCollector.setDomain(url);
+	}
+
 	@Override
-	public void sendFileMessageToChannel(String channel, File f, String text, OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
 
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
@@ -133,8 +145,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
-			OptionalLong id) {
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String text, String fileType,
+										 Optional<String> id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
 		File file = new File(fileName + "." + fileType);
 		try {
@@ -143,11 +155,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		sendFileMessageToChannel(channel, file, "", id);
+		sendFileMessageToChannel(channel, file, text, id);
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, OptionalLong id) {
+	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
@@ -475,6 +487,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		// Creating Logical ChatRooms using factory class
 	}
 
+
+
+	//Leo: sending of file messages is already implemented
+	@Override
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id){}
+
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(message.getRoomId());
@@ -507,6 +525,16 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				}
 			}
 		}
+	}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+
+	}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		super.sendBlocksMessageToChannel(channel, blocks);
 	}
 
 	@Override
