@@ -129,21 +129,8 @@ import net.minidev.json.parser.ParseException;
  * A REST service that manages social bots in a las2peer network.
  *
  */
-@Api(
-		value = "test")
-@SwaggerDefinition(
-		info = @Info(
-				title = "las2peer Bot Manager Service",
-				version = "1.0.19",
-				description = "A las2peer service for managing social bots.",
-				termsOfService = "",
-				contact = @Contact(
-						name = "Alexander Tobias Neumann",
-						url = "",
-						email = "neumann@dbis.rwth-aachen.de"),
-				license = @License(
-						name = "",
-						url = "")))
+@Api(value = "test")
+@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.19", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
 @ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
@@ -165,9 +152,9 @@ public class SocialBotManagerService extends RESTService {
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
 	private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
-    private static HashMap<String, String> rasaIntents = new HashMap<String, String>();
-    private static HashMap<String, String> courseMap = null;
-    
+	private static HashMap<String, String> rasaIntents = new HashMap<String, String>();
+	private static HashMap<String, String> courseMap = null;
+
 	private static BotConfiguration config;
 
 	private static HashMap<String, BotAgent> botAgents;
@@ -253,15 +240,17 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(TrainingResource.class);
 		getResourceConfig().register(this);
 	}
+
 	@POST
 	@Path("/trainAndLoad")
 	@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
-	@ApiOperation(
-			value = "Trains and loads an NLU model on the given Rasa NLU server instance.",
-			notes = "")
-	// TODO: Just an adapter, since the Rasa server doesn't support "Access-Control-Expose-Headers"
-	// and the model file name is returned as a response header... Remove and just use Rasa's
-	// API directly once that's fixed. The whole `TrainingHelper` class can be deleted then as well.
+	@ApiOperation(value = "Trains and loads an NLU model on the given Rasa NLU server instance.", notes = "")
+	// TODO: Just an adapter, since the Rasa server doesn't support
+	// "Access-Control-Expose-Headers"
+	// and the model file name is returned as a response header... Remove and just
+	// use Rasa's
+	// API directly once that's fixed. The whole `TrainingHelper` class can be
+	// deleted then as well.
 	public Response trainAndLoad(String body) {
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		if (this.nluTrainThread != null && this.nluTrainThread.isAlive()) {
@@ -278,25 +267,28 @@ public class SocialBotManagerService extends RESTService {
 			this.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
 			this.nluTrainThread = new Thread(this.nluTrain);
 			this.nluTrainThread.start();
-			// TODO: Create a member for this thread, make another REST method to check whether
+			// TODO: Create a member for this thread, make another REST method to check
+			// whether
 			// training was successful.
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 
-		// Doesn't signal that training and loading was successful, but that it was started.
+		// Doesn't signal that training and loading was successful, but that it was
+		// started.
 		return Response.ok("Training started.").build();
 	}
 
 	@GET
 	@Path("/trainAndLoadStatus")
 	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "Returns information about the training process started by the last invocation of `/trainAndLoad`.",
-			notes = "")
-	// TODO: Just an adapter, since the Rasa server doesn't support "Access-Control-Expose-Headers"
-	// and the model file name is returned as a response header... Remove and just use Rasa's
-	// API directly once that's fixed. The whole `TrainingHelper` class can be deleted then as well.
+	@ApiOperation(value = "Returns information about the training process started by the last invocation of `/trainAndLoad`.", notes = "")
+	// TODO: Just an adapter, since the Rasa server doesn't support
+	// "Access-Control-Expose-Headers"
+	// and the model file name is returned as a response header... Remove and just
+	// use Rasa's
+	// API directly once that's fixed. The whole `TrainingHelper` class can be
+	// deleted then as well.
 	public Response trainAndLoadStatus(String body) {
 		if (this.nluTrainThread == null) {
 			return Response.ok("No training process was started yet.").build();
@@ -312,9 +304,7 @@ public class SocialBotManagerService extends RESTService {
 	@GET
 	@Path("/{rasaUrl}/intents")
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value = "Returns the intents of a current Rasa Model.",
-			notes = "")
+	@ApiOperation(value = "Returns the intents of a current Rasa Model.", notes = "")
 	public Response getIntents(@PathParam("rasaUrl") String url) {
 		if (this.rasaIntents.get(url) == null) {
 			return Response.ok("failed.").build();
@@ -327,21 +317,8 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-	@Api(
-			value = "Bot Resource")
-	@SwaggerDefinition(
-			info = @Info(
-					title = "las2peer Bot Manager Service",
-					version = "1.0.13",
-					description = "A las2peer service for managing social bots.",
-					termsOfService = "",
-					contact = @Contact(
-							name = "Alexander Tobias Neumann",
-							url = "",
-							email = "neumann@dbis.rwth-aachen.de"),
-					license = @License(
-							name = "",
-							url = "")))
+	@Api(value = "Bot Resource")
+	@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.13", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
 	@Path("/bots")
 	public static class BotResource {
 		SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
@@ -430,13 +407,8 @@ public class SocialBotManagerService extends RESTService {
 		@GET
 		@Path("/{vleName}")
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Returns bot information") })
-		@ApiOperation(
-				value = "Retrieve bot by name",
-				notes = "Returns bot information by the given VLE name.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
 		public Response getBotsForVLE(@PathParam("vleName") String name) {
 			VLE vle = getConfig().getVLEs().get(name);
 			// Set<String> botList = new HashSet<String>();
@@ -470,13 +442,8 @@ public class SocialBotManagerService extends RESTService {
 		@POST
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Init successful.") })
-		@ApiOperation(
-				value = "Init Bot",
-				notes = "Reads the configuration file.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Init successful.") })
+		@ApiOperation(value = "Init Bot", notes = "Reads the configuration file.")
 		public Response init(BotModel botModel) {
 			sbfservice.setL2pcontext(Context.getCurrent());
 			BotParser bp = BotParser.getInstance();
@@ -555,31 +522,27 @@ public class SocialBotManagerService extends RESTService {
 						e2.printStackTrace();
 					}
 
-			}
-			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
+				}
+				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 
-			return Response.ok().entity(returnString).build();
-			// }
+				return Response.ok().entity(returnString).build();
+			}
 		}
 
 		/**
 		 * Join function
 		 *
-		 * @param body TODO
+		 * @param body    TODO
 		 * @param botName TODO
-		 * @return Returns an HTTP response with plain text string content derived from the path input param.
+		 * @return Returns an HTTP response with plain text string content derived from
+		 *         the path input param.
 		 */
 		@POST
 		@Path("/{botName}")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Bot activated") })
-		@ApiOperation(
-				value = "Activate Bot",
-				notes = "Has the capability to join the digital space to get rights.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot activated") })
+		@ApiOperation(value = "Activate Bot", notes = "Has the capability to join the digital space to get rights.")
 		public Response join(String body, @PathParam("botName") String botName) {
 			String returnString = "";
 			try {
@@ -643,13 +606,8 @@ public class SocialBotManagerService extends RESTService {
 		@Path("/{botName}/trigger/service")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiOperation(
-				value = "Trigger bot by service function",
-				notes = "Service Function triggers bot")
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Bot triggered") })
+		@ApiOperation(value = "Trigger bot by service function", notes = "Service Function triggers bot")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot triggered") })
 		public Response trigger(String body, @PathParam("botName") String name) {
 			String returnString = "";
 			try {
@@ -687,13 +645,8 @@ public class SocialBotManagerService extends RESTService {
 		@Path("/{botName}/trigger/routine")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiOperation(
-				value = "Trigger bot by routine",
-				notes = "Routine triggers bot")
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Bot triggered") })
+		@ApiOperation(value = "Trigger bot by routine", notes = "Routine triggers bot")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot triggered") })
 		public Response triggerRoutine(String body, @PathParam("botName") String name) {
 			String returnString = "Routine is running.";
 			SocialBotManagerService sbf = this.sbfservice;
@@ -748,20 +701,19 @@ public class SocialBotManagerService extends RESTService {
 		@Path("/{botName}/appRequestURL/{instanceAlias}/{intent}/{token}")
 		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiOperation(
-				value = "Used as an slack app request url to send button clicks")
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "") })
-		public Response triggerButton(String body, @PathParam("botName") String name, @PathParam("instanceAlias") String instanceAlias, @PathParam("intent") String expectedIntent, @PathParam("token") String token) {
+		@ApiOperation(value = "Used as an slack app request url to send button clicks")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+		public Response triggerButton(String body, @PathParam("botName") String name,
+				@PathParam("instanceAlias") String instanceAlias, @PathParam("intent") String expectedIntent,
+				@PathParam("token") String token) {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			System.out.println("name " + name + " , instance alias " + instanceAlias);
 
 			try {
 				String result = java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name());
 
-				//slack adds payload= in front of the result, so deleting that to parse it to json
+				// slack adds payload= in front of the result, so deleting that to parse it to
+				// json
 				result = result.substring(8);
 
 				System.out.println("now trying to handle message...");
@@ -779,28 +731,27 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject userJson = (JSONObject) p.parse(bodyInput.getAsString("user"));
 				user = userJson.getAsString("id");
 
-
 				JSONArray actions = (JSONArray) p.parse(bodyInput.getAsString("actions"));
-				for(Object actionsObject : actions){
+				for (Object actionsObject : actions) {
 					String selectedOptionsString = ((JSONObject) actionsObject).getAsString("selected_options");
 					String selectedOptionString = ((JSONObject) actionsObject).getAsString("selected_option");
-					if(selectedOptionsString != null){
+					if (selectedOptionsString != null) {
 						// multiple choice with one or more than one selected option
-						//System.out.println("selected options string: " + selectedOptionsString);
+						// System.out.println("selected options string: " + selectedOptionsString);
 						JSONArray selectedOptionsJson = (JSONArray) p.parse(selectedOptionsString);
 						text = selectedOptionsJson.toString();
 
-					} else if(selectedOptionString != null){
+					} else if (selectedOptionString != null) {
 						// single choice with one selected option (possible)
-						//System.out.println("selected option: " + selectedOptionString);
+						// System.out.println("selected option: " + selectedOptionString);
 						JSONObject selectedOptionJson = (JSONObject) p.parse(selectedOptionString);
 
 						String textString = selectedOptionJson.getAsString("text");
 						JSONObject textJson = (JSONObject) p.parse(textString);
 						text += textJson.getAsString("text");
 
-					}else {
-						//System.out.println("No selectedOption and no selectedOptions.");
+					} else {
+						// System.out.println("No selectedOption and no selectedOptions.");
 						System.out.println("No selectedOption and no selectedOptions. Just a normal button press.");
 
 						String textString = ((JSONObject) actionsObject).getAsString("text");
@@ -811,7 +762,7 @@ public class SocialBotManagerService extends RESTService {
 
 				System.out.println("Assembled text from triggerButton is: " + text);
 				// remove the last ","
-				if((String.valueOf(text.charAt(text.length() - 1)).equals(","))){
+				if ((String.valueOf(text.charAt(text.length() - 1)).equals(","))) {
 					System.out.println("inside removing last comma");
 					text = text.substring(0, text.length() - 1);
 				}
@@ -824,15 +775,17 @@ public class SocialBotManagerService extends RESTService {
 				intentJO.put("intent", innerIntent);
 				JSONArray ja = new JSONArray();
 				intentJO.put("entities", ja);
-				i5.las2peer.services.socialBotManagerService.nlu.Intent intent = new i5.las2peer.services.socialBotManagerService.nlu.Intent(intentJO);
+				i5.las2peer.services.socialBotManagerService.nlu.Intent intent = new i5.las2peer.services.socialBotManagerService.nlu.Intent(
+						intentJO);
 				// set email, since it is not passed on in body
 				chatMessage.setEmail(user);
 				// adjust triggered function id
-				MessageInfo messageInfo = new MessageInfo(chatMessage, intent, "", name, instanceAlias, true, new ArrayList<>());
+				MessageInfo messageInfo = new MessageInfo(chatMessage, intent, "", name, instanceAlias, true,
+						new ArrayList<>());
 
-
-				//this.triggeredFunction.get(message.getChannel());
-				System.out.println("Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
+				// this.triggeredFunction.get(message.getChannel());
+				System.out.println(
+						"Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 
 				SocialBotManagerService sbf = this.sbfservice;
@@ -845,30 +798,37 @@ public class SocialBotManagerService extends RESTService {
 							System.out.println("service name: " + service);
 							VLE vle = getConfig().getServiceConfiguration(service);
 
-							// get triggered function id, by getting bot, the messengers and then the intent hash map
+							// get triggered function id, by getting bot, the messengers and then the intent
+							// hash map
 							HashMap<String, Bot> botsHM = vle.getBots();
-							//System.out.println("botsHM: " + botsHM);
+							// System.out.println("botsHM: " + botsHM);
 							String triggerdFunctionId = "";
-							for(Bot bot : botsHM.values()){
+							for (Bot bot : botsHM.values()) {
 								System.out.println(bot);
-								HashMap<String, i5.las2peer.services.socialBotManagerService.model.Messenger> messengers =  bot.getMessengers();
-								for(Messenger m : messengers.values()){
-									//System.out.println("messenger: " + m);
-									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m.getKnownIntents();
-									//System.out.println("intentsHM: " + intentsHM);
-									for(String s : intentsHM.keySet()){
-										if(s.equals(expectedIntent)){
-											i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = intentsHM.get(s);
-											i5.las2peer.services.socialBotManagerService.model.ChatResponse chatResponses = incomingMessage.getResponse(new Random());
-											//System.out.println(chatResponses);
-											//System.out.println(chatResponses.getTriggeredFunctionId());
+								HashMap<String, i5.las2peer.services.socialBotManagerService.model.Messenger> messengers = bot
+										.getMessengers();
+								for (Messenger m : messengers.values()) {
+									// System.out.println("messenger: " + m);
+									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m
+											.getKnownIntents();
+									// System.out.println("intentsHM: " + intentsHM);
+									for (String s : intentsHM.keySet()) {
+										if (s.equals(expectedIntent)) {
+											i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = intentsHM
+													.get(s);
+											i5.las2peer.services.socialBotManagerService.model.ChatResponse chatResponses = incomingMessage
+													.getResponse(new Random());
+											// System.out.println(chatResponses);
+											// System.out.println(chatResponses.getTriggeredFunctionId());
 											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
 										}
 									}
 								}
 							}
-							MessageInfo newMessageInfo = new MessageInfo(chatMessage, intent, triggerdFunctionId, name, instanceAlias, true, new ArrayList<>());
-							System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " " + newMessageInfo.getTriggeredFunctionId());
+							MessageInfo newMessageInfo = new MessageInfo(chatMessage, intent, triggerdFunctionId, name,
+									instanceAlias, true, new ArrayList<>());
+							System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " "
+									+ newMessageInfo.getTriggeredFunctionId());
 							try {
 								sbf.performIntentTrigger(vle, botAgent, newMessageInfo);
 							} catch (Exception e) {
@@ -887,25 +847,19 @@ public class SocialBotManagerService extends RESTService {
 				}).start();
 				return Response.ok().build();
 
-			} catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
 			return Response.ok().build();
 		}
 
-
-
 		@POST
 		@Path("/{botName}/trigger/intent")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiOperation(
-				value = "Log message to MobSOS and trigger bot by intent if necessary")
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "") })
+		@ApiOperation(value = "Log message to MobSOS and trigger bot by intent if necessary")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
 		public Response triggerIntent(String body, @PathParam("botName") String name) {
 			Gson gson = new Gson();
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
@@ -916,7 +870,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject cleanedJson = (JSONObject) message.get("message");
 				System.out.println("cleaning now1");
 				cleanedJson.put("user", encryptThisString(cleanedJson.getAsString("user")));
-				if(cleanedJson.containsKey("email")){
+				if (cleanedJson.containsKey("email")) {
 					cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
 				}
 				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
@@ -962,13 +916,8 @@ public class SocialBotManagerService extends RESTService {
 		@DELETE
 		@Path("/{botName}/{unit}")
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Bot deactivated") })
-		@ApiOperation(
-				value = "Deactivate bot for unit",
-				notes = "Deactivates a bot for a unit.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot deactivated") })
+		@ApiOperation(value = "Deactivate bot for unit", notes = "Deactivates a bot for a unit.")
 		public Response deactivateBot(@PathParam("botName") String bot, @PathParam("unit") String unit) {
 			Collection<VLE> vles = getConfig().getVLEs().values();
 			for (VLE vle : vles) {
@@ -1043,13 +992,9 @@ public class SocialBotManagerService extends RESTService {
 		@GET
 		@Path("/{botName}/generators")
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "List of content generators") })
-		@ApiOperation(
-				value = "Get content generators",
-				notes = "Returns a list of content generators specified for that bot.")
+		@ApiResponses(value = {
+				@ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of content generators") })
+		@ApiOperation(value = "Get content generators", notes = "Returns a list of content generators specified for that bot.")
 		public Response getContentGenerators(@PathParam("botName") String service) {
 			VLE vle = null;
 			if (getConfig() != null) {
@@ -1133,7 +1078,8 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-	// TODO: Use entity value, handle environment separator, handle other things than static content
+	// TODO: Use entity value, handle environment separator, handle other things
+	// than static content
 	public void performIntentTrigger(VLE vle, BotAgent botAgent, MessageInfo messageInfo)
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
 			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
@@ -1160,17 +1106,17 @@ public class SocialBotManagerService extends RESTService {
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
 			body.put("user", messageInfo.getMessage().getUser());
-            body.put("intent", messageInfo.getIntent().getKeyword());
+			body.put("intent", messageInfo.getIntent().getKeyword());
 			body.put("time", messageInfo.getMessage().getTime());
-            if (messageInfo.getMessage().getFileBody() != null) {
+			if (messageInfo.getMessage().getFileBody() != null) {
 				body.put("fileBody", messageInfo.getMessage().getFileBody());
 				body.put("fileName", messageInfo.getMessage().getFileName());
 				body.put("fileType", messageInfo.getMessage().getFileType());
 			}
 
-            // Insert entities detected from the message
-            JSONObject entities = new JSONObject();
-            for(Entity entityName : messageInfo.getIntent().getEntities()) {
+			// Insert entities detected from the message
+			JSONObject entities = new JSONObject();
+			for (Entity entityName : messageInfo.getIntent().getEntities()) {
 				body.put(entityName.getEntityName(), entityName.getValue());// Kept for compatibility reasons
 				JSONObject entity = new JSONObject();
 				entity.put("value", entityName.getValue());
@@ -1187,15 +1133,16 @@ public class SocialBotManagerService extends RESTService {
 					entities.put(entityName.getEntityName(), entity);
 				}
 			}
-			if ((messageInfo.getMessage().getPreviousMessage() != null) && (messageInfo.getMessage().getCurrMessage() != null)) {
+			if ((messageInfo.getMessage().getPreviousMessage() != null)
+					&& (messageInfo.getMessage().getCurrMessage() != null)) {
 				// if a message has been edited
 				body.put("previousMessage", messageInfo.getMessage().getPreviousMessage());
 				body.put("currMessage", messageInfo.getMessage().getCurrMessage());
-			}			
+			}
 
-            body.put("entities", entities);
-            body.put("msg", messageInfo.getMessage().getText());
-            body.put("contextOn", messageInfo.contextActive());
+			body.put("entities", entities);
+			body.put("msg", messageInfo.getMessage().getText());
+			body.put("contextOn", messageInfo.contextActive());
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -1450,17 +1397,18 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 		if (sf.getActionType().equals(ActionType.SERVICE)) {
 			System.out.println(sf.getFunctionName());
-			// This part is "hardcoded" and will need improvements, but currently makes using the assessment function
+			// This part is "hardcoded" and will need improvements, but currently makes
+			// using the assessment function
 			// work
 			MiniClient client = new MiniClient();
 			client.setConnectorEndpoint(vle.getAddress());
-			//client.setLogin("alice", "pwalice");
+			// client.setLogin("alice", "pwalice");
 			System.out.println(botAgent.getLoginName() + "    pass " + botPass);
 			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
-			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " " + sf.getConsumes() +" " + sf.getProduces() +  " My string is"
-                    		+ ":" + triggeredBody.toJSONString());
+			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
+					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
 			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
 					triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
 			System.out.println("Connect Success");
@@ -1478,25 +1426,25 @@ public class SocialBotManagerService extends RESTService {
 						triggeredBody.put("fileBody", response.getAsString("fileBody"));
 						triggeredBody.put("fileName", response.getAsString("fileName"));
 						triggeredBody.put("fileType", response.getAsString("fileType"));
-					}
-					else
+					} else
 						triggeredBody.remove("fileBody");
-					if(response.containsKey("contactList")){
+					if (response.containsKey("contactList")) {
 						triggeredBody.put("contactList", response.getAsString("contactList"));
 					}
-					if(response.containsKey("contactText")){
+					if (response.containsKey("contactText")) {
 						triggeredBody.put("contactText", response.getAsString("contactText"));
 					}
-					if(response.containsKey("attachments")){
+					if (response.containsKey("attachments")) {
 						triggeredBody.put("attachments", response.getAsString("attachments"));
 					}
-					if(response.containsKey("blocks")){
+					if (response.containsKey("blocks")) {
 						triggeredBody.put("blocks", response.getAsString("blocks"));
 					}
 					triggerChat(chat, triggeredBody);
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						System.out.println("Closed Context");
-						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"), triggeredBody.getAsString("user"));
+						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
+								triggeredBody.getAsString("user"));
 					}
 				} catch (ParseException e) {
 					e.printStackTrace();
@@ -1532,21 +1480,21 @@ public class SocialBotManagerService extends RESTService {
 		String blocks = body.getAsString("blocks");
 		String channel = null;
 		String user = "";
-        
+
 		System.out.println(body);
-		if(body.containsKey("contactList")){
+		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist
 			String email = body.getAsString("contactList");
 			System.out.println("Goes to pick channel(s) by provided email(s)");
 			String[] emailArray = email.split(",");
 
-			if(body.containsKey("contactText")){
+			if (body.containsKey("contactText")) {
 				// specific text at position 1 should be sent to person on contactlist at pos 1
 				String ctext = body.getAsString("contactText");
 				System.out.println("Goes to send text from contextText");
 				String[] textArray = ctext.split(",");
 				int i = 0;
-				for(String s : emailArray){
+				for (String s : emailArray) {
 					channel = chat.getChannelByEmail(s);
 
 					if (textArray[i] != null) {
@@ -1554,9 +1502,9 @@ public class SocialBotManagerService extends RESTService {
 					}
 					i++;
 				}
-			} else{
+			} else {
 				// if no specific text, send the regular text
-				for(String s : emailArray){
+				for (String s : emailArray) {
 					System.out.println(s);
 					channel = chat.getChannelByEmail(s);
 
@@ -1575,7 +1523,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			chat.sendMessageToChannel(channel, "ContactList contacted.");
 
-		} else{
+		} else {
 			if (body.containsKey("channel")) {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
@@ -1586,11 +1534,11 @@ public class SocialBotManagerService extends RESTService {
 			if (text != null) {
 				chat.sendMessageToChannel(channel, text);
 			}
-			if(body.containsKey("attachments")){
+			if (body.containsKey("attachments")) {
 				System.out.println("body has attachments");
 				chat.sendAttachmentMessageToChannel(channel, attachments);
 			}
-			if(body.containsKey("blocks")){
+			if (body.containsKey("blocks")) {
 				System.out.println("body has blocks");
 				chat.sendBlocksMessageToChannel(channel, blocks);
 			}
@@ -1601,23 +1549,8 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-
-
-	@Api(
-			value = "Model Resource")
-	@SwaggerDefinition(
-			info = @Info(
-					title = "las2peer Bot Manager Service",
-					version = "1.0.13",
-					description = "A las2peer service for managing social bots.",
-					termsOfService = "",
-					contact = @Contact(
-							name = "Alexander Tobias Neumann",
-							url = "",
-							email = "neumann@dbis.rwth-aachen.de"),
-					license = @License(
-							name = "",
-							url = "")))
+	@Api(value = "Model Resource")
+	@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.13", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
 	@Path("/models")
 	public static class BotModelResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
@@ -1627,19 +1560,15 @@ public class SocialBotManagerService extends RESTService {
 		 *
 		 * @param name name of the model
 		 * @param body content of the model
-		 * @return Returns an HTTP response with plain text string content derived from the path input param.
+		 * @return Returns an HTTP response with plain text string content derived from
+		 *         the path input param.
 		 */
 		@POST
 		@Path("/{name}")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Model stored") })
-		@ApiOperation(
-				value = "Save BotModel",
-				notes = "Stores the BotModel in the shared storage.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Model stored") })
+		@ApiOperation(value = "Save BotModel", notes = "Stores the BotModel in the shared storage.")
 		public Response putModel(@PathParam("name") String name, BotModel body) {
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -1656,7 +1585,8 @@ public class SocialBotManagerService extends RESTService {
 				Blob blob = con.createBlob();
 				blob.setBytes(1, bOut.toByteArray());
 
-				// Check if model with given name already exists in database. If yes, update it. Else, insert it
+				// Check if model with given name already exists in database. If yes, update it.
+				// Else, insert it
 				ps = con.prepareStatement("SELECT * FROM models WHERE name = ?");
 				ps.setString(1, name);
 				ResultSet rs = ps.executeQuery();
@@ -1701,13 +1631,8 @@ public class SocialBotManagerService extends RESTService {
 
 		@GET
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "List of BotModels") })
-		@ApiOperation(
-				value = "Retrieve BotModels",
-				notes = "Get all stored BotModels.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of BotModels") })
+		@ApiOperation(value = "Retrieve BotModels", notes = "Get all stored BotModels.")
 		public Response getModels() {
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -1751,13 +1676,8 @@ public class SocialBotManagerService extends RESTService {
 		@GET
 		@Path("/{name}")
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Return BotModel") })
-		@ApiOperation(
-				value = "Get BotModel by name",
-				notes = "Returns the BotModel for the given name.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Return BotModel") })
+		@ApiOperation(value = "Get BotModel by name", notes = "Returns the BotModel for the given name.")
 		public Response getModelByName(@PathParam("name") String name) {
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -1815,7 +1735,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 		return true;
 	}
-	
+
 	public void setCourseMap(JSONObject map) {
 		if (courseMap == null) {
 			courseMap = new HashMap<String, String>();
@@ -1825,11 +1745,11 @@ public class SocialBotManagerService extends RESTService {
 		}
 		System.out.println("Bot: Got courses: " + courseMap.toString());
 	}
-	
+
 	public void getXapiStatements(ArrayList<String> statements) {
 		System.out.println("Bot: Got " + statements.size() + " statements!");
 		System.out.println(statements.toString());
-		
+
 		HashMap<String, ArrayList<String>> statementsPerCourse = new HashMap<String, ArrayList<String>>();
 		Collections.reverse(statements);
 		for (String statementObj : statements) {
@@ -1839,9 +1759,10 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject statement = (JSONObject) obj.get("statement");
 				JSONObject context = (JSONObject) statement.get("context");
 				JSONObject extensions = (JSONObject) context.get("extensions");
-				JSONObject courseInfo = (JSONObject) extensions.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
+				JSONObject courseInfo = (JSONObject) extensions
+						.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
 				String courseid = Integer.toString(courseInfo.getAsNumber("courseid").intValue());
-				
+
 				if (!statementsPerCourse.containsKey(courseid)) {
 					statementsPerCourse.put(courseid, new ArrayList<String>());
 				}
@@ -1851,13 +1772,12 @@ public class SocialBotManagerService extends RESTService {
 			}
 		}
 		System.out.println("\u001B[33mDebug --- Partition: " + statementsPerCourse.toString() + "\u001B[0m");
-		
-		
+
 		// Check if any bots take xAPI statements first
 		HashMap<String, VLE> vles = config.getVLEs();
 		for (Entry<String, VLE> vleEntry : vles.entrySet()) {
 			HashMap<String, Bot> bots = vleEntry.getValue().getBots();
-			
+
 			for (Entry<String, Bot> botEntry : bots.entrySet()) {
 				HashMap<String, Messenger> messengers = botEntry.getValue().getMessengers();
 				String botName = botEntry.getValue().getName();
@@ -1867,7 +1787,8 @@ public class SocialBotManagerService extends RESTService {
 						MoodleForumMediator moodleMediator = (MoodleForumMediator) mediator;
 						if (courseMap != null && courseMap.containsKey(botName)) {
 							if (statementsPerCourse.containsKey(courseMap.get(botName))) {
-								System.out.println("\u001B[33mDebug --- Statement: " + statementsPerCourse.get(courseMap.get(botName)) + "\u001B[0m");
+								System.out.println("\u001B[33mDebug --- Statement: "
+										+ statementsPerCourse.get(courseMap.get(botName)) + "\u001B[0m");
 								moodleMediator.handle(statementsPerCourse.get(courseMap.get(botName)));
 							}
 						} else {
@@ -1950,7 +1871,7 @@ public class SocialBotManagerService extends RESTService {
 					e.printStackTrace();
 				}
 
-      }
+			}
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
@@ -2088,21 +2009,8 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
-	@Api(
-			value = "Training Resource")
-	@SwaggerDefinition(
-			info = @Info(
-					title = "las2peer Bot Manager Service",
-					version = "1.0.13",
-					description = "A las2peer service for managing social bots.",
-					termsOfService = "",
-					contact = @Contact(
-							name = "Alexander Tobias Neumann",
-							url = "",
-							email = "neumann@dbis.rwth-aachen.de"),
-					license = @License(
-							name = "",
-							url = "")))
+	@Api(value = "Training Resource")
+	@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.13", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
 	@Path("/training")
 	public static class TrainingResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
@@ -2120,13 +2028,8 @@ public class SocialBotManagerService extends RESTService {
 		@Path("/{dataName}")
 		@Consumes(MediaType.TEXT_PLAIN)
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Data stored.") })
-		@ApiOperation(
-				value = "Store Training Data",
-				notes = "Stores the current training data.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Store Training Data", notes = "Stores the current training data.")
 		public Response storeData(String body, @PathParam("dataName") String name) {
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -2136,7 +2039,8 @@ public class SocialBotManagerService extends RESTService {
 				// Open database connection
 				con = service.database.getDataSource().getConnection();
 
-				// Check if data with given name already exists in database. If yes, update it. Else, insert it
+				// Check if data with given name already exists in database. If yes, update it.
+				// Else, insert it
 				ps = con.prepareStatement("SELECT * FROM training WHERE name = ?");
 				ps.setString(1, name);
 				ResultSet rs = ps.executeQuery();
@@ -2186,13 +2090,8 @@ public class SocialBotManagerService extends RESTService {
 		@GET
 		@Path("/{dataName}")
 		@Produces(MediaType.TEXT_PLAIN)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "Data stored.") })
-		@ApiOperation(
-				value = "Fetch Training Data",
-				notes = "Fetches the current training data.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Data stored.") })
+		@ApiOperation(value = "Fetch Training Data", notes = "Fetches the current training data.")
 		public Response getData(@PathParam("dataName") String name) {
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -2240,13 +2139,8 @@ public class SocialBotManagerService extends RESTService {
 		 */
 		@GET
 		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(
-				value = { @ApiResponse(
-						code = HttpURLConnection.HTTP_OK,
-						message = "List of datasets") })
-		@ApiOperation(
-				value = "Retrieve datasets",
-				notes = "Get all stored datasets.")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of datasets") })
+		@ApiOperation(value = "Retrieve datasets", notes = "Get all stored datasets.")
 		public Response getDatasets() {
 			Connection con = null;
 			PreparedStatement ps = null;
@@ -2318,8 +2212,7 @@ public class SocialBotManagerService extends RESTService {
 			catch (NoSuchAlgorithmException e) {
 				throw new RuntimeException(e);
 			}
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -2328,21 +2221,20 @@ public class SocialBotManagerService extends RESTService {
 	@Path("/sendMessageToSlack/{token}/{email}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "Trigger slack chat message to slack user with given email")
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "triggered chat message") })
-	public Response testRoute(@PathParam("token") String token,@PathParam("email") String email, String input){
-		// This function is a proof of concept. It is not the best in terms of run time, but optimization would require bigger changes
-		// in the code structure. To make it faster, the channel could be saved in a db once at first access, so the expensive API do not have to be called everytime.
-		try{
+	@ApiOperation(value = "Trigger slack chat message to slack user with given email")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response testRoute(@PathParam("token") String token, @PathParam("email") String email, String input) {
+		// This function is a proof of concept. It is not the best in terms of run time,
+		// but optimization would require bigger changes
+		// in the code structure. To make it faster, the channel could be saved in a db
+		// once at first access, so the expensive API do not have to be called
+		// everytime.
+		try {
 			SlackChatMediator chatMediator = new SlackChatMediator(token);
 			System.out.println("slack mediator initialized");
 
 			// get user id from slack
-			try{
+			try {
 				// slack api call to get email for user id
 				JSONParser p = new JSONParser();
 				JSONObject bodyInput = (JSONObject) p.parse(input);
@@ -2353,12 +2245,12 @@ public class SocialBotManagerService extends RESTService {
 				String channel = chatMediator.getChannelByEmail(email);
 				chatMediator.sendMessageToChannel(channel, msgtext);
 
-			} catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.ok("Sending message failed.").build();
 			}
 
-		} catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -2370,30 +2262,27 @@ public class SocialBotManagerService extends RESTService {
 	@Path("/sendMessageToRocketChat/{token}/{email}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "Trigger rocket chat message to given rocket chat channel")
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "triggered chat message") })
-	public Response sendMessageToRocketChat(@PathParam("token") String token,@PathParam("email") String email, String input){
-		try{
+	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response sendMessageToRocketChat(@PathParam("token") String token, @PathParam("email") String email,
+			String input) {
+		try {
 			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
 			System.out.println("rocket chat mediator initialized");
 
-			try{
+			try {
 				JSONParser p = new JSONParser();
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
 				String channel = chatMediator.getChannelByEmail(email);
 				chatMediator.sendMessageToChannel(channel, msgtext);
 
-			} catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.ok("Sending message failed.").build();
 			}
 
-		} catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
