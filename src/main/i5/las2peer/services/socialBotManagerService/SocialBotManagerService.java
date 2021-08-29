@@ -94,6 +94,8 @@ import i5.las2peer.services.socialBotManagerService.model.BotConfiguration;
 import i5.las2peer.services.socialBotManagerService.model.BotModel;
 import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
+import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
+import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
@@ -523,10 +525,10 @@ public class SocialBotManagerService extends RESTService {
 					}
 
 				}
-				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
-
-				return Response.ok().entity(returnString).build();
 			}
+			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
+
+			return Response.ok().entity(returnString).build();
 		}
 
 		/**
@@ -1865,9 +1867,14 @@ public class SocialBotManagerService extends RESTService {
 							&& !restarterBotPW.equals("")) {
 						ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "",
 								headers);
+						if (result2 != null) {
+							restarterBot = BotAgent.createBotAgent("restarterBot");
+						}
+					} else {
+						restarterBot = BotAgent.createBotAgent("restarterBot");
 					}
-					restarterBot = BotAgent.createBotAgent("restarterBot");
 				} catch (Exception e) {
+					restarterBot = null;
 					e.printStackTrace();
 				}
 
