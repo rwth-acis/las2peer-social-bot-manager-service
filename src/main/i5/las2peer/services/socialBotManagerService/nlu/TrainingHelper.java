@@ -13,7 +13,6 @@ public class TrainingHelper implements Runnable {
 	String config;
 	String markdownTrainingData;
 
-
 	boolean success = false;
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
 			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
@@ -43,7 +42,12 @@ public class TrainingHelper implements Runnable {
 
 		JSONObject json = new JSONObject();
 		json.put("config", config);
-		json.put("nlu", markdownTrainingData);
+		if (markdownTrainingData.contains("examples: |")) {
+			json.put("domain", markdownTrainingData.replace("\\t", ""));
+			json.put("nlu", "");
+		} else {
+			json.put("nlu", markdownTrainingData);
+		}
 
 		HashMap<String, String> headers = new HashMap<String, String>();
 		ClientResponse response = client.sendRequest("POST", "model/train", json.toJSONString(),
