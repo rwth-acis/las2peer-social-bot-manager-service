@@ -515,7 +515,12 @@ public class Messenger {
 									}
 
 								}
-								this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+								// check if message parses buttons or is simple text
+								if(response.getType().equals("Interactive Message")){
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split);
+								} else{
+									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
 								// the user

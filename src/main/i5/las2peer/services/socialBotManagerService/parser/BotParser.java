@@ -492,6 +492,7 @@ public class BotParser {
 		String message = null;
 		String fileURL = null;
 		String errorMessage = null;
+		String type = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -504,6 +505,8 @@ public class BotParser {
 				fileURL = subVal.getValue();
 			} else if (name.contentEquals("ErrorMessage")) {
 				errorMessage = subVal.getValue();
+			} else if (name.contentEquals("Chat Response Type")) {
+				type = subVal.getValue();
 			}
 		}
 
@@ -516,8 +519,11 @@ public class BotParser {
 		if (errorMessage == null) {
 			throw new ParseBotException("Response is missing Error Message");
 		}
+		if (type == null) {
+			throw new ParseBotException("Response is missing Type");
+		}
 
-		return new ChatResponse(message, fileURL, errorMessage);
+		return new ChatResponse(message, fileURL, errorMessage, type);
 	}
     
 	private NLUKnowledge addNLUKnowledge(String key, BotModelNode elem, BotConfiguration config)
