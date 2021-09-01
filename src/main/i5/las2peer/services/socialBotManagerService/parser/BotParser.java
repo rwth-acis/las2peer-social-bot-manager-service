@@ -505,7 +505,7 @@ public class BotParser {
 				fileURL = subVal.getValue();
 			} else if (name.contentEquals("ErrorMessage")) {
 				errorMessage = subVal.getValue();
-			} else if (name.contentEquals("Chat Response Type")) {
+			} else if (name.contentEquals("Type")) {
 				type = subVal.getValue();
 			}
 		}
