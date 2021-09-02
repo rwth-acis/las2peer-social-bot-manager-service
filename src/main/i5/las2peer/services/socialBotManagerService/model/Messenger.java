@@ -57,7 +57,7 @@ public class Messenger {
 
 	private Random random;
 
-	public Messenger(String id, String chatService, String token, String url, SQLDatabase database)
+	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
@@ -67,26 +67,26 @@ public class Messenger {
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
 		switch (this.chatService) {
-			case SLACK:
-				this.chatMediator = new SlackChatMediator(token);
-				break;
-			case TELEGRAM:
-				this.chatMediator = new TelegramChatMediator(token, url);
-				String username = ((TelegramChatMediator) this.chatMediator).getBotName();
-				if(username != null)
-					this.name = username;
-				break;
-			case ROCKET_CHAT:
-				this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-				break;
-			case MOODLE_CHAT:
-				this.chatMediator = new MoodleChatMediator(token);
-				break;
-			case MOODLE_FORUM:
-				this.chatMediator = new MoodleForumMediator(token);
-				break;
-			default:
-				throw new ParseBotException("Unimplemented chat service: " + chatService);
+		case SLACK:
+			this.chatMediator = new SlackChatMediator(token);
+			break;
+		case TELEGRAM:
+			this.chatMediator = new TelegramChatMediator(token);
+			String username = ((TelegramChatMediator) this.chatMediator).getBotName();
+			if (username != null)
+				this.name = username;
+			break;
+		case ROCKET_CHAT:
+			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+			break;
+		case MOODLE_CHAT:
+			this.chatMediator = new MoodleChatMediator(token);
+			break;
+		case MOODLE_FORUM:
+			this.chatMediator = new MoodleForumMediator(token);
+			break;
+		default:
+			throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
 
 		this.name = id;
@@ -618,6 +618,13 @@ public class Messenger {
 			}
 		}
 
+	}
+
+	public void setUrl(String Url) {
+		this.url = Url;
+		if (this.chatMediator instanceof TelegramChatMediator) {
+			((TelegramChatMediator) this.chatMediator).settingWebhook(Url);
+		}
 	}
 
 	public void close() {

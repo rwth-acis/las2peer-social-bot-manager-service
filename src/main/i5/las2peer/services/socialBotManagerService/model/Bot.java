@@ -154,12 +154,14 @@ public class Bot {
 		}
 		return null;
 	}
-	
+
 	public HashMap<String, Messenger> getMessengers() {
 		return this.messengers;
 	}
 
 	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
+		messenger.setUrl(vle.getAddress());
+		System.out.println(vle.getAddress());
 		this.messengers.put(messenger.getName(), messenger);
 	}
 
