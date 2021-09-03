@@ -112,8 +112,9 @@
             classpathref="libraries"
             debug="on"
             encoding="UTF-8"
-        	includeantruntime="false"
-            />
+        	includeantruntime="false" 
+    	>
+    	</javac>
         <copy todir="${tmp.classes}">
             <fileset dir="${src.main}">
                 <include name="**/*.xml" />

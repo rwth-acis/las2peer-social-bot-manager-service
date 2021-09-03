@@ -36,5 +36,7 @@
         <dependency org="com.reprezen.kaizen" name="openapi-parser" rev="4.0.4" conf="bundle->*"/>
         <dependency org="io.swagger" name="swagger-parser" rev="1.0.33" conf="bundle->*"/>
         <dependency org="com.github.pengrad" name="java-telegram-bot-api" rev="4.9.0" conf="bundle->*"/>
+        <dependency org="jakarta.xml.bind" name="jakarta.xml.bind-api" rev="3.0.0"/>
+        <dependency org="com.sun.xml.bind" name="jaxb-impl" rev="3.0.0"/>
     </dependencies>
 </ivy-module>
