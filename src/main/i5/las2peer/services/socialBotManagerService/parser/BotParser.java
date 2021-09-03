@@ -471,8 +471,6 @@ public class BotParser {
 				messengerType = subVal.getValue();
 			} else if (name.contentEquals("Authentication Token")) {
 				token = subVal.getValue();
-			} else if (name.contentEquals("Manager URL")) {
-				url = subVal.getValue();
 			}
 		}
 		if (messengerName == null) {
@@ -485,7 +483,7 @@ public class BotParser {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
 
-        return new Messenger(messengerName, messengerType, token, url, database);
+		return new Messenger(messengerName, messengerType, token, database);
 	}
 
 	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {

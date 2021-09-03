@@ -45,18 +45,15 @@ public class TelegramChatMediator extends EventChatMediator {
 	/**
 	 * URL address of the SBF manager service
 	 */
-	private final String url;
+	private String url;
 	MiniClient client;
 
-	public TelegramChatMediator(String authToken, String url) {
+	public TelegramChatMediator(String authToken) {
 		super(authToken);
 
 		this.bot = new TelegramBot(authToken);
 		this.client = new MiniClient();
-		this.url = url;
 		client.setConnectorEndpoint("https://api.telegram.org/bot" + authToken);
-
-		this.settingWebhook();
 		messageCollector = new TelegramMessageCollector();
 	}
 
@@ -98,8 +95,8 @@ public class TelegramChatMediator extends EventChatMediator {
 				String mimeType = document.getAsString("mime_type");
 				String fileId = document.getAsString("file_id");
 				String fileBody = getFile(fileId);
-				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp, fileName, mimeType,
-											fileBody));
+				messageCollector
+						.addMessage(new ChatMessage(channel, user, text, timestamp, fileName, mimeType, fileBody));
 			} else {
 				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp));
 			}
@@ -110,11 +107,14 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	/**
 	 * Registers to receive push notifications from telegram
-	 *
+	 * 
+	 * @param url Address of bot url
 	 * @see <a href="https://core.telegram.org/bots/api#setwebhook">Setting Telegram
 	 *      Webhook</a>
 	 */
-	public void settingWebhook() {
+	public void settingWebhook(String url) {
+		System.out.println("poppo");
+		this.url = url;
 		assert url != null : "url not initialized";
 		assert !url.contentEquals("") : "empty url";
 
@@ -133,12 +133,12 @@ public class TelegramChatMediator extends EventChatMediator {
 		GetMe request = new GetMe();
 		GetMeResponse response = bot.execute(request);
 		if (response.isOk() && response.user() != null) {
-			
+
 			String username = response.user().username();
 			System.out.println("request botname: " + username);
 			return username;
 		}
-		
+
 		return null;
 	}
 
@@ -159,7 +159,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	@Override
 	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, String text,
-										 Optional<String> id) {
+			Optional<String> id) {
 		String caption = "";
 		System.out.println("Send File to Telegram channel: " + channel);
 
@@ -202,7 +202,6 @@ public class TelegramChatMediator extends EventChatMediator {
 		BaseResponse res = bot.execute(request);
 		System.out.println(String.valueOf(res.isOk()) + " " + res.errorCode() + " " + res.description());
 	}
-
 
 	@Override
 	public String getChannelByEmail(String email) {
@@ -260,7 +259,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * Shows an indication to the user about what the next bots action is
 	 * 
 	 * @param channel id of channel indication should be shown
-	 * @param action type of indication shown
+	 * @param action  type of indication shown
 	 * @return request was successful (true) or failed (false)
 	 */
 	public boolean showAction(String channel, ChatAction action) {
@@ -269,7 +268,5 @@ public class TelegramChatMediator extends EventChatMediator {
 		BaseResponse response = this.bot.execute(typingAction);
 		return response.isOk();
 	}
-
-
 
 }
