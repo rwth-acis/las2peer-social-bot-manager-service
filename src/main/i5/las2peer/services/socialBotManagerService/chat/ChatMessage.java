@@ -11,6 +11,8 @@ public class ChatMessage {
 	private String fileBody;
 	private String time;
 	private String domain;
+	private String previousMessage;
+	private String currMessage;
 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
@@ -18,10 +20,28 @@ public class ChatMessage {
 		this.text = text;
 	}
 
+	public ChatMessage(String channel, String user, String text, String time) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text;
+		this.time = time;
+	}
+
 	public ChatMessage(String channel, String user, String text, String fileName, String fileType, String body) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text + fileName;
+		this.fileName = fileName;
+		this.fileType = fileType;
+		this.fileBody = body;
+	}
+
+	public ChatMessage(String channel, String user, String text, String time, String fileName, String fileType,
+					   String body) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text + fileName;
+		this.time = time;
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;
@@ -85,5 +105,28 @@ public class ChatMessage {
 
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+
+	public String getPreviousMessage() {
+		return previousMessage;
+	}
+
+	public void setPreviousMessage(String previousMessage) {
+		this.previousMessage = previousMessage;
+	}
+
+	public String getCurrMessage() {
+		return currMessage;
+	}
+
+	public void setCurrMessage(String currMessage) {
+		this.currMessage = currMessage;
+	}
+
+	public boolean hasTime(){
+		if(this.getTime() != null){
+			return true;
+		}
+		return false;
 	}
 }

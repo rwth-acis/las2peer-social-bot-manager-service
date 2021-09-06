@@ -10,11 +10,13 @@ public class ChatResponse {
 	String triggerEntity;
 	String fileURL;
 	String errorMessage;
-	public ChatResponse(String response, String fileURL, String errorMessage) {
+	String type;
+	public ChatResponse(String response, String fileURL, String errorMessage, String type) {
 		this.response = response;
 		this.fileURL = fileURL;
 		this.errorMessage  = errorMessage;
 		this.triggerEntity = "";
+		this.type = type;
 		
 	}
     public String getResponse(){
@@ -46,4 +48,11 @@ public class ChatResponse {
         this.triggerEntity = triggerEntity;
     }
 
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
 }

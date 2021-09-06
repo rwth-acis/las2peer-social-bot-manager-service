@@ -449,6 +449,7 @@ public class BotParser {
 			jarr.add(b.getIdentifier());
 		}
 		j.put("botIds", jarr);
+
 		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	}
 
@@ -457,8 +458,7 @@ public class BotParser {
 		String messengerName = null;
 		String messengerType = null;
 		String token = null;
-	//	String rasaUrl = null;
-    //    String rasaAssessmentUrl = null;
+		String url = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -471,11 +471,7 @@ public class BotParser {
 				messengerType = subVal.getValue();
 			} else if (name.contentEquals("Authentication Token")) {
 				token = subVal.getValue();
-			} /*else if (name.contentEquals("Rasa NLU URL")) {
-				rasaUrl = subVal.getValue();
-			} else if (name.contentEquals("Rasa Assessment NLU URL")) {
-				rasaAssessmentUrl = subVal.getValue();
-			}*/
+			}
 		}
 		if (messengerName == null) {
 			throw new ParseBotException("Messenger is missing a name");
@@ -486,24 +482,15 @@ public class BotParser {
 		if (token == null) {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
-	/*	if (rasaUrl == null) {
-			throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
-		}
-		if (rasaAssessmentUrl == null) {
-            throw new ParseBotException("Messenger is missing \"Rasa NLU URL\" attribute");
-		}
-		if (rasaAssessmentUrl == "") {
-			System.out.println("WARNING: No Rasa Assessment NLU Server given, thus no NLU Assessments will be possible");
-		}    */                   
 
-    //    return new Messenger(messengerName, messengerType, token, rasaUrl, rasaAssessmentUrl, database);
-        return new Messenger(messengerName, messengerType, token, database);
+		return new Messenger(messengerName, messengerType, token, database);
 	}
 
 	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
 		String message = null;
 		String fileURL = null;
 		String errorMessage = null;
+		String type = null;
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -516,6 +503,8 @@ public class BotParser {
 				fileURL = subVal.getValue();
 			} else if (name.contentEquals("ErrorMessage")) {
 				errorMessage = subVal.getValue();
+			} else if (name.contentEquals("Type")) {
+				type = subVal.getValue();
 			}
 		}
 
@@ -523,13 +512,16 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Message");
 		} 
 		if (fileURL == null) {
-			throw new ParseBotException("Response is missing Message");
+			throw new ParseBotException("Response is missing File URL");
 		}
 		if (errorMessage == null) {
-			throw new ParseBotException("Response is missing Message");
+			throw new ParseBotException("Response is missing Error Message");
+		}
+		if (type == null) {
+			throw new ParseBotException("Response is missing Type");
 		}
 
-		return new ChatResponse(message, fileURL, errorMessage);
+		return new ChatResponse(message, fileURL, errorMessage, type);
 	}
     
 	private NLUKnowledge addNLUKnowledge(String key, BotModelNode elem, BotConfiguration config)
