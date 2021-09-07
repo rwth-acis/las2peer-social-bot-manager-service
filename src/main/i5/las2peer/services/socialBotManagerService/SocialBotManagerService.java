@@ -857,6 +857,50 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@POST
+		@Path("/{botName}/appRequestURL/{instanceAlias}/{token}")
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(value = "Used as an slack app request url to send button clicks")
+		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "") })
+		public Response triggerButton(String body, @PathParam("botName") String name,
+									  @PathParam("instanceAlias") String instanceAlias,
+									  @PathParam("token") String token) {
+
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+
+					// Identify bot
+					Collection<VLE> vles = getConfig().getVLEs().values();
+					Bot bot = null;
+
+					for (VLE vle : vles) {
+						Bot slackBot = vle.getBotByServiceToken(token, ChatService.SLACK);
+						if (slackBot != null) {
+							bot = slackBot;
+						}
+					}
+					if (bot == null)
+						System.out.println("cannot relate slack action to a bot with token: " + token);
+						System.out.println("slack action: bot identified: " + bot.getName());
+
+					// Handle action
+					Messenger messenger = bot.getMessenger(ChatService.SLACK);
+					SlackChatMediator mediator = (SlackChatMediator) messenger.getChatMediator();
+					JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					JSONObject parsedBody;
+					try {
+						parsedBody = (JSONObject) jsonParser.parse(java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name()).substring(8));
+						mediator.handleEvent(parsedBody);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}).start();
+			return Response.ok().build();
+		}
+
+		@POST
 		@Path("/{botName}/trigger/intent")
 		@Consumes(MediaType.APPLICATION_JSON)
 		@Produces(MediaType.TEXT_PLAIN)
