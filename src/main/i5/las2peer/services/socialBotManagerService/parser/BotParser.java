@@ -849,28 +849,35 @@ public class BotParser {
 				if (vle.getServiceInformation().get(s.getServiceName()) == null
 						/*&& s.getActionType().equals(ActionType.SERVICE)*/ ) {
 					try {
-						
-						System.out.println("Service name is:" + s.getServiceName()  + "\nBot is : " + vle.getBots() );
-						JSONObject j = readJsonFromUrl(vle.getAddress() + "/" + s.getServiceName() + "/swagger.json");
-						System.out.println("Information is: "+ j);
-						vle.addServiceInformation(s.getServiceName(), j);
-						if(s.getServiceName().equals("AssessmentHandler")) {
-							MiniClient client = new MiniClient();
-							//client.setLogin(, password);
-							client.setConnectorEndpoint(vle.getAddress());
-							HashMap<String, String> headers = new HashMap<String, String>();
-							JSONObject botName = new JSONObject();
-							for (Bot b : vle.getBots().values()) {
-								System.out.println(b);
-								
-								botName.put("botName", b.getId());
-								//client.setLogin("alice", "pwalice");
-								client.setLogin(b.getId(), "actingAgent");
-							} 
-							
-							ClientResponse result = client.sendRequest("POST", "AssessmentHandler/reset",botName.toString(),
-									MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
-							
+
+						System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + vle.getBots());
+						if (s.getActionType().equals(ActionType.OPENAPI)) {
+							JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
+							System.out.println("Information is: " + j);
+							vle.addServiceInformation(s.getServiceName(), j);
+						} else {
+							JSONObject j = readJsonFromUrl(
+									vle.getAddress() + "/" + s.getServiceName() + "/swagger.json");
+							System.out.println("Information is: " + j);
+							vle.addServiceInformation(s.getServiceName(), j);
+							if (s.getServiceName().equals("AssessmentHandler")) {
+								MiniClient client = new MiniClient();
+								// client.setLogin(, password);
+								client.setConnectorEndpoint(vle.getAddress());
+								HashMap<String, String> headers = new HashMap<String, String>();
+								JSONObject botName = new JSONObject();
+								for (Bot b : vle.getBots().values()) {
+									System.out.println(b);
+
+									botName.put("botName", b.getId());
+									// client.setLogin("alice", "pwalice");
+									client.setLogin(b.getId(), "actingAgent");
+								}
+
+								ClientResponse result = client.sendRequest("POST", "AssessmentHandler/reset",
+										botName.toString(), MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
+
+							}
 						}
 						
 					} catch (Exception e) {
