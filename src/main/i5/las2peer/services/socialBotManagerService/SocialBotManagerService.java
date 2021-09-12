@@ -1589,8 +1589,8 @@ public class SocialBotManagerService extends RESTService {
 				chat.sendBlocksMessageToChannel(channel, blocks);
 			}
 			if (body.containsKey("fileBody")) {
-				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"), "",
-						body.getAsString("fileType"), Optional.empty());
+				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
+						body.getAsString("fileType"), "");
 			}
 		}
 	}
