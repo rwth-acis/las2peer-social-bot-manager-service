@@ -748,7 +748,22 @@ public class BotParser {
 			sf.setActionType(ActionType.SENDMESSAGE);
 			sf.setMessengerName(messengerID);
 			sf.setServiceName(service);
-            sf.setFunctionName(sfName);
+			sf.setFunctionName(sfName);
+		} else if (actionType.equals("OpenAPI")) {
+			URL functionURL = null;
+			// Open API with full path
+			// service alias should contain base path, so that /swagger can be added
+			// afterwards
+			try {
+				functionURL = new URL(service);
+				sf.setFunctionName(sfName);
+				sf.setFunctionPath(service);
+				sf.setActionType(ActionType.OPENAPI);
+				// maybe check here whether there is a swagger.json? if not, return null
+			} catch (Exception e) {
+				System.out.println("Given URL in service alias is not correct");
+				return null;
+			}
 		} else {
 			// default case
 			sf.setFunctionName(sfName);

@@ -1092,8 +1092,11 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 			String functionPath = "";
-			if (botFunction.getActionType().equals(ActionType.SERVICE))
+			if (botFunction.getActionType().equals(ActionType.SERVICE)) {
 				functionPath = botFunction.getFunctionPath();
+			} else if (botFunction.getActionType().equals(ActionType.OPENAPI)) {
+				functionPath = botFunction.getFunctionPath();
+			}
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
@@ -1471,6 +1474,26 @@ public class SocialBotManagerService extends RESTService {
 				return;
 			}
 
+			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+			triggerChat(chat, triggeredBody);
+		} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
+			System.out.println("openapi babieeee");
+			System.out.println(
+					sf.getFunctionPath() + "\n" + sf.getServiceName() + sf.getConsumes() + sf.getFunctionName());
+			MiniClient client = new MiniClient();
+			client.setConnectorEndpoint(sf.getFunctionPath());
+			// client.setLogin("alice", "pwalice");
+			triggeredBody.put("botName", botAgent.getIdentifier());
+			HashMap<String, String> headers = new HashMap<String, String>();
+			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
+					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
+			ClientResponse r = client.sendRequest("GET", sf.getFunctionName(), triggeredBody.toJSONString(), "", "",
+					headers);
+			System.out.println("Connect Success");
+			System.out.println(r.getResponse());
+			triggeredBody.put("text", r.getResponse());
+			String messengerID = sf.getMessengerName();
+			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 			triggerChat(chat, triggeredBody);
 		}
