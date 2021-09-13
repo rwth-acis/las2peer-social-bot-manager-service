@@ -1481,14 +1481,14 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(
 					sf.getFunctionPath() + "\n" + sf.getServiceName() + sf.getConsumes() + sf.getFunctionName());
 			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(sf.getFunctionPath());
+			client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			// client.setLogin("alice", "pwalice");
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
-			ClientResponse r = client.sendRequest("GET", sf.getFunctionName(), triggeredBody.toJSONString(), "", "",
-					headers);
+			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
+					sf.getConsumes(), sf.getProduces(), headers);
 			System.out.println("Connect Success");
 			System.out.println(r.getResponse());
 			triggeredBody.put("text", r.getResponse());

@@ -758,6 +758,7 @@ public class BotParser {
 				functionURL = new URL(service);
 				sf.setFunctionName(sfName);
 				sf.setFunctionPath(service);
+				sf.setServiceName(service);
 				sf.setActionType(ActionType.OPENAPI);
 				// maybe check here whether there is a swagger.json? if not, return null
 			} catch (Exception e) {
