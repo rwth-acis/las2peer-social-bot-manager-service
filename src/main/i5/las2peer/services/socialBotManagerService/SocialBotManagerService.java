@@ -1400,22 +1400,27 @@ public class SocialBotManagerService extends RESTService {
 
 	private void performTrigger(VLE vle, ServiceFunction sf, BotAgent botAgent, String functionPath, String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
-		if (sf.getActionType().equals(ActionType.SERVICE)) {
-			System.out.println(sf.getFunctionName());
-			// This part is "hardcoded" and will need improvements, but currently makes
-			// using the assessment function
-			// work
+		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(vle.getAddress());
+			if (sf.getActionType().equals(ActionType.SERVICE)) {
+				client.setConnectorEndpoint(vle.getAddress());
+			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
+				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
+			}
 			// client.setLogin("alice", "pwalice");
-			System.out.println(botAgent.getLoginName() + "    pass " + botPass);
 			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
-			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
-					triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
+			ClientResponse r = null;
+			if (sf.getActionType().equals(ActionType.SERVICE)) {
+				r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
+						triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
+			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
+				r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
+						sf.getConsumes(), sf.getProduces(), headers);
+			}
 			System.out.println("Connect Success");
 			System.out.println(r.getResponse());
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
@@ -1474,26 +1479,6 @@ public class SocialBotManagerService extends RESTService {
 				return;
 			}
 
-			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
-			triggerChat(chat, triggeredBody);
-		} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
-			System.out.println("openapi babieeee");
-			System.out.println(
-					sf.getFunctionPath() + "\n" + sf.getServiceName() + sf.getConsumes() + sf.getFunctionName());
-			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(sf.getServiceName() + functionPath);
-			// client.setLogin("alice", "pwalice");
-			triggeredBody.put("botName", botAgent.getIdentifier());
-			HashMap<String, String> headers = new HashMap<String, String>();
-			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
-					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
-			ClientResponse r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
-					sf.getConsumes(), sf.getProduces(), headers);
-			System.out.println("Connect Success");
-			System.out.println(r.getResponse());
-			triggeredBody.put("text", r.getResponse());
-			String messengerID = sf.getMessengerName();
-			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 			triggerChat(chat, triggeredBody);
 		}
