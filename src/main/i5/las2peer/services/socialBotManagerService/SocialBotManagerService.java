@@ -509,6 +509,7 @@ public class SocialBotManagerService extends RESTService {
 					Context.get().storeEnvelope(env, restarterBot);
 				} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
 						| EnvelopeOperationFailedException e) {
+					System.out.println(e);
 					try {
 						env = Context.get().createEnvelope(restarterBotNameStatic, restarterBot);
 						env.setPublic();
