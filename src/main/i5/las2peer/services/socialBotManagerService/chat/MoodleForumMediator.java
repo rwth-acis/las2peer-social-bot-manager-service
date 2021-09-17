@@ -1,6 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.io.File;
 import java.util.Vector;
@@ -69,24 +72,37 @@ public class MoodleForumMediator extends ChatMediator {
 
 	public void handle(ArrayList<String> statements) {
 		for (String statement : statements) {
-			String xAPIStatement = statement.split("\\*")[0];
-			JSONObject json = new JSONObject(xAPIStatement);
-			JSONObject verb = (JSONObject) json.get("verb");
+
+			JSONObject json = new JSONObject(statement);
+			JSONObject statementObj = (JSONObject) json.get("statement");
+			JSONObject verb = (JSONObject) statementObj.get("verb");
 			String verbID = verb.getString("id");
 			
 			// If the statement is about forum activity
 			if (verbID.contains("replied") || verbID.contains("posted")) {
-				JSONObject obj = (JSONObject) json.get("object");
+				JSONObject obj = (JSONObject) statementObj.get("object");
 				JSONObject definition = (JSONObject) obj.get("definition");
 				JSONObject description = (JSONObject) definition.get("description");
-				JSONObject actor = (JSONObject) json.get("actor");
+				JSONObject actor = (JSONObject) statementObj.get("actor");
 				JSONObject account = (JSONObject) actor.get("account");
 				
-				JSONObject context = (JSONObject) json.get("context");
+				JSONObject context = (JSONObject) statementObj.get("context");
 				JSONObject extensions = (JSONObject) context.get("extensions");
 				
 				String message = description.getString("en-US");
-				String userid = account.getString("name");
+				String userEmail = account.getString("name");
+				HashMap<String,String> args = new HashMap<String,String>();
+				args.put("field", "email");
+				args.put("values[0]", userEmail);
+				String userid = "";
+				try {
+					String res = sendRequest(domainName, "core_user_get_users_by_field", args);
+					JSONObject resObj = (JSONObject) (new JSONArray(res)).get(0);
+					userid = Integer.toString(resObj.getNumber("id").intValue());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
 				try {
 					// Determine discussion id, post id, and parent post id
 					String discussionid = obj.getString("id").split("d=")[1].split("#")[0];
