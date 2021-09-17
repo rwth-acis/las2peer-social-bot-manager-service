@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -38,7 +39,7 @@ import com.github.seratch.jslack.api.rtm.message.Message.MessageBuilder;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
-public class SlackChatMediator extends ChatMediator {
+public class SlackChatMediator extends EventChatMediator {
 	private Slack slack = null;
 	private RTMClient rtm = null;
 	private SlackChatMessageCollector messageCollector = new SlackChatMessageCollector();
@@ -593,4 +594,72 @@ public class SlackChatMediator extends ChatMediator {
 		}
 		this.slack = null;
 	}
+
+	@Override
+	public void handleEvent(JSONObject action) {
+		System.out.println("action: " + action);
+		JSONParser p = new JSONParser();
+
+		try{
+			System.out.println("now trying to handle message...");
+
+			String channel = "";
+			String text = "";
+			String user = "";
+			String ts = "";
+			JSONObject containerJson = (JSONObject) p.parse(action.getAsString("container"));
+			ts = containerJson.getAsString("message_ts");
+			JSONObject channelJson = (JSONObject) p.parse(action.getAsString("channel"));
+			channel = channelJson.getAsString("id");
+			JSONObject userJson = (JSONObject) p.parse(action.getAsString("user"));
+			user = userJson.getAsString("id");
+
+			JSONArray actions = (JSONArray) p.parse(action.getAsString("actions"));
+			for (Object actionsObject : actions) {
+				String selectedOptionsString = ((JSONObject) actionsObject).getAsString("selected_options");
+				String selectedOptionString = ((JSONObject) actionsObject).getAsString("selected_option");
+				if (selectedOptionsString != null) {
+					// multiple choice with one or more than one selected option
+					// System.out.println("selected options string: " + selectedOptionsString);
+					JSONArray selectedOptionsJson = (JSONArray) p.parse(selectedOptionsString);
+					text = selectedOptionsJson.toString();
+
+				} else if (selectedOptionString != null) {
+					// single choice with one selected option (possible)
+					// System.out.println("selected option: " + selectedOptionString);
+					JSONObject selectedOptionJson = (JSONObject) p.parse(selectedOptionString);
+
+					String textString = selectedOptionJson.getAsString("text");
+					JSONObject textJson = (JSONObject) p.parse(textString);
+					text += textJson.getAsString("text");
+
+				} else {
+					// System.out.println("No selectedOption and no selectedOptions.");
+					System.out.println("No selectedOption and no selectedOptions. Just a normal button press.");
+
+					String textString = ((JSONObject) actionsObject).getAsString("text");
+					JSONObject textJson = (JSONObject) p.parse(textString);
+					text += textJson.getAsString("text");
+				}
+			}
+
+			System.out.println("Assembled text from triggerButton is: " + text);
+			// remove the last ","
+			if ((String.valueOf(text.charAt(text.length() - 1)).equals(","))) {
+				System.out.println("inside removing last comma");
+				text = text.substring(0, text.length() - 1);
+			}
+
+			ChatMessage chatMessage = new ChatMessage(channel, user, text, ts);
+
+			// set email, since it is not passed on in body
+			chatMessage.setEmail(user);
+
+			messageCollector.addMessage(chatMessage);
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+
+	}
+
 }

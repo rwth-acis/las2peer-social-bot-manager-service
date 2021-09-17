@@ -8,6 +8,12 @@ import java.util.Optional;
 import java.util.Vector;
 
 import javax.ws.rs.core.MediaType;
+
+import com.pengrad.telegrambot.model.request.*;
+import com.pengrad.telegrambot.request.*;
+import net.minidev.json.JSONArray;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
@@ -74,14 +80,36 @@ public class TelegramChatMediator extends EventChatMediator {
 	public void handleEvent(JSONObject event) {
 		assert event != null : "jsonobject event parameter is null";
 
+		//System.out.println("event.toString: " + event.toString());
 		try {
-			JSONObject message = (JSONObject) event.get("message");
+			String messageString = "";
+			String data = "";
+			// check if a button click was detected
+			if(event.containsKey("callback_query")){
+				System.out.println("inside callback_query");
+				JSONObject callback_query = (JSONObject) event.get("callback_query");
+				messageString = callback_query.getAsString("message");
+				// the field data is defined when creating a button to identify the button that was clicked
+				data = callback_query.getAsString("data");
+			}
+			else{
+				messageString = event.get("message").toString();
+			}
+
+			JSONParser p = new JSONParser();
+			JSONObject message = (JSONObject) p.parse(messageString);
 			JSONObject chat = (JSONObject) message.get("chat");
 			JSONObject from = (JSONObject) message.get("from");
 			JSONObject document = (JSONObject) message.get("document");
 			String channel = chat.getAsString("id");
 			String user = from.getAsString("first_name");
 			String text = message.getAsString("text");
+			if(event.containsKey("callback_query")){
+				// the data field can be used to know which button was clicked
+				// (the text returned is not the text from the button, but the text above the button, therefore irrelevant)
+				text = data;
+			}
+
 			String timestamp = message.getAsString("date");
 
 			if (channel == null || user == null || (text == null && document == null) || timestamp == null)
@@ -100,7 +128,8 @@ public class TelegramChatMediator extends EventChatMediator {
 			} else {
 				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp));
 			}
-		} catch (InvalidChatMessageException e) {
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -238,11 +267,47 @@ public class TelegramChatMediator extends EventChatMediator {
 	@Override
 	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
 
+		System.out.println("send interactive message to telegram channel " + channel);
+		assert channel != null;
+		assert blocks != null;
+
+		JSONParser p = new JSONParser();
+
+		try{
+			JSONObject blocksJO = (JSONObject) p.parse(blocks);
+			String text = blocksJO.getAsString("text");
+			JSONArray blocksJA = (JSONArray) p.parse(blocksJO.getAsString("inline_keyboard"));
+
+			InlineKeyboardButton[] allButtons = new InlineKeyboardButton[blocksJA.size()];
+
+			int i = 0;
+			for(Object o : blocksJA){
+				JSONArray currO = (JSONArray) o;
+
+				for(Object so : currO){
+					JSONObject currSO = (JSONObject) so;
+					InlineKeyboardButton button = new InlineKeyboardButton(currSO.getAsString("text"));
+					button.callbackData(currSO.getAsString("callback_data"));
+					allButtons[i] = button;
+					i++;
+				}
+			}
+
+			InlineKeyboardMarkup markup = new InlineKeyboardMarkup(allButtons);
+
+			SendMessage request = new SendMessage(channel, text);
+			request.replyMarkup(markup);
+
+			BaseResponse res = bot.execute(request);
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
 	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
 	}
 
 	@Override
