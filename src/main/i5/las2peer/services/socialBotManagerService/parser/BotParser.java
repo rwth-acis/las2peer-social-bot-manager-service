@@ -645,7 +645,9 @@ public class BotParser {
 						botAgent = BotAgent.createBotAgent(botPass);
 						botAgent.unlock(botPass);
 						botAgent.setLoginName(botName);
+						System.out.println(botName);
 						Context.getCurrent().storeAgent(botAgent);
+						System.out.println("Here?");
 					}
 					botAgent.unlock(botPass);
 					Context.getCurrent().registerReceiver(botAgent);
