@@ -77,6 +77,16 @@ public class ServiceFunction extends TriggerFunction{
 	}
 
 	public void setFunctionPath(String functionPath) {
+		for (ServiceFunctionAttribute attr : attributes) {
+			if (attr.getParameterType().equals("path")) {
+				try {
+					functionPath = functionPath.replaceAll("\\{" + attr.getName() + "\\}", attr.getContent());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		System.out.println(functionPath);
 		this.functionPath = functionPath;
 	}
 
