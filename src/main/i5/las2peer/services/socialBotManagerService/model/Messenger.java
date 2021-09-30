@@ -18,6 +18,7 @@ import java.util.Vector;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.*;
+import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -170,12 +171,20 @@ public class Messenger {
 			if (state.getFollowingMessages() == null) {
 				System.out.println("Conversation flow ended now");
 			} else if (state.getFollowingMessages().get("") != null) {
+				// check whether bot action needs to be triggered without user input
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				System.out.println("1");
 				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(), Optional.of(userid));
+						|| !state.getResponse(random).triggeredFunctionId.equals("")) {
+					this.chatMediator.getMessageCollector().addMessage(chatMsg);
+				}
 			} else {
+				// If only message to be sent
+				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(),
+						Optional.of(userid));
 			}
+		} else {
 		}
 	}
 
@@ -191,6 +200,7 @@ public class Messenger {
 	// across
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
+		System.out.println("asddasd");
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {

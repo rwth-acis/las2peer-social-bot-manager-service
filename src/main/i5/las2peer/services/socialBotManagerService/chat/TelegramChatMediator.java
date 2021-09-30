@@ -305,6 +305,10 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	}
 
+	public TelegramMessageCollector getMessageCollector() {
+		return messageCollector;
+	}
+
 	@Override
 	public void sendBlocksMessageToChannel(String channel, String blocks) {
 		sendBlocksMessageToChannel(channel, blocks, Optional.empty());

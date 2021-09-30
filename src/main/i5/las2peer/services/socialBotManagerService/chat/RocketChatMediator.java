@@ -537,6 +537,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		super.sendBlocksMessageToChannel(channel, blocks);
 	}
 
+	public RocketChatMessageCollector getMessageCollector() {
+		return messageCollector;
+	}
+
 	@Override
 	public void close() {
 		shouldCheckRooms = false;

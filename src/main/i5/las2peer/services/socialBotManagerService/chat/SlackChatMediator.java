@@ -545,6 +545,10 @@ public class SlackChatMediator extends EventChatMediator {
 		return null;
 	}
 
+	public SlackChatMessageCollector getMessageCollector() {
+		return messageCollector;
+	}
+
 	private void reconnect() {
 		if (!this.messageCollector.isConnected()) {
 			try {
