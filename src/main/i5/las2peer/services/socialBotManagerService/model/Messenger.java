@@ -174,9 +174,10 @@ public class Messenger {
 				// check whether bot action needs to be triggered without user input
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
-				System.out.println("1");
-				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(), Optional.of(userid));
+				if (state.getResponse(random).triggeredFunctionId != null
 						|| !state.getResponse(random).triggeredFunctionId.equals("")) {
+					ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
+					this.triggeredFunction.put(channel, state.getResponse(random).triggeredFunctionId);
 					this.chatMediator.getMessageCollector().addMessage(chatMsg);
 				}
 			} else {
@@ -200,7 +201,6 @@ public class Messenger {
 	// across
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
-		System.out.println("asddasd");
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
