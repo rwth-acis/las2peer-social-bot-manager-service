@@ -15,6 +15,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 public abstract class ChatMediator {
+	private ChatMessageCollector messageCollector;
 	protected String authToken;
 
 	public ChatMediator(String authToken) {
@@ -183,6 +184,10 @@ public abstract class ChatMediator {
 			return true;
 		} else
 			return false;
+	}
+
+	public ChatMessageCollector getMessageCollector() {
+		return messageCollector;
 	}
 
 	public abstract void close();
