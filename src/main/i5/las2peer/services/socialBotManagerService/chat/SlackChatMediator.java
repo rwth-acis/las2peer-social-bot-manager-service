@@ -204,7 +204,15 @@ public class SlackChatMediator extends EventChatMediator {
 								String optionString = optionJson.getAsString("text");
 								String descriptionString = optionJson.getAsString("description");
 								JSONObject currOptionsJSON = (JSONObject) parser.parse(optionString);
-								JSONObject currDescriptionJSON = (JSONObject) parser.parse(descriptionString);
+								JSONObject currDescriptionJSON = new JSONObject();
+								if(descriptionString != null){
+									currDescriptionJSON = (JSONObject) parser.parse(descriptionString);
+								}
+								else{
+									currDescriptionJSON.put("type","plain_text");
+									currDescriptionJSON.put("text"," ");
+
+								}
 
 								PlainTextObject oTempPlainText = PlainTextObject.builder()
 										.text(currOptionsJSON.getAsString("text"))
@@ -606,17 +614,10 @@ public class SlackChatMediator extends EventChatMediator {
 
 		try{
 			System.out.println("now trying to handle message...");
-
-			String channel = "";
+			String ts = ((JSONObject) p.parse(action.getAsString("container"))).getAsString("message_ts");
+			String channel = ((JSONObject) p.parse(action.getAsString("channel"))).getAsString("id");
+			String user = ((JSONObject) p.parse(action.getAsString("user"))).getAsString("id");
 			String text = "";
-			String user = "";
-			String ts = "";
-			JSONObject containerJson = (JSONObject) p.parse(action.getAsString("container"));
-			ts = containerJson.getAsString("message_ts");
-			JSONObject channelJson = (JSONObject) p.parse(action.getAsString("channel"));
-			channel = channelJson.getAsString("id");
-			JSONObject userJson = (JSONObject) p.parse(action.getAsString("user"));
-			user = userJson.getAsString("id");
 
 			JSONArray actions = (JSONArray) p.parse(action.getAsString("actions"));
 			for (Object actionsObject : actions) {

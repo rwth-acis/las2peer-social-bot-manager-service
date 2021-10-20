@@ -51,6 +51,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import import com.github.seratch.jslack.Slack;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -723,17 +724,12 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject bodyInput = (JSONObject) p.parse(result);
 				System.out.println("parsed json: " + bodyInput);
 
-				String channel = "";
+				String ts = ((JSONObject) p.parse(bodyInput.getAsString("container"))).getAsString("message_ts");
+				String channel = ((JSONObject) p.parse(bodyInput.getAsString("channel"))).getAsString("id");
+				String user = ((JSONObject) p.parse(bodyInput.getAsString("user"))).getAsString("id");
 				String text = "";
-				String user = "";
-				String ts = "";
-				JSONObject containerJson = (JSONObject) p.parse(bodyInput.getAsString("container"));
-				ts = containerJson.getAsString("message_ts");
-				JSONObject channelJson = (JSONObject) p.parse(bodyInput.getAsString("channel"));
-				channel = channelJson.getAsString("id");
-				JSONObject userJson = (JSONObject) p.parse(bodyInput.getAsString("user"));
-				user = userJson.getAsString("id");
 
+				// parse text
 				JSONArray actions = (JSONArray) p.parse(bodyInput.getAsString("actions"));
 				for (Object actionsObject : actions) {
 					String selectedOptionsString = ((JSONObject) actionsObject).getAsString("selected_options");
@@ -741,54 +737,37 @@ public class SocialBotManagerService extends RESTService {
 					if (selectedOptionsString != null) {
 						// multiple choice with one or more than one selected option
 						// System.out.println("selected options string: " + selectedOptionsString);
-						JSONArray selectedOptionsJson = (JSONArray) p.parse(selectedOptionsString);
-						text = selectedOptionsJson.toString();
+						text = p.parse(selectedOptionsString).toString();
 
 					} else if (selectedOptionString != null) {
 						// single choice with one selected option (possible)
 						// System.out.println("selected option: " + selectedOptionString);
 						JSONObject selectedOptionJson = (JSONObject) p.parse(selectedOptionString);
-
 						String textString = selectedOptionJson.getAsString("text");
-						JSONObject textJson = (JSONObject) p.parse(textString);
-						text += textJson.getAsString("text");
+						text = ((JSONObject) p.parse(textString)).getAsString("text");
 
 					} else {
 						// System.out.println("No selectedOption and no selectedOptions.");
 						System.out.println("No selectedOption and no selectedOptions. Just a normal button press.");
 
 						String textString = ((JSONObject) actionsObject).getAsString("text");
-						JSONObject textJson = (JSONObject) p.parse(textString);
-						text += textJson.getAsString("text");
+						text = ((JSONObject) p.parse(textString)).getAsString("text");
 					}
 				}
 
-				System.out.println("Assembled text from triggerButton is: " + text);
-				// remove the last ","
-				if ((String.valueOf(text.charAt(text.length() - 1)).equals(","))) {
-					System.out.println("inside removing last comma");
-					text = text.substring(0, text.length() - 1);
-				}
-
+				// add intent to message
 				ChatMessage chatMessage = new ChatMessage(channel, user, text, ts);
 				JSONObject intentJO = new JSONObject();
 				JSONObject innerIntent = new JSONObject();
 				innerIntent.put("name", expectedIntent);
 				innerIntent.put("confidence", 1.0);
 				intentJO.put("intent", innerIntent);
-				JSONArray ja = new JSONArray();
-				intentJO.put("entities", ja);
+				intentJO.put("entities", new JSONArray());
 				i5.las2peer.services.socialBotManagerService.nlu.Intent intent = new i5.las2peer.services.socialBotManagerService.nlu.Intent(
 						intentJO);
 				// set email, since it is not passed on in body
 				chatMessage.setEmail(user);
-				// adjust triggered function id
-				MessageInfo messageInfo = new MessageInfo(chatMessage, intent, "", name, instanceAlias, true,
-						new ArrayList<>());
 
-				// this.triggeredFunction.get(message.getChannel());
-				System.out.println(
-						"Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 
 				SocialBotManagerService sbf = this.sbfservice;
@@ -796,44 +775,20 @@ public class SocialBotManagerService extends RESTService {
 					@Override
 					public void run() {
 						try {
-							BotAgent botAgent = getBotAgents().get(messageInfo.getBotName());
-							String service = messageInfo.getServiceAlias();
-							System.out.println("service name: " + service);
-							VLE vle = getConfig().getServiceConfiguration(service);
+							VLE vle = getConfig().getServiceConfiguration(instanceAlias);
+							Bot bot = vle.getBotByServiceToken(token, ChatService.SLACK);
+							Messenger messenger = bot.getMessenger(ChatService.SLACK);
+							i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = messenger.getKnownIntents().get(expectedIntent);
+							String triggeredFunctionId = (incomingMessage.getResponse(new Random())).getTriggeredFunctionId();
 
-							// get triggered function id, by getting bot, the messengers and then the intent
-							// hash map
-							HashMap<String, Bot> botsHM = vle.getBots();
-							// System.out.println("botsHM: " + botsHM);
-							String triggerdFunctionId = "";
-							for (Bot bot : botsHM.values()) {
-								System.out.println(bot);
-								HashMap<String, i5.las2peer.services.socialBotManagerService.model.Messenger> messengers = bot
-										.getMessengers();
-								for (Messenger m : messengers.values()) {
-									// System.out.println("messenger: " + m);
-									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m
-											.getKnownIntents();
-									// System.out.println("intentsHM: " + intentsHM);
-									for (String s : intentsHM.keySet()) {
-										if (s.equals(expectedIntent)) {
-											i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = intentsHM
-													.get(s);
-											i5.las2peer.services.socialBotManagerService.model.ChatResponse chatResponses = incomingMessage
-													.getResponse(new Random());
-											// System.out.println(chatResponses);
-											// System.out.println(chatResponses.getTriggeredFunctionId());
-											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
-										}
-									}
-								}
-							}
-							MessageInfo newMessageInfo = new MessageInfo(chatMessage, intent, triggerdFunctionId, name,
-									instanceAlias, true, new ArrayList<>());
-							System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " "
-									+ newMessageInfo.getTriggeredFunctionId());
+							BotAgent botAgent = getBotAgents().get(name);
+
+							i5.las2peer.services.socialBotManagerService.model.MessageInfo messageInfo = new MessageInfo(chatMessage, intent, triggeredFunctionId, name, instanceAlias, true, new ArrayList<>());
+
+							System.out.println("Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
+
 							try {
-								sbf.performIntentTrigger(vle, botAgent, newMessageInfo);
+								sbf.performIntentTrigger(vle, botAgent, messageInfo);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}

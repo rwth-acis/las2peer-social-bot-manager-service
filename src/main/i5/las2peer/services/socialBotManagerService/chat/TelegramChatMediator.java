@@ -92,6 +92,10 @@ public class TelegramChatMediator extends EventChatMediator {
 				// the field data is defined when creating a button to identify the button that was clicked
 				data = callback_query.getAsString("data");
 			}
+			else if(event.containsKey("edited_message")){
+				System.out.println("inside edited message");
+				messageString = event.getAsString("edited_message");
+			}
 			else{
 				messageString = event.get("message").toString();
 			}
