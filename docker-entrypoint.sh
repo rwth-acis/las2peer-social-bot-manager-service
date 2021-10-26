@@ -14,7 +14,7 @@ export SERVICE_NAME=$(awk -F "=" '/service.name/ {print $2}' etc/ant_configurati
 export SERVICE_CLASS=$(awk -F "=" '/service.class/ {print $2}' etc/ant_configuration/service.properties)
 export SERVICE=${SERVICE_NAME}.${SERVICE_CLASS}@${SERVICE_VERSION}
 export CREATE_DB_SQL='SBF.sql'
-
+export CORE_VERSION=$(awk -F "=" '/core.version/ {print $2}' gradle.properties)
 function set_in_service_config {
     sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
 }
