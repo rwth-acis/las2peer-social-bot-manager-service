@@ -19,7 +19,7 @@ USER las2peer
 
 RUN chmod +x gradlew && ./gradlew build --exclude-task test
 RUN dos2unix /src/docker-entrypoint.sh
-RUN dos2unix /src/settings.gradle
+RUN dos2unix /src/gradle.properties
 RUN dos2unix /src/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample
 RUN dos2unix /src/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
 
