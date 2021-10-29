@@ -19,5 +19,17 @@
 /etc/launcher-configuration.ini
 /etc/pastry.properties
 /etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+/social-bot-manager/.classpath
+/social-bot-manager/.project
+/social-bot-manager/.settings/
+/social-bot-manager/output/
+/social-bot-manager/export/
+/social-bot-manager/node-storage/
+/.settings/
 *.secret
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
 archiva_credentials.xml
