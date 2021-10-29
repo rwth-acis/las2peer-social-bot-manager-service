@@ -16,13 +16,12 @@ RUN chmod -R a+rwx /src
 RUN chmod +x /src/docker-entrypoint.sh
 # run the rest as unprivileged user
 USER las2peer
+
 RUN dos2unix gradlew
 RUN dos2unix /src/gradle.properties
 RUN chmod +x gradlew && ./gradlew build --exclude-task test
 RUN dos2unix /src/docker-entrypoint.sh
-
 RUN dos2unix /src/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample
 RUN dos2unix /src/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
-
 EXPOSE $LAS2PEER_PORT
 ENTRYPOINT ["/src/docker-entrypoint.sh"]
