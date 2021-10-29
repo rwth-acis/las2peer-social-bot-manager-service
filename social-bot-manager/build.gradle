@@ -147,6 +147,14 @@ pause
 
 build.dependsOn "startscripts"
 
+task deleteStartup {
+
+        file("$rootDir/etc/startup").deleteDir()
+    
+}
+
+build.dependsOn "deleteStartup"
+
 def startup = "$rootDir/etc/startup"
 def userAgent1Path = "${startup}/agent-user-${project.property('las2peer_user1.name')}.xml"
 def userAgent2Path = "${startup}/agent-user-${project.property('las2peer_user2.name')}.xml"
