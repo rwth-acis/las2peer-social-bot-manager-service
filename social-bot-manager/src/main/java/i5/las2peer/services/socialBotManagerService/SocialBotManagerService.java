@@ -1113,6 +1113,9 @@ public class SocialBotManagerService extends RESTService {
 			body.put("user", messageInfo.getMessage().getUser());
 			body.put("intent", messageInfo.getIntent().getKeyword());
 			body.put("time", messageInfo.getMessage().getTime());
+			if(messageInfo.getMessage().getMessageId() != null){
+				body.put("message_id", messageInfo.getMessage().getMessageId());
+			}
 			if (messageInfo.getMessage().getFileBody() != null) {
 				body.put("fileBody", messageInfo.getMessage().getFileBody());
 				body.put("fileName", messageInfo.getMessage().getFileName());
@@ -1444,9 +1447,6 @@ public class SocialBotManagerService extends RESTService {
 					if (response.containsKey("contactText")) {
 						triggeredBody.put("contactText", response.getAsString("contactText"));
 					}
-					if (response.containsKey("attachments")) {
-						triggeredBody.put("attachments", response.getAsString("attachments"));
-					}
 					if (response.containsKey("blocks")) {
 						triggeredBody.put("blocks", response.getAsString("blocks"));
 					}
@@ -1486,7 +1486,6 @@ public class SocialBotManagerService extends RESTService {
 
 	public void triggerChat(ChatMediator chat, JSONObject body) {
 		String text = body.getAsString("text");
-		String attachments = body.getAsString("attachments");
 		String blocks = body.getAsString("blocks");
 		String channel = null;
 		String user = "";
@@ -1543,10 +1542,6 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(channel);
 			if (text != null) {
 				chat.sendMessageToChannel(channel, text);
-			}
-			if (body.containsKey("attachments")) {
-				System.out.println("body has attachments");
-				chat.sendAttachmentMessageToChannel(channel, attachments);
 			}
 			if (body.containsKey("blocks")) {
 				System.out.println("body has blocks");
@@ -2304,4 +2299,50 @@ public class SocialBotManagerService extends RESTService {
 		return Response.ok().build();
 
 	}
+
+	@POST
+	@Path("/editMessage/{token}/{email}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Edit Chat Message")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response editMessage(@PathParam("token") String token, @PathParam("email") String email,
+								String input) {
+		System.out.println("received api call to edit message");
+		try {
+
+			ChatMediator chatMediator = null;
+			String channel = "";
+			if(token.startsWith("xoxb")){
+				chatMediator = (SlackChatMediator) new SlackChatMediator(token);
+				channel = chatMediator.getChannelByEmail(email);
+			}
+			else{
+				chatMediator = (TelegramChatMediator) new TelegramChatMediator(token);
+				channel = email;
+			}
+
+			try {
+				JSONParser p = new JSONParser();
+				JSONObject bodyInput = (JSONObject) p.parse(input);
+				String ts = bodyInput.getAsString("ts");
+				String blocks = bodyInput.getAsString("blocks");
+				System.out.println("Using token " + token + " ts " + ts + " blocks " + blocks);
+
+
+				chatMediator.editMessage(channel, ts, blocks, Optional.empty());
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok("Editing chat failed.").build();
+			}
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return Response.ok().build();
+
+	}
+
 }

@@ -13,6 +13,8 @@ import java.util.*;
 
 import javax.websocket.DeploymentException;
 
+import com.github.seratch.jslack.api.methods.request.chat.ChatUpdateRequest;
+import com.github.seratch.jslack.api.methods.response.chat.ChatUpdateResponse;
 import com.github.seratch.jslack.api.model.*;
 import com.github.seratch.jslack.api.model.block.ActionsBlock;
 import com.github.seratch.jslack.api.model.block.DividerBlock;
@@ -123,194 +125,14 @@ public class SlackChatMediator extends EventChatMediator {
 
 	}
 
-	private List<LayoutBlock> parseBlocks(String blocks) {
-		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		try {
-			JSONArray block = (JSONArray) parser.parse(blocks);
-			JSONObject elementJson = new JSONObject();
-			JSONObject optionJson = new JSONObject();
-			JSONObject eTextJson = new JSONObject();
-			List<LayoutBlock> lb = new ArrayList<>();
-			String elements = "";
-			String options = "";
-			String textString = "";
-			PlainTextObject tempPlainText = new PlainTextObject();
-			String eTextString = "";
-			for (int i = 0; i < block.size(); i++) {
-				ArrayList<BlockElement> bList = new ArrayList<>();
-				ArrayList<OptionObject> oList = new ArrayList<>();
-
-				JSONObject o = (JSONObject) block.get(i);
-
-				String type = o.getAsString("type");
-
-				//System.out.println(o.toString());
-				if (o.containsKey("text")) {
-					textString = o.getAsString("text");
-					JSONObject textJSON = (JSONObject) parser.parse(textString);
-
-					tempPlainText = PlainTextObject.builder()
-							.text(textJSON.getAsString("text"))
-							.build();
-
-					//System.out.println(tempPlainText);
-
-					SectionBlock sectionBlock = SectionBlock.builder()
-							.text(tempPlainText)
-							.build();
-
-					//System.out.println(sectionBlock);
-
-					lb.add(sectionBlock);
-				}
-				if(type.equals("divider")){
-					DividerBlock dividerBlock = DividerBlock.builder()
-							.build();
-
-					lb.add(dividerBlock);
-				}
-				if (o.containsKey("elements")) {
-					elements = o.getAsString("elements");
-					JSONArray elementsJson = (JSONArray) parser.parse(elements);
-
-					for (int x = 0; x < elementsJson.size(); x++) {
-						//System.out.println("element curr: " + elementJson);
-						elementJson = (JSONObject) elementsJson.get(x);
-						if (elementJson.containsKey("text")) {
-							//System.out.println("element " + x + " text element" + elementJson.toString());
-							eTextString = elementJson.getAsString("text");
-							eTextJson = (JSONObject) parser.parse(eTextString);
-
-							PlainTextObject eTempPlainText = PlainTextObject.builder()
-									.text(eTextJson.getAsString("text"))
-									.build();
-
-							if (elementJson.getAsString("type").equals("button")) {
-								ButtonElement buttonElement = ButtonElement.builder()
-										.text(eTempPlainText)
-										.build();
-
-								bList.add(buttonElement);
-							}
-						} else if (elementJson.getAsString("type").equals("checkboxes")) {
-							//System.out.println("element " + x + " checkbox element" + elementJson.toString());
-							options = elementJson.getAsString("options");
-							JSONArray optionsJson = (JSONArray) parser.parse(options);
-							//System.out.println(optionsJson.toString());
-
-							for (int z = 0; z < optionsJson.size(); z++) {
-								optionJson = (JSONObject) optionsJson.get(z);
-								String value = optionJson.getAsString("value");
-								String optionString = optionJson.getAsString("text");
-								String descriptionString = optionJson.getAsString("description");
-								JSONObject currOptionsJSON = (JSONObject) parser.parse(optionString);
-								JSONObject currDescriptionJSON = new JSONObject();
-								if(descriptionString != null){
-									currDescriptionJSON = (JSONObject) parser.parse(descriptionString);
-								}
-								else{
-									currDescriptionJSON.put("type","plain_text");
-									currDescriptionJSON.put("text"," ");
-
-								}
-
-								PlainTextObject oTempPlainText = PlainTextObject.builder()
-										.text(currOptionsJSON.getAsString("text"))
-										.build();
-
-								PlainTextObject dTempPlainText = PlainTextObject.builder()
-										.text(currDescriptionJSON.getAsString("text"))
-										.build();
-
-								//System.out.println("text" + oTempPlainText);
-
-								OptionObject oTempOptionObject = OptionObject.builder()
-										.value(currOptionsJSON.getAsString("value"))
-										.text(oTempPlainText)
-										.description(dTempPlainText)
-										.value(value)
-										.build();
-
-								//System.out.println("options" + oTempOptionObject);
-								oList.add(oTempOptionObject);
-							}
-
-							CheckboxesElement checkboxesElement = CheckboxesElement.builder()
-									.options(oList)
-									.build();
-
-							bList.add(checkboxesElement);
-						} else if (elementJson.getAsString("type").equals("radio_buttons")) {
-							//System.out.println("element " + x + " checkbox element" + elementJson.toString());
-							options = elementJson.getAsString("options");
-							JSONArray optionsJson = (JSONArray) parser.parse(options);
-							//System.out.println(optionsJson.toString());
-
-							for (int z = 0; z < optionsJson.size(); z++) {
-								optionJson = (JSONObject) optionsJson.get(z);
-								String value = optionJson.getAsString("value");
-								String optionString = optionJson.getAsString("text");
-								JSONObject currOptionsJSON = (JSONObject) parser.parse(optionString);
-
-								PlainTextObject oTempPlainText = PlainTextObject.builder()
-										.text(currOptionsJSON.getAsString("text"))
-										.build();
-
-								//System.out.println("text" + oTempPlainText);
-
-								OptionObject oTempOptionObject = OptionObject.builder()
-										.value(currOptionsJSON.getAsString("value"))
-										.text(oTempPlainText)
-										.value(value)
-										.build();
-
-								//System.out.println("options" + oTempOptionObject);
-								oList.add(oTempOptionObject);
-							}
-
-							RadioButtonsElement radioButtonsElement = RadioButtonsElement.builder()
-									.options(oList)
-									.build();
-
-							bList.add(radioButtonsElement);
-						}
-
-					}
-
-
-				}
-
-				//System.out.println("blist: " + bList);
-				if(!bList.isEmpty()){
-					ActionsBlock tempActionsBlockElement = ActionsBlock.builder()
-							.elements(bList)
-							.build();
-
-					//System.out.println("tempactions: " + tempActionsBlockElement);
-					lb.add(tempActionsBlockElement);
-
-				}
-
-
-			}
-
-			return lb;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 
 //	@Override
 	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
 		//System.out.println("sending blocks now...");
 
-		List<LayoutBlock> lb = parseBlocks(blocks);
 		MessageBuilder msg = Message.builder()
 				.id(System.currentTimeMillis())
-				.channel(channel)
-				.blocks(lb);
+				.channel(channel);
 
 		if (id.isPresent()) {
 			msg.id(Long.parseLong(id.get()));
@@ -327,7 +149,7 @@ public class SlackChatMediator extends EventChatMediator {
 
 			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
 					// ID
-					.blocks(lb).iconUrl(url).username(name));
+					.blocksAsString(blocks).iconUrl(url).username(name));
 			System.out.println("Block sent: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
@@ -354,56 +176,29 @@ public class SlackChatMediator extends EventChatMediator {
 
 	}
 
+	public void editMessage(String channel, String messageId, String message, Optional<String> id) {
+		System.out.println("now trying editing...");
+		MessageBuilder msg = Message.builder()
+				.id(System.currentTimeMillis())
+				.channel(channel);
 
-//	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
-		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		if (id.isPresent()) {
+			msg.id(Long.parseLong(id.get()));
+		}
+		String msgString = msg.build().toJSONString();
+
 		try {
-			JSONArray attachment = (JSONArray) parser.parse(attachments);
-			ArrayList<Attachment> attachmentList = new ArrayList<>();
-			List<LayoutBlock> lb = new ArrayList<>();
-
-			System.out.println("attachments: " + attachments);
-			for(Object arrayObject : attachment) {
-				String blocks = ((JSONObject) arrayObject).getAsString("blocks");
-				System.out.println("blocks: " + blocks);
-				lb = parseBlocks(blocks);
-			}
-
-			Attachment a = Attachment.builder().blocks(lb).build();
-			System.out.println("attachment a: " + a);
-			attachmentList.add(a);
-			System.out.println("attachmentsList: " + attachmentList.toString());
-			MessageBuilder msg = Message.builder()
-					.id(System.currentTimeMillis())
-					.channel(channel)
-					.attachments(attachmentList);
-
-			if (id.isPresent()) {
-				msg.id(Long.parseLong(id.get()));
-			}
-			String message = msg.build().toJSONString();
-			System.out.println("message after adding attachments: " + message);
-
-			try {
-				// make sure that the bot's name and profile pic is used
-				String userId = (slack.methods().authTest(req -> req.token(authToken))).getUserId();
-				String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile()
-						.getImageOriginal();
-				String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
-
-				ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
-						// ID
-						.attachments(attachmentList).iconUrl(url).username(name));
-				System.out.println("Attachment sent: " + response.isOk());
-			} catch (Exception e) {
-				this.messageCollector.setConnected(false);
-				this.reconnect();
-				rtm.sendMessage(message);
-				System.out.println("Sent attachment with Exception: " + e.getMessage());
-				if (e.getMessage().toLowerCase().equals("timeout")) {
-					sendAttachmentMessageToChannel(channel, attachments, id);
-				}
+			ChatUpdateResponse response = slack.methods(authToken).chatUpdate(req -> req.channel(channel)
+					.blocksAsString(message).ts(messageId));
+			System.out.println("Chat updated: " + response.isOk());
+		} catch (Exception e) {
+			this.messageCollector.setConnected(false);
+			this.reconnect();
+			rtm.sendMessage(msgString);
+			System.out.println("Sent message with Exception: " + e.getMessage());
+			if (e.getMessage().toLowerCase().equals("timeout")) {
+				// TODO recursive call not the best idea
+				editMessage(channel, messageId, message, id);
 			}
 			try {
 				// get the users email address if not done at the beginning (should only happen if a new user joined the
@@ -417,8 +212,6 @@ public class SlackChatMediator extends EventChatMediator {
 			} catch (Exception e) {
 				System.out.println("Could not extract Email for reason + " + e);
 			}
-		} catch(Exception e){
-			e.printStackTrace();
 		}
 	}
 

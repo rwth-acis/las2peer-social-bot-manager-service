@@ -193,14 +193,7 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
-
-	}
-
-	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments) {
-		super.sendAttachmentMessageToChannel(channel, attachments);
-	}
+	public void editMessage(String channel, String messageId, String message, Optional<String> id){}
 
 	@Override
 	public void close() {
