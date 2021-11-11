@@ -119,6 +119,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
 		try {
 			FileDataBodyPart filePart = new FileDataBodyPart("file", f);
+			if(f.getName().toLowerCase().contains("json")){
+				filePart.setMediaType(MediaType.APPLICATION_JSON_TYPE);
+			}
 			FormDataMultiPart mp = new FormDataMultiPart();
 			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
 					.bodyPart(filePart);

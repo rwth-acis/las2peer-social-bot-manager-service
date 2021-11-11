@@ -90,6 +90,9 @@ public abstract class ChatMediator {
 												  String text, Optional<String> id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
 		File file = new File(fileName + "." + fileType);
+		if(fileType.equals("")){
+			file = new File(fileName);
+	    } 
 		try {
 			FileUtils.writeByteArrayToFile(file, decodedBytes);
 		} catch (IOException e) {
