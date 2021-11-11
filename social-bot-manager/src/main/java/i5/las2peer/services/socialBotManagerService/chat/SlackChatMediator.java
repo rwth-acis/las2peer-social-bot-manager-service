@@ -209,8 +209,8 @@ public class SlackChatMediator extends EventChatMediator {
 					usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
 							.getProfile().getEmail());
 				}
-			} catch (Exception e) {
-				System.out.println("Could not extract Email for reason + " + e);
+			} catch (Exception exception) {
+				System.out.println("Could not extract Email for reason + " + exception);
 			}
 		}
 	}
