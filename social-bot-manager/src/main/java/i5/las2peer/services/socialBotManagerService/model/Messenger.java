@@ -182,8 +182,11 @@ public class Messenger {
 				}
 			} else {
 				// If only message to be sent
-				this.chatMediator.sendMessageToChannel(channel, state.getResponse(random).getResponse(),
-						Optional.of(userid));
+				String response = state.getResponse(random).getResponse();
+				if( response != null && !response.equals(""))
+				{
+					this.chatMediator.sendMessageToChannel(channel, response, Optional.of(userid));
+				}
 			}
 		} else {
 		}
