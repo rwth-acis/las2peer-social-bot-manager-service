@@ -187,6 +187,10 @@ public class Messenger {
 				{
 					this.chatMediator.sendMessageToChannel(channel, response, Optional.of(userid));
 				}
+				if(state.getFollowingMessages().size()== 0){
+					this.stateMap.remove(channel);
+
+				}
 			}
 		} else {
 		}
