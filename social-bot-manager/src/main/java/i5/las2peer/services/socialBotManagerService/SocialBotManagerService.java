@@ -2210,8 +2210,12 @@ public class SocialBotManagerService extends RESTService {
 				String hashtext = no.toString(16);
 
 				// Add preceding 0s to make it 32 bit
-				while (hashtext.length() < 32) {
+				try{
+				while (hashtext.getBytes("UTF-16BE").length * 8 < 1536) {
 					hashtext = "0" + hashtext;
+				}
+			} catch (Exception e){
+					System.out.println(e);
 				}
 
 				// return the HashText

@@ -302,9 +302,8 @@ public class Messenger {
 										&& this.knownIntents.get(intent.getKeyword()).expectsFile()) {
 									state = this.knownIntents.get(intent.getKeyword());
 									// get("0") refers to an empty intent that is accessible from the start state
-								} else if (this.knownIntents.get("0") != null
-										&& this.knownIntents.get("0").expectsFile()) {
-									state = this.knownIntents.get("0");
+								} else if (this.knownIntents.get("anyFile") != null) {
+									state = this.knownIntents.get("anyFile");
 								} else {
 									state = this.knownIntents.get("default");
 								}
@@ -315,8 +314,12 @@ public class Messenger {
 								// Incoming Message which expects file should not be chosen when no file was
 								// sent
 								if (state == null || state.expectsFile()) {
+									if(this.knownIntents.get("0") != null){
+										state = this.knownIntents.get("0");
+									} else{ 
 									state = this.knownIntents.get("default");
 								}
+							}
 								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
 										+ " confidence.");
 								stateMap.put(message.getChannel(), state);
@@ -366,17 +369,18 @@ public class Messenger {
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 									// In a conversation state, if no fitting intent was found and an empty leadsTo
 									// label is found
-								} else if (state.getFollowingMessages().get("") != null) {
-									System.out.println("Empty leadsTo1");
-									if (message.getFileBody() != null) {
-										if (state.getFollowingMessages().get("").expectsFile()) {
-											state = state.getFollowingMessages().get("");
+								} else if(state.getFollowingMessages().get("") != null || state.getFollowingMessages().get("anyFile") != null){
+									if (message.getFileBody() != null ) {
+										if (state.getFollowingMessages().get("anyFile") != null) {
+											state = state.getFollowingMessages().get("anyFile");
+											stateMap.put(message.getChannel(), state);
+											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 										} else {
 											state = this.knownIntents.get("default");
 										}
 
 									} else {
-										if (!state.getFollowingMessages().get("").expectsFile()) {
+										if (state.getFollowingMessages().get("") != null) {
 											state = state.getFollowingMessages().get("");
 											stateMap.put(message.getChannel(), state);
 											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
