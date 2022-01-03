@@ -148,7 +148,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String text, String fileType,
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, String text,
 										 Optional<String> id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
 		File file = new File(fileName + "." + fileType);
