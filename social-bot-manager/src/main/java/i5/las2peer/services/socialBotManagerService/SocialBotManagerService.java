@@ -1540,7 +1540,7 @@ public class SocialBotManagerService extends RESTService {
 				channel = chat.getChannelByEmail(email);
 			}
 			System.out.println(channel);
-			if (text != null) {
+			if (text != null && !body.containsKey("fileBody")) {
 				chat.sendMessageToChannel(channel, text);
 			}
 			if (body.containsKey("blocks")) {
@@ -1548,8 +1548,13 @@ public class SocialBotManagerService extends RESTService {
 				chat.sendBlocksMessageToChannel(channel, blocks);
 			}
 			if (body.containsKey("fileBody")) {
+				if (text == null){
+					
+					 text = "" ;
+				}
+				System.out.println("text is sss" + text);
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
-						body.getAsString("fileType"), "");
+						body.getAsString("fileType"), text);
 			}
 		}
 	}
@@ -2210,8 +2215,12 @@ public class SocialBotManagerService extends RESTService {
 				String hashtext = no.toString(16);
 
 				// Add preceding 0s to make it 32 bit
-				while (hashtext.length() < 32) {
+				try{
+				while (hashtext.getBytes("UTF-16BE").length * 8 < 1536) {
 					hashtext = "0" + hashtext;
+				}
+			} catch (Exception e){
+					System.out.println(e);
 				}
 
 				// return the HashText

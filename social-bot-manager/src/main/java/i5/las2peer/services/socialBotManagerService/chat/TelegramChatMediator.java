@@ -197,7 +197,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	@Override
 	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, String text,
 			Optional<String> id) {
-		String caption = "";
+		String caption = text;
 		System.out.println("Send File to Telegram channel: " + channel);
 
 		try {
