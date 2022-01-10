@@ -37,10 +37,13 @@ public class IncomingMessage {
 	public IncomingMessage(String intent, String NluID, Boolean containsFile) {
 		if(intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
-		} else intent = "";
+		} else intentKeyword = "";
 		this.followupMessages = new HashMap<String, IncomingMessage>();
 		this.responses = new ArrayList<ChatResponse>();
 		this.containsFile = containsFile;
+		if (intentKeyword.equals("0") && containsFile){
+			intentKeyword = "anyFile";
+		}
         if(NluID == ""){
             this.NluID = "";
         } else this.NluID = NluID;
@@ -69,7 +72,11 @@ public class IncomingMessage {
 	public void addFollowupMessage(String intentKeyword, IncomingMessage msg) {
 		String[] intentList = intentKeyword.split(",");
 		for (String intent : intentList) {
-			this.followupMessages.put(replaceUmlaute(intent).replaceAll("\\s+", ""), msg);
+			if (intent.equals("") && msg.containsFile){
+				this.followupMessages.put(replaceUmlaute(intent).replaceAll("\\s+", "") + "anyFile", msg);
+			} else {
+				this.followupMessages.put(replaceUmlaute(intent).replaceAll("\\s+", ""), msg);
+			}
 		}
 		// (this.followupMessages.put(replaceUmlaute(intentKeyword), msg);
 	}
