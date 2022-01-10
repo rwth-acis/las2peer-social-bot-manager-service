@@ -112,8 +112,8 @@ public abstract class ChatMediator {
 	 * @param fileType Type of the file to be generated
 	 * @param text Text to be sent with file
 	 */
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String text,
-										 String fileType) {
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
+	String text) {
 		sendFileMessageToChannel(channel, fileBody, fileName, fileType, text, Optional.empty());
 	}
 

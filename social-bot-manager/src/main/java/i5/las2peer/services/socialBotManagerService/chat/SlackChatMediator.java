@@ -375,8 +375,8 @@ public class SlackChatMediator extends EventChatMediator {
 		FilesUploadResponse response2;
 		try {
 			response2 = slack.methods(authToken).filesUpload(req -> req.channels(channels).file(f)
-					.content("Pretty stuff").filename(f.getName()).title(f.getName()));
-			System.out.println("File sent: " + response2.isOk());
+					.content("Pretty stuff").filename(f.getName()).title(f.getName()).initialComment(text));
+			System.out.println("File sent: " + response2.isOk()  + text);
 		} catch (IOException | SlackApiException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
