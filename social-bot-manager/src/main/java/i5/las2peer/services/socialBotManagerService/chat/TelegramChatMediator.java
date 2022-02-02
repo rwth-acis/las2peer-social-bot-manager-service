@@ -108,6 +108,7 @@ public class TelegramChatMediator extends EventChatMediator {
 			JSONObject chat = (JSONObject) message.get("chat");
 			JSONObject from = (JSONObject) message.get("from");
 			JSONObject document = (JSONObject) message.get("document");
+			JSONObject audio = (JSONObject) message.get("audio");
 			String channel = chat.getAsString("id");
 			String user = from.getAsString("first_name");
 			String text = message.getAsString("text");
@@ -133,7 +134,14 @@ public class TelegramChatMediator extends EventChatMediator {
 				String fileBody = getFile(fileId);
 				messageCollector
 						.addMessage(new ChatMessage(channel, user, text, timestamp, messageId, fileName, mimeType, fileBody));
-			} else {
+			}
+			else if(audio !=null){
+				String fileId = audio.getAsString("file_id");
+				String mimeType = audio.getAsString("mime_type");
+				String fileBody = getFile(fileId);
+				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp, messageId, mimeType, fileBody));
+			}			
+			 else {
 				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp, messageId));
 			}
 
