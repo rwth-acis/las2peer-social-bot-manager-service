@@ -12,11 +12,21 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import javax.websocket.DeploymentException;
-
+import com.github.seratch.jslack.api.model.Attachment;
+import com.github.seratch.jslack.api.model.Conversation;
+import com.github.seratch.jslack.api.model.ConversationType;
+import com.github.seratch.jslack.api.model.block.ActionsBlock;
+import com.github.seratch.jslack.api.model.block.LayoutBlock;
+import com.github.seratch.jslack.api.model.block.SectionBlock;
+import com.github.seratch.jslack.api.model.block.composition.OptionObject;
+import com.github.seratch.jslack.api.model.block.composition.PlainTextObject;
+import com.github.seratch.jslack.api.model.block.element.BlockElement;
+import com.github.seratch.jslack.api.model.block.element.ButtonElement;
+import com.github.seratch.jslack.api.model.block.element.CheckboxesElement;
+import com.github.seratch.jslack.api.model.block.element.RadioButtonsElement;
 import com.github.seratch.jslack.api.methods.request.chat.ChatUpdateRequest;
 import com.github.seratch.jslack.api.methods.response.chat.ChatUpdateResponse;
 import com.github.seratch.jslack.api.model.*;
-import com.github.seratch.jslack.api.model.block.ActionsBlock;
 import com.github.seratch.jslack.api.model.block.DividerBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.OptionObject;
@@ -40,6 +50,17 @@ import com.github.seratch.jslack.api.rtm.message.Message.MessageBuilder;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+
+import javax.websocket.DeploymentException;
+import javax.ws.rs.core.UriBuilder;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+
 
 public class SlackChatMediator extends EventChatMediator {
 	private Slack slack = null;
@@ -81,6 +102,42 @@ public class SlackChatMediator extends EventChatMediator {
 		botIDs.add(rtm.getConnectedBotUser().getId());
 		messageCollector.setDomain("https://slack.com/");
 		System.out.println(this.botUser + " connected.");
+	}
+
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id) {
+		JSONObject jsonBlocks = new JSONObject();
+		jsonBlocks.put("id", System.currentTimeMillis());
+		jsonBlocks.put("channel", channel);
+		jsonBlocks.put("blocks", blocks);
+		jsonBlocks.put("ts", ts);
+		id.ifPresent(s -> jsonBlocks.put("id", Long.parseLong(s)));
+		System.out.println(jsonBlocks);
+		try{
+			String line = null;
+			StringBuilder sb = new StringBuilder ();
+			String res = null;
+			URL url = UriBuilder.fromPath("https://slack.com/api/chat.update").build().toURL();
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Authorization", "Bearer " + authToken);
+			connection.setRequestProperty("Content-type", "application/json; charset=utf-8");
+			connection.setDoOutput(true);
+			connection.connect();
+			byte[] outputBytes = jsonBlocks.toString().getBytes("UTF-8");
+			OutputStream os = connection.getOutputStream();
+			os.write(outputBytes);
+			os.close();
+
+			BufferedReader rd  = new BufferedReader( new InputStreamReader(connection.getInputStream(), "UTF-8"));
+
+			while ((line = rd.readLine()) != null ) {
+				sb.append(line);
+			}
+			res = sb.toString();
+			System.out.println(res);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -127,51 +184,39 @@ public class SlackChatMediator extends EventChatMediator {
 
 
 //	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks,String authToken, Optional<String> id) {
 		//System.out.println("sending blocks now...");
 
-		MessageBuilder msg = Message.builder()
-				.id(System.currentTimeMillis())
-				.channel(channel);
+		JSONObject jsonBlocks = new JSONObject();
+		jsonBlocks.put("id", System.currentTimeMillis());
+		jsonBlocks.put("channel", channel);
+		jsonBlocks.put("blocks", blocks);
+		id.ifPresent(s -> jsonBlocks.put("id", Long.parseLong(s)));
+		try{
+			String line = null;
+			StringBuilder sb = new StringBuilder ();
+			String res = null;
+			URL url = UriBuilder.fromPath("https://slack.com/api/chat.postMessage").build().toURL();
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Authorization", "Bearer " + authToken);
+			connection.setRequestProperty("Content-type", "application/json;charset=utf-8");
+			connection.setDoOutput(true);
+			connection.connect();
+			byte[] outputBytes = jsonBlocks.toString().getBytes("UTF-8");
+			OutputStream os = connection.getOutputStream();
+			os.write(outputBytes);
+			os.close();
 
-		if (id.isPresent()) {
-			msg.id(Long.parseLong(id.get()));
-		}
-		String message = msg.build().toJSONString();
-		//System.out.println("message after adding blocks: " + message);
+			BufferedReader rd  = new BufferedReader( new InputStreamReader(connection.getInputStream(), "UTF-8"));
 
-		try {
-			// make sure that the bot's name and profile pic is used
-			String userId = (slack.methods().authTest(req -> req.token(authToken))).getUserId();
-			String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile()
-					.getImageOriginal();
-			String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
-
-			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
-					// ID
-					.blocksAsString(blocks).iconUrl(url).username(name));
-			System.out.println("Block sent: " + response.isOk());
-		} catch (Exception e) {
-			this.messageCollector.setConnected(false);
-			this.reconnect();
-			rtm.sendMessage(message);
-			System.out.println("Sent message with Exception: " + e.getMessage());
-			if (e.getMessage().toLowerCase().equals("timeout")) {
-				// TODO recursive call not the best idea
-				sendBlocksMessageToChannel(channel, blocks, id);
+			while ((line = rd.readLine()) != null ) {
+				sb.append(line);
 			}
-		}
-		try {
-			// get the users email address if not done at the beginning (should only happen if a new user joined the
-			// space)
-			if (usersByChannel.get(channel) == null) {
-				String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
-						.getChannel().getUser();
-				usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
-						.getProfile().getEmail());
-			}
-		} catch (Exception e) {
-			System.out.println("Could not extract Email for reason + " + e);
+			res = sb.toString();
+			System.out.println(res);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
 	}

@@ -538,7 +538,7 @@ public class Messenger {
 								}
 								// check if message parses buttons or is simple text
 								if(response.getType().equals("Interactive Message")){
-									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split);
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken());
 								} else{
 									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
 								}

@@ -183,13 +183,23 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
+
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
+		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
 	}
 
 	@Override

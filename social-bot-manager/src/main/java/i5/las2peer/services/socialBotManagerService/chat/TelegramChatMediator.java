@@ -273,7 +273,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
 
 		System.out.println("send interactive message to telegram channel " + channel);
 		assert channel != null;
@@ -296,6 +296,15 @@ public class TelegramChatMediator extends EventChatMediator {
 			e.printStackTrace();
 		}
 
+	}
+
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
+
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
+		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
 	}
 
 	private InlineKeyboardMarkup parseInlineKeyboardMarkup(String blocks){
@@ -377,8 +386,8 @@ public class TelegramChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		sendBlocksMessageToChannel(channel, blocks, authToken, Optional.empty());
 	}
 
 	/**

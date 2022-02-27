@@ -1,5 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import org.web3j.abi.datatypes.Bool;
+
 public class ChatMessage {
 	private String channel;
 	private String user;
@@ -14,7 +16,7 @@ public class ChatMessage {
 	private String previousMessage;
 	private String currMessage;
 	private String messageId;
-
+	private String actionInfo; 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
 		this.user = user;
@@ -66,6 +68,18 @@ public class ChatMessage {
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;
+	}
+	// ChatMessage for actions
+	public ChatMessage(String channel, String user, String text, String time, String actionInfo, boolean action) {
+		this.channel = channel;
+		this.user = user;
+		this.text = text;
+		this.time = time;
+		this.actionInfo = actionInfo;
+	}
+
+	public  String getActionInfo(){
+		return this.actionInfo;
 	}
 
 	public void setText(String text) {
