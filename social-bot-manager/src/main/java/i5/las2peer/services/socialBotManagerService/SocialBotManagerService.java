@@ -1183,7 +1183,7 @@ public class SocialBotManagerService extends RESTService {
 			body.put("intent", messageInfo.getIntent().getKeyword());
 			body.put("time", messageInfo.getMessage().getTime());
 			if(messageInfo.getMessage().getMessageId() != null){
-				body.put("message_id", messageInfo.getMessage().getMessageId());
+				body.put("action_id", messageInfo.getMessage().getMessageId());
 			}
 			if (messageInfo.getMessage().getFileBody() != null) {
 				body.put("fileBody", messageInfo.getMessage().getFileBody());
