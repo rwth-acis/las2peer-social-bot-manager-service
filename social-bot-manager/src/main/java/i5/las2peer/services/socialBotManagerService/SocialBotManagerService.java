@@ -1625,7 +1625,6 @@ public class SocialBotManagerService extends RESTService {
 			}
 			if (body.containsKey("blocks")) {
 				System.out.println("Body has blocks");
-				chat.sendBlocksMessageToChannel(channel, blocks, chat.getAuthToken());
 				if(body.containsKey("updateBlock") && Boolean.parseBoolean(body.getAsString("updateBlock"))){
 					if(body.containsKey("ts")){
 						System.out.println("A block would be updated");
