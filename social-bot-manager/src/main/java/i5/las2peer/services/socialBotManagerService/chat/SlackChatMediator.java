@@ -289,8 +289,7 @@ public class SlackChatMediator extends EventChatMediator {
 						System.out.println("subtype: " + currMessageJson.getAsString("subtype"));
 						if(currMessageJson.getAsString("subtype").equals("bot_message")){
 							System.out.println("bot changed answer, ignore");
-							return null;
-						//	throw new InvalidChatMessageException();
+							throw new InvalidChatMessageException();
 						}
 					}
 					System.out.println("user edited answer");

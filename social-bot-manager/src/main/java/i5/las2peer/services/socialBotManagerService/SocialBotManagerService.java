@@ -1183,6 +1183,8 @@ public class SocialBotManagerService extends RESTService {
 			body.put("intent", messageInfo.getIntent().getKeyword());
 			body.put("time", messageInfo.getMessage().getTime());
 			if(messageInfo.getMessage().getMessageId() != null){
+				body.put("message_id", messageInfo.getMessage().getMessageId());
+				// actionInfo needed for citbot...
 				body.put("actionInfo", messageInfo.getMessage().getMessageId());
 			}
 			if (messageInfo.getMessage().getFileBody() != null) {
