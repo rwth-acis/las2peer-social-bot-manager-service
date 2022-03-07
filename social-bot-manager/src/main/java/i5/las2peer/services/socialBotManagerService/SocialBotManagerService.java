@@ -1484,8 +1484,8 @@ public class SocialBotManagerService extends RESTService {
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
-			 client.setLogin("alice", "pwalice");
-		//	client.setLogin(botAgent.getLoginName(), botPass);
+		//  client.setLogin("alice", "pwalice");
+			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
