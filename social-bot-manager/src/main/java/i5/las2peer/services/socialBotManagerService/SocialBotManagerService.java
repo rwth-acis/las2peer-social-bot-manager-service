@@ -947,7 +947,7 @@ public class SocialBotManagerService extends RESTService {
 			for (VLE vle : vles) {
 				Bot b = vle.getBots().get(bot);
 				if (b != null) {
-					ArrayList messengers = (ArrayList) body.get("messengerNames");
+					ArrayList messengers = (ArrayList) body.get("messengers");
 					if (b.deactivateAllWithCheck(messengers)) {
 						vle.getBots().remove(bot);
 						if (restarterBot != null) {
