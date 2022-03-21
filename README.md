@@ -33,6 +33,16 @@ Unix/Mac:
 bin/start_network.sh
 ```
 
+Update block messages
+--------
+Set the response of the las2peer service (a JsonObject) to
+```json
+{
+  "blocks": "the content of the new block message",
+  "updateBlock": true,
+  "ts": "the time when the need to be updated blocks have been sent"
+}
+```
 
 How to run using Docker
 -------------------

@@ -710,106 +710,175 @@ public class SocialBotManagerService extends RESTService {
 		public Response triggerButton(String body, @PathParam("botName") String name,
 				@PathParam("instanceAlias") String instanceAlias, @PathParam("intent") String expectedIntent,
 				@PathParam("token") String token) {
-			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			System.out.println("name " + name + " , instance alias " + instanceAlias);
-
-			try {
-				String result = java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name());
-
-				// slack adds payload= in front of the result, so deleting that to parse it to
-				// json
-				result = result.substring(8);
-
-				System.out.println("now trying to handle message...");
-				JSONObject bodyInput = (JSONObject) p.parse(result);
-				System.out.println("parsed json: " + bodyInput);
-
-				String ts = ((JSONObject) p.parse(bodyInput.getAsString("container"))).getAsString("message_ts");
-				String channel = ((JSONObject) p.parse(bodyInput.getAsString("channel"))).getAsString("id");
-				String user = ((JSONObject) p.parse(bodyInput.getAsString("user"))).getAsString("id");
-				String text = "";
-
-				// parse text
-				JSONArray actions = (JSONArray) p.parse(bodyInput.getAsString("actions"));
-				for (Object actionsObject : actions) {
-					String selectedOptionsString = ((JSONObject) actionsObject).getAsString("selected_options");
-					String selectedOptionString = ((JSONObject) actionsObject).getAsString("selected_option");
-					if (selectedOptionsString != null) {
-						// multiple choice with one or more than one selected option
-						// System.out.println("selected options string: " + selectedOptionsString);
-						text = p.parse(selectedOptionsString).toString();
-
-					} else if (selectedOptionString != null) {
-						// single choice with one selected option (possible)
-						// System.out.println("selected option: " + selectedOptionString);
-						JSONObject selectedOptionJson = (JSONObject) p.parse(selectedOptionString);
-						String textString = selectedOptionJson.getAsString("text");
-						text = ((JSONObject) p.parse(textString)).getAsString("text");
-
-					} else {
-						// System.out.println("No selectedOption and no selectedOptions.");
-						System.out.println("No selectedOption and no selectedOptions. Just a normal button press.");
-
-						String textString = ((JSONObject) actionsObject).getAsString("text");
-						text = ((JSONObject) p.parse(textString)).getAsString("text");
-					}
-				}
-
-				// add intent to message
-				ChatMessage chatMessage = new ChatMessage(channel, user, text, ts);
-				JSONObject intentJO = new JSONObject();
-				JSONObject innerIntent = new JSONObject();
-				innerIntent.put("name", expectedIntent);
-				innerIntent.put("confidence", 1.0);
-				intentJO.put("intent", innerIntent);
-				intentJO.put("entities", new JSONArray());
-				i5.las2peer.services.socialBotManagerService.nlu.Intent intent = new i5.las2peer.services.socialBotManagerService.nlu.Intent(
-						intentJO);
-				// set email, since it is not passed on in body
-				chatMessage.setEmail(user);
-
-				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
-
-				SocialBotManagerService sbf = this.sbfservice;
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							VLE vle = getConfig().getServiceConfiguration(instanceAlias);
-							Bot bot = vle.getBotByServiceToken(token, ChatService.SLACK);
-							Messenger messenger = bot.getMessenger(ChatService.SLACK);
-							i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = messenger.getKnownIntents().get(expectedIntent);
-							String triggeredFunctionId = (incomingMessage.getResponse(new Random())).getTriggeredFunctionId();
-
-							BotAgent botAgent = getBotAgents().get(name);
-
-							i5.las2peer.services.socialBotManagerService.model.MessageInfo messageInfo = new MessageInfo(chatMessage, intent, triggeredFunctionId, name, instanceAlias, true, new ArrayList<>());
-
-							System.out.println("Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
-
-							try {
-								sbf.performIntentTrigger(vle, botAgent, messageInfo);
-							} catch (Exception e) {
-								e.printStackTrace();
+					JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					System.out.println("name " + name + " , instance alias " + instanceAlias);
+		
+					try {
+						String result = java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name());
+		
+						//slack adds payload= in front of the result, so deleting that to parse it to json
+						result = result.substring(8);
+		
+						System.out.println("now trying to handle message...");
+						JSONObject bodyInput = (JSONObject) p.parse(result);
+						System.out.println("parsed json: " + bodyInput);
+		
+						String channel = "";
+						String text = "";
+						String user = "";
+						String ts = "";
+						JSONObject actionInfoJson = new JSONObject();
+		
+						if (bodyInput.getAsString("type").equals("view_submission")) {
+							// handle modal submission
+							// the channel should be added in "{"private_metadata":{"channel": "channel_id", ...}}"
+							// you can add other infos in private_metadata, it would be sent to the channel and sent back after submission
+							// info in private_metadata would not be shown in the channel
+							JSONObject view = (JSONObject) p.parse(bodyInput.getAsString("view"));
+							channel = ((JSONObject) p.parse(view.getAsString("private_metadata"))).getAsString("channel");
+							user = ((JSONObject) p.parse(bodyInput.getAsString("user"))).getAsString("id");
+							ts = "view_submission";
+							text = "view_submission";
+							// use callback_id to recognize which kind of view have been submitted
+							actionInfoJson.put("actionId", view.getAsString("callback_id"));
+							actionInfoJson.put("value", view.getAsString("state"));
+						} else {
+							String actionId = "";
+							StringBuilder value = new StringBuilder();
+							JSONObject containerJson = (JSONObject) p.parse(bodyInput.getAsString("container"));
+							ts = containerJson.getAsString("message_ts");
+							JSONObject channelJson = (JSONObject) p.parse(bodyInput.getAsString("channel"));
+							channel = channelJson.getAsString("id");
+							JSONObject userJson = (JSONObject) p.parse(bodyInput.getAsString("user"));
+							user = userJson.getAsString("id");
+		
+		
+							JSONArray actions = (JSONArray) p.parse(bodyInput.getAsString("actions"));
+							// this for loop only executed once
+							for(Object actionsObject : actions){
+								String selectedOptionsString = ((JSONObject) actionsObject).getAsString("selected_options");
+								String selectedOptionString = ((JSONObject) actionsObject).getAsString("selected_option");
+								actionId = ((JSONObject) actionsObject).getAsString("action_id");
+								if(selectedOptionsString != null){
+									// multiple choice with one or more than one selected option
+									//System.out.println("selected options string: " + selectedOptionsString);
+									JSONArray selectedOptionsJson = (JSONArray) p.parse(selectedOptionsString);
+									text = selectedOptionsJson.toString();
+									value.append("[");
+									for(Object singleOptionJson : selectedOptionsJson) {
+										value.append(((JSONObject) singleOptionJson).getAsString("value")).append(',');
+									}
+									value.append("]");
+		
+								} else if(selectedOptionString != null){
+									// single choice with one selected option (possible)
+									//System.out.println("selected option: " + selectedOptionString);
+									JSONObject selectedOptionJson = (JSONObject) p.parse(selectedOptionString);
+		
+									String textString = selectedOptionJson.getAsString("text");
+									JSONObject textJson = (JSONObject) p.parse(textString);
+									text += textJson.getAsString("text");
+									value.append(((JSONObject) actionsObject).getAsString("value"));
+		
+								}else {
+									//System.out.println("No selectedOption and no selectedOptions.");
+									System.out.println("No selectedOption and no selectedOptions. Just a normal button press.");
+		
+									String textString = ((JSONObject) actionsObject).getAsString("text");
+									JSONObject textJson = (JSONObject) p.parse(textString);
+									text += textJson.getAsString("text");
+									value.append(((JSONObject) actionsObject).getAsString("value"));
+								}
 							}
-							try {
-								Thread.sleep(500);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
+		
+							System.out.println("Assembled text from triggerButton is: " + text);
+							// remove the last ","
+							if((String.valueOf(text.charAt(text.length() - 1)).equals(","))){
+								System.out.println("inside removing last comma");
+								text = text.substring(0, text.length() - 1);
 							}
-						} catch (Exception e) {
-							e.printStackTrace();
+		
+							actionInfoJson.put("actionId", actionId);
+							actionInfoJson.put("value", value.toString());
 						}
-						System.out.println("Intent processing finished.");
+						actionInfoJson.put("triggerId", bodyInput.getAsString("trigger_id"));
+		
+						ChatMessage chatMessage = new ChatMessage(channel, user, text, ts, actionInfoJson.toString());
+						JSONObject intentJO = new JSONObject();
+						JSONObject innerIntent = new JSONObject();
+						innerIntent.put("name", expectedIntent);
+						innerIntent.put("confidence", 1.0);
+						intentJO.put("intent", innerIntent);
+						JSONArray ja = new JSONArray();
+						intentJO.put("entities", ja);
+						i5.las2peer.services.socialBotManagerService.nlu.Intent intent = new i5.las2peer.services.socialBotManagerService.nlu.Intent(intentJO);
+						// set email, since it is not passed on in body
+						chatMessage.setEmail(user);
+						// adjust triggered function id
+						MessageInfo messageInfo = new MessageInfo(chatMessage, intent, "", name, instanceAlias, true, new ArrayList<>());
+		
+		
+						//this.triggeredFunction.get(message.getChannel());
+						System.out.println("Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
+						Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
+		
+						SocialBotManagerService sbf = this.sbfservice;
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									BotAgent botAgent = getBotAgents().get(messageInfo.getBotName());
+									String service = messageInfo.getServiceAlias();
+									System.out.println("service name: " + service);
+									VLE vle = getConfig().getServiceConfiguration(service);
+		
+									// get triggered function id, by getting bot, the messengers and then the intent hash map
+									HashMap<String, Bot> botsHM = vle.getBots();
+									//System.out.println("botsHM: " + botsHM);
+									String triggerdFunctionId = "";
+									for(Bot bot : botsHM.values()){
+										System.out.println(bot);
+										HashMap<String, i5.las2peer.services.socialBotManagerService.model.Messenger> messengers =  bot.getMessengers();
+										for(Messenger m : messengers.values()){
+											//System.out.println("messenger: " + m);
+											HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m.getKnownIntents();
+											//System.out.println("intentsHM: " + intentsHM);
+											for(String s : intentsHM.keySet()){
+												if(s.equals(expectedIntent)){
+													i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = intentsHM.get(s);
+													i5.las2peer.services.socialBotManagerService.model.ChatResponse chatResponses = incomingMessage.getResponse(new Random());
+													//System.out.println(chatResponses);
+													//System.out.println(chatResponses.getTriggeredFunctionId());
+													triggerdFunctionId = chatResponses.getTriggeredFunctionId();
+												}
+											}
+										}
+									}
+									MessageInfo newMessageInfo = new MessageInfo(chatMessage, intent, triggerdFunctionId, name, instanceAlias, true, new ArrayList<>());
+									System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " " + newMessageInfo.getTriggeredFunctionId());
+									try {
+										sbf.performIntentTrigger(vle, botAgent, newMessageInfo);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+									try {
+										Thread.sleep(500);
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									}
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								System.out.println("Intent processing finished.");
+							}
+						}).start();
+						return Response.ok().build();
+		
+					} catch(Exception e){
+						e.printStackTrace();
 					}
-				}).start();
-				return Response.ok().build();
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			return Response.ok().build();
+		
+					return Response.ok().build();
 		}
 
 		@POST
@@ -1115,11 +1184,16 @@ public class SocialBotManagerService extends RESTService {
 			body.put("time", messageInfo.getMessage().getTime());
 			if(messageInfo.getMessage().getMessageId() != null){
 				body.put("message_id", messageInfo.getMessage().getMessageId());
+				// actionInfo needed for citbot...
+				body.put("actionInfo", messageInfo.getMessage().getMessageId());
 			}
 			if (messageInfo.getMessage().getFileBody() != null) {
 				body.put("fileBody", messageInfo.getMessage().getFileBody());
 				body.put("fileName", messageInfo.getMessage().getFileName());
 				body.put("fileType", messageInfo.getMessage().getFileType());
+			}
+			if(messageInfo.getMessage().getActionInfo() != null) {
+				body.put("actionInfo", messageInfo.getMessage().getActionInfo());
 			}
 
 			// Insert entities detected from the message
@@ -1410,7 +1484,7 @@ public class SocialBotManagerService extends RESTService {
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
-			// client.setLogin("alice", "pwalice");
+		//  client.setLogin("alice", "pwalice");
 			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
@@ -1449,6 +1523,12 @@ public class SocialBotManagerService extends RESTService {
 					}
 					if (response.containsKey("blocks")) {
 						triggeredBody.put("blocks", response.getAsString("blocks"));
+						if(response.containsKey("updateBlock")){
+							triggeredBody.put("updateBlock", response.getAsString("updateBlock"));
+							if(response.containsKey("ts")){
+								triggeredBody.put("ts", response.getAsString("ts"));
+							}
+						}
 					}
 					triggerChat(chat, triggeredBody);
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
@@ -1544,8 +1624,18 @@ public class SocialBotManagerService extends RESTService {
 				chat.sendMessageToChannel(channel, text);
 			}
 			if (body.containsKey("blocks")) {
-				System.out.println("body has blocks");
-				chat.sendBlocksMessageToChannel(channel, blocks);
+				System.out.println("Body has blocks");
+				if(body.containsKey("updateBlock") && Boolean.parseBoolean(body.getAsString("updateBlock"))){
+					if(body.containsKey("ts")){
+						System.out.println("A block would be updated");
+						chat.updateBlocksMessageToChannel(channel, blocks, chat.getAuthToken(), body.getAsString("ts"));
+					} else{
+						System.out.println("No ts information is available. No block would be updated, a new block will be sent instead.");
+					}
+
+				} else{
+					chat.sendBlocksMessageToChannel(channel, blocks, chat.getAuthToken());
+				}
 			}
 			if (body.containsKey("fileBody")) {
 				if (text == null){

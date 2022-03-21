@@ -38,10 +38,16 @@ public abstract class ChatMediator {
 		editMessage(channel, messageId, message, Optional.empty());
 	}
 
-	public abstract void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id);
+	public abstract void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id);
 
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		sendBlocksMessageToChannel(channel, blocks, authToken, Optional.empty());
+	}
+
+	public abstract void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id);
+
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
+		updateBlocksMessageToChannel(channel, blocks, authToken, ts, Optional.empty());
 	}
 
 	/**
@@ -176,6 +182,10 @@ public abstract class ChatMediator {
 			result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
 		}
 		return result.toString();
+	}
+
+	public String getAuthToken() {
+		return authToken;
 	}
 
 	// used to check whether given token is the real one
