@@ -33,19 +33,21 @@ dependencies {
     implementation "javax.websocket:javax.websocket-api:1.1"
     implementation "org.glassfish.tyrus.bundles:tyrus-standalone-client:1.13"
 
-    implementation "com.github.seratch:jslack:3.4.2"
-        implementation "com.rocketchat.common:rocketchat-common:0.7.1"
-        implementation "com.rocketchat.core:rocketchat-core:0.7.1"
-        implementation "com.rocketchat.livechat:rocketchat-livechat:0.7.1"
-        implementation "com.neovisionaries:nv-websocket-client:2.9"
-        implementation "org.json:json:20190722" 
-        implementation "mysql:mysql-connector-java:8.0.13"
-        implementation("org.apache.commons:commons-dbcp2:2.7.0"){
-        exclude module: "asm"
-        exclude module: "asm-commons"
-          }
-        implementation "commons-codec:commons-codec:1.13" 
-        implementation "com.github.pengrad:java-telegram-bot-api:4.9.0"
+//   implementation "com.github.seratch:jslack:3.4.2"
+    implementation "com.slack.api:slack-api-client:1.20.2"
+    implementation "com.slack.api:slack-api-model:1.20.2"
+    implementation "com.rocketchat.common:rocketchat-common:0.7.1"
+    implementation "com.rocketchat.core:rocketchat-core:0.7.1"
+    implementation "com.rocketchat.livechat:rocketchat-livechat:0.7.1"
+    implementation "com.neovisionaries:nv-websocket-client:2.9"
+    implementation "org.json:json:20190722" 
+    implementation "mysql:mysql-connector-java:8.0.13"
+    implementation("org.apache.commons:commons-dbcp2:2.7.0"){
+    exclude module: "asm"
+    exclude module: "asm-commons"
+        }
+    implementation "commons-codec:commons-codec:1.13" 
+    implementation "com.github.pengrad:java-telegram-bot-api:4.9.0"
 
      //   javax.websocket-api;version="1.1", jslack;version="1.8.1", rocketchat-common;version="0.7.1, rocketchat-core;version="0.7.1, rocketchat-livechat;version="0.7.1"
 }
