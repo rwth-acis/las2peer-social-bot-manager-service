@@ -403,8 +403,9 @@ public class SlackChatMediator extends EventChatMediator {
 				this.rtm.close();
 				this.slack = new Slack();
 				this.rtm = this.slack.rtm(authToken);
-
-				this.rtm.addMessageHandler(messageCollector);
+				this.rtm.removeMessageHandler(this.messageCollector);
+				this.messageCollector = new SlackChatMessageCollector();
+				this.rtm.addMessageHandler(this.messageCollector);
 				this.rtm.connect();
 				this.botUser = rtm.getConnectedBotUser().toString();
 				this.messageCollector.setConnected(true);
