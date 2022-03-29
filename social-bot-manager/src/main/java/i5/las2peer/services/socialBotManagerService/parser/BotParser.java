@@ -141,8 +141,12 @@ public class BotParser {
 				users.put(entry.getKey(), u);
 				// Bot
 			} else if (nodeType.equals("Bot")) {
-				Bot bot = addBot(elem, botAgents);
-				bots.put(entry.getKey(), bot);
+				try{
+					Bot bot = addBot(elem, botAgents);
+					bots.put(entry.getKey(), bot);
+				} catch (Exception e){
+					throw e;
+				}
 				// VLE Routine
 			} else if (nodeType.equals("Routine")) {
 				VLERoutine routine = addRoutine(elem);
@@ -651,9 +655,11 @@ public class BotParser {
 					}
 					botAgent.unlock(botPass);
 					Context.getCurrent().registerReceiver(botAgent);
-				} catch (AgentException | CryptoException e2) {
+				} catch (AgentException | IllegalArgumentException | CryptoException e2) {
 					// TODO Errorhandling
+					System.out.println("Caught the error here");
 					e2.printStackTrace();
+					throw new IllegalArgumentException(e2);
 				}
 				// runningAt = botAgent.getRunningAtNode();
 				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
