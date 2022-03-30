@@ -67,27 +67,31 @@ public class Messenger {
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
-		switch (this.chatService) {
-		case SLACK:
-			this.chatMediator = new SlackChatMediator(token);
-			break;
-		case TELEGRAM:
-			this.chatMediator = new TelegramChatMediator(token);
-			String username = ((TelegramChatMediator) this.chatMediator).getBotName();
-			if (username != null)
-				this.name = username;
-			break;
-		case ROCKET_CHAT:
-			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-			break;
-		case MOODLE_CHAT:
-			this.chatMediator = new MoodleChatMediator(token);
-			break;
-		case MOODLE_FORUM:
-			this.chatMediator = new MoodleForumMediator(token);
-			break;
-		default:
-			throw new ParseBotException("Unimplemented chat service: " + chatService);
+		try{
+			switch (this.chatService) {
+			case SLACK:
+				this.chatMediator = new SlackChatMediator(token);
+				break;
+			case TELEGRAM:
+				this.chatMediator = new TelegramChatMediator(token);
+				String username = ((TelegramChatMediator) this.chatMediator).getBotName();
+				if (username != null)
+					this.name = username;
+				break;
+			case ROCKET_CHAT:
+				this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+				break;
+			case MOODLE_CHAT:
+				this.chatMediator = new MoodleChatMediator(token);
+				break;
+			case MOODLE_FORUM:
+				this.chatMediator = new MoodleForumMediator(token);
+				break;
+			default:
+				throw new ParseBotException("Unimplemented chat service: " + chatService);
+			}
+		} catch (Exception e){
+			throw e;
 		}
 
 		this.name = id;

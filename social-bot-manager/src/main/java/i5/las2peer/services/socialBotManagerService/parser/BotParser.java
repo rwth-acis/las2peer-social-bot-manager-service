@@ -177,6 +177,7 @@ public class BotParser {
 				}
 				gList.put(entry.getKey(), g);
 			}
+		
 		}
 
 		if (vleCount != 1) {
@@ -184,7 +185,7 @@ public class BotParser {
 		} else if (users.isEmpty() && bots.isEmpty()) {
 			throw new ParseBotException("Missing VLE User!");
 		} else if (bsfList.isEmpty() && responses.isEmpty()) {
-			throw new ParseBotException("Missing Bot Action and Chat Response!");
+			throw new ParseBotException("Missing Bot Action and Chat Response! (You need at least one chat response OR a bot action for the bot to work)");
 		} else if (usfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty()) {
 			throw new ParseBotException("Missing User Action, VLE Routine and Incoming Message!");
 		}
@@ -483,7 +484,7 @@ public class BotParser {
 		if (messengerType == null) {
 			throw new ParseBotException("Messenger is missing \"Messenger Type\" attribute");
 		}
-		if (token == null) {
+		if (token == null || token == "") {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
 
@@ -547,7 +548,7 @@ public class BotParser {
             }
 		}
 
-		if (url == null) {
+		if (url == null || url == "") {
 			throw new ParseBotException("NLU Knowledge without URL");
 		}
 
