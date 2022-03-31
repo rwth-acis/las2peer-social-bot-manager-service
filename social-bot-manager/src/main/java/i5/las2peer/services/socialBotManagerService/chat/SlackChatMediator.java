@@ -1,66 +1,45 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.DeploymentException;
-import com.slack.api.model.Attachment;
-import com.slack.api.model.Conversation;
-import com.slack.api.model.ConversationType;
-import com.slack.api.model.block.ActionsBlock;
-import com.slack.api.model.block.LayoutBlock;
-import com.slack.api.model.block.SectionBlock;
-import com.slack.api.model.block.composition.OptionObject;
-import com.slack.api.model.block.composition.PlainTextObject;
-import com.slack.api.model.block.element.BlockElement;
-import com.slack.api.model.block.element.ButtonElement;
-import com.slack.api.model.block.element.CheckboxesElement;
-import com.slack.api.model.block.element.RadioButtonsElement;
-import com.slack.api.methods.request.chat.ChatUpdateRequest;
-import com.slack.api.methods.response.chat.ChatUpdateResponse;
-import com.slack.api.model.*;
-import com.slack.api.model.block.DividerBlock;
-import com.slack.api.model.block.SectionBlock;
-import com.slack.api.model.block.composition.OptionObject;
-import com.slack.api.model.block.composition.PlainTextObject;
-import com.slack.api.model.block.LayoutBlock;
-import com.slack.api.model.block.element.*;
-import net.minidev.json.parser.JSONParser;
-import org.apache.commons.io.FileUtils;
+import javax.ws.rs.core.UriBuilder;
 
 // TODO: Currently needed because of class with the same name in this package
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.channels.UsersLookupByEmailResponse;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.methods.response.conversations.ConversationsListResponse;
 import com.slack.api.methods.response.files.FilesUploadResponse;
 import com.slack.api.methods.response.users.UsersConversationsResponse;
+import com.slack.api.model.Conversation;
+import com.slack.api.model.ConversationType;
 import com.slack.api.rtm.RTMClient;
 import com.slack.api.rtm.message.Message;
 import com.slack.api.rtm.message.Message.MessageBuilder;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-
-import javax.websocket.DeploymentException;
-import javax.ws.rs.core.UriBuilder;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-
-
+import net.minidev.json.parser.JSONParser;
 
 public class SlackChatMediator extends EventChatMediator {
 	private Slack slack = null;
@@ -71,7 +50,8 @@ public class SlackChatMediator extends EventChatMediator {
 	public static HashMap<String, String> usersByChannel;
 	// Is needed to use the token when downloading user files
 	public static HashMap<String, String> botTokens = new HashMap<String, String>();
-	// When files are sent, it is not clear whether a bot or user sent them, differentiate using the id of the bot!
+	// When files are sent, it is not clear whether a bot or user sent them,
+	// differentiate using the id of the bot!
 	public static ArrayList<String> botIDs = new ArrayList<String>();
 
 	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
@@ -104,7 +84,8 @@ public class SlackChatMediator extends EventChatMediator {
 		System.out.println(this.botUser + " connected.");
 	}
 
-	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id) {
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts,
+			Optional<String> id) {
 		JSONObject jsonBlocks = new JSONObject();
 		jsonBlocks.put("id", System.currentTimeMillis());
 		jsonBlocks.put("channel", channel);
@@ -112,9 +93,9 @@ public class SlackChatMediator extends EventChatMediator {
 		jsonBlocks.put("ts", ts);
 		id.ifPresent(s -> jsonBlocks.put("id", Long.parseLong(s)));
 		System.out.println(jsonBlocks);
-		try{
+		try {
 			String line = null;
-			StringBuilder sb = new StringBuilder ();
+			StringBuilder sb = new StringBuilder();
 			String res = null;
 			URL url = UriBuilder.fromPath("https://slack.com/api/chat.update").build().toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -128,9 +109,9 @@ public class SlackChatMediator extends EventChatMediator {
 			os.write(outputBytes);
 			os.close();
 
-			BufferedReader rd  = new BufferedReader( new InputStreamReader(connection.getInputStream(), "UTF-8"));
+			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
 
-			while ((line = rd.readLine()) != null ) {
+			while ((line = rd.readLine()) != null) {
 				sb.append(line);
 			}
 			res = sb.toString();
@@ -168,7 +149,8 @@ public class SlackChatMediator extends EventChatMediator {
 			}
 		}
 		try {
-			// get the users email address if not done at the beginning (should only happen if a new user joined the
+			// get the users email address if not done at the beginning (should only happen
+			// if a new user joined the
 			// space)
 			if (usersByChannel.get(channel) == null) {
 				String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
@@ -182,19 +164,18 @@ public class SlackChatMediator extends EventChatMediator {
 
 	}
 
-
-//	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks,String authToken, Optional<String> id) {
-		//System.out.println("sending blocks now...");
+	// @Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
+		// System.out.println("sending blocks now...");
 
 		JSONObject jsonBlocks = new JSONObject();
 		jsonBlocks.put("id", System.currentTimeMillis());
 		jsonBlocks.put("channel", channel);
 		jsonBlocks.put("blocks", blocks);
 		id.ifPresent(s -> jsonBlocks.put("id", Long.parseLong(s)));
-		try{
+		try {
 			String line = null;
-			StringBuilder sb = new StringBuilder ();
+			StringBuilder sb = new StringBuilder();
 			String res = null;
 			URL url = UriBuilder.fromPath("https://slack.com/api/chat.postMessage").build().toURL();
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -208,9 +189,9 @@ public class SlackChatMediator extends EventChatMediator {
 			os.write(outputBytes);
 			os.close();
 
-			BufferedReader rd  = new BufferedReader( new InputStreamReader(connection.getInputStream(), "UTF-8"));
+			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
 
-			while ((line = rd.readLine()) != null ) {
+			while ((line = rd.readLine()) != null) {
 				sb.append(line);
 			}
 			res = sb.toString();
@@ -246,13 +227,15 @@ public class SlackChatMediator extends EventChatMediator {
 				editMessage(channel, messageId, message, id);
 			}
 			try {
-				// get the users email address if not done at the beginning (should only happen if a new user joined the
+				// get the users email address if not done at the beginning (should only happen
+				// if a new user joined the
 				// space)
 				if (usersByChannel.get(channel) == null) {
 					String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
 							.getChannel().getUser();
-					usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
-							.getProfile().getEmail());
+					usersByChannel.put(channel,
+							slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
+									.getProfile().getEmail());
 				}
 			} catch (Exception exception) {
 				System.out.println("Could not extract Email for reason + " + exception);
@@ -268,26 +251,26 @@ public class SlackChatMediator extends EventChatMediator {
 		// used to identity the message (in case it gets edited)
 		String time = o.getAsString("ts");
 
-		//System.out.println(user);
-		//System.out.println(channel);
-		//System.out.println(text);
+		// System.out.println(user);
+		// System.out.println(channel);
+		// System.out.println(text);
 
-		if(o.containsKey("subtype")){
-			if(o.getAsString("subtype").equals("message_changed")){
+		if (o.containsKey("subtype")) {
+			if (o.getAsString("subtype").equals("message_changed")) {
 				JSONParser parser = new JSONParser();
 				System.out.println("message subtype message_changed recognized...");
 
-				try{
+				try {
 					String currMessage = o.getAsString("message");
 					String prevMessage = o.getAsString("previous_message");
 
 					JSONObject currMessageJson = (JSONObject) parser.parse(currMessage);
 
 					System.out.println("now checking who edited answer...");
-					if(currMessageJson.containsKey("subtype")){
+					if (currMessageJson.containsKey("subtype")) {
 						// check if the bot edited an answer
 						System.out.println("subtype: " + currMessageJson.getAsString("subtype"));
-						if(currMessageJson.getAsString("subtype").equals("bot_message")){
+						if (currMessageJson.getAsString("subtype").equals("bot_message")) {
 							System.out.println("bot changed answer, ignore");
 							throw new InvalidChatMessageException();
 						}
@@ -297,24 +280,28 @@ public class SlackChatMediator extends EventChatMediator {
 					user = currMessageJson.getAsString("user");
 					text = currMessageJson.getAsString("text");
 
-					//System.out.println("creating new chat message: c: " + channel + " u: " + user + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " + ts);
+					// System.out.println("creating new chat message: c: " + channel + " u: " + user
+					// + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " +
+					// ts);
 					ChatMessage msg = new ChatMessage(channel, user, text, time);
 					msg.setCurrMessage(currMessage);
 					msg.setPreviousMessage(prevMessage);
 					System.out.println("returning msg");
 					System.out.println(msg);
 					return msg;
-				} catch(Exception e){
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 			}
 		}
 
-		// Second part of the if clause if bcs the bot would for some reason react to its own message
+		// Second part of the if clause if bcs the bot would for some reason react to
+		// its own message
 		if (o.get("files") != null && !botIDs.contains(o.get("user"))) {
 			for (int i = 0; i < ((JSONArray) o.get("files")).size(); i++) {
-				// left it as for(...), but only sending 1 file at a time will be accepted currently
+				// left it as for(...), but only sending 1 file at a time will be accepted
+				// currently
 				try {
 					URL url = new URL(((JSONObject) ((JSONArray) o.get("files")).get(i)).getAsString("url_private"));
 					HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -360,16 +347,18 @@ public class SlackChatMediator extends EventChatMediator {
 		return messages;
 	}
 
-	/*public String getEmails(String channel) {
-		
-		if(usersByChannel.get(channel) == null)
-		{
-			return "No Email available at the moment";
-		}
-		System.out.println("Email is " + usersByChannel.get(channel));
-		return usersByChannel.get(channel); // slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser().getProfile().getEmail();
-	}
-	*/
+	/*
+	 * public String getEmails(String channel) {
+	 * 
+	 * if(usersByChannel.get(channel) == null)
+	 * {
+	 * return "No Email available at the moment";
+	 * }
+	 * System.out.println("Email is " + usersByChannel.get(channel));
+	 * return usersByChannel.get(channel); // slack.methods().usersInfo(req ->
+	 * req.token(authToken).user(user)).getUser().getProfile().getEmail();
+	 * }
+	 */
 	public String getBotUser() {
 		return this.botUser.toString();
 	}
@@ -400,6 +389,7 @@ public class SlackChatMediator extends EventChatMediator {
 	private void reconnect() {
 		if (!this.messageCollector.isConnected()) {
 			try {
+				System.out.println(this.botUser + " is reconnecting.");
 				this.rtm.close();
 				this.slack = new Slack();
 				this.rtm = this.slack.rtm(authToken);
@@ -413,9 +403,24 @@ public class SlackChatMediator extends EventChatMediator {
 			} catch (IOException | DeploymentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException i) {
+					i.printStackTrace();
+				}
+				this.reconnect();
+			} catch (Exception e) {
+				e.printStackTrace();
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException i) {
+					i.printStackTrace();
+				}
+				this.reconnect();
 			}
 		}
 	}
+
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
 		ArrayList<String> channels = new ArrayList<String>();
@@ -424,7 +429,7 @@ public class SlackChatMediator extends EventChatMediator {
 		try {
 			response2 = slack.methods(authToken).filesUpload(req -> req.channels(channels).file(f)
 					.content("Pretty stuff").filename(f.getName()).title(f.getName()).initialComment(text));
-			System.out.println("File sent: " + response2.isOk()  + text);
+			System.out.println("File sent: " + response2.isOk() + text);
 		} catch (IOException | SlackApiException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -453,7 +458,7 @@ public class SlackChatMediator extends EventChatMediator {
 		System.out.println("action: " + action);
 		JSONParser p = new JSONParser();
 
-		try{
+		try {
 			System.out.println("now trying to handle message...");
 			String ts = ((JSONObject) p.parse(action.getAsString("container"))).getAsString("message_ts");
 			String channel = ((JSONObject) p.parse(action.getAsString("channel"))).getAsString("id");
@@ -502,7 +507,7 @@ public class SlackChatMediator extends EventChatMediator {
 			chatMessage.setEmail(user);
 
 			messageCollector.addMessage(chatMessage);
-		} catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
