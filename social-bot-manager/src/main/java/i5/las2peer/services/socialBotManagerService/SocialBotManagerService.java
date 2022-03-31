@@ -1966,10 +1966,10 @@ public class SocialBotManagerService extends RESTService {
 						ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "",
 								headers);
 						if (result2 != null) {
-							restarterBot = BotAgent.createBotAgent("restarterBot");
+							restarterBot = BotAgent.createBotAgent(restarterBotName);
 						}
 					} else {
-						restarterBot = BotAgent.createBotAgent("restarterBot");
+						restarterBot = BotAgent.createBotAgent(restarterBotName);
 					}
 				} catch (Exception e) {
 					restarterBot = null;
