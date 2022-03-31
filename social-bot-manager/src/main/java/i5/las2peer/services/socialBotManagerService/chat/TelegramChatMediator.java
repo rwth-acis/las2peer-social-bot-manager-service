@@ -57,10 +57,16 @@ public class TelegramChatMediator extends EventChatMediator {
 	private String url;
 	MiniClient client;
 
-	public TelegramChatMediator(String authToken) {
+	public TelegramChatMediator(String authToken) throws AuthTokenException{
 		super(authToken);
-
-		this.bot = new TelegramBot(authToken);
+		try{
+			this.bot = new TelegramBot(authToken);
+		} catch (Exception e){
+			if(e.toString().toLowerCase().contains("404")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			} else throw e;
+			
+		}
 		this.client = new MiniClient();
 		client.setConnectorEndpoint("https://api.telegram.org/bot" + authToken);
 		messageCollector = new TelegramMessageCollector();
@@ -149,7 +155,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * @see <a href="https://core.telegram.org/bots/api#setwebhook">Setting Telegram
 	 *      Webhook</a>
 	 */
-	public void settingWebhook(String url) {
+	public void settingWebhook(String url) throws AuthTokenException{
 		System.out.println("poppo");
 		this.url = url;
 		assert url != null : "url not initialized";
@@ -163,6 +169,9 @@ public class TelegramChatMediator extends EventChatMediator {
 		System.out.println("Setting Webhook");
 		ClientResponse result = client.sendRequest("GET", "setWebhook?url=" + url + path + super.authToken,
 				MediaType.TEXT_PLAIN);
+		if(result.getHttpCode() == 404){
+			throw new AuthTokenException("Authentication Token is faulty!");
+		}
 		System.out.println(result.getResponse());
 	}
 

@@ -59,7 +59,7 @@ public class Messenger {
 	private Random random;
 
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
-			throws IOException, DeploymentException, ParseBotException {
+			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
 //        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
@@ -67,7 +67,6 @@ public class Messenger {
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
-		try{
 			switch (this.chatService) {
 			case SLACK:
 				this.chatMediator = new SlackChatMediator(token);
@@ -90,9 +89,7 @@ public class Messenger {
 			default:
 				throw new ParseBotException("Unimplemented chat service: " + chatService);
 			}
-		} catch (Exception e){
-			throw e;
-		}
+			System.out.println("no exceptions");
 
 		this.name = id;
 		this.knownIntents = new HashMap<String, IncomingMessage>();
@@ -645,7 +642,7 @@ public class Messenger {
 
 	}
 
-	public void setUrl(String Url) {
+	public void setUrl(String Url) throws AuthTokenException {
 		this.url = Url;
 		if (this.chatMediator instanceof TelegramChatMediator) {
 			((TelegramChatMediator) this.chatMediator).settingWebhook(Url);

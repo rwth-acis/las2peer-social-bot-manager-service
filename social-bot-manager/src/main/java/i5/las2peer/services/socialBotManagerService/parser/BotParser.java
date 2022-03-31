@@ -21,6 +21,7 @@ import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.security.BotAgent;
+import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -68,7 +69,7 @@ public class BotParser {
 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
-			throws ParseBotException, IOException, DeploymentException {
+			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
@@ -459,7 +460,7 @@ public class BotParser {
 	}
 
 	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)
-			throws ParseBotException, IOException, DeploymentException {
+			throws ParseBotException, IOException, DeploymentException, AuthTokenException{
 		String messengerName = null;
 		String messengerType = null;
 		String token = null;
@@ -487,8 +488,10 @@ public class BotParser {
 		if (token == null || token == "") {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
+		
+		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database);
+		return newMessenger;
 
-		return new Messenger(messengerName, messengerType, token, database);
 	}
 
 	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {

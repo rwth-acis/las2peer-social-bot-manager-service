@@ -490,7 +490,7 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
-			} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException e) {
+			} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException | AuthTokenException e) {
 				System.out.println("Error caught");
 				e.printStackTrace();
 				if(e.toString().toLowerCase().contains("login name longer")){
