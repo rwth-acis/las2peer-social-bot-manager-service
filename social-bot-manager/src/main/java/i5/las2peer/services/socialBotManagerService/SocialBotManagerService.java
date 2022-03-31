@@ -374,6 +374,8 @@ public class SocialBotManagerService extends RESTService {
 				} catch (AgentException | CryptoException e2) {
 					// TODO Errorhandling
 					e2.printStackTrace();
+				} catch (Exception e3){
+					e3.printStackTrace();
 				}
 			}
 			return Response.ok().entity("vleList").build();
