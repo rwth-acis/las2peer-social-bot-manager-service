@@ -74,10 +74,16 @@ public class SlackChatMediator extends EventChatMediator {
 	// When files are sent, it is not clear whether a bot or user sent them, differentiate using the id of the bot!
 	public static ArrayList<String> botIDs = new ArrayList<String>();
 
-	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
+	public SlackChatMediator(String authToken) throws IOException, DeploymentException, AuthTokenException {
 		super(authToken);
 		this.slack = new Slack();
+		try{
 		this.rtm = this.slack.rtm(authToken);
+		} catch (Exception e){
+			if(e.toString().toLowerCase().contains("invalid_auth")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			} else throw e;
+		}
 		usersByChannel = new HashMap<String, String>();
 		this.rtm.addMessageHandler(messageCollector);
 		this.rtm.connect();
