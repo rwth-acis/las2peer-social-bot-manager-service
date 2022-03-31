@@ -7,6 +7,7 @@ import java.util.HashSet;
 
 import javax.websocket.DeploymentException;
 
+import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
 import net.minidev.json.JSONArray;
@@ -159,7 +160,7 @@ public class Bot {
 		return this.messengers;
 	}
 
-	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
+	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 		messenger.setUrl(vle.getAddress());
 		System.out.println(vle.getAddress());
 		this.messengers.put(messenger.getName(), messenger);

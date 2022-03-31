@@ -19,7 +19,7 @@ public class MoodleChatMediator extends ChatMediator {
 	private long lastUpdated;
 	
 	
-	public MoodleChatMediator(String authToken) {
+	public MoodleChatMediator(String authToken) throws AuthTokenException{
 		super(authToken);
 		
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -27,13 +27,15 @@ public class MoodleChatMediator extends ChatMediator {
 		Instant instant = timestamp.toInstant();
 		lastUpdated = instant.getEpochSecond();
 		botId = getBotId();
-
 	}
 
-	protected String getBotId() {
+	protected String getBotId() throws AuthTokenException{
 		HashMap<String,String> args = new HashMap<String,String>();
 		try {
 			String response = sendRequest(domainName, "core_webservice_get_site_info", args);
+			if(response.contains("Invalid token")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			}
 			JSONObject json = new JSONObject(response);
 			return Integer.toString(json.getInt("userid"));
 		} catch (IOException e) {
@@ -113,14 +115,25 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
 	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
+
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
+		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
+	}
+
 
 	@Override
 	public void editMessage(String channel, String messageId, String message, Optional<String> id){}

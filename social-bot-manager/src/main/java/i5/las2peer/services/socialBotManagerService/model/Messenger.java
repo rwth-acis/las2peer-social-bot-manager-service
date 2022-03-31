@@ -59,7 +59,7 @@ public class Messenger {
 	private Random random;
 
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
-			throws IOException, DeploymentException, ParseBotException {
+			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
 //        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
@@ -67,28 +67,29 @@ public class Messenger {
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
-		switch (this.chatService) {
-		case SLACK:
-			this.chatMediator = new SlackChatMediator(token);
-			break;
-		case TELEGRAM:
-			this.chatMediator = new TelegramChatMediator(token);
-			String username = ((TelegramChatMediator) this.chatMediator).getBotName();
-			if (username != null)
-				this.name = username;
-			break;
-		case ROCKET_CHAT:
-			this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-			break;
-		case MOODLE_CHAT:
-			this.chatMediator = new MoodleChatMediator(token);
-			break;
-		case MOODLE_FORUM:
-			this.chatMediator = new MoodleForumMediator(token);
-			break;
-		default:
-			throw new ParseBotException("Unimplemented chat service: " + chatService);
-		}
+			switch (this.chatService) {
+			case SLACK:
+				this.chatMediator = new SlackChatMediator(token);
+				break;
+			case TELEGRAM:
+				this.chatMediator = new TelegramChatMediator(token);
+				String username = ((TelegramChatMediator) this.chatMediator).getBotName();
+				if (username != null)
+					this.name = username;
+				break;
+			case ROCKET_CHAT:
+				this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+				break;
+			case MOODLE_CHAT:
+				this.chatMediator = new MoodleChatMediator(token);
+				break;
+			case MOODLE_FORUM:
+				this.chatMediator = new MoodleForumMediator(token);
+				break;
+			default:
+				throw new ParseBotException("Unimplemented chat service: " + chatService);
+			}
+			System.out.println("no exceptions");
 
 		this.name = id;
 		this.knownIntents = new HashMap<String, IncomingMessage>();
@@ -538,7 +539,7 @@ public class Messenger {
 								}
 								// check if message parses buttons or is simple text
 								if(response.getType().equals("Interactive Message")){
-									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split);
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken());
 								} else{
 									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
 								}
@@ -641,7 +642,7 @@ public class Messenger {
 
 	}
 
-	public void setUrl(String Url) {
+	public void setUrl(String Url) throws AuthTokenException {
 		this.url = Url;
 		if (this.chatMediator instanceof TelegramChatMediator) {
 			((TelegramChatMediator) this.chatMediator).settingWebhook(Url);

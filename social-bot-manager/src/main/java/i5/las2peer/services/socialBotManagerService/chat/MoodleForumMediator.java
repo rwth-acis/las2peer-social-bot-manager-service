@@ -6,6 +6,8 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 
 import java.io.File;
+import java.io.IOError;
+import java.io.IOException;
 import java.util.Vector;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,8 +21,19 @@ public class MoodleForumMediator extends ChatMediator {
 	private MoodleForumMessageCollector messageCollector = new MoodleForumMessageCollector();
 	private HashMap<String, MessageTree> discussions = new HashMap<String, MessageTree>();
 	
-	public MoodleForumMediator(String authToken) {
+	public MoodleForumMediator(String authToken) throws IOException, AuthTokenException{
 		super(authToken);
+		// test whether given authToken is valid
+		HashMap<String,String> args = new HashMap<String,String>();
+		try {
+			String response = sendRequest(domainName, "core_webservice_get_site_info", args);
+			if(response.contains("Invalid token")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -183,13 +196,23 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		super.sendBlocksMessageToChannel(channel, blocks);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		super.sendBlocksMessageToChannel(channel, blocks, authToken);
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
+
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
+		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
 	}
 
 	@Override

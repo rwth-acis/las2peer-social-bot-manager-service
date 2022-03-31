@@ -21,6 +21,7 @@ import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.security.BotAgent;
+import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.ActionType;
 import i5.las2peer.services.socialBotManagerService.model.Bot;
@@ -68,7 +69,7 @@ public class BotParser {
 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
-			throws ParseBotException, IOException, DeploymentException {
+			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
@@ -141,8 +142,12 @@ public class BotParser {
 				users.put(entry.getKey(), u);
 				// Bot
 			} else if (nodeType.equals("Bot")) {
-				Bot bot = addBot(elem, botAgents);
-				bots.put(entry.getKey(), bot);
+				try{
+					Bot bot = addBot(elem, botAgents);
+					bots.put(entry.getKey(), bot);
+				} catch (Exception e){
+					throw e;
+				}
 				// VLE Routine
 			} else if (nodeType.equals("Routine")) {
 				VLERoutine routine = addRoutine(elem);
@@ -173,6 +178,7 @@ public class BotParser {
 				}
 				gList.put(entry.getKey(), g);
 			}
+		
 		}
 
 		if (vleCount != 1) {
@@ -180,7 +186,7 @@ public class BotParser {
 		} else if (users.isEmpty() && bots.isEmpty()) {
 			throw new ParseBotException("Missing VLE User!");
 		} else if (bsfList.isEmpty() && responses.isEmpty()) {
-			throw new ParseBotException("Missing Bot Action and Chat Response!");
+			throw new ParseBotException("Missing Bot Action and Chat Response! (You need at least one chat response OR a bot action for the bot to work)");
 		} else if (usfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty()) {
 			throw new ParseBotException("Missing User Action, VLE Routine and Incoming Message!");
 		}
@@ -454,7 +460,7 @@ public class BotParser {
 	}
 
 	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)
-			throws ParseBotException, IOException, DeploymentException {
+			throws ParseBotException, IOException, DeploymentException, AuthTokenException{
 		String messengerName = null;
 		String messengerType = null;
 		String token = null;
@@ -479,11 +485,13 @@ public class BotParser {
 		if (messengerType == null) {
 			throw new ParseBotException("Messenger is missing \"Messenger Type\" attribute");
 		}
-		if (token == null) {
+		if (token == null || token == "") {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
+		
+		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database);
+		return newMessenger;
 
-		return new Messenger(messengerName, messengerType, token, database);
 	}
 
 	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
@@ -543,7 +551,7 @@ public class BotParser {
             }
 		}
 
-		if (url == null) {
+		if (url == null || url == "") {
 			throw new ParseBotException("NLU Knowledge without URL");
 		}
 
@@ -651,9 +659,11 @@ public class BotParser {
 					}
 					botAgent.unlock(botPass);
 					Context.getCurrent().registerReceiver(botAgent);
-				} catch (AgentException | CryptoException e2) {
+				} catch (AgentException | IllegalArgumentException | CryptoException e2) {
 					// TODO Errorhandling
+					System.out.println("Caught the error here");
 					e2.printStackTrace();
+					throw new IllegalArgumentException(e2);
 				}
 				// runningAt = botAgent.getRunningAtNode();
 				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
