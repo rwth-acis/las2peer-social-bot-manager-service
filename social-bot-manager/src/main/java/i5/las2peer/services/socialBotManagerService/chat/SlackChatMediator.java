@@ -402,12 +402,12 @@ public class SlackChatMediator extends EventChatMediator {
 				this.messageCollector = new SlackChatMessageCollector();
 				this.rtm.addMessageHandler(this.messageCollector);
 				this.rtm.connect();
-				this.botUser = rtm.getConnectedBotUser().toString();
 				System.out.println(this.messageCollector.isConnected() + this.rtm.getConnectedBotUser().toString());
 				if (this.rtm.getConnectedBotUser().toString() != this.botUser) {
 					System.out.println("Bot not online");
 					this.reconnect();
 				} else {
+					this.botUser = rtm.getConnectedBotUser().toString();
 					this.messageCollector.setConnected(true);
 
 					System.out.println(this.botUser + " reconnected.");
