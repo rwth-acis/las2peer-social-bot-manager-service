@@ -391,6 +391,11 @@ public class SlackChatMediator extends EventChatMediator {
 			try {
 				System.out.println(this.botUser + " is reconnecting.");
 				this.rtm.close();
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException i) {
+					i.printStackTrace();
+				}
 				this.slack = new Slack();
 				this.rtm = this.slack.rtm(authToken);
 				this.rtm.removeMessageHandler(this.messageCollector);
@@ -398,8 +403,16 @@ public class SlackChatMediator extends EventChatMediator {
 				this.rtm.addMessageHandler(this.messageCollector);
 				this.rtm.connect();
 				this.botUser = rtm.getConnectedBotUser().toString();
-				this.messageCollector.setConnected(true);
-				System.out.println(this.botUser + " reconnected.");
+				System.out.println(this.messageCollector.isConnected() + this.rtm.getConnectedBotUser().toString());
+				if (this.rtm.getConnectedBotUser().toString() != this.botUser) {
+					System.out.println("Bot not online");
+					this.reconnect();
+				} else {
+					this.messageCollector.setConnected(true);
+
+					System.out.println(this.botUser + " reconnected.");
+
+				}
 			} catch (IOException | DeploymentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
