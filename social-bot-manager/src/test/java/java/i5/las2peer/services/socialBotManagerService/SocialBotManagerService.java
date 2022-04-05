@@ -502,8 +502,9 @@ public class SocialBotManagerService extends RESTService {
 			if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
 					&& !restarterBotPWStatic.equals("")) {
 				try {
-					// try to add project to project list (with service group agent)
+					// try to add bot model to model list (with service group agent)
 					env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
+					System.out.println("Fetching envelope with: " + restarterBotNameStatic + restarterBot.getLoginName());
 					old = (HashMap<String, BotModel>) env.getContent();
 					old.put(botToken, botModel);
 					env.setContent(old);
