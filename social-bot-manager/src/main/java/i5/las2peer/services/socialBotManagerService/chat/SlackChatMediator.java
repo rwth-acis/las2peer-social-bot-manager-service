@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +55,9 @@ public class SlackChatMediator extends EventChatMediator {
 	// differentiate using the id of the bot!
 	public static ArrayList<String> botIDs = new ArrayList<String>();
 
+	//store the mediators so that you can restart them all at the same time
+	public static HashSet<SlackChatMediator> mediators = new HashSet<SlackChatMediator>();
+
 	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
 		super(authToken);
 		this.slack = new Slack();
@@ -81,6 +85,7 @@ public class SlackChatMediator extends EventChatMediator {
 		this.botUser = rtm.getConnectedBotUser().toString();
 		botIDs.add(rtm.getConnectedBotUser().getId());
 		messageCollector.setDomain("https://slack.com/");
+		mediators.add(this);
 		System.out.println(this.botUser + " connected.");
 	}
 
@@ -387,30 +392,42 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	private void reconnect() {
-		if (!this.messageCollector.isConnected()) {
+		
+		for(SlackChatMediator scm : mediators){
+			scm.messageCollector.setConnected(false);
+			System.out.println("Message Collector is connected: " + scm.messageCollector.isConnected());
+			reconnect(scm);
+		}
+
+		
+	}
+
+	public static void reconnect(SlackChatMediator scm){
+		if (!scm.messageCollector.isConnected()) {
 			try {
-				System.out.println(this.botUser + " is reconnecting.");
-				this.rtm.close();
+				System.out.println(scm.botUser + " is reconnecting.");
+				scm.rtm.close();
 				try {
 					TimeUnit.SECONDS.sleep(30);
 				} catch (InterruptedException i) {
 					i.printStackTrace();
 				}
-				this.slack = new Slack();
-				this.rtm = this.slack.rtm(authToken);
-				this.rtm.removeMessageHandler(this.messageCollector);
-				this.messageCollector = new SlackChatMessageCollector();
-				this.rtm.addMessageHandler(this.messageCollector);
-				this.rtm.connect();
-				System.out.println(this.messageCollector.isConnected() + this.rtm.getConnectedBotUser().toString());
-				if (this.rtm.getConnectedBotUser().toString() != this.botUser) {
-					System.out.println("Bot not online");
-					this.reconnect();
-				} else {
-					this.botUser = rtm.getConnectedBotUser().toString();
-					this.messageCollector.setConnected(true);
+				scm.slack = new Slack();
+				scm.rtm = scm.slack.rtm(scm.authToken);
+				scm.rtm.removeMessageHandler(scm.messageCollector);
+				scm.messageCollector = new SlackChatMessageCollector();
+				scm.rtm.addMessageHandler(scm.messageCollector);
+				scm.rtm.connect();
+				System.out.println(scm.messageCollector.isConnected() + scm.rtm.getConnectedBotUser().toString());
+				if (!scm.rtm.getConnectedBotUser().toString().equals(scm.botUser)) {
 
-					System.out.println(this.botUser + " reconnected.");
+					System.out.println("Bot not online");
+					scm.reconnect();
+				} else {
+					scm.botUser = scm.rtm.getConnectedBotUser().toString();
+					scm.messageCollector.setConnected(true);
+
+					System.out.println(scm.botUser + " reconnected.");
 
 				}
 			} catch (IOException | DeploymentException e) {
@@ -421,7 +438,7 @@ public class SlackChatMediator extends EventChatMediator {
 				} catch (InterruptedException i) {
 					i.printStackTrace();
 				}
-				this.reconnect();
+				reconnect(scm);
 			} catch (Exception e) {
 				e.printStackTrace();
 				try {
@@ -429,7 +446,7 @@ public class SlackChatMediator extends EventChatMediator {
 				} catch (InterruptedException i) {
 					i.printStackTrace();
 				}
-				this.reconnect();
+				reconnect(scm);
 			}
 		}
 	}
