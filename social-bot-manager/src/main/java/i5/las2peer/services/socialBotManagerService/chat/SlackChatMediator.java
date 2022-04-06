@@ -476,6 +476,7 @@ public class SlackChatMediator extends EventChatMediator {
 	public void close() {
 		try {
 			this.rtm.close();
+			mediators.remove(this);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
