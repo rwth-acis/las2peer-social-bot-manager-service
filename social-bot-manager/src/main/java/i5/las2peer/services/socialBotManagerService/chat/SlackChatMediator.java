@@ -392,12 +392,13 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	private void reconnect() {
-		
+		if(!this.messageCollector.isConnected()){
 		for(SlackChatMediator scm : mediators){
 			scm.messageCollector.setConnected(false);
 			System.out.println("Message Collector is connected: " + scm.messageCollector.isConnected());
 			reconnect(scm);
 		}
+	}
 
 		
 	}
