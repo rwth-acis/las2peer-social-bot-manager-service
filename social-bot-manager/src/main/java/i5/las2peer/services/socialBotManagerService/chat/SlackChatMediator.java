@@ -55,7 +55,7 @@ public class SlackChatMediator extends EventChatMediator {
 	// differentiate using the id of the bot!
 	public static ArrayList<String> botIDs = new ArrayList<String>();
 
-	//store the mediators so that you can restart them all at the same time
+	// store the mediators so that you can restart them all at the same time
 	public static HashSet<SlackChatMediator> mediators = new HashSet<SlackChatMediator>();
 
 	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
@@ -348,7 +348,9 @@ public class SlackChatMediator extends EventChatMediator {
 	@Override
 	public Vector<ChatMessage> getMessages() {
 		Vector<ChatMessage> messages = this.messageCollector.getMessages();
-		this.reconnect();
+		if (!this.messageCollector.isConnected()) {
+			reconnect();
+		}
 		return messages;
 	}
 
@@ -392,18 +394,17 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	private void reconnect() {
-		if(!this.messageCollector.isConnected()){
-		for(SlackChatMediator scm : mediators){
-			scm.messageCollector.setConnected(false);
-			System.out.println("Message Collector is connected: " + scm.messageCollector.isConnected());
-			reconnect(scm);
+		if (!this.messageCollector.isConnected()) {
+			for (SlackChatMediator scm : mediators) {
+				scm.messageCollector.setConnected(false);
+				System.out.println("Message Collector is connected: " + scm.messageCollector.isConnected());
+				reconnect(scm);
+			}
 		}
+
 	}
 
-		
-	}
-
-	public static void reconnect(SlackChatMediator scm){
+	public static void reconnect(SlackChatMediator scm) {
 		if (!scm.messageCollector.isConnected()) {
 			try {
 				System.out.println(scm.botUser + " is reconnecting.");
