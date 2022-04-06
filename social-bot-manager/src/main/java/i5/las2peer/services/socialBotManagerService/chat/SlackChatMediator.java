@@ -37,6 +37,7 @@ import com.slack.api.model.ConversationType;
 import com.slack.api.rtm.RTMClient;
 import com.slack.api.rtm.message.Message;
 import com.slack.api.rtm.message.Message.MessageBuilder;
+import com.slack.api.methods.request.bots.*;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -146,7 +147,7 @@ public class SlackChatMediator extends EventChatMediator {
 			System.out.println("Message sent: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
-			this.reconnect();
+			reconnect();
 			rtm.sendMessage(message);
 			System.out.println("Sent message with Exception: " + e.getMessage());
 			if (e.getMessage().toLowerCase().equals("timeout")) {
@@ -224,7 +225,7 @@ public class SlackChatMediator extends EventChatMediator {
 			System.out.println("Chat updated: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
-			this.reconnect();
+			reconnect();
 			rtm.sendMessage(msgString);
 			System.out.println("Sent message with Exception: " + e.getMessage());
 			if (e.getMessage().toLowerCase().equals("timeout")) {
@@ -394,6 +395,7 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	private void reconnect() {
+		System.out.println("Reconnecting all bots!");
 		if (!this.messageCollector.isConnected()) {
 			for (SlackChatMediator scm : mediators) {
 				scm.messageCollector.setConnected(false);
@@ -405,6 +407,7 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	public static void reconnect(SlackChatMediator scm) {
+		System.out.println("Reconnecting:" + scm.botUser);
 		if (!scm.messageCollector.isConnected()) {
 			try {
 				System.out.println(scm.botUser + " is reconnecting.");
