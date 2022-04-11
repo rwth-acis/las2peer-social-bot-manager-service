@@ -26,7 +26,7 @@ import javax.ws.rs.core.UriBuilder;
 // TODO: Currently needed because of class with the same name in this package
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
-import com.slack.api.methods.response.channels.UsersLookupByEmailResponse;
+import com.slack.api.methods.response.users.UsersLookupByEmailResponse;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.methods.response.conversations.ConversationsListResponse;
@@ -344,6 +344,24 @@ public class SlackChatMediator extends EventChatMediator {
 		}
 
 		return new ChatMessage(channel, user, text, time);
+	}
+
+	public static String fetchEmailByUserId(String userId) {
+		Slack slackObj = new Slack();
+		for (String token : botTokens.values()) {
+			try {
+				String email = slackObj.methods().usersInfo(req -> req.token(token).user(userId)).getUser().getProfile()
+						.getEmail();
+				if (email != null) {
+					System.out.println("Slack group, extracted following email: " + email);
+					return email;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return "No Email?";
+
 	}
 
 	@Override

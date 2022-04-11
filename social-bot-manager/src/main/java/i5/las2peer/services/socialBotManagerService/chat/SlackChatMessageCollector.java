@@ -14,19 +14,24 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 		try {
 			messageJson = (JSONObject) p.parse(messageJsonString);
 			String type = messageJson.getAsString("type");
-			
+			System.out.println("Type Check");
 			if (type != null) {
-				if(type.equals("message")) {
+				if (type.equals("message")) {
 					ChatMessage message;
 					message = SlackChatMediator.parseSlackMessage(messageJson);
-					message.setEmail(SlackChatMediator.usersByChannel.get(message.getChannel()));
+					if (SlackChatMediator.usersByChannel.get(message.getChannel()) != null) {
+						message.setEmail(SlackChatMediator.usersByChannel.get(message.getChannel()));
+					} else {
+						message.setEmail(SlackChatMediator.fetchEmailByUserId(message.getUser()));
+					}
 					// If bot sent file to user, don't add message
-					if(!SlackChatMediator.botIDs.contains(messageJson.get("user"))) {
+					if (!SlackChatMediator.botIDs.contains(messageJson.get("user"))) {
 						this.addMessage(message);
 					}
-				} else if(type.equals("goodbye")) {
+				} else if (type.equals("goodbye")) {
 					System.out.println("Slack client disconnected");
 					this.setConnected(false);
+
 				}
 			} else {
 				System.out.println("Skipped");
