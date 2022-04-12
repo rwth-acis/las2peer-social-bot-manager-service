@@ -56,13 +56,21 @@ public class SlackChatMediator extends EventChatMediator {
 	// differentiate using the id of the bot!
 	public static ArrayList<String> botIDs = new ArrayList<String>();
 
+
 	// store the mediators so that you can restart them all at the same time
 	public static HashSet<SlackChatMediator> mediators = new HashSet<SlackChatMediator>();
 
-	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
+	public SlackChatMediator(String authToken) throws IOException, DeploymentException, AuthTokenException {
+
 		super(authToken);
 		this.slack = new Slack();
+		try{
 		this.rtm = this.slack.rtm(authToken);
+		} catch (Exception e){
+			if(e.toString().toLowerCase().contains("invalid_auth")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			} else throw e;
+		}
 		usersByChannel = new HashMap<String, String>();
 		this.rtm.addMessageHandler(messageCollector);
 		this.rtm.connect();

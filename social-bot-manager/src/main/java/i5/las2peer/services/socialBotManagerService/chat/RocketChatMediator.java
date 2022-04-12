@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 
+import javax.print.attribute.standard.Media;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -58,6 +59,9 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
+
+import javax.ws.rs.core.MediaType;
+
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {
 
@@ -74,7 +78,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private boolean shouldCheckRooms = false;
 	private HashMap<String, Boolean> sendingMessage = new HashMap<String, Boolean>();
 
-	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
+	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) throws AuthTokenException{
 		super(authToken);
 		this.database = database;
 		String[] auth = authToken.split(":");
@@ -87,6 +91,18 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
 		client.setPingInterval(15000);
 		client.connect(this);
+			MiniClient clientLoginTest = new MiniClient();
+			clientLoginTest.setConnectorEndpoint(url + "/api/v1/login");
+			HashMap<String, String> headers = new HashMap<String, String>();
+			ClientResponse r = null;
+			JSONObject reqBody = new JSONObject(); 
+			reqBody.put("username", username);
+			reqBody.put("password", password);
+			r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			if(r.getHttpCode() != 200){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			}
+
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		this.rasa = rasa;
 		messageCollector.setDomain(url);

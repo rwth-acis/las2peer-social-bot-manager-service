@@ -492,8 +492,12 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
 						nodes, edges, sbfservice.database);
-			} catch (ParseBotException | IOException | DeploymentException e) {
+			} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException | AuthTokenException e) {
+				System.out.println("Error caught");
 				e.printStackTrace();
+				if(e.toString().toLowerCase().contains("login name longer")){
+					return Response.status(Status.BAD_REQUEST).entity("Bot Name needs to have at least 4 characters!").build();
+				}
 				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			}
 			// initialized = true;
