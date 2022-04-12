@@ -51,7 +51,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import com.github.seratch.jslack.Slack;
+import com.slack.api.Slack;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -502,8 +502,9 @@ public class SocialBotManagerService extends RESTService {
 			if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
 					&& !restarterBotPWStatic.equals("")) {
 				try {
-					// try to add project to project list (with service group agent)
+					// try to add bot model to model list (with service group agent)
 					env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
+					System.out.println("Fetching envelope with: " + restarterBotNameStatic + restarterBot.getLoginName());
 					old = (HashMap<String, BotModel>) env.getContent();
 					old.put(botToken, botModel);
 					env.setContent(old);

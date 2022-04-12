@@ -51,7 +51,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import com.github.seratch.jslack.Slack;
+import com.slack.api.Slack;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -374,6 +374,8 @@ public class SocialBotManagerService extends RESTService {
 				} catch (AgentException | CryptoException e2) {
 					// TODO Errorhandling
 					e2.printStackTrace();
+				} catch (Exception e3){
+					e3.printStackTrace();
 				}
 			}
 			return Response.ok().entity("vleList").build();
