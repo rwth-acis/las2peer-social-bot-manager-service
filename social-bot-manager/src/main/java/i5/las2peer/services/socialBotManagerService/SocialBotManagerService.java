@@ -1967,12 +1967,12 @@ public class SocialBotManagerService extends RESTService {
 				clientRestart.setLogin("alice", "pwalice");
 				HashMap<String, String> headers = new HashMap<String, String>();
 				try {
-					System.out.println(restarterBotName + restarterBotPW);
 					if (restarterBotName != null && restarterBotPW != null && !restarterBotName.equals("")
 							&& !restarterBotPW.equals("")) {
 						ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "",
 								headers);
 						if (result2 != null) {
+							System.out.println("Successfully retrieved restarterbot: "+restarterBotName);
 							restarterBot = BotAgent.createBotAgent("restarterBot");
 						}
 					} else {
@@ -1987,6 +1987,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
+			System.out.println("Now checking vles");
 			for (VLE vle : getConfig().getVLEs().values()) {
 				System.out.println(vle + "2");
 				for (Bot bot : vle.getBots().values()) {
