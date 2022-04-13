@@ -670,6 +670,7 @@ public class SocialBotManagerService extends RESTService {
 						String service = (String) j.get("serviceAlias");
 
 						VLE vle = getConfig().getServiceConfiguration(service);
+						System.out.println(vle);
 						JSONObject context = new JSONObject();
 						context.put("addr", vle.getAddress());
 						if (!vle.getEnvironmentSeparator().equals("singleEnvironment")) {
@@ -1987,6 +1988,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
 			for (VLE vle : getConfig().getVLEs().values()) {
+				System.out.println(vle + "2");
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 					for (MessageInfo m : messageInfos) {
@@ -2085,6 +2087,7 @@ public class SocialBotManagerService extends RESTService {
 
 								System.out.println(df.format(d1) + ": " + b.getName());
 								MiniClient client = new MiniClient();
+								System.out.println("vle2" + vle);
 								client.setConnectorEndpoint(vle.getAddress());
 
 								JSONObject body = new JSONObject();
