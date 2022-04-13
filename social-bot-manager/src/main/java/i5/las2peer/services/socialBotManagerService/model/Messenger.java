@@ -209,6 +209,7 @@ public class Messenger {
 	// across
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
+		System.out.println("I think the thread has problems");
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			System.out.println("Start of handling message in messenger class");
