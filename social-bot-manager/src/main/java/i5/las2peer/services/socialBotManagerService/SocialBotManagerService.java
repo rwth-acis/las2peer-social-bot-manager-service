@@ -1989,7 +1989,6 @@ public class SocialBotManagerService extends RESTService {
 			Gson gson = new Gson();
 			System.out.println("Now checking vles");
 			for (VLE vle : getConfig().getVLEs().values()) {
-				System.out.println(vle + "2");
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 					for (MessageInfo m : messageInfos) {
@@ -2017,7 +2016,6 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 				}
-				System.out.println("2");
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time
 					Calendar c = Calendar.getInstance();
@@ -2077,10 +2075,8 @@ public class SocialBotManagerService extends RESTService {
 							r.setLastUpdate(d1);
 						}
 					}
-					System.out.println("6");
 					if (trigger) {
 						for (Bot b : vle.getBots().values()) {
-							System.out.println("3");
 							HashMap<String, Boolean> activeBots = b.getActive();
 							HashSet<Trigger> tList = r.getTrigger();
 							for (Trigger t : tList) {
@@ -2116,13 +2112,10 @@ public class SocialBotManagerService extends RESTService {
 										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 								System.out.println(result.getResponse());
 								// }
-								// }
-								System.out.println("22");
 							}
 						}
 					}
 				}
-				System.out.println("5");
 			}
 			System.out.println("Done checking vles");
 		}
