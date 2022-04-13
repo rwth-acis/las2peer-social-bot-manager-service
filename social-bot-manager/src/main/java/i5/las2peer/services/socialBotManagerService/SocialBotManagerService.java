@@ -2017,7 +2017,7 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 				}
-
+				System.out.println("2");
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time
 					Calendar c = Calendar.getInstance();
@@ -2077,8 +2077,10 @@ public class SocialBotManagerService extends RESTService {
 							r.setLastUpdate(d1);
 						}
 					}
+					System.out.println("6");
 					if (trigger) {
 						for (Bot b : vle.getBots().values()) {
+							System.out.println("3");
 							HashMap<String, Boolean> activeBots = b.getActive();
 							HashSet<Trigger> tList = r.getTrigger();
 							for (Trigger t : tList) {
@@ -2115,11 +2117,14 @@ public class SocialBotManagerService extends RESTService {
 								System.out.println(result.getResponse());
 								// }
 								// }
+								System.out.println("22");
 							}
 						}
 					}
 				}
+				System.out.println("5");
 			}
+			System.out.println("Done checking vles");
 		}
 
 	}
