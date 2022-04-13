@@ -211,6 +211,7 @@ public class Messenger {
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
+			System.out.println("Start of handling message in messenger class");
 			try {
 				// // If a channel/user pair still isn't assigned to a state, assign it to null
 				// if (this.stateMap.get(message.getChannel()) == null) {
