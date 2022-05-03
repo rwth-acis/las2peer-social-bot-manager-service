@@ -671,6 +671,7 @@ public class SocialBotManagerService extends RESTService {
 						String service = (String) j.get("serviceAlias");
 
 						VLE vle = getConfig().getServiceConfiguration(service);
+						System.out.println(vle);
 						JSONObject context = new JSONObject();
 						context.put("addr", vle.getAddress());
 						if (!vle.getEnvironmentSeparator().equals("singleEnvironment")) {
@@ -1980,12 +1981,12 @@ public class SocialBotManagerService extends RESTService {
 				clientRestart.setLogin("alice", "pwalice");
 				HashMap<String, String> headers = new HashMap<String, String>();
 				try {
-					System.out.println(restarterBotName + restarterBotPW);
 					if (restarterBotName != null && restarterBotPW != null && !restarterBotName.equals("")
 							&& !restarterBotPW.equals("")) {
 						ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "",
 								headers);
 						if (result2 != null) {
+							System.out.println("Successfully retrieved restarterbot: "+restarterBotName);
 							restarterBot = BotAgent.createBotAgent("restarterBot");
 						}
 					} else {
@@ -2000,6 +2001,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
+			System.out.println("Now checking vles");
 			for (VLE vle : getConfig().getVLEs().values()) {
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
@@ -2028,7 +2030,6 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 				}
-
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time
 					Calendar c = Calendar.getInstance();
@@ -2099,6 +2100,7 @@ public class SocialBotManagerService extends RESTService {
 
 								System.out.println(df.format(d1) + ": " + b.getName());
 								MiniClient client = new MiniClient();
+								System.out.println("vle2" + vle);
 								client.setConnectorEndpoint(vle.getAddress());
 
 								JSONObject body = new JSONObject();
@@ -2124,12 +2126,12 @@ public class SocialBotManagerService extends RESTService {
 										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 								System.out.println(result.getResponse());
 								// }
-								// }
 							}
 						}
 					}
 				}
 			}
+			System.out.println("Done checking vles");
 		}
 
 	}
