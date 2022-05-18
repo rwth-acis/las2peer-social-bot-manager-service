@@ -1503,7 +1503,7 @@ public class SocialBotManagerService extends RESTService {
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
-			// client.setLogin("alice", "pwalice");
+			//client.setLogin("alice", "pwalice");
 			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
@@ -1588,11 +1588,15 @@ public class SocialBotManagerService extends RESTService {
 		String blocks = body.getAsString("blocks");
 		String channel = null;
 		String user = "";
+		JSONObject monitorEvent42 = new JSONObject();
+		final long start = System.currentTimeMillis();
+		monitorEvent42.put("task", "Send message");
 
 		System.out.println(body);
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist
 			String email = body.getAsString("contactList");
+			monitorEvent42.put("email", email);
 			System.out.println("Goes to pick channel(s) by provided email(s)");
 			String[] emailArray = email.split(",");
 
@@ -1622,7 +1626,7 @@ public class SocialBotManagerService extends RESTService {
 
 				}
 			}
-
+			monitorEvent42.put("time", System.currentTimeMillis() - start);
 			if (body.containsKey("channel")) {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
@@ -1631,11 +1635,12 @@ public class SocialBotManagerService extends RESTService {
 			}
 			chat.sendMessageToChannel(channel, "ContactList contacted.");
 
-		} else {
+		}else {
 			if (body.containsKey("channel")) {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
 				String email = body.getAsString("email");
+				monitorEvent42.put("email", email);
 				channel = chat.getChannelByEmail(email);
 			}
 			System.out.println(channel);
@@ -1666,7 +1671,9 @@ public class SocialBotManagerService extends RESTService {
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
 						body.getAsString("fileType"), text);
 			}
+			monitorEvent42.put("time", System.currentTimeMillis() - start);
 		}
+		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
 	}
 
 	@Api(value = "Model Resource")
