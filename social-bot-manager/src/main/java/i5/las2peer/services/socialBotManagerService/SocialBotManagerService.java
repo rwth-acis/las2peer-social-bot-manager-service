@@ -1149,6 +1149,7 @@ public class SocialBotManagerService extends RESTService {
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
 			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
 			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
+		System.out.println("checkRoutineTrigger is executed");
 		String botId = botAgent.getIdentifier();
 		Bot bot = vle.getBots().get(botId);
 		if (bot != null) {
@@ -1164,6 +1165,7 @@ public class SocialBotManagerService extends RESTService {
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
 				formAttributes(vle, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
+			System.out.println("performTrigger is called1");
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -1174,6 +1176,7 @@ public class SocialBotManagerService extends RESTService {
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
 			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
 			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
+		System.out.println("performIntentTrigger is executed");
 		String botId = botAgent.getIdentifier();
 		Bot bot = vle.getBots().get(botId);
 		if (bot != null) {
@@ -1244,6 +1247,7 @@ public class SocialBotManagerService extends RESTService {
 			body.put("entities", entities);
 			body.put("msg", messageInfo.getMessage().getText());
 			body.put("contextOn", messageInfo.contextActive());
+			System.out.println("performTrigger is called2");
 			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -1254,7 +1258,7 @@ public class SocialBotManagerService extends RESTService {
 			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
 			ServiceNotAuthorizedException, ParseBotException {
 		String botId = botAgent.getIdentifier();
-
+		System.out.println("checkTriggerBot is executed");
 		Bot bot = vle.getBots().get(botId);
 		if (bot != null && !(triggerUID.toLowerCase().equals(botAgent.getIdentifier().toLowerCase()))) {
 
@@ -1288,6 +1292,7 @@ public class SocialBotManagerService extends RESTService {
 						}
 
 						System.out.println("Performing...");
+						System.out.println("performTrigger is called3");
 						performTrigger(vle, triggeredFunction, botAgent, functionPath, triggerUID, triggeredBody);
 					}
 				}
@@ -1496,6 +1501,7 @@ public class SocialBotManagerService extends RESTService {
 
 	private void performTrigger(VLE vle, ServiceFunction sf, BotAgent botAgent, String functionPath, String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
+		System.out.println("performTrigger is executed");
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
@@ -1549,6 +1555,7 @@ public class SocialBotManagerService extends RESTService {
 							}
 						}
 					}
+					System.out.println("triggerChat is called 1");
 					triggerChat(chat, triggeredBody);
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						System.out.println("Closed Context");
@@ -1579,11 +1586,13 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+			System.out.println("triggerChat is called 2");
 			triggerChat(chat, triggeredBody);
 		}
 	}
 
 	public void triggerChat(ChatMediator chat, JSONObject body) {
+		System.out.println("triggerChat is executed");
 		String text = body.getAsString("text");
 		String blocks = body.getAsString("blocks");
 		String channel = null;
@@ -1674,6 +1683,7 @@ public class SocialBotManagerService extends RESTService {
 			monitorEvent42.put("time", System.currentTimeMillis() - start);
 		}
 		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
+		System.out.println("triggerChat finished");
 	}
 
 	@Api(value = "Model Resource")
