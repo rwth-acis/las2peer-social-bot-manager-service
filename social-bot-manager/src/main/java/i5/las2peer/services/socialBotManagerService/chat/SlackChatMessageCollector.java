@@ -24,6 +24,7 @@ public class SlackChatMessageCollector extends ChatMessageCollector implements R
 					} else {
 						message.setEmail(SlackChatMediator.fetchEmailByUserId(message.getUser()));
 					}
+					System.out.println("message: " + message);
 					// If bot sent file to user, don't add message
 					if (!SlackChatMediator.botIDs.contains(messageJson.get("user"))) {
 						this.addMessage(message);

@@ -160,9 +160,8 @@ public class Bot {
 		return this.messengers;
 	}
 
-	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException, AuthTokenException {
-		messenger.setUrl(vle.getAddress());
-		System.out.println(vle.getAddress());
+	public void addMessenger(Messenger messenger, String url) throws IOException, DeploymentException, ParseBotException, AuthTokenException {
+		messenger.setUrl(url);
 		this.messengers.put(messenger.getName(), messenger);
 	}
 
