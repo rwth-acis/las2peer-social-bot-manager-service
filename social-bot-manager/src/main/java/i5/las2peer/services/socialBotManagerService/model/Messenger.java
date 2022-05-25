@@ -210,6 +210,7 @@ public class Messenger {
 	// threads somehow?
 	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
+		System.out.println("handleMessages is called ");
 		for (ChatMessage message : newMessages) {
 			try {
 				// // If a channel/user pair still isn't assigned to a state, assign it to null
@@ -265,6 +266,7 @@ public class Messenger {
 					}
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
+
 				} else {
 					// System.out.println(message.getFileName() + " + " + message.getFileBody());
 					// System.out.println(Intent.replaceUmlaute(message.getText()));
@@ -279,7 +281,8 @@ public class Messenger {
 					}
 
 				}
-
+				System.out.println("The intent is:" + intent);
+				System.out.println("The intent keyword is:" + intent.getKeyword());
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				System.out.println(state);
@@ -471,9 +474,11 @@ public class Messenger {
 							boolean foundMatch = false;
 							ArrayList<ChatResponse> emptyResponses = new ArrayList<ChatResponse>();
 							for (ChatResponse res : state.getResponseArray()) {
+								System.out.println("TriggeredEntitiy is:");
 								System.out.println(res.getTriggerEntity());
 								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
 									response = res;
+									System.out.println("Found matching response:"+res);
 									foundMatch = true;
 									break;
 								}
@@ -539,9 +544,13 @@ public class Messenger {
 								}
 								// check if message parses buttons or is simple text
 								if(response.getType().equals("Interactive Message")){
+									System.out.println("Before sendBlocksMessageToChannel");
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken());
+									System.out.println("After sendBlocksMessageToChannel");
 								} else{
+									System.out.println("Before sendMessageToChannel");
 									this.chatMediator.sendMessageToChannel(message.getChannel(), split);
+									System.out.println("After sendMessageToChannel");
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
@@ -639,7 +648,7 @@ public class Messenger {
 				e.printStackTrace();
 			}
 		}
-
+		System.out.println("End of handleMessages method");
 	}
 
 	public void setUrl(String Url) throws AuthTokenException {
