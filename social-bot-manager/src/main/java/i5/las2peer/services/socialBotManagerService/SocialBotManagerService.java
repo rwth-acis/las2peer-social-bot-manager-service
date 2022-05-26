@@ -1556,7 +1556,6 @@ public class SocialBotManagerService extends RESTService {
 							}
 						}
 					}
-					System.out.println("triggerChat is called 1");
 					triggerChat(chat, triggeredBody);
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						System.out.println("Closed Context");
@@ -1587,26 +1586,20 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
-			System.out.println("triggerChat is called 2");
 			triggerChat(chat, triggeredBody);
 		}
 	}
 
 	public void triggerChat(ChatMediator chat, JSONObject body) {
-		System.out.println("triggerChat is executed");
 		String text = body.getAsString("text");
 		String blocks = body.getAsString("blocks");
 		String channel = null;
 		String user = "";
-		JSONObject monitorEvent42 = new JSONObject();
-		final long start = System.currentTimeMillis();
-		monitorEvent42.put("task", "Send message");
 
 		System.out.println(body);
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist
 			String email = body.getAsString("contactList");
-			monitorEvent42.put("email", email);
 			System.out.println("Goes to pick channel(s) by provided email(s)");
 			String[] emailArray = email.split(",");
 
@@ -1636,7 +1629,7 @@ public class SocialBotManagerService extends RESTService {
 
 				}
 			}
-			monitorEvent42.put("time", System.currentTimeMillis() - start);
+			
 			if (body.containsKey("channel")) {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
@@ -1650,7 +1643,6 @@ public class SocialBotManagerService extends RESTService {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
 				String email = body.getAsString("email");
-				monitorEvent42.put("email", email);
 				channel = chat.getChannelByEmail(email);
 			}
 			System.out.println(channel);
@@ -1681,10 +1673,7 @@ public class SocialBotManagerService extends RESTService {
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
 						body.getAsString("fileType"), text);
 			}
-			monitorEvent42.put("time", System.currentTimeMillis() - start);
 		}
-		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
-		System.out.println("triggerChat finished");
 	}
 
 	@Api(value = "Model Resource")
@@ -2028,8 +2017,15 @@ public class SocialBotManagerService extends RESTService {
 						String chatStatementJSON = gson.toJson(chatStatement);
 						l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, chatStatementJSON);
 					}
-					bot.handleMessages(messageInfos);
-
+					JSONObject monitorEvent42 = new JSONObject();
+       	 			final long start = System.currentTimeMillis();
+					monitorEvent42.put("task", "Simple message");
+					
+					bot.handleMessages(messageInfos); 
+					
+					monitorEvent42.put("time", System.currentTimeMillis() - start);
+					Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
+					
 					// TODO: Handle multiple environments (maybe?)
 
 					MiniClient client = new MiniClient();
