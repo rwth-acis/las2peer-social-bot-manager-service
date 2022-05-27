@@ -2019,12 +2019,14 @@ public class SocialBotManagerService extends RESTService {
 					}
 					JSONObject monitorEvent42 = new JSONObject();
        	 			final long start = System.currentTimeMillis();
-					monitorEvent42.put("task", "Simple message");
 					
 					bot.handleMessages(messageInfos); 
 					
-					monitorEvent42.put("time", System.currentTimeMillis() - start);
-					Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
+					if(!messageInfos.isEmpty()){	
+						monitorEvent42.put("task", "Simple message");
+						monitorEvent42.put("time", System.currentTimeMillis() - start);
+						Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());	
+					}
 					
 					// TODO: Handle multiple environments (maybe?)
 
