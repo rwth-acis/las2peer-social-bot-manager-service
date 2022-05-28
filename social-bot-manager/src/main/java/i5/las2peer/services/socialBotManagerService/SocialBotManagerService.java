@@ -2017,15 +2017,22 @@ public class SocialBotManagerService extends RESTService {
 						String chatStatementJSON = gson.toJson(chatStatement);
 						l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, chatStatementJSON);
 					}
-					JSONObject monitorEvent42 = new JSONObject();
-       	 				final long start = System.currentTimeMillis();
-					System.out.println("MessageInfos" + messageInfos);
-					bot.handleMessages(messageInfos); 
 					
-					if(!messageInfos.isEmpty()){	
-						monitorEvent42.put("task", "Simple message");
-						monitorEvent42.put("time", System.currentTimeMillis() - start);
-						Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());	
+					try{
+						JSONObject monitorEvent42 = new JSONObject();
+       	 					final long start = System.currentTimeMillis();
+						System.out.println("MessageInfos" + messageInfos);
+						System.out.println("ChatStatement" + chatStatement);
+						bot.handleMessages(messageInfos); 
+					
+						if(!messageInfos.isEmpty()){	
+							monitorEvent42.put("task", "Simple message");
+							monitorEvent42.put("time", System.currentTimeMillis() - start);
+							l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());	
+						}
+					}
+					catch(Exception e){
+						e.printStackTrace();
 					}
 					
 					// TODO: Handle multiple environments (maybe?)
