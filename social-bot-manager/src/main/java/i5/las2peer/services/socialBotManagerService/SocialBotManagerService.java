@@ -2022,7 +2022,6 @@ public class SocialBotManagerService extends RESTService {
 						JSONObject monitorEvent42 = new JSONObject();
        	 					final long start = System.currentTimeMillis();
 						System.out.println("MessageInfos" + messageInfos);
-						System.out.println("ChatStatement" + chatStatement);
 						bot.handleMessages(messageInfos); 
 					
 						if(!messageInfos.isEmpty()){	
