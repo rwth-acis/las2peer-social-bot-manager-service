@@ -2018,8 +2018,8 @@ public class SocialBotManagerService extends RESTService {
 						l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, chatStatementJSON);
 					}
 					JSONObject monitorEvent42 = new JSONObject();
-       	 			final long start = System.currentTimeMillis();
-					
+       	 				final long start = System.currentTimeMillis();
+					System.out.println("MessageInfos" + messageInfos);
 					bot.handleMessages(messageInfos); 
 					
 					if(!messageInfos.isEmpty()){	
