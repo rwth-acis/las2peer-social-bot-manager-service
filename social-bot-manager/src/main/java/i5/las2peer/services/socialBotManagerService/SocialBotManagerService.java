@@ -1674,7 +1674,9 @@ public class SocialBotManagerService extends RESTService {
 			}
 			monitorEvent42.put("time", System.currentTimeMillis() - start);
 		}
-		Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
+		if (l2pcontext!=null){
+			l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
+		}
 	}
 
 	@Api(value = "Model Resource")
