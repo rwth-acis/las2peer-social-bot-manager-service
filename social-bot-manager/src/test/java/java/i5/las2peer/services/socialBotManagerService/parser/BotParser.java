@@ -656,7 +656,7 @@ public class BotParser {
 					e2.printStackTrace();
 				}
 				// runningAt = botAgent.getRunningAtNode();
-				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
+				System.out.println("Bot" + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
 				b.setId(botAgent.getIdentifier());

@@ -671,6 +671,7 @@ public class SocialBotManagerService extends RESTService {
 						String service = (String) j.get("serviceAlias");
 
 						VLE vle = getConfig().getServiceConfiguration(service);
+						System.out.println(vle);
 						JSONObject context = new JSONObject();
 						context.put("addr", vle.getAddress());
 						if (!vle.getEnvironmentSeparator().equals("singleEnvironment")) {
@@ -1503,7 +1504,7 @@ public class SocialBotManagerService extends RESTService {
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
-			// client.setLogin("alice", "pwalice");
+			//client.setLogin("alice", "pwalice");
 			client.setLogin(botAgent.getLoginName(), botPass);
 			triggeredBody.put("botName", botAgent.getIdentifier());
 			HashMap<String, String> headers = new HashMap<String, String>();
@@ -1588,11 +1589,15 @@ public class SocialBotManagerService extends RESTService {
 		String blocks = body.getAsString("blocks");
 		String channel = null;
 		String user = "";
+		JSONObject monitorEvent42 = new JSONObject();
+		final long start = System.currentTimeMillis();
+		monitorEvent42.put("task", "Send message");
 
 		System.out.println(body);
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist
 			String email = body.getAsString("contactList");
+			monitorEvent42.put("email", email);
 			System.out.println("Goes to pick channel(s) by provided email(s)");
 			String[] emailArray = email.split(",");
 
@@ -1622,7 +1627,7 @@ public class SocialBotManagerService extends RESTService {
 
 				}
 			}
-
+			monitorEvent42.put("time", System.currentTimeMillis() - start);
 			if (body.containsKey("channel")) {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
@@ -1631,11 +1636,12 @@ public class SocialBotManagerService extends RESTService {
 			}
 			chat.sendMessageToChannel(channel, "ContactList contacted.");
 
-		} else {
+		}else {
 			if (body.containsKey("channel")) {
 				channel = body.getAsString("channel");
 			} else if (body.containsKey("email")) {
 				String email = body.getAsString("email");
+				monitorEvent42.put("email", email);
 				channel = chat.getChannelByEmail(email);
 			}
 			System.out.println(channel);
@@ -1666,6 +1672,10 @@ public class SocialBotManagerService extends RESTService {
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
 						body.getAsString("fileType"), text);
 			}
+			monitorEvent42.put("time", System.currentTimeMillis() - start);
+		}
+		if (l2pcontext!=null){
+			l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_42,monitorEvent42.toString());
 		}
 	}
 
@@ -1980,12 +1990,12 @@ public class SocialBotManagerService extends RESTService {
 				clientRestart.setLogin("alice", "pwalice");
 				HashMap<String, String> headers = new HashMap<String, String>();
 				try {
-					System.out.println(restarterBotName + restarterBotPW);
 					if (restarterBotName != null && restarterBotPW != null && !restarterBotName.equals("")
 							&& !restarterBotPW.equals("")) {
 						ClientResponse result2 = clientRestart.sendRequest("GET", "SBFManager/bots/restart", "",
 								headers);
 						if (result2 != null) {
+							System.out.println("Successfully retrieved restarterbot: "+restarterBotName);
 							restarterBot = BotAgent.createBotAgent("restarterBot");
 						}
 					} else {
@@ -2000,6 +2010,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
+			System.out.println("Now checking vles");
 			for (VLE vle : getConfig().getVLEs().values()) {
 				for (Bot bot : vle.getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
@@ -2028,7 +2039,6 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 				}
-
 				for (VLERoutine r : vle.getRoutines().values()) {
 					// current time
 					Calendar c = Calendar.getInstance();
@@ -2099,6 +2109,7 @@ public class SocialBotManagerService extends RESTService {
 
 								System.out.println(df.format(d1) + ": " + b.getName());
 								MiniClient client = new MiniClient();
+								System.out.println("vle2" + vle);
 								client.setConnectorEndpoint(vle.getAddress());
 
 								JSONObject body = new JSONObject();
@@ -2124,12 +2135,12 @@ public class SocialBotManagerService extends RESTService {
 										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 								System.out.println(result.getResponse());
 								// }
-								// }
 							}
 						}
 					}
 				}
 			}
+			System.out.println("Done checking vles");
 		}
 
 	}

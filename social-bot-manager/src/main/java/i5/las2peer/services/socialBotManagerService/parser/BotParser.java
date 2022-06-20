@@ -229,7 +229,7 @@ public class BotParser {
 					// ...messenger / ChatMediator
 					if (messengers.get(target) != null) {
 						Messenger m = messengers.get(target);
-						b.addMessenger(m);
+						b.addMessenger(m, vle.getAddress());
                         // NLU Servers
 					} else if (nluKnowledge.get(target) != null){
                         NLUKnowledge nlu = nluKnowledge.get(target);
