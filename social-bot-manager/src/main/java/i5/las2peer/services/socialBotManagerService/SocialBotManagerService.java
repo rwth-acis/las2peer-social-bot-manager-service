@@ -591,8 +591,8 @@ public class SocialBotManagerService extends RESTService {
 
 					MiniClient client = new MiniClient();
 					client.setConnectorEndpoint(basePath);
-					//client.setLogin(botAgent.getLoginName(), botPass); 
-					client.setLogin("alice", "pwalice");
+					client.setLogin(botAgent.getLoginName(), botPass); 
+					//client.setLogin("alice", "pwalice");
 
 					j.remove("joinPath");
 					j.remove("basePath");
