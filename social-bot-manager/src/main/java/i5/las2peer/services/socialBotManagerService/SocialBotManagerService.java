@@ -218,8 +218,6 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		this.databaseType = SQLDatabaseType.getSQLDatabaseType(databaseTypeInt);
-		System.out.println(this.databaseType + " " + this.databaseUser + " " + this.databasePassword + " "
-				+ this.databaseName + " " + this.databaseHost + " " + this.databasePort);
 		this.database = new SQLDatabase(this.databaseType, this.databaseUser, this.databasePassword, this.databaseName,
 				this.databaseHost, this.databasePort);
 		try {
