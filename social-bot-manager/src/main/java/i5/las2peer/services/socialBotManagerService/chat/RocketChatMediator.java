@@ -533,7 +533,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					String fileName = j.getJSONObject("file").getString("name");
 					System.out.println(j);
 					if (fileType.equals("text/plain") || fileType.equals("application/pdf")
-							|| fileType.equals("image/png")) {
+							|| fileType.equals("image/png") || fileType.equals("audio/aac") || fileType.equals("audio/mpeg") || fileType.equals("audio/x-m4a")) {
 						String file = j.getJSONArray("attachments").getJSONObject(0).getString("title_link")
 								.substring(1);
 						JSONObject bodyJSON = new JSONObject();
