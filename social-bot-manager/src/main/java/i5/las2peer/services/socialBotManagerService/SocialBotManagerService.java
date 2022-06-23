@@ -2019,7 +2019,7 @@ public class SocialBotManagerService extends RESTService {
 						ChatStatement chatStatement = ChatStatement.generate(m.getMessage().getUser(), m.getBotName(),
 								m.getMessage().getText(), m.getMessage().getTime(), m.getMessage().getDomain());
 						String chatStatementJSON = gson.toJson(chatStatement);
-						l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, chatStatementJSON);
+						// l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, chatStatementJSON);
 					}
 					bot.handleMessages(messageInfos);
 
