@@ -64,8 +64,9 @@ import javax.ws.rs.core.MediaType;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {
-
-	private final static String url = "https://chat.tech4comp.dbis.rwth-aachen.de";
+	
+	// TODO Default url, should be set via env variable
+	private String url = "https://chat.tech4comp.dbis.rwth-aachen.de";
 	RocketChatAPI client;
 	private String username;
 	private String password;
@@ -81,9 +82,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) throws AuthTokenException{
 		super(authToken);
 		this.database = database;
-		String[] auth = authToken.split(":");
-		username = auth[0];
-		password = auth[1];
+		setAuthData(authToken);
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
 		}
@@ -111,9 +110,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public RocketChatMediator(String authToken, SQLDatabase database) {
 		super(authToken);
 		this.database = database;
-		String[] auth = authToken.split(":");
-		username = auth[0];
-		password = auth[1];
+		setAuthData(authToken);
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
 		}
@@ -125,9 +122,18 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		messageCollector.setDomain(url);
 	}
 
+	private void setAuthData(String authToken){
+		// TODO some error handling? 
+		String[] auth = authToken.split(":");
+		username = auth[0];
+		password = auth[1];
+		if (auth.length>3){
+			url = auth[2]+":"+auth[3];
+		}
+	}
+
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
-
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
 		String newText = text.replace("\\n", "\n");
@@ -493,11 +499,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		textClientHeader.put("X-Auth-Token", token);
 		ClientResponse r = textClient.sendRequest("GET", "api/v1/users.info?username=" + userName, "",
 				MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, textClientHeader);
-		System.out.println("respèone is" + r.getResponse());
+		System.out.println("response is" + r.getResponse());
 		JSONObject userObject = new JSONObject(r.getResponse());
-		System.out.println("Error now");
 		JSONArray emails = userObject.getJSONObject("user").getJSONArray("emails");
-		System.out.println("Or not");
 		return emails.getJSONObject(0).getString("address");
 	}
 
