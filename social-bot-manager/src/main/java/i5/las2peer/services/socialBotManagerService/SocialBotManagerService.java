@@ -1198,6 +1198,8 @@ public class SocialBotManagerService extends RESTService {
 			// to the same channel the action was triggered from.
 			// TODO: Handle multiple messengers
 			System.out.println(messageInfo.getMessage().getEmail());
+			String mail = messageInfo.getMessage().getEmail();
+			if(mail==null) mail = "";
 			body.put("email", messageInfo.getMessage().getEmail());
 			body.put("channel", messageInfo.getMessage().getChannel());
 			body.put("user", messageInfo.getMessage().getUser());
