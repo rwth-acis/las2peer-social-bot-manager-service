@@ -7,6 +7,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -58,12 +62,14 @@ public class Messenger {
 
 	private Random random;
 
+	private SQLDatabase db;
+
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 
 //		this.rasa = new RasaNlu(rasaUrl);
 //        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
-
+		this.db = database;
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
 		System.out.println("Messenger: " + chatService.toString());
@@ -279,6 +285,8 @@ public class Messenger {
 					}
 
 				}
+
+				safeEntities(message,bot, intent);
 
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
@@ -651,5 +659,74 @@ public class Messenger {
 
 	public void close() {
 		chatMediator.close();
+	}
+
+	private void safeEntities(ChatMessage msg, Bot bot, Intent intent){
+		String user = msg.getUser();
+		String channel = msg.getChannel();
+		String b = bot.getId();
+		intent.getEntities().forEach((entity) -> { 
+			String k = entity.getEntityName();
+			String v = entity.getValue();
+			PreparedStatement stmt = null;
+			PreparedStatement stmt2 = null;
+			Connection conn = null;
+			ResultSet rs = null;
+			try {
+
+				conn = db.getDataSource().getConnection();
+				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE bot=? and channel=? and user=? and key=?");
+				stmt.setString(1, b);
+				stmt.setString(2, channel);
+				stmt.setString(3, user);
+				stmt.setString(4, k);
+				rs = stmt.executeQuery();
+				boolean f = false;
+				while (rs.next())
+					f = true;
+				if(f){
+					// Update
+					stmt2 = conn.prepareStatement("UPDATE attributes SET v=? WHERE bot=? and channel=? and user=? and key=?");
+					stmt2.setString(1, v);
+					stmt2.setString(2, b);
+					stmt2.setString(3, channel);
+					stmt2.setString(4, user);
+					stmt2.setString(5, k);
+					stmt.executeUpdate();
+				}else{
+					// Insert
+					stmt2 = conn.prepareStatement("INSERT INTO attributes WHERE (bot,channel,user,key,value) VALUES (?,?,?,?,?)");
+					stmt2.setString(1, b);
+					stmt2.setString(2, channel);
+					stmt2.setString(3, user);
+					stmt2.setString(4, k);
+					stmt2.setString(5, v);
+					stmt2.executeUpdate();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (rs != null)
+						rs.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (stmt != null)
+						stmt.close();
+					if (stmt2 != null)
+						stmt2.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (conn != null)
+						conn.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+		 });
 	}
 }
