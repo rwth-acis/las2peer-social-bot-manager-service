@@ -476,9 +476,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 				MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, textClientHeader);
 		System.out.println("respèone is" + r.getResponse());
 		JSONObject userObject = new JSONObject(r.getResponse());
-		System.out.println("Error now");
 		JSONArray emails = userObject.getJSONObject("user").getJSONArray("emails");
-		System.out.println("Or not");
 		return emails.getJSONObject(0).getString("address");
 	}
 
