@@ -64,7 +64,7 @@ public class GitHubAppHelper {
 
         try {
             // first create GitHub object using a JWT (this is needed to request an access token for an app installation)
-            GitHub gitHub = new GitHubBuilder().withJwtToken(generateJWT(gitHubAppId)).build();
+            GitHub gitHub = new GitHubBuilder().withJwtToken(generateJWT()).build();
 
             // get app installation for given repository (getInstallationByRepository requires a JWT)
             GHAppInstallation installation = gitHub.getApp().getInstallationByRepository(ownerName, repoName);
@@ -79,10 +79,9 @@ public class GitHubAppHelper {
 
     /**
      * Generates a JWT and signs it with the app's private key.
-     * @param gitHubAppId Id of the GitHub app
      * @return JWT
      */
-    private String generateJWT(int gitHubAppId) {
+    private String generateJWT() {
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
         Date expiration = new Date(nowMillis + 60000);
