@@ -1562,7 +1562,7 @@ public class SocialBotManagerService extends RESTService {
 
 			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
-			triggeredBody.put("messenger", bot.getMessenger(messengerID).getName());
+			triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
 			triggeredBody.put("botName", botAgent.getIdentifier());
 
 			HashMap<String, String> headers = new HashMap<String, String>();
