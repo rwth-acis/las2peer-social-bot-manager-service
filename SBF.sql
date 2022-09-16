@@ -22,7 +22,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `attributes`  (
   `id` int(12) NOT NULL AUTO_INCREMENT,
-  `user` int(12) NULL DEFAULT NULL,
+  `bot` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `channel` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `key` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `value` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
