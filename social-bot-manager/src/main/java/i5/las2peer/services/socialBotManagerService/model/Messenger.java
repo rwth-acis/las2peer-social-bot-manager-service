@@ -675,7 +675,7 @@ public class Messenger {
 			try {
 
 				conn = db.getDataSource().getConnection();
-				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE bot=? and channel=? and user=? and key=?");
+				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
 				stmt.setString(1, b);
 				stmt.setString(2, channel);
 				stmt.setString(3, user);
@@ -686,7 +686,7 @@ public class Messenger {
 					f = true;
 				if(f){
 					// Update
-					stmt2 = conn.prepareStatement("UPDATE attributes SET v=? WHERE bot=? and channel=? and user=? and key=?");
+					stmt2 = conn.prepareStatement("UPDATE attributes SET `value`=? WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
 					stmt2.setString(1, v);
 					stmt2.setString(2, b);
 					stmt2.setString(3, channel);
@@ -695,7 +695,7 @@ public class Messenger {
 					stmt.executeUpdate();
 				}else{
 					// Insert
-					stmt2 = conn.prepareStatement("INSERT INTO attributes WHERE (bot,channel,user,key,value) VALUES (?,?,?,?,?)");
+					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
 					stmt2.setString(1, b);
 					stmt2.setString(2, channel);
 					stmt2.setString(3, user);
