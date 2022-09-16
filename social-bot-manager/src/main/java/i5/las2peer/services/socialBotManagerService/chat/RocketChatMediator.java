@@ -181,6 +181,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			e.printStackTrace();
 		}
 		sendFileMessageToChannel(channel, file, text, id);
+		file.delete();
 	}
 
 	@Override
@@ -423,13 +424,17 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		InputStream in = new ByteArrayInputStream(r.getRawResponse());
 		StringWriter writer = new StringWriter();
 		String encoding = StandardCharsets.UTF_8.name();
+		String res = "";
 		try {
 			IOUtils.copy(in, writer, encoding);
+			res = writer.toString();
+			writer.close();
+			in.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return writer.toString();
+		return res;
 	}
 
 	protected String getFileBase64(String userId, String file) {
@@ -531,7 +536,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					String fileName = j.getJSONObject("file").getString("name");
 					System.out.println(j);
 					if (fileType.equals("text/plain") || fileType.equals("application/pdf")
-							|| fileType.equals("image/png")) {
+							|| fileType.equals("image/png") || fileType.equals("audio/aac") || fileType.equals("audio/mpeg") || fileType.equals("audio/x-m4a")) {
 						String file = j.getJSONArray("attachments").getJSONObject(0).getString("title_link")
 								.substring(1);
 						JSONObject bodyJSON = new JSONObject();
