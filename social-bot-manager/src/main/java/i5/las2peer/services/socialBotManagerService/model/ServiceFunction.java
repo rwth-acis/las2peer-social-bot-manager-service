@@ -1,7 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashSet;
-
+import java.util.HashMap;
 public class ServiceFunction extends TriggerFunction{
 	private String id;
 	private String serviceName;
@@ -16,12 +16,14 @@ public class ServiceFunction extends TriggerFunction{
 	private String messengerName;
 	private HashSet<ServiceFunctionAttribute> attributes;
 	private HashSet<Trigger> trigger;
+	private HashMap<String,String> onStart;
 
 	public ServiceFunction() {
 		setAttributes(new HashSet<ServiceFunctionAttribute>());
 		setBots(new HashSet<Bot>());
 		setUsers(new HashSet<VLEUser>());
 		setTrigger(new HashSet<Trigger>());
+		this.onStart =  new HashMap<String,String>();
 	}
 
 	public String getId() {
@@ -152,6 +154,15 @@ public class ServiceFunction extends TriggerFunction{
 
 	public void addTrigger(Trigger t) {
 		this.trigger.add(t);
+	}
+
+	
+	public HashMap<String,String> getOnStart() {
+		return this.onStart;
+	}
+
+	public void setOnStart(String botName) {
+		this.onStart.put(botName, this.getFunctionName());
 	}
 
 }

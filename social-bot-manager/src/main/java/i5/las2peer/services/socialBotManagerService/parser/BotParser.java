@@ -90,6 +90,8 @@ public class BotParser {
 		HashMap<String, IfThenBlock> itbList = new HashMap<String, IfThenBlock>();
 		HashMap<String, VLERoutine> rlist = new HashMap<String, VLERoutine>();
 
+		HashMap<String, ServiceFunction> onBotStartList = new HashMap<String, ServiceFunction>();
+
 		int vleCount = 0;
 		VLE vle = null;
 
@@ -280,6 +282,9 @@ public class BotParser {
 					if (bsfListItem != null) {
 						bot.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
 						bsfListItem.addBot(bot);
+					} 
+					if(value.equals("start")){
+						bsfListItem.setOnStart(bot.getName());
 					}
 				} else if (users.get(source) != null) {
 					VLEUser user = users.get(source);
@@ -901,7 +906,19 @@ public class BotParser {
 					addServiceInformation(s, vle.getServiceInformation().get(s.getServiceName()));
 				}
 
-				
+				for(String bName : s.getOnStart().keySet()){
+					MiniClient client = new MiniClient();
+					// client.setLogin(, password);
+					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+					HashMap<String, String> headers = new HashMap<String, String>();
+				//	client.setLogin(bName, "actingAgent");
+					client.setLogin("alice", "pwalice");
+					JSONObject botName = new JSONObject();
+					botName.put("botName", bName);
+					
+					ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
+							botName.toString(), s.getConsumes(), s.getProduces(), headers);
+				}
 			}
 
 		}
