@@ -913,11 +913,13 @@ public class BotParser {
 					HashMap<String, String> headers = new HashMap<String, String>();
 				//	client.setLogin(bName, "actingAgent");
 					client.setLogin("alice", "pwalice");
-					JSONObject botName = new JSONObject();
-					botName.put("botName", bName);
-					
+					JSONObject body = new JSONObject();
+					body.put("botName", bName);
+					for(ServiceFunctionAttribute a : s.getAttributes()){
+						body.put(a.getName(), a.getContent());
+					}
 					ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
-							botName.toString(), s.getConsumes(), s.getProduces(), headers);
+							body.toString(), s.getConsumes(), s.getProduces(), headers);
 				}
 			}
 
