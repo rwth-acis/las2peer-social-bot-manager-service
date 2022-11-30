@@ -284,7 +284,7 @@ public class BotParser {
 						bsfListItem.addBot(bot);
 					} 
 					if(value.equals("start")){
-						bsfListItem.setOnStart(bot.getName());
+						bsfListItem.setOnStart(bot.getId());
 					}
 				} else if (users.get(source) != null) {
 					VLEUser user = users.get(source);
