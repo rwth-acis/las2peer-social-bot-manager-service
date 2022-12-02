@@ -1563,8 +1563,8 @@ public class SocialBotManagerService extends RESTService {
 			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
 			triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
-			triggeredBody.put("botName", botAgent.getIdentifier());
-
+			triggeredBody.put("botId", bot.getId());
+			triggeredBody.put("botName", bot.getName());
 			HashMap<String, String> headers = new HashMap<String, String>();
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());

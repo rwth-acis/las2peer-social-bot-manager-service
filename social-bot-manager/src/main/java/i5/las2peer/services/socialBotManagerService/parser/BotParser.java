@@ -906,7 +906,7 @@ public class BotParser {
 					addServiceInformation(s, vle.getServiceInformation().get(s.getServiceName()));
 				}
 
-				for(String bName : s.getOnStart().keySet()){
+				for(String bId : s.getOnStart().keySet()){
 					MiniClient client = new MiniClient();
 					// client.setLogin(, password);
 					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
@@ -914,7 +914,14 @@ public class BotParser {
 				//	client.setLogin(bName, "actingAgent");
 					client.setLogin("alice", "pwalice");
 					JSONObject body = new JSONObject();
-					body.put("botName", bName);
+					String botName = "";
+					for (Bot b : vle.getBots().values()) {
+						if(b.getId().equals(bId)){
+							botName = b.getName();
+						}
+					}
+					body.put("botId", bId);
+					body.put("botName", botName);
 					for(ServiceFunctionAttribute a : s.getAttributes()){
 						body.put(a.getName(), a.getContent());
 					}
