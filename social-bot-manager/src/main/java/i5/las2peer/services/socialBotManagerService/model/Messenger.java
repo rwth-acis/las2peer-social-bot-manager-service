@@ -263,6 +263,10 @@ public class Messenger {
 					}
 
 					String entityKeyword = incMsg.getEntityKeyword();
+					if(entityKeyword == null){
+						incMsg.setEntityKeyword("newEntity");
+						entityKeyword = "newEntity";
+					}
 					String entityValue = null;
 					// Entity value is the rest of the message. The whole rest
 					// is in the second element, since we only split it into two parts.
