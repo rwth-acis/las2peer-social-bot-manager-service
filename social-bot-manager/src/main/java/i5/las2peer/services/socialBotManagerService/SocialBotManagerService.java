@@ -1667,7 +1667,7 @@ public class SocialBotManagerService extends RESTService {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
 			// client.setLogin("alice", "pwalice");
-			client.setLogin(botAgent.getLoginName(), botPass);
+		//	client.setLogin(botAgent.getLoginName(), botPass);
 
 			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
