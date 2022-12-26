@@ -1,8 +1,10 @@
 databaseUser = root
-databasePassword = root
+databasePassword = password
 databaseName = LAS2PEERMON
-databaseHost = host.docker.internal
+databaseHost = 127.0.0.1
 databasePort = 3306
-address = http://127.0.0.1:8080
+address = http://127.0.0.1:8090
 restarterBotName =  
 restarterBotPW =
+lrsAuthToken = 
+lrsURL = 

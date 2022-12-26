@@ -18,7 +18,6 @@ export CORE_VERSION=$(awk -F "=" '/core.version/ {print $2}' gradle.properties)
 function set_in_service_config {
     sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
 }
-cp $SERVICE_PROPERTY_FILE.sample $SERVICE_PROPERTY_FILE
 set_in_service_config databaseName ${DATABASE_NAME}
 set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
@@ -27,6 +26,8 @@ set_in_service_config databasePassword ${DATABASE_PASSWORD}
 set_in_service_config address ${ADDRESS}
 set_in_service_config restarterBotName ${RESTARTERBOTNAME}
 set_in_service_config restarterBotPW ${RESTARTERBOTPW}
+set_in_service_config lrsURL ${LRS_URL}
+set_in_service_config lrsAuthToken ${LRS_AUTH_TOKEN}
 
 
 # ensure the database is ready
