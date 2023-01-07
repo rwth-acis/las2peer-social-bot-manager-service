@@ -696,7 +696,7 @@ public class Messenger {
 					stmt2.setString(3, channel);
 					stmt2.setString(4, user);
 					stmt2.setString(5, k);
-					stmt.executeUpdate();
+					stmt2.executeUpdate();
 				}else{
 					// Insert
 					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
@@ -708,6 +708,10 @@ public class Messenger {
 					stmt2.executeUpdate();
 				}
 			} catch (SQLException e) {
+				e.printStackTrace();
+			
+			} catch (Exception e ) {
+				e.printStackTrace();
 				try {
 					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
 					stmt2.setString(1, b);
@@ -720,8 +724,8 @@ public class Messenger {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				e.printStackTrace();
-			} finally {
+			}
+			finally {
 				try {
 					if (rs != null)
 						rs.close();
