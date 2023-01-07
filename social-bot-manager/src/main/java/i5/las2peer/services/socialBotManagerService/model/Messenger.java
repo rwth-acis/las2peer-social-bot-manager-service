@@ -708,6 +708,18 @@ public class Messenger {
 					stmt2.executeUpdate();
 				}
 			} catch (SQLException e) {
+				try {
+					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
+					stmt2.setString(1, b);
+					stmt2.setString(2, channel);
+					stmt2.setString(3, user);
+					stmt2.setString(4, k);
+					stmt2.setString(5, v);
+					stmt2.executeUpdate();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			} finally {
 				try {
