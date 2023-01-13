@@ -1734,6 +1734,8 @@ public class SocialBotManagerService extends RESTService {
 					}
 				} catch (ParseException e) {
 					e.printStackTrace();
+					bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
+								triggeredBody.getAsString("user"));
 				}
 			}
 
