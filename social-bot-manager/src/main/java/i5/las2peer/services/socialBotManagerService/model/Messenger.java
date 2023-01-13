@@ -485,6 +485,7 @@ public class Messenger {
 							for (ChatResponse res : state.getResponseArray()) {
 								System.out.println(res.getTriggerEntity());
 								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
+									System.out.println("Found right response for entity value");
 									response = res;
 									foundMatch = true;
 									break;
