@@ -421,10 +421,11 @@ public class BotParser {
 					// ...Chat Response
 					if (responses.get(target) != null) {
 						ChatResponse response = responses.get(target);
-						if(!value.equals("")){
-							System.out.println("Adding message with trigger value" + value);
-						}
+
 						response.addTriggerEntity(value);
+						if(!value.equals("")){
+							System.out.println("Adding message with trigger value" + value + response.getResponse() + response.getTriggerEntity());
+						}
 						m.addResponse(response);
 						
 						// ...Bot Action
