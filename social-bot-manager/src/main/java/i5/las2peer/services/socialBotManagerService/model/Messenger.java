@@ -484,14 +484,13 @@ public class Messenger {
 							ArrayList<ChatResponse> emptyResponses = new ArrayList<ChatResponse>();
 							System.out.println(state.getResponseArray().size() + " wow big");
 							for (ChatResponse res : state.getResponseArray()) {
-								System.out.println(res.getTriggerEntity() + res.getResponse() + res.getTriggerEntity());
-								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
+								if (res.getTriggerEntity(state).equals(intent.getEntitieValues().get(0))) {
 									System.out.println("Found right response for entity value" +intent.getEntitieValues().get(0) );
 									response = res;
 									foundMatch = true;
 									break;
 								}
-								if (res.getTriggerEntity().equals("")) {
+								if (res.getTriggerEntity(state).equals("")) {
 									System.out.println("now empty");
 									emptyResponses.add(res);
 								}
