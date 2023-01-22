@@ -382,14 +382,6 @@ public class BotParser {
 					// ...another IncomingMessage
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
-						try{
-
-							System.out.println("incom message has foll res" + targetMessage.getIntentKeyword() + value);
-							for(ChatResponse c : targetMessage.getResponseArray()){
-								System.out.println("incom message has foll" + c.getTriggerEntity());
-							}
-						} catch (Exception e) {e.printStackTrace();}
-
 						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
 				}
@@ -430,10 +422,7 @@ public class BotParser {
 					if (responses.get(target) != null) {
 						ChatResponse response = responses.get(target);
 
-						response.addTriggerEntity(value);
-						if(!value.equals("")){
-							System.out.println("Adding message with trigger value" + value + response.getResponse() + response.getTriggerEntity());
-						}
+						response.addTriggerEntity(m,value);
 						m.addResponse(response);
 						System.out.println(m.getResponseArray().size() + " and diidid " +incomingMessages.get(source).getResponseArray().size());
 						

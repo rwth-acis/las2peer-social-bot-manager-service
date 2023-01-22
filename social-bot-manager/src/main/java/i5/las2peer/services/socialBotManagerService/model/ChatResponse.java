@@ -7,7 +7,7 @@ import java.util.Random;
 public class ChatResponse {
 	String response;
 	String triggeredFunctionId;
-	String triggerEntity;
+	HashMap<IncomingMessage,String> triggerEntity;
 	String fileURL;
 	String errorMessage;
 	String type;
@@ -15,7 +15,7 @@ public class ChatResponse {
 		this.response = response;
 		this.fileURL = fileURL;
 		this.errorMessage  = errorMessage;
-		this.triggerEntity = "";
+		this.triggerEntity = new HashMap<IncomingMessage,String>();
 		this.type = type;
 		
 	}
@@ -40,12 +40,12 @@ public class ChatResponse {
         return this.triggeredFunctionId;
     }
     
-    public String getTriggerEntity(){
-        return this.triggerEntity;
+    public String getTriggerEntity(IncomingMessage m){
+        return this.triggerEntity.get(m);
     }
     
-    public void addTriggerEntity(String triggerEntity){
-        this.triggerEntity = triggerEntity;
+    public void addTriggerEntity(IncomingMessage m,String triggerEntity){
+        this.triggerEntity.put(m, triggerEntity);
     }
 
 	public String getType() {
