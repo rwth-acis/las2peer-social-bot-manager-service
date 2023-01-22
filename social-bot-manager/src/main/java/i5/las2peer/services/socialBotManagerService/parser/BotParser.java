@@ -384,7 +384,7 @@ public class BotParser {
 						IncomingMessage targetMessage = incomingMessages.get(target);
 						try{
 
-							System.out.println("incom message has foll res" + targetMessage.getIntentKeyword());
+							System.out.println("incom message has foll res" + targetMessage.getIntentKeyword() + value);
 							for(ChatResponse c : targetMessage.getResponseArray()){
 								System.out.println("incom message has foll" + c.getTriggerEntity());
 							}
