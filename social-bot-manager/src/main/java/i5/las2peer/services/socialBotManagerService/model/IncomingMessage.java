@@ -2,7 +2,6 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Random;
 
 import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
@@ -13,7 +12,7 @@ public class IncomingMessage {
     String NluID;
     boolean containsFile;
 
-	HashSet<ChatResponse> responses;
+	ArrayList<ChatResponse> responses;
 
 	// Intent keywords used as keys
 	HashMap<String, IncomingMessage> followupMessages;
@@ -40,7 +39,7 @@ public class IncomingMessage {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else intentKeyword = "";
 		this.followupMessages = new HashMap<String, IncomingMessage>();
-		this.responses = new HashSet<ChatResponse>();
+		this.responses = new ArrayList<ChatResponse>();
 		this.containsFile = containsFile;
 		if (intentKeyword.equals("0") && containsFile){
 			intentKeyword = "anyFile";
@@ -90,19 +89,11 @@ public class IncomingMessage {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
-			int r = random.nextInt(responses.size());
-			int i = 0;
-			for(ChatResponse cr : responses){
-				if(r == i){
-					return cr;
-				} 
-				i++;
-			}
-			return null;
+			return responses.get(random.nextInt(responses.size()));
 		}
 	}
 	
-	public HashSet<ChatResponse> getResponseArray() {
+	public ArrayList<ChatResponse> getResponseArray() {
 		if (responses.isEmpty()) {
 			return null;
 		} else {

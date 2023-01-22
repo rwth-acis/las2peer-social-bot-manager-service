@@ -435,6 +435,7 @@ public class BotParser {
 							System.out.println("Adding message with trigger value" + value + response.getResponse() + response.getTriggerEntity());
 						}
 						m.addResponse(response);
+						System.out.println(m.getResponseArray().size() + " and diidid " +incomingMessages.get(source).getResponseArray().size());
 						
 						// ...Bot Action
 					} else if (bsfList.get(target) != null) {
