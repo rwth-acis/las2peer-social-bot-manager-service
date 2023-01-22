@@ -484,7 +484,7 @@ public class Messenger {
 							ArrayList<ChatResponse> emptyResponses = new ArrayList<ChatResponse>();
 							System.out.println(state.getResponseArray().size() + " wow big");
 							for (ChatResponse res : state.getResponseArray()) {
-								System.out.println(res.getTriggerEntity() + res.getResponse());
+								System.out.println(res.getTriggerEntity() + res.getResponse() + res.getTriggerEntity());
 								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
 									System.out.println("Found right response for entity value" +intent.getEntitieValues().get(0) );
 									response = res;
