@@ -382,6 +382,10 @@ public class BotParser {
 					// ...another IncomingMessage
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
+						System.out.println("incom message has foll res" + targetMessage.getIntentKeyword());
+						for(ChatResponse c : targetMessage.getResponseArray()){
+							System.out.println("incom message has foll" + c.getTriggerEntity());
+						}
 						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
 				}
