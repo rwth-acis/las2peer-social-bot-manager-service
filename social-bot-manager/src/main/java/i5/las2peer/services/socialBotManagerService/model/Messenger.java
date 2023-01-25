@@ -108,6 +108,7 @@ public class Messenger {
 		this.currentNluModel = new HashMap<String, String>();
 		this.triggeredFunction = new HashMap<String, String>();
 		this.defaultAnswered = new HashMap<String, Integer>();
+		this.storedSession = new HashMap<String, IncomingMessage>();
 	}
 
 	public String getName() {
@@ -316,6 +317,9 @@ public class Messenger {
 						recognizedEntities.remove(message.getChannel());
 						state = this.knownIntents.get(intent.getKeyword());
 						stateMap.put(message.getChannel(), state);
+						if (storedSession.containsKey(message.getCurrMessage())) {
+							storedSession.remove(message.getChannel());
+						}
 					} else
 					// add file case to default if part
 					if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
