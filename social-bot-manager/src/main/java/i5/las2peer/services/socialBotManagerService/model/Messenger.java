@@ -60,6 +60,8 @@ public class Messenger {
 	// state
 	private HashMap<String, Integer> defaultAnswered;
 
+	private HashMap<String, IncomingMessage> storedSession; 
+
 	private Random random;
 
 	private SQLDatabase db;
@@ -177,6 +179,10 @@ public class Messenger {
 		if (state != null) {
 			if (state.getFollowingMessages() == null) {
 				System.out.println("Conversation flow ended now");
+				if(storedSession.containsKey(channel)){
+					stateMap.put(channel, storedSession.get(channel));
+							storedSession.remove(channel);
+				}
 			} else if (state.getFollowingMessages().get("") != null) {
 				// check whether bot action needs to be triggered without user input
 				state = state.getFollowingMessages().get("");
@@ -255,6 +261,7 @@ public class Messenger {
 					// TODO: Log this? (`!` command with unknown intent / keyword)
 					if (incMsg == null && !intentKeyword.toLowerCase().equals("exit")) {
 						if (this.currentNluModel.get(message.getChannel()) == "0") {
+							System.out.println("will continue");
 							continue;
 						} else {
 							incMsg = new IncomingMessage(intentKeyword, "", false);
@@ -295,6 +302,13 @@ public class Messenger {
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				System.out.println(state);
+				if(state != null && message.getText().startsWith("!")){
+					storedSession.put(message.getChannel(), state);
+					state = null;
+				}
+				if(state != null && message.getText().startsWith("!") && storedSession.containsKey(message.getChannel())){
+					System.out.println("Dont start command inside command lol");
+				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
@@ -639,6 +653,12 @@ public class Messenger {
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
 							this.stateMap.remove(message.getChannel());
+							if(storedSession.containsKey(message.getChannel())){
+								
+							stateMap.put(message.getChannel(), storedSession.get(message.getChannel()));
+							storedSession.remove(message.getChannel());
+							}
+							
 							this.recognizedEntities.remove(message.getChannel());
 						}
 					}
@@ -670,6 +690,9 @@ public class Messenger {
 		String user = msg.getUser();
 		String channel = msg.getChannel();
 		String b = bot.getId();
+		System.out.println(intent.getKeyword());
+		System.out.println(intent.getEntities().size());
+		
 		intent.getEntities().forEach((entity) -> { 
 			String k = entity.getEntityName();
 			String v = entity.getValue();
@@ -721,6 +744,7 @@ public class Messenger {
 					stmt2.setString(4, k);
 					stmt2.setString(5, v);
 					stmt2.executeUpdate();
+					System.out.println("sql statement saved successfully");
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
