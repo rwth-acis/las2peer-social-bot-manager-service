@@ -99,6 +99,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -2523,6 +2524,60 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		return Response.ok().build();
+
+	}
+
+	
+	@POST
+	@Path("/RESTfulChat/{bot}/{channel}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response handleRESTfulChat(@PathParam("bot") String bot,@PathParam("channel") String channel,
+			String input) {
+				String answerMsg = "";
+		try {
+			Bot b = null;
+			for (VLE vle : getConfig().getVLEs().values()) {
+				for(Bot botIterator: vle.getBots().values()){
+					if(botIterator.getName().equalsIgnoreCase(bot)){
+						b = botIterator;
+					}
+				}
+			}
+			// there should be one or no bot available (we will remove instance in a later version)
+			if(b!=null){
+				ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+				for (Messenger m : b.getMessengers().values()) {
+					if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
+						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
+						JSONParser p = new JSONParser();
+						JSONObject bodyInput = (JSONObject) p.parse(input);
+						String msgtext = bodyInput.getAsString("msg");
+						ChatMessage msg = new ChatMessage(channel, channel, msgtext);
+						m.getChatMediator().getMessageCollector().addMessage(msg);
+						m.handleMessages(messageInfos, b);
+						answerMsg = chatMediator.getMessageForChannel(channel);
+
+					}
+				}
+				try {
+					
+					
+	
+				} catch (Exception e) {
+					e.printStackTrace();
+					return Response.ok("Sending message failed.").build();
+				}
+			}
+			
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().entity(answerMsg).build();
 
 	}
 
