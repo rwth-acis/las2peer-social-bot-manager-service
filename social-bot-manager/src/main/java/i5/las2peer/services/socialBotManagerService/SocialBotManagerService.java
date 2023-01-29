@@ -635,7 +635,7 @@ public class SocialBotManagerService extends RESTService {
 		 */
 		@POST
 		@Path("/{botName}/webhook")
-		@Consumes(MediaType.TEXT_PLAIN)
+		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = {
 				@ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Successfully handled webhook call."),
 				@ApiResponse(code = HttpURLConnection.HTTP_NOT_FOUND, message = "Bot not found."),
