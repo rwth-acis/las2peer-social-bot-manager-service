@@ -86,6 +86,7 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.*;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubWebhookReceiver;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
@@ -240,6 +241,7 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(BotModelResource.class);
 		getResourceConfig().register(TrainingResource.class);
 		getResourceConfig().register(this);
+		getResourceConfig().register(GitHubWebhookReceiver.class);
 	}
 
 	@POST
