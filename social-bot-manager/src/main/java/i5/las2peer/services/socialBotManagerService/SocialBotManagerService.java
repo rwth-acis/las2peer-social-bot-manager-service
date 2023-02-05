@@ -1559,7 +1559,12 @@ public class SocialBotManagerService extends RESTService {
 			}
 			//client.setLogin("alice", "pwalice");
 			client.setLogin(botAgent.getLoginName(), botPass);
+
+			Bot bot = vle.getBots().get(botAgent.getIdentifier());
+			String messengerID = sf.getMessengerName();
+			triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
 			triggeredBody.put("botName", botAgent.getIdentifier());
+
 			HashMap<String, String> headers = new HashMap<String, String>();
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
@@ -1576,8 +1581,6 @@ public class SocialBotManagerService extends RESTService {
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				try {
-					Bot bot = vle.getBots().get(botAgent.getIdentifier());
-					String messengerID = sf.getMessengerName();
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
 					System.out.println(response);
 					triggeredBody.put("text", response.getAsString("text"));
