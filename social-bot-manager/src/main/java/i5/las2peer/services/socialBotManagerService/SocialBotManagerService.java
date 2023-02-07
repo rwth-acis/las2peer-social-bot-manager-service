@@ -2601,10 +2601,12 @@ public class SocialBotManagerService extends RESTService {
 				String answerMsg = "";
 		try {
 			Bot b = null;
+			String addr = "";
 			for (VLE vle : getConfig().getVLEs().values()) {
 				for(Bot botIterator: vle.getBots().values()){
 					if(botIterator.getName().equalsIgnoreCase(bot)){
 						b = botIterator;
+						addr = vle.getAddress();
 					}
 				}
 			}
@@ -2617,10 +2619,31 @@ public class SocialBotManagerService extends RESTService {
 						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 						String fname = fileDetail.getFileName();
 						String ftype = getFileType(uploadedInputStream);
-						//Base64.encodeBytes(r.getRawResponse())
-						//m.getChatMediator().getMessageCollector().handle(fileBody, fname, ftype, channel);
-						
+						String encoded = toBase64String(uploadedInputStream);
+						RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator.getMessageCollector();
+						msgcollector.handle(encoded, fname, ftype, channel);
+						m.handleMessages(messageInfos, b);
+						answerMsg = chatMediator.getMessageForChannel(channel);
+						System.out.println("handling file");
 						found = true;
+						MiniClient client = new MiniClient();
+						System.out.println("Addr: "+addr);
+						client.setConnectorEndpoint(addr);
+
+						HashMap<String, String> headers = new HashMap<String, String>();
+						for (MessageInfo mInfo : messageInfos) {
+							try {
+								Gson gson = new Gson();
+								//System.out.println("SBFManager/bots/" + mInfo.getBotName() + "/trigger/intent");
+								//System.out.println(gson.toJson(mInfo));
+								ClientResponse result = client.sendRequest("POST",
+										"SBFManager/bots/" + mInfo.getBotName() + "/trigger/intent", gson.toJson(mInfo),
+										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+								System.out.println(result.getResponse());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
 					}
 				}
 				if(!found){
@@ -2638,8 +2661,19 @@ public class SocialBotManagerService extends RESTService {
 		return Response.ok().entity(answerMsg).build();
 
 	}
-	public String getFileType(InputStream uploadedInputStream) throws IOException {
+	private String getFileType(InputStream uploadedInputStream) throws IOException {
 		Tika tika = new Tika();
 		return tika.detect(uploadedInputStream);
+	}
+
+	private String toBase64String(InputStream uploadedInputStream) throws IOException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = uploadedInputStream.read(buffer)) != -1) {
+			outputStream.write(buffer, 0, len);
+		}
+		byte[] bytes = outputStream.toByteArray();
+		return Base64.getEncoder().encodeToString(bytes);
 	}
 }
