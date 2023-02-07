@@ -22,7 +22,9 @@ import java.util.Vector;
 import javax.websocket.DeploymentException;
 
 import i5.las2peer.services.socialBotManagerService.chat.*;
-import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubPRMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -91,6 +93,20 @@ public class Messenger {
 				break;
 			case MOODLE_FORUM:
 				this.chatMediator = new MoodleForumMediator(token);
+				break;
+			case GITHUB_ISSUES:
+				try {
+					this.chatMediator = new GitHubIssueMediator(token);
+				} catch (GitHubAppHelper.GitHubAppHelperException e) {
+					throw new AuthTokenException(e.getMessage());
+				}
+				break;
+			case GITHUB_PR:
+				try {
+					this.chatMediator = new GitHubPRMediator(token);
+				} catch (GitHubAppHelper.GitHubAppHelperException e) {
+					throw new AuthTokenException(e.getMessage());
+				}
 				break;
 			default:
 				throw new ParseBotException("Unimplemented chat service: " + chatService);
