@@ -15,6 +15,7 @@ public class RESTfulChatMediator extends ChatMediator{
         super(authToken);
         if(chatsession==null){
             chatsession = new HashMap<String,String>();
+            messageCollector = new RESTfulChatMessageCollector();
         }
     }
 
@@ -66,6 +67,11 @@ public class RESTfulChatMediator extends ChatMediator{
     public void close() {
         // TODO Auto-generated method stub
         
+    }
+    
+    @Override
+    public ChatMessageCollector getMessageCollector(){
+        return (ChatMessageCollector) messageCollector;
     }
     
 }

@@ -34,7 +34,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.Collections;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -52,6 +51,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import com.slack.api.Slack;
+
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import org.apache.tika.Tika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -2551,27 +2555,29 @@ public class SocialBotManagerService extends RESTService {
 			// there should be one or no bot available (we will remove instance in a later version)
 			if(b!=null){
 				ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+				boolean found = false;
 				for (Messenger m : b.getMessengers().values()) {
 					if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
 						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 						JSONParser p = new JSONParser();
 						JSONObject bodyInput = (JSONObject) p.parse(input);
+						
 						String msgtext = bodyInput.getAsString("msg");
+						if(msgtext==null || msgtext.equals("")){
+							return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
+						}
 						ChatMessage msg = new ChatMessage(channel, channel, msgtext);
-						m.getChatMediator().getMessageCollector().addMessage(msg);
+						chatMediator.getMessageCollector().addMessage(msg);
 						m.handleMessages(messageInfos, b);
 						answerMsg = chatMediator.getMessageForChannel(channel);
-
+						found = true;
 					}
 				}
-				try {
-					
-					
-	
-				} catch (Exception e) {
-					e.printStackTrace();
-					return Response.ok("Sending message failed.").build();
+				if(!found){
+					return Response.status(Status.NOT_FOUND).entity("No RESTfulChat found for Bot "+bot+".").build();
 				}
+			}else{
+				return Response.status(Status.NOT_FOUND).entity("Bot "+bot+" not found.").build();
 			}
 			
 
@@ -2583,4 +2589,57 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
+	@POST
+	@Path("/RESTfulChat/{bot}/{channel}/file")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response handleRESTfulChatFile(@PathParam("bot") String bot,@PathParam("channel") String channel,
+	@FormDataParam("file") InputStream uploadedInputStream,
+	@FormDataParam("file") FormDataContentDisposition fileDetail) {
+				String answerMsg = "";
+		try {
+			Bot b = null;
+			for (VLE vle : getConfig().getVLEs().values()) {
+				for(Bot botIterator: vle.getBots().values()){
+					if(botIterator.getName().equalsIgnoreCase(bot)){
+						b = botIterator;
+					}
+				}
+			}
+			// there should be one or no bot available (we will remove instance in a later version)
+			if(b!=null){
+				ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+				boolean found = false;
+				for (Messenger m : b.getMessengers().values()) {
+					if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
+						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
+						String fname = fileDetail.getFileName();
+						String ftype = getFileType(uploadedInputStream);
+						//Base64.encodeBytes(r.getRawResponse())
+						//m.getChatMediator().getMessageCollector().handle(fileBody, fname, ftype, channel);
+						
+						found = true;
+					}
+				}
+				if(!found){
+					return Response.status(Status.NOT_FOUND).entity("No RESTfulChat found for Bot "+bot+".").build();
+				}
+			}else{
+				return Response.status(Status.NOT_FOUND).entity("Bot "+bot+" not found.").build();
+			}
+			
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().entity(answerMsg).build();
+
+	}
+	public String getFileType(InputStream uploadedInputStream) throws IOException {
+		Tika tika = new Tika();
+		return tika.detect(uploadedInputStream);
+	}
 }
