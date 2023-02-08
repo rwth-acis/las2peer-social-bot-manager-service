@@ -322,7 +322,7 @@ public class Messenger {
 						}
 					} else
 					// add file case to default if part
-					if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
+					if (intent.getConfidence() >= 0.30 || message.getFileName() != null) {
 						if (state == null) {
 							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
 							if (message.getFileName() != null) {
