@@ -197,9 +197,8 @@ public class Messenger {
 			} else {
 				// If only message to be sent
 				String response = state.getResponse(random).getResponse();
-				if( response != null && !response.equals(""))
-				{
-					this.chatMediator.sendMessageToChannel(channel, response, Optional.of(userid));
+				if (response != null && !response.equals("")) {
+				//	this.chatMediator.sendMessageToChannel(channel, response, Optional.of(userid));
 				}
 				if(state.getFollowingMessages().size()== 0){
 					this.stateMap.remove(channel);
