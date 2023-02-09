@@ -86,6 +86,7 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.*;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubWebhookReceiver;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
@@ -133,7 +134,7 @@ import net.minidev.json.parser.ParseException;
  *
  */
 @Api(value = "test")
-@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.19", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
+@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.6.0", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
 @ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
@@ -240,6 +241,7 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(BotModelResource.class);
 		getResourceConfig().register(TrainingResource.class);
 		getResourceConfig().register(this);
+		getResourceConfig().register(GitHubWebhookReceiver.class);
 	}
 
 	@POST
