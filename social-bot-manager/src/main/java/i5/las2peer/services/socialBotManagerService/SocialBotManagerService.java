@@ -2533,13 +2533,22 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
-	
+	// Should be an own resource.. this whole class needs refactoring. 
+
+	/**
+	 * Handles RESTful chat requests.
+	 *
+	 * @param bot the name of the bot to send the message to
+	 * @param channel the channel to send the message to
+	 * @param input the input message, in JSON format
+	 * @return the response from the bot, in plain text format
+	 */
 	@POST
 	@Path("/RESTfulChat/{bot}/{channel}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
-	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	@ApiOperation(value = "Sends a message to the RESTful chat bot and channel", notes = "Provides a service to send a message to the specified bot and channel through a RESTful API endpoint")
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Message successfully sent"),@ApiResponse(code = 500, message = "Internal server error"),@ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
 	public Response handleRESTfulChat(@PathParam("bot") String bot,@PathParam("channel") String channel,
 			String input) {
 				String answerMsg = "";
@@ -2589,12 +2598,21 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
+	/**
+	 * Handle RESTful chat file.
+	 *
+	 * @param bot the bot name
+	 * @param channel the channel name
+	 * @param uploadedInputStream the uploaded input stream
+	 * @param fileDetail the file detail
+	 * @return the response
+	 */
 	@POST
 	@Path("/RESTfulChat/{bot}/{channel}/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
-	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	@ApiOperation(value = "Uploads a file to the RESTful chat bot and channel", notes = "Provides a service to upload a file to the specified bot and channel through a RESTful API endpoint")
+	@ApiResponses(value = {ApiResponse(code = 200, message = "File successfully uploaded"), @ApiResponse(code = 500, message = "Internal server error"), @ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
 	public Response handleRESTfulChatFile(@PathParam("bot") String bot,@PathParam("channel") String channel,
 	@FormDataParam("file") InputStream uploadedInputStream,
 	@FormDataParam("file") FormDataContentDisposition fileDetail) {
