@@ -178,7 +178,7 @@ public class Messenger {
 		triggeredFunction.remove(channel);
 		IncomingMessage state = this.stateMap.get(channel);
 		if (state != null) {
-			System.out.println("state where we broke off is;:" + state.getIntentKeyword());
+			System.out.println("state where we broke off is;:" + state.getIntentKeyword() + state.getFollowingMessages());
 			if (state.getFollowingMessages() == null) {
 				System.out.println("Conversation flow ended now");
 				if(storedSession.containsKey(channel)){
