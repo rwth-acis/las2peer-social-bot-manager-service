@@ -303,12 +303,17 @@ public class Messenger {
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				System.out.println(state);
-				if(state != null && message.getText().startsWith("!")){
+				if (state != null && message.getText().startsWith("!")) {
+					if(!intent.getKeyword().equals("exit")){
 					storedSession.put(message.getChannel(), state);
 					state = null;
+					}
 				}
-				if(state != null && message.getText().startsWith("!") && storedSession.containsKey(message.getChannel())){
+				if (state != null && message.getText().startsWith("!")
+						&& storedSession.containsKey(message.getChannel())) {
 					System.out.println("Dont start command inside command lol");
+					this.chatMediator.sendMessageToChannel(message.getChannel(),
+												"Dont start command inside command lol");
 				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
