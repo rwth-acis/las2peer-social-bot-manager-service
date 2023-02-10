@@ -183,7 +183,11 @@ public class Messenger {
 				System.out.println("Conversation flow ended now");
 				if(storedSession.containsKey(channel)){
 					stateMap.put(channel, storedSession.get(channel));
-							storedSession.remove(channel);
+					storedSession.remove(channel);
+					String response = state.getResponse(random).getResponse();
+					if (response != null && !response.equals("")) {
+							this.chatMediator.sendMessageToChannel(channel, response, Optional.of(userid));
+						}
 				}
 			} else if (state.getFollowingMessages().get("") != null) {
 				// check whether bot action needs to be triggered without user input
