@@ -662,7 +662,7 @@ public class Messenger {
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
 							this.stateMap.remove(message.getChannel());
-							if (storedSession.containsKey(message.getChannel()) && this.triggeredFunction.containsKey(message.getChannel())) {
+							if (storedSession.containsKey(message.getChannel()) && !this.triggeredFunction.containsKey(message.getChannel())) {
 
 								stateMap.put(message.getChannel(), storedSession.get(message.getChannel()));
 								storedSession.remove(message.getChannel());
