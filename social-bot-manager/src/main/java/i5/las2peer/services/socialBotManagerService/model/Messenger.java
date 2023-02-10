@@ -181,11 +181,14 @@ public class Messenger {
 			System.out.println("state where we broke off is;:" + state.getIntentKeyword() + state.getFollowingMessages());
 			if (state.getFollowingMessages() == null || state.getFollowingMessages().size()==0) {
 				System.out.println("Conversation flow ended now");
-				if(storedSession.containsKey(channel)){
+				if (storedSession.containsKey(channel)) {
 					stateMap.put(channel, storedSession.get(channel));
+					state = storedSession.get(channel);
 					storedSession.remove(channel);
+					System.out.println("Restoring session");
 					String response = state.getResponse(random).getResponse();
 					if (response != null && !response.equals("")) {
+						System.out.println("Found old message");
 							this.chatMediator.sendMessageToChannel(channel, response, Optional.of(userid));
 						}
 				}
