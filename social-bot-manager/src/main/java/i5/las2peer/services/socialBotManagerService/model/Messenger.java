@@ -666,6 +666,8 @@ public class Messenger {
 
 								stateMap.put(message.getChannel(), storedSession.get(message.getChannel()));
 								storedSession.remove(message.getChannel());
+							} else if (storedSession.containsKey(message.getChannel()) && this.triggeredFunction.containsKey(message.getChannel())) {
+								this.stateMap.put(message.getChannel(),state);
 							}
 							
 							this.recognizedEntities.remove(message.getChannel());
