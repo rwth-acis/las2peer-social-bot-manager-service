@@ -197,11 +197,11 @@ public class Messenger {
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				if (state.getResponse(random).triggeredFunctionId != null
-						|| !state.getResponse(random).triggeredFunctionId.equals("")) {
+						&& !state.getResponse(random).triggeredFunctionId.equals("")) {
 					ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
 					this.triggeredFunction.put(channel, state.getResponse(random).triggeredFunctionId);
 					this.chatMediator.getMessageCollector().addMessage(chatMsg);
-				}
+				
 			} else {
 				// If only message to be sent
 				String response = state.getResponse(random).getResponse();
@@ -212,7 +212,7 @@ public class Messenger {
 					this.stateMap.remove(channel);
 
 				}
-			}
+			}}
 		} else {
 		}
 	}
