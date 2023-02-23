@@ -194,15 +194,18 @@ public class Messenger {
 				}
 			} else if (state.getFollowingMessages().get("") != null) {
 				// check whether bot action needs to be triggered without user input
+				System.out.println("followup not null");
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				if (state.getResponse(random).triggeredFunctionId != null
 						&& !state.getResponse(random).triggeredFunctionId.equals("")) {
+							System.out.println("trigger not null");
 					ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
 					this.triggeredFunction.put(channel, state.getResponse(random).triggeredFunctionId);
 					this.chatMediator.getMessageCollector().addMessage(chatMsg);
 				
 			} else {
+				System.out.println("sending next message automatically");
 				// If only message to be sent
 				String response = state.getResponse(random).getResponse();
 				if (response != null && !response.equals("")) {
