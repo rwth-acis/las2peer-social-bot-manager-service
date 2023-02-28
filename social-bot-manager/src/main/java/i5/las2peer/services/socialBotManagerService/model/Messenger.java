@@ -108,6 +108,10 @@ public class Messenger {
 					throw new AuthTokenException(e.getMessage());
 				}
 				break;
+			case RESTful_Chat:
+				this.chatMediator = new RESTfulChatMediator(token);
+				System.out.println("RESTful Chat selected");
+				break;
 			default:
 				throw new ParseBotException("Unimplemented chat service: " + chatService);
 			}
