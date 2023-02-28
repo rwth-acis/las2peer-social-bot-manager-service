@@ -34,7 +34,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.Collections;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -52,6 +51,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import com.slack.api.Slack;
+
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import org.apache.tika.Tika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -100,6 +104,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -2528,4 +2533,167 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
+	// Should be an own resource.. this whole class needs refactoring. 
+
+	/**
+	 * Handles RESTful chat requests.
+	 *
+	 * @param bot the name of the bot to send the message to
+	 * @param organization the organization to send the message to
+	 * @param channel the channel to send the message to
+	 * @param input the input message, in JSON format
+	 * @return the response from the bot, in plain text format
+	 */
+	@POST
+	@Path("/RESTfulChat/{bot}/{organization}/{channel}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Sends a message to the RESTful chat bot and channel", notes = "Provides a service to send a message to the specified bot and channel through a RESTful API endpoint")
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "Message successfully sent"),@ApiResponse(code = 500, message = "Internal server error"),@ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
+	public Response handleRESTfulChat(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
+			String input) {
+				RESTfulChatResponse answerMsg = null;
+		try {
+			Bot b = null;
+			for (VLE vle : getConfig().getVLEs().values()) {
+				for(Bot botIterator: vle.getBots().values()){
+					if(botIterator.getName().equalsIgnoreCase(bot)){
+						b = botIterator;
+					}
+				}
+			}
+			// there should be one or no bot available (we will remove instance in a later version)
+			if(b!=null){
+				ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+				boolean found = false;
+				for (Messenger m : b.getMessengers().values()) {
+					if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
+						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
+						JSONParser p = new JSONParser();
+						JSONObject bodyInput = (JSONObject) p.parse(input);
+						String orgChannel = organization + "-" + channel;
+						
+						String msgtext = bodyInput.getAsString("msg");
+						if(msgtext==null || msgtext.equals("")){
+							return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
+						}
+						ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
+						chatMediator.getMessageCollector().addMessage(msg);
+						m.handleMessages(messageInfos, b);
+						answerMsg = chatMediator.getMessageForChannel(orgChannel);
+						found = true;
+					}
+				}
+				if(!found){
+					return Response.status(Status.NOT_FOUND).entity("No RESTfulChat found for Bot "+bot+".").build();
+				}
+			}else{
+				return Response.status(Status.NOT_FOUND).entity("Bot "+bot+" not found.").build();
+			}
+			
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().entity(answerMsg).build();
+
+	}
+
+	/**
+	 * Handle RESTful chat file.
+	 *
+	 * @param bot the bot name
+	 * @param organization the organization name
+	 * @param channel the channel name
+	 * @param uploadedInputStream the uploaded input stream
+	 * @param fileDetail the file detail
+	 * @return the response
+	 */
+	@POST
+	@Path("/RESTfulChat/{bot}/{organization}/{channel}/file")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Uploads a file to the RESTful chat bot and channel", notes = "Provides a service to upload a file to the specified bot and channel through a RESTful API endpoint")
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "File successfully uploaded"), @ApiResponse(code = 500, message = "Internal server error"), @ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
+	public Response handleRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
+	@FormDataParam("file") InputStream uploadedInputStream,
+	@FormDataParam("file") FormDataContentDisposition fileDetail) {
+				RESTfulChatResponse answerMsg = null;
+		try {
+			Bot b = null;
+			String addr = "";
+			for (VLE vle : getConfig().getVLEs().values()) {
+				for(Bot botIterator: vle.getBots().values()){
+					if(botIterator.getName().equalsIgnoreCase(bot)){
+						b = botIterator;
+						addr = vle.getAddress();
+					}
+				}
+			}
+			// there should be one or no bot available (we will remove instance in a later version)
+			if(b!=null){
+				ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
+				boolean found = false;
+				for (Messenger m : b.getMessengers().values()) {
+					if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
+						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
+						String fname = fileDetail.getFileName();
+						String ftype = getFileType(uploadedInputStream);
+						String encoded = toBase64String(uploadedInputStream);
+						RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator.getMessageCollector();
+						String orgChannel = organization + "-" + channel;
+						msgcollector.handle(encoded, fname, ftype, orgChannel);
+						m.handleMessages(messageInfos, b);
+						answerMsg = chatMediator.getMessageForChannel(orgChannel);
+						System.out.println("handling file");
+						found = true;
+						MiniClient client = new MiniClient();
+						System.out.println("Addr: "+addr);
+						client.setConnectorEndpoint(addr);
+
+						HashMap<String, String> headers = new HashMap<String, String>();
+						for (MessageInfo mInfo : messageInfos) {
+							try {
+								Gson gson = new Gson();
+								ClientResponse result = client.sendRequest("POST",
+										"SBFManager/bots/" + mInfo.getBotName() + "/trigger/intent", gson.toJson(mInfo),
+										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+								System.out.println(result.getResponse());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+				if(!found){
+					return Response.status(Status.NOT_FOUND).entity("No RESTfulChat found for Bot "+bot+".").build();
+				}
+			}else{
+				return Response.status(Status.NOT_FOUND).entity("Bot "+bot+" not found.").build();
+			}
+			
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().entity(answerMsg).build();
+
+	}
+	private String getFileType(InputStream uploadedInputStream) throws IOException {
+		Tika tika = new Tika();
+		return tika.detect(uploadedInputStream);
+	}
+
+	private String toBase64String(InputStream uploadedInputStream) throws IOException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = uploadedInputStream.read(buffer)) != -1) {
+			outputStream.write(buffer, 0, len);
+		}
+		byte[] bytes = outputStream.toByteArray();
+		return Base64.getEncoder().encodeToString(bytes);
+	}
 }

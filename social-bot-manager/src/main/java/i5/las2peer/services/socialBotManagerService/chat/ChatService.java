@@ -31,6 +31,9 @@ public enum ChatService {
 	@JsonProperty("GitHub Pull Requests")
 	GITHUB_PR("GitHub Pull Requests", GitHubPRMediator.class),
 
+	@JsonProperty("RESTfulChat")
+	RESTful_Chat("RESTfulChat", RESTfulChatMediator.class),
+
 	UNKNOWN("", null);
 
 	/**
