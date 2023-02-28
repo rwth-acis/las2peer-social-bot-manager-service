@@ -2539,19 +2539,20 @@ public class SocialBotManagerService extends RESTService {
 	 * Handles RESTful chat requests.
 	 *
 	 * @param bot the name of the bot to send the message to
+	 * @param organization the organization to send the message to
 	 * @param channel the channel to send the message to
 	 * @param input the input message, in JSON format
 	 * @return the response from the bot, in plain text format
 	 */
 	@POST
-	@Path("/RESTfulChat/{bot}/{channel}")
+	@Path("/RESTfulChat/{bot}/{organization}/{channel}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Sends a message to the RESTful chat bot and channel", notes = "Provides a service to send a message to the specified bot and channel through a RESTful API endpoint")
 	@ApiResponses(value = {@ApiResponse(code = 200, message = "Message successfully sent"),@ApiResponse(code = 500, message = "Internal server error"),@ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
-	public Response handleRESTfulChat(@PathParam("bot") String bot,@PathParam("channel") String channel,
+	public Response handleRESTfulChat(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 			String input) {
-				String answerMsg = "";
+				RESTfulChatResponse answerMsg = null;
 		try {
 			Bot b = null;
 			for (VLE vle : getConfig().getVLEs().values()) {
@@ -2570,15 +2571,16 @@ public class SocialBotManagerService extends RESTService {
 						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 						JSONParser p = new JSONParser();
 						JSONObject bodyInput = (JSONObject) p.parse(input);
+						String orgChannel = organization + "-" + channel;
 						
 						String msgtext = bodyInput.getAsString("msg");
 						if(msgtext==null || msgtext.equals("")){
 							return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
 						}
-						ChatMessage msg = new ChatMessage(channel, channel, msgtext);
+						ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 						chatMediator.getMessageCollector().addMessage(msg);
 						m.handleMessages(messageInfos, b);
-						answerMsg = chatMediator.getMessageForChannel(channel);
+						answerMsg = chatMediator.getMessageForChannel(orgChannel);
 						found = true;
 					}
 				}
@@ -2602,21 +2604,22 @@ public class SocialBotManagerService extends RESTService {
 	 * Handle RESTful chat file.
 	 *
 	 * @param bot the bot name
+	 * @param organization the organization name
 	 * @param channel the channel name
 	 * @param uploadedInputStream the uploaded input stream
 	 * @param fileDetail the file detail
 	 * @return the response
 	 */
 	@POST
-	@Path("/RESTfulChat/{bot}/{channel}/file")
+	@Path("/RESTfulChat/{bot}/{organization}/{channel}/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Uploads a file to the RESTful chat bot and channel", notes = "Provides a service to upload a file to the specified bot and channel through a RESTful API endpoint")
-	@ApiResponses(value = {ApiResponse(code = 200, message = "File successfully uploaded"), @ApiResponse(code = 500, message = "Internal server error"), @ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
-	public Response handleRESTfulChatFile(@PathParam("bot") String bot,@PathParam("channel") String channel,
+	@ApiResponses(value = {@ApiResponse(code = 200, message = "File successfully uploaded"), @ApiResponse(code = 500, message = "Internal server error"), @ApiResponse(code = 400, message = "Bad request, required parameters not provided")})
+	public Response handleRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 	@FormDataParam("file") InputStream uploadedInputStream,
 	@FormDataParam("file") FormDataContentDisposition fileDetail) {
-				String answerMsg = "";
+				RESTfulChatResponse answerMsg = null;
 		try {
 			Bot b = null;
 			String addr = "";
@@ -2639,9 +2642,10 @@ public class SocialBotManagerService extends RESTService {
 						String ftype = getFileType(uploadedInputStream);
 						String encoded = toBase64String(uploadedInputStream);
 						RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator.getMessageCollector();
-						msgcollector.handle(encoded, fname, ftype, channel);
+						String orgChannel = organization + "-" + channel;
+						msgcollector.handle(encoded, fname, ftype, orgChannel);
 						m.handleMessages(messageInfos, b);
-						answerMsg = chatMediator.getMessageForChannel(channel);
+						answerMsg = chatMediator.getMessageForChannel(orgChannel);
 						System.out.println("handling file");
 						found = true;
 						MiniClient client = new MiniClient();
@@ -2652,8 +2656,6 @@ public class SocialBotManagerService extends RESTService {
 						for (MessageInfo mInfo : messageInfos) {
 							try {
 								Gson gson = new Gson();
-								//System.out.println("SBFManager/bots/" + mInfo.getBotName() + "/trigger/intent");
-								//System.out.println(gson.toJson(mInfo));
 								ClientResponse result = client.sendRequest("POST",
 										"SBFManager/bots/" + mInfo.getBotName() + "/trigger/intent", gson.toJson(mInfo),
 										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);

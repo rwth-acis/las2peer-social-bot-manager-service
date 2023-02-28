@@ -7,26 +7,28 @@ import java.util.Vector;
 
 public class RESTfulChatMediator extends ChatMediator{
 
-    static HashMap<String,String> chatsession = null;
+    static HashMap<String,RESTfulChatResponse> chatsession = null;
 	private RESTfulChatMessageCollector messageCollector = new RESTfulChatMessageCollector();
 
     // To we need a token? Prevent malicious attacks? 
     public RESTfulChatMediator(String authToken) {
         super(authToken);
         if(chatsession==null){
-            chatsession = new HashMap<String,String>();
+            chatsession = new HashMap<String,RESTfulChatResponse>();
             messageCollector = new RESTfulChatMessageCollector();
         }
     }
 
     @Override
     public void sendMessageToChannel(String channel, String text, Optional<String> id) {
-        chatsession.put(channel, text);
+        RESTfulChatResponse rcr = new RESTfulChatResponse(text);
+        chatsession.put(channel, rcr);
     }
 
     @Override
     public void editMessage(String channel, String messageId, String message, Optional<String> id) {
-        chatsession.put(channel,message);
+        RESTfulChatResponse rcr = new RESTfulChatResponse(message);
+        chatsession.put(channel, rcr);
     }
 
     @Override
@@ -53,8 +55,8 @@ public class RESTfulChatMediator extends ChatMediator{
 		return messages;
     }
 
-    public String getMessageForChannel(String channel) {
-		return chatsession.getOrDefault(channel, "");
+    public RESTfulChatResponse getMessageForChannel(String channel) {
+		return chatsession.getOrDefault(channel, new RESTfulChatResponse(""));
     }
 
     @Override
