@@ -140,6 +140,7 @@ import net.minidev.json.parser.ParseException;
  */
 @Api(value = "test")
 @SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.6.0", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "BSD 3-Clause License", url = "https://raw.githubusercontent.com/rwth-acis/las2peer-social-bot-manager-service/master/LICENSE")))
+
 @ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
