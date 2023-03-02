@@ -2603,8 +2603,8 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			return Response.ok().entity(answerMsg).build();
+			Gson gson = new Gson();
+			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
 		}
 
@@ -2687,8 +2687,36 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			return Response.ok().entity(answerMsg).build();
-
 		}
+		
+		@GET
+		@Path("/{bot}/{organization}/{channel}/file/{filename}")
+		@Produces(MediaType.APPLICATION_OCTET_STREAM)
+		@ApiOperation(value = "Download file", produces = MediaType.APPLICATION_OCTET_STREAM)
+		@ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "File downloaded successfully"),
+        @ApiResponse(code = 404, message = "File not found"),
+        @ApiResponse(code = 500, message = "Internal server error")})
+		public Response getRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel, @PathParam("filename") String filename) {
+					RESTfulChatResponse answerMsg = null;
+			try {
+				String path = "files/"+bot+organization+channel+"-"+filename;
+				File file = new File(path);
+				if (!file.exists()) {
+					return Response.status(Status.NOT_FOUND).entity("File not found.").build();
+				}
+
+				return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
+							.header("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
+							.build();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
+		}
+
 		private String getFileType(InputStream uploadedInputStream) throws IOException {
 			Tika tika = new Tika();
 			return tika.detect(uploadedInputStream);
