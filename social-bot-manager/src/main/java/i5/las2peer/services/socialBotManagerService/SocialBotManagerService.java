@@ -716,7 +716,7 @@ public class SocialBotManagerService extends RESTService {
 			String botName = parsedBody.getAsString("botName");
 			for(VLE vle : getConfig().getVLEs().values()){
 				System.out.println("BOTS COMING NOW");
-				for(Bot s : vle.getBots()){
+				for(Bot s : vle.getBots().values()){
 					System.out.println(s.getName());
 				}
 			}
