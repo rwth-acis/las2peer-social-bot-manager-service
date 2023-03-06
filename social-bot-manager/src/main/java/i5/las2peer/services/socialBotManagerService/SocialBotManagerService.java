@@ -693,7 +693,6 @@ public class SocialBotManagerService extends RESTService {
 		 * Endpoint that handles incoming webhook calls.
 		 * 
 		 * @param body    JSONObject
-		 * @param botName Name of the bot.
 		 * @return HTTP response
 		 */
 		@POST
