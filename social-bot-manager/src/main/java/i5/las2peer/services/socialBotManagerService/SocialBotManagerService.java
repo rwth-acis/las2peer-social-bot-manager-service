@@ -714,6 +714,12 @@ public class SocialBotManagerService extends RESTService {
 			// check if bot exists
 			Bot bot = null;
 			String botName = parsedBody.getAsString("botName");
+			for(VLE vle : getConfig().getVLEs().values()){
+				System.out.println("BOTS COMING NOW");
+				for(Bot s : vle.getBots()){
+					System.out.println(s.getName());
+				}
+			}
 			for (VLE vle : getConfig().getVLEs().values()) {
 				bot = vle.getBots().values().stream().filter(b -> b.getName().equals(botName)).findFirst().get();
 				if (bot != null)
