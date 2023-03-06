@@ -718,13 +718,16 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("BOTS COMING NOW");
 				for(Bot s : vle.getBots().values()){
 					System.out.println(s.getName());
+					if(s.getName().equals(botName)){
+						bot = s;
+					}
 				}
 			}
-			for (VLE vle : getConfig().getVLEs().values()) {
+		/*for (VLE vle : getConfig().getVLEs().values()) {
 				bot = vle.getBots().values().stream().filter(b -> b.getName().equals(botName)).findFirst().get();
 				if (bot != null)
 					break;
-			}
+			} */	
 			if (bot == null)
 				return Response.status(HttpURLConnection.HTTP_NOT_FOUND).entity("Bot " + botName + " not found.")
 						.build();
