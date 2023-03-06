@@ -711,7 +711,7 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				// parse body
 				JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-				JsonObject parsedBody = (JSONObject) p.parse(body);
+				JSONObject parsedBody = (JSONObject) p.parse(body);
 			// check if bot exists
 			Bot bot = null;
 			String botName = parsedBody.getAsString("botName");
