@@ -689,6 +689,70 @@ public class SocialBotManagerService extends RESTService {
 			}
 		}
 
+		/**
+		 * Endpoint that handles incoming webhook calls.
+		 * 
+		 * @param body    JSONObject
+		 * @param botName Name of the bot.
+		 * @return HTTP response
+		 */
+		@POST
+		@Path("/webhook")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiResponses(value = {
+				@ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Successfully handled webhook call."),
+				@ApiResponse(code = HttpURLConnection.HTTP_NOT_FOUND, message = "Bot not found."),
+				@ApiResponse(code = HttpURLConnection.HTTP_BAD_REQUEST, message = "Parse exception, field event is missing or event is unsupported.")
+		})
+		@ApiOperation(value = "Handle webhook calls", notes = "Handles incoming webhook calls.")
+		public Response webhook(String body) {
+
+
+			try {
+				// parse body
+				JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+				JsonObject parsedBody = (JSONObject) p.parse(body);
+			// check if bot exists
+			Bot bot = null;
+			String botName = parsedBody.getAsString("botName");
+			for (VLE vle : getConfig().getVLEs().values()) {
+				bot = vle.getBots().values().stream().filter(b -> b.getName().equals(botName)).findFirst().get();
+				if (bot != null)
+					break;
+			}
+			if (bot == null)
+				return Response.status(HttpURLConnection.HTTP_NOT_FOUND).entity("Bot " + botName + " not found.")
+						.build();
+				// all webhook calls need to include the "event" property
+				if (!parsedBody.containsKey("event"))
+					return Response.status(HttpURLConnection.HTTP_BAD_REQUEST).entity("Field event is missing.")
+							.build();
+
+				String event = parsedBody.getAsString("event");
+				// handle webhook depending on the event (currently only chat_message supported)
+				if (event.equals("chat_message")) {
+					String messenger = parsedBody.getAsString("messenger");
+					if (!parsedBody.containsKey("messenger")) {
+						for (String m : bot.getMessengers().keySet()) {
+							messenger = m;
+						}
+					}
+					ChatMediator chat = bot.getMessenger(messenger).getChatMediator();
+
+					// send message
+					JSONObject chatBody = new JSONObject();
+					chatBody.put("channel", parsedBody.getAsString("channel"));
+					chatBody.put("text", parsedBody.getAsString("message"));
+					this.sbfservice.triggerChat(chat, chatBody);
+
+					return Response.status(HttpURLConnection.HTTP_OK).build();
+				}
+				return Response.status(HttpURLConnection.HTTP_BAD_REQUEST).entity("Unsupported event.").build();
+			} catch (ParseException e) {
+				return Response.status(HttpURLConnection.HTTP_BAD_REQUEST).entity("Body parse exception.").build();
+			}
+		}
+
 		@POST
 		@Path("/{botName}/trigger/service")
 		@Consumes(MediaType.APPLICATION_JSON)
