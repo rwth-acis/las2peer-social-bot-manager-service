@@ -2581,7 +2581,7 @@ public class SocialBotManagerService extends RESTService {
 							JSONObject bodyInput = (JSONObject) p.parse(input);
 							String orgChannel = organization + "-" + channel;
 							
-							String msgtext = bodyInput.getAsString("msg");
+							String msgtext = bodyInput.getAsString("message");
 							if(msgtext==null || msgtext.equals("")){
 								return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
 							}
