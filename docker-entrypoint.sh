@@ -27,6 +27,10 @@ set_in_service_config databasePassword ${DATABASE_PASSWORD}
 set_in_service_config address ${ADDRESS}
 set_in_service_config restarterBotName ${RESTARTERBOTNAME}
 set_in_service_config restarterBotPW ${RESTARTERBOTPW}
+set_in_service_config mongoHost ${MONGO_HOST}
+set_in_service_config mongoDB ${MONGO_DB}
+set_in_service_config mongoUser ${MONGO_USER}
+set_in_service_config mongoPass ${MONGO_PASSWORD}
 
 
 # ensure the database is ready

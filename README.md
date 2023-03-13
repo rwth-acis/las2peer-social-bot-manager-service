@@ -23,8 +23,7 @@ The Bot-Manager-Service requires the [MobSOS Data-Processing](https://github.com
 
 ## 🚀 Installation
 
-To install the Bot-Manager-Service, you first need to install and set up [las2peer](https://github.com/rwth-acis/las2peer). 
-Once you have done that, you can clone this repository and build the service.
+To install the Bot-Manager-Service, you first need to clone this repository and build the service.
 
 ### Build
 

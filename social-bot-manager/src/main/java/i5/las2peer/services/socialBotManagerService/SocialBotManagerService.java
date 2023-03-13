@@ -132,6 +132,24 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
+import com.mongodb.ServerApi;
+import com.mongodb.ServerApiVersion;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
+import org.bson.BsonDocument;
+import org.bson.BsonInt64;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+
 /**
  * las2peer-SocialBotManager-Service
  *
@@ -158,6 +176,13 @@ public class SocialBotManagerService extends RESTService {
 	private static String restarterBotNameStatic;
 	private String restarterBotPW; // PW of restarterBot
 	private static String restarterBotPWStatic; // PW of restarterBot
+
+	private String mongoHost;
+	private String mongoUser;
+	private String mongoPass;
+	private static String mongoDB;
+	private static String mongoUri;
+
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
@@ -233,6 +258,29 @@ public class SocialBotManagerService extends RESTService {
 		} catch (SQLException e) {
 			System.out.println("Failed to Connect: " + e.getMessage());
 		}
+
+		// mongo db connection for exchanging files 
+        mongoUri = "mongodb+srv://"+mongoUser+":"+mongoPass+"@"+mongoHost+"/?retryWrites=true&w=majority";
+        // Construct a ServerApi instance using the ServerApi.builder() method
+        ServerApi serverApi = ServerApi.builder()
+                .version(ServerApiVersion.V1)
+                .build();
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(mongoUri))
+                .serverApi(serverApi)
+                .build();
+        // Create a new client and connect to the server
+        try (MongoClient mongoClient = MongoClients.create(settings)) {
+            MongoDatabase database = mongoClient.getDatabase(mongoDB);
+            try {
+                // Send a ping to confirm a successful connection
+                Bson command = new BsonDocument("ping", new BsonInt64(1));
+                Document commandResult = database.runCommand(command);
+                System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
+            } catch (MongoException me) {
+                System.err.println(me);
+            }
+        }
 
 		if (rt == null) {
 			rt = Executors.newSingleThreadScheduledExecutor();
@@ -2643,11 +2691,42 @@ public class SocialBotManagerService extends RESTService {
 				if(b!=null){
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 					boolean found = false;
+					boolean err = false;
 					for (Messenger m : b.getMessengers().values()) {
 						if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 							String fname = fileDetail.getFileName();
 							String ftype = getFileType(uploadedInputStream);
+							ServerApi serverApi = ServerApi.builder()
+									.version(ServerApiVersion.V1)
+									.build();
+							MongoClientSettings settings = MongoClientSettings.builder()
+									.applyConnectionString(new ConnectionString(mongoUri))
+									.serverApi(serverApi)
+									.build();
+							// Create a new client and connect to the server
+							MongoClient mongoClient = MongoClients.create(settings);
+							try{
+								MongoDatabase database = mongoClient.getDatabase(mongoDB);
+								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
+								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, uploadedInputStream);
+								System.out.println("File uploaded successfully with ID: " + fileId);
+							} catch (MongoException me) {
+								System.err.println(me);
+								err = true;
+							} finally {
+								// Close the input stream and MongoDB client
+								try {
+									uploadedInputStream.close();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+								mongoClient.close();
+							}
+							if(err){
+								return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error uploading file.").build();
+							}
+        
 							String encoded = toBase64String(uploadedInputStream);
 							RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator.getMessageCollector();
 							String orgChannel = organization + "-" + channel;
@@ -2700,7 +2779,40 @@ public class SocialBotManagerService extends RESTService {
 		public Response getRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel, @PathParam("filename") String filename) {
 					RESTfulChatResponse answerMsg = null;
 			try {
-				String path = "files/"+bot+organization+channel+"-"+filename;
+				String path = bot+organization+channel+"-"+filename;
+
+				ServerApi serverApi = ServerApi.builder()
+									.version(ServerApiVersion.V1)
+									.build();
+				MongoClientSettings settings = MongoClientSettings.builder()
+						.applyConnectionString(new ConnectionString(mongoUri))
+						.serverApi(serverApi)
+						.build();
+				// Create a new client and connect to the server
+				MongoClient mongoClient = MongoClients.create(settings);
+				
+				try {
+					MongoDatabase database = mongoClient.getDatabase(mongoDB);
+					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
+					GridFSFile file = gridFSBucket.find(Filters.eq("filename", path)).first();
+					if (file == null) {
+						return Response.status(Response.Status.NOT_FOUND).entity("File not found").build();
+					}
+					Response.ResponseBuilder response = Response.ok(file.getObjectId().toHexString());
+					response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
+					
+					// Download the file to a ByteArrayOutputStream
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					gridFSBucket.downloadToStream(file.getObjectId(), baos);
+					return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM).build();
+				} catch (MongoException me) {
+					System.err.println(me);
+				} finally {
+					// Close the MongoDB client
+					mongoClient.close();
+				}
+
+
 				File file = new File(path);
 				if (!file.exists()) {
 					return Response.status(Status.NOT_FOUND).entity("File not found.").build();
