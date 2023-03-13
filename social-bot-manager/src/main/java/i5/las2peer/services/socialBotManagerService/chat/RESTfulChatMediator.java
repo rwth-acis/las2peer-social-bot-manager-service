@@ -2,6 +2,7 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 
@@ -22,6 +23,11 @@ public class RESTfulChatMediator extends ChatMediator{
     @Override
     public void sendMessageToChannel(String channel, String text, Optional<String> id) {
         RESTfulChatResponse rcr = new RESTfulChatResponse(text);
+        chatsession.put(channel, rcr);
+    }
+
+    public void sendMessageToChannel(String channel, String text, List<InteractiveChatElement> interactiveElements, Optional<String> id) {
+        RESTfulChatResponse rcr = new RESTfulChatResponse(text,interactiveElements);
         chatsession.put(channel, rcr);
     }
 
