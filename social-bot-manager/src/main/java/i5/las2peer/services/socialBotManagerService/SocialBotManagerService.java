@@ -2704,6 +2704,8 @@ public class SocialBotManagerService extends RESTService {
 					boolean err = false;
 					for (Messenger m : b.getMessengers().values()) {
 						if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
+							byte[] bytes = toBytes(uploadedInputStream);
+							String encoded = Base64.getEncoder().encodeToString(bytes);
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 							String fname = fileDetail.getFileName();
 							String ftype = getFileType(uploadedInputStream);
@@ -2722,7 +2724,8 @@ public class SocialBotManagerService extends RESTService {
 								System.out.println("connected to "+ service.mongoDB);
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 								System.out.println("gridFSBucket: files");
-								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, uploadedInputStream);
+								ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, inputStream);
 								System.out.println("File uploaded successfully with ID: " + fileId);
 							} catch (MongoException me) {
 								System.err.println(me);
@@ -2740,7 +2743,6 @@ public class SocialBotManagerService extends RESTService {
 								return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error uploading file.").build();
 							}
         
-							String encoded = toBase64String(uploadedInputStream);
 							RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator.getMessageCollector();
 							String orgChannel = organization + "-" + channel;
 							msgcollector.handle(encoded, fname, ftype, orgChannel);
@@ -2807,9 +2809,7 @@ public class SocialBotManagerService extends RESTService {
 				
 				try {
 					MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
-					System.out.println("Connected to: "+service.mongoDB);
 					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
-					System.out.println("Connected to bucket files");
 					GridFSFile file = gridFSBucket.find(Filters.eq("filename", path)).first();
 					if (file == null) {
 						return Response.status(Response.Status.NOT_FOUND).entity("File "+path+" not found").build();
@@ -2850,7 +2850,7 @@ public class SocialBotManagerService extends RESTService {
 			return tika.detect(uploadedInputStream);
 		}
 
-		private String toBase64String(InputStream uploadedInputStream) throws IOException {
+		private byte[] toBytes(InputStream uploadedInputStream) throws IOException {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			byte[] buffer = new byte[1024];
 			int len;
@@ -2858,7 +2858,7 @@ public class SocialBotManagerService extends RESTService {
 				outputStream.write(buffer, 0, len);
 			}
 			byte[] bytes = outputStream.toByteArray();
-			return Base64.getEncoder().encodeToString(bytes);
+			return bytes;
 		}
 	}
 }
