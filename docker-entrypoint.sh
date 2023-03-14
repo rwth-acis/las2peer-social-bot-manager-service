@@ -31,6 +31,7 @@ set_in_service_config mongoHost ${MONGO_HOST}
 set_in_service_config mongoDB ${MONGO_DB}
 set_in_service_config mongoUser ${MONGO_USER}
 set_in_service_config mongoPass ${MONGO_PASSWORD}
+set_in_service_config mongoAuth ${MONGO_AUTH}
 
 
 # ensure the database is ready
