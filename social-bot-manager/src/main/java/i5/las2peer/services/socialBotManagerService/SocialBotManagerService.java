@@ -180,8 +180,8 @@ public class SocialBotManagerService extends RESTService {
 	private String mongoHost;
 	private String mongoUser;
 	private String mongoPassword;
-	private static String mongoDB;
-	private static String mongoUri;
+	private String mongoDB;
+	private String mongoUri;
 
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
@@ -2701,13 +2701,13 @@ public class SocialBotManagerService extends RESTService {
 									.version(ServerApiVersion.V1)
 									.build();
 							MongoClientSettings settings = MongoClientSettings.builder()
-									.applyConnectionString(new ConnectionString(mongoUri))
+									.applyConnectionString(new ConnectionString(service.mongoUri))
 									.serverApi(serverApi)
 									.build();
 							// Create a new client and connect to the server
 							MongoClient mongoClient = MongoClients.create(settings);
 							try{
-								MongoDatabase database = mongoClient.getDatabase(mongoDB);
+								MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, uploadedInputStream);
 								System.out.println("File uploaded successfully with ID: " + fileId);
@@ -2785,14 +2785,14 @@ public class SocialBotManagerService extends RESTService {
 									.version(ServerApiVersion.V1)
 									.build();
 				MongoClientSettings settings = MongoClientSettings.builder()
-						.applyConnectionString(new ConnectionString(mongoUri))
+						.applyConnectionString(new ConnectionString(service.mongoUri))
 						.serverApi(serverApi)
 						.build();
 				// Create a new client and connect to the server
 				MongoClient mongoClient = MongoClients.create(settings);
 				
 				try {
-					MongoDatabase database = mongoClient.getDatabase(mongoDB);
+					MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
 					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 					GridFSFile file = gridFSBucket.find(Filters.eq("filename", path)).first();
 					if (file == null) {
