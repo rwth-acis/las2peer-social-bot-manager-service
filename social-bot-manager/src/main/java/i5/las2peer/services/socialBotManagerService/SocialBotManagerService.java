@@ -2714,11 +2714,12 @@ public class SocialBotManagerService extends RESTService {
 									.applyConnectionString(new ConnectionString(service.mongoUri))
 									.codecRegistry(codecRegistry)
 									.build();
-							
+							System.out.println("Connecting to: "+service.mongoUri);
 							// Create a new client and connect to the server
 							MongoClient mongoClient = MongoClients.create(settings);
 							try{
 								MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
+								System.out.println("connected to "+ service.mongoDB);
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, uploadedInputStream);
 								System.out.println("File uploaded successfully with ID: " + fileId);
