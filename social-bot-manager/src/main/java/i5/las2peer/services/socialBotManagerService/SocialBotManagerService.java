@@ -182,6 +182,7 @@ public class SocialBotManagerService extends RESTService {
 	private String mongoPassword;
 	private String mongoDB;
 	private String mongoUri;
+	private String mongoAuth = "admin";
 
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
@@ -260,7 +261,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		// mongo db connection for exchanging files 
-        mongoUri = "mongodb://"+mongoUser+":"+mongoPassword+"@"+mongoHost+"/?retryWrites=true&w=majority";
+        mongoUri = "mongodb://"+mongoUser+":"+mongoPassword+"@"+mongoHost+"/?retryWrites=true&w=majority&authSource="+mongoAuth;
         // Construct a ServerApi instance using the ServerApi.builder() method
         ServerApi serverApi = ServerApi.builder()
                 .version(ServerApiVersion.V1)
