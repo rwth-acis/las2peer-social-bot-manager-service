@@ -145,10 +145,16 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+
 
 /**
  * las2peer-SocialBotManager-Service
@@ -261,27 +267,30 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		// mongo db connection for exchanging files 
-        mongoUri = "mongodb://"+mongoUser+":"+mongoPassword+"@"+mongoHost+"/?retryWrites=true&w=majority&authSource="+mongoAuth;
+        mongoUri = "mongodb://"+mongoUser+":"+mongoPassword+"@"+mongoHost+"/?authSource="+mongoAuth;
         // Construct a ServerApi instance using the ServerApi.builder() method
-        ServerApi serverApi = ServerApi.builder()
-                .version(ServerApiVersion.V1)
-                .build();
-        MongoClientSettings settings = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(mongoUri))
-                .serverApi(serverApi)
-                .build();
+        CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
+		CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
+		MongoClientSettings settings = MongoClientSettings.builder()
+				.uuidRepresentation(UuidRepresentation.STANDARD)
+				.applyConnectionString(new ConnectionString(mongoUri))
+				.codecRegistry(codecRegistry)
+				.build();
+		
+		// Create a new client and connect to the server
+		MongoClient mongoClient = MongoClients.create(settings);
         // Create a new client and connect to the server
-        try (MongoClient mongoClient = MongoClients.create(settings)) {
-            MongoDatabase database = mongoClient.getDatabase(mongoDB);
-            try {
-                // Send a ping to confirm a successful connection
-                Bson command = new BsonDocument("ping", new BsonInt64(1));
-                Document commandResult = database.runCommand(command);
-                System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
-            } catch (MongoException me) {
-                System.err.println(me);
-            }
-        }
+		try {
+			MongoDatabase database = mongoClient.getDatabase(mongoDB);
+			// Send a ping to confirm a successful connection
+			Bson command = new BsonDocument("ping", new BsonInt64(1));
+			Document commandResult = database.runCommand(command);
+			System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
+		} catch (MongoException me) {
+			System.err.println(me);
+		} finally{
+			mongoClient.close();
+		}
 
 		if (rt == null) {
 			rt = Executors.newSingleThreadScheduledExecutor();
@@ -2698,17 +2707,19 @@ public class SocialBotManagerService extends RESTService {
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 							String fname = fileDetail.getFileName();
 							String ftype = getFileType(uploadedInputStream);
-							ServerApi serverApi = ServerApi.builder()
-									.version(ServerApiVersion.V1)
-									.build();
+							CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
+							CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
 							MongoClientSettings settings = MongoClientSettings.builder()
+									.uuidRepresentation(UuidRepresentation.STANDARD)
 									.applyConnectionString(new ConnectionString(service.mongoUri))
-									.serverApi(serverApi)
+									.codecRegistry(codecRegistry)
 									.build();
+							System.out.println("Connecting to: "+service.mongoUri);
 							// Create a new client and connect to the server
 							MongoClient mongoClient = MongoClients.create(settings);
 							try{
 								MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
+								System.out.println("connected to "+ service.mongoDB);
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, uploadedInputStream);
 								System.out.println("File uploaded successfully with ID: " + fileId);
@@ -2782,13 +2793,14 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				String path = bot+organization+channel+"-"+filename;
 
-				ServerApi serverApi = ServerApi.builder()
-									.version(ServerApiVersion.V1)
-									.build();
+				CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
+				CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
 				MongoClientSettings settings = MongoClientSettings.builder()
+						.uuidRepresentation(UuidRepresentation.STANDARD)
 						.applyConnectionString(new ConnectionString(service.mongoUri))
-						.serverApi(serverApi)
+						.codecRegistry(codecRegistry)
 						.build();
+				
 				// Create a new client and connect to the server
 				MongoClient mongoClient = MongoClients.create(settings);
 				
