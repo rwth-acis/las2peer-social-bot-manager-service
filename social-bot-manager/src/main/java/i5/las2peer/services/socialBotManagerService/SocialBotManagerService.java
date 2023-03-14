@@ -2721,6 +2721,7 @@ public class SocialBotManagerService extends RESTService {
 								MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
 								System.out.println("connected to "+ service.mongoDB);
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
+								System.out.println("gridFSBucket: files");
 								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, uploadedInputStream);
 								System.out.println("File uploaded successfully with ID: " + fileId);
 							} catch (MongoException me) {
@@ -2806,10 +2807,12 @@ public class SocialBotManagerService extends RESTService {
 				
 				try {
 					MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
+					System.out.println("Connected to: "+service.mongoDB);
 					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
+					System.out.println("Connected to bucket files");
 					GridFSFile file = gridFSBucket.find(Filters.eq("filename", path)).first();
 					if (file == null) {
-						return Response.status(Response.Status.NOT_FOUND).entity("File not found").build();
+						return Response.status(Response.Status.NOT_FOUND).entity("File "+path+" not found").build();
 					}
 					Response.ResponseBuilder response = Response.ok(file.getObjectId().toHexString());
 					response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
