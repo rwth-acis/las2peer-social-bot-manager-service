@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+
 public class RESTfulChatMediator extends ChatMediator{
 
     static HashMap<String,RESTfulChatResponse> chatsession = null;
@@ -21,13 +23,8 @@ public class RESTfulChatMediator extends ChatMediator{
     }
 
     @Override
-    public void sendMessageToChannel(String channel, String text, Optional<String> id) {
-        RESTfulChatResponse rcr = new RESTfulChatResponse(text);
-        chatsession.put(channel, rcr);
-    }
-
-    public void sendMessageToChannel(String channel, String text, List<InteractiveChatElement> interactiveElements, Optional<String> id) {
-        RESTfulChatResponse rcr = new RESTfulChatResponse(text,interactiveElements);
+    public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
+        RESTfulChatResponse rcr = new RESTfulChatResponse(text, hashMap);
         chatsession.put(channel, rcr);
     }
 
@@ -38,7 +35,7 @@ public class RESTfulChatMediator extends ChatMediator{
     }
 
     @Override
-    public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
+    public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
         // TODO Auto-generated method stub
     }
 
