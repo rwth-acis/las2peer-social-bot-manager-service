@@ -13,6 +13,8 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+
 public class MoodleChatMediator extends ChatMediator {
 	private static final String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
 	private static String botId;
@@ -45,7 +47,7 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
 		HashMap<String,String> args = new HashMap<String,String>();
 		args.put("messages[0][touserid]", channel);
 		args.put("messages[0][text]", text);
@@ -115,7 +117,7 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
 
 	}
 
