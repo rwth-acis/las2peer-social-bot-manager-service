@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 
@@ -14,8 +15,12 @@ public class RESTfulChatResponse {
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap) {
         this(text);
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
-        for (String intent : hashMap.keySet()) {
-            InteractiveChatElement ice = new InteractiveChatElement(intent, "button", "todo");
+        for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
+            String key = entry.getKey();
+            IncomingMessage value = entry.getValue();
+            String intent = key;
+            if(intent==null||intent=="") intent = value.getIntentKeyword();
+            InteractiveChatElement ice = new InteractiveChatElement(intent, "button", value.getIntentDescription());
             icel.add(ice);
         }
         interactiveElements = Arrays.asList(icel.toArray());
