@@ -4,11 +4,13 @@ import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessageCollector;
 import i5.las2peer.services.socialBotManagerService.chat.EventChatMediator;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import net.minidev.json.JSONObject;
 import org.kohsuke.github.GitHub;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
@@ -156,7 +158,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
      * @param id
      */
     @Override
-    public void sendMessageToChannel(String channel, String text, Optional<String> id) {
+    public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
         String repositoryFullName = channel.split("#")[0];
         int number = Integer.parseInt(channel.split("#")[1]);
 
@@ -212,7 +214,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
     }
 
     @Override
-    public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
+    public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
     }
 
     @Override
