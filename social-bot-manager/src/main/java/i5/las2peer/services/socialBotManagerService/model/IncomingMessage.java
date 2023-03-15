@@ -10,6 +10,7 @@ public class IncomingMessage {
 	String intentKeyword;
 	String entityKeyword;
     String NluID;
+    String intentDescription;
     boolean containsFile;
 
 	ArrayList<ChatResponse> responses;
@@ -112,5 +113,13 @@ public class IncomingMessage {
 	public boolean expectsFile() {
 		return this.containsFile;
 	}
+
+	public void setIntentDescription(String intentDescription) {
+        this.intentDescription = intentDescription;
+    }
+
+    public String getIntentDescription() {
+        return this.intentDescription;
+    }
 
 }
