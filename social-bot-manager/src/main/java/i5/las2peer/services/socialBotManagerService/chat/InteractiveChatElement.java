@@ -7,7 +7,7 @@ public class InteractiveChatElement {
 
     public InteractiveChatElement(String intent, String type, String description){
         this.intent = intent;
-        this.type = InteractiveChatElementType.valueOf(type);
+        this.type = InteractiveChatElementType.valueOf(type.toUpperCase());
         this.description = description;
     }
 
