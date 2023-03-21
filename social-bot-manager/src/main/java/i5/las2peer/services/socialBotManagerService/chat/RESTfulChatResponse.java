@@ -11,6 +11,7 @@ import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 public class RESTfulChatResponse {
     private String message;
     private List<Object> interactiveElements;
+    private String fileId;
 
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap) {
         this(text);
@@ -20,7 +21,7 @@ public class RESTfulChatResponse {
             IncomingMessage value = entry.getValue();
             String intent = key;
             if(intent==null||intent=="") intent = value.getIntentKeyword();
-            InteractiveChatElement ice = new InteractiveChatElement(intent, "button", value.getIntentDescription());
+            InteractiveChatElement ice = new InteractiveChatElement(intent, value.getFollowupMessageType(), value.getIntentLabel());
             icel.add(ice);
         }
         interactiveElements = Arrays.asList(icel.toArray());
@@ -46,4 +47,12 @@ public class RESTfulChatResponse {
         this.interactiveElements = interactiveElements;
     }
     
+    public String getFileId() {
+        return fileId;
+    }
+
+    public void setFileID(String fileId) {
+        this.fileId = fileId;
+    }
+
 }

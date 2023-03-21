@@ -277,7 +277,7 @@ public class Messenger {
 						if (this.currentNluModel.get(message.getChannel()) == "0") {
 							continue;
 						} else {
-							incMsg = new IncomingMessage(intentKeyword, "", false);
+							incMsg = new IncomingMessage(intentKeyword, "", false,"",null,"",null, "","text");
 							incMsg.setEntityKeyword("newEntity");
 						}
 					}
@@ -493,12 +493,12 @@ public class Messenger {
 						if (state.getFollowingMessages().get("skip") != null) {
 							state = state.getFollowingMessages().get("skip");
 						}
-						ChatResponse response = null;
+						IncomingMessage response = null;
 						// choose a response based on entity value
 						if (intent.getEntitieValues().size() == 1) {
 							boolean foundMatch = false;
-							ArrayList<ChatResponse> emptyResponses = new ArrayList<ChatResponse>();
-							for (ChatResponse res : state.getResponseArray()) {
+							ArrayList<IncomingMessage> emptyResponses = new ArrayList<IncomingMessage>();
+							for (IncomingMessage res : state.getResponseArray()) {
 								System.out.println(res.getTriggerEntity());
 								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
 									response = res;
