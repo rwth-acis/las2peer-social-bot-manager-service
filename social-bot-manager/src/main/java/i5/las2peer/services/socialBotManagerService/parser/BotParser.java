@@ -30,7 +30,6 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
-import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
 import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
@@ -74,7 +73,7 @@ public class BotParser {
 		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
 		HashMap<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
-		HashMap<String, ChatResponse> responses = new HashMap<String, ChatResponse>();
+		HashMap<String, IncomingMessage> responses = new HashMap<String, IncomingMessage>();
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
 		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
@@ -125,9 +124,6 @@ public class BotParser {
 			} else if (nodeType.equals("Incoming Message")) {
 				IncomingMessage m = addIncomingMessage(entry.getKey(), elem, config);
 				incomingMessages.put(entry.getKey(), m);
-			} else if (nodeType.equals("Chat Response")) {
-				ChatResponse r = addResponse(entry.getKey(), elem, config);
-				responses.put(entry.getKey(), r);
 			} else if (nodeType.equals("Intent Entity")) {
 				IntentEntity entity = addIntentEntity(entry.getKey(), elem, config);
 				intentEntities.put(entry.getKey(), entity);
@@ -334,7 +330,7 @@ public class BotParser {
 					}
 					sf.setMessengerName(m.getName());
 				} else if (responses.containsKey(source)){
-                    ChatResponse cr = responses.get(source);
+                    IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
 						cr.setTriggeredFunctionId(botFunction.getId());
@@ -415,7 +411,7 @@ public class BotParser {
 					IncomingMessage m = incomingMessages.get(source);
 					// ...Chat Response
 					if (responses.get(target) != null) {
-						ChatResponse response = responses.get(target);
+						IncomingMessage response = responses.get(target);
 						response.addTriggerEntity(value);
 						m.addResponse(response);
 						
@@ -493,44 +489,6 @@ public class BotParser {
 		return newMessenger;
 
 	}
-
-	private ChatResponse addResponse(String key, BotModelNode elem, BotConfiguration config) throws ParseBotException {
-		String message = null;
-		String fileURL = null;
-		String errorMessage = null;
-		String type = null;
-
-		// TODO: Reduce code duplication
-		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
-			BotModelNodeAttribute subElem = subEntry.getValue();
-			BotModelValue subVal = subElem.getValue();
-			String name = subVal.getName();
-			if (name.contentEquals("Message")) {
-				message = subVal.getValue();
-			} else if (name.contentEquals("FileURL")) {
-				fileURL = subVal.getValue();
-			} else if (name.contentEquals("ErrorMessage")) {
-				errorMessage = subVal.getValue();
-			} else if (name.contentEquals("Type")) {
-				type = subVal.getValue();
-			}
-		}
-
-		if (message == null) {
-			throw new ParseBotException("Response is missing Message");
-		} 
-		if (fileURL == null) {
-			throw new ParseBotException("Response is missing File URL");
-		}
-		if (errorMessage == null) {
-			throw new ParseBotException("Response is missing Error Message");
-		}
-		if (type == null) {
-			throw new ParseBotException("Response is missing Type");
-		}
-
-		return new ChatResponse(message, fileURL, errorMessage, type);
-	}
     
 	private NLUKnowledge addNLUKnowledge(String key, BotModelNode elem, BotConfiguration config)
 			throws ParseBotException {
@@ -563,6 +521,12 @@ public class BotParser {
 		String intentKeyword = null;
         String NluID = null;
         Boolean containsFile = null;
+		String message = null;
+		String fileURL = null;
+		String errorMessage = null;
+		String type = null;
+		String intentLabel = null;
+		String followupMessageType = null; 
 
 		// TODO: Reduce code duplication
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
@@ -575,7 +539,19 @@ public class BotParser {
                 NluID = subVal.getValue();
             } else if (name.contentEquals("IsFile")){
                 containsFile = Boolean.valueOf(subVal.getValue());
-            }
+            } else if (name.contentEquals("Message")) {
+				message = subVal.getValue();
+			} else if (name.contentEquals("FileURL")) {
+				fileURL = subVal.getValue();
+			} else if (name.contentEquals("ErrorMessage")) {
+				errorMessage = subVal.getValue();
+			} else if (name.contentEquals("Type")) {
+				type = subVal.getValue();
+			} else if (name.contentEquals("Intent Label")) {
+				intentLabel = subVal.getValue();
+			} else if (name.contentEquals("Followup Message Type")) {
+				followupMessageType = subVal.getValue();
+			}
 		}
 
 		if (intentKeyword == null) {
@@ -587,8 +563,21 @@ public class BotParser {
 		if(intentKeyword.equals("")) {
 			intentKeyword = "0";
 		}
+
+		if (message == null) {
+			throw new ParseBotException("Response is missing Message");
+		} 
+		if (fileURL == null) {
+			throw new ParseBotException("Response is missing File URL");
+		}
+		if (errorMessage == null) {
+			throw new ParseBotException("Response is missing Error Message");
+		}
+		if (type == null) {
+			throw new ParseBotException("Response is missing Type");
+		}
 		
-		return new IncomingMessage(intentKeyword, NluID, containsFile);
+		return new IncomingMessage(intentKeyword, NluID, containsFile, message, fileURL, errorMessage, type, intentLabel, followupMessageType);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
