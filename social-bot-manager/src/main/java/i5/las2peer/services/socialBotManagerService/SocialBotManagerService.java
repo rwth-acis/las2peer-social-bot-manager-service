@@ -982,7 +982,7 @@ public class SocialBotManagerService extends RESTService {
 										if (s.equals(expectedIntent)) {
 											i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = intentsHM
 													.get(s);
-											i5.las2peer.services.socialBotManagerService.model.ChatResponse chatResponses = incomingMessage
+											i5.las2peer.services.socialBotManagerService.model.IncomingMessage chatResponses = incomingMessage
 													.getResponse(new Random());
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
@@ -2719,14 +2719,15 @@ public class SocialBotManagerService extends RESTService {
 							System.out.println("Connecting to: "+service.mongoUri);
 							// Create a new client and connect to the server
 							MongoClient mongoClient = MongoClients.create(settings);
+							ObjectId fileId = null;
 							try{
 								MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
 								System.out.println("connected to "+ service.mongoDB);
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 								System.out.println("gridFSBucket: files");
 								ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-								ObjectId fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, inputStream);
-								System.out.println("File uploaded successfully with ID: " + fileId);
+								fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, inputStream);
+								System.out.println("File uploaded successfully with ID: " + fileId.toString());
 							} catch (MongoException me) {
 								System.err.println(me);
 								err = true;
@@ -2748,6 +2749,7 @@ public class SocialBotManagerService extends RESTService {
 							msgcollector.handle(encoded, fname, ftype, orgChannel);
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							if(fileId!=null) answerMsg.setFileID(fileId.toString());
 							System.out.println("handling file");
 							found = true;
 							MiniClient client = new MiniClient();
@@ -2784,17 +2786,17 @@ public class SocialBotManagerService extends RESTService {
 		}
 		
 		@GET
-		@Path("/{bot}/{organization}/{channel}/file/{filename}")
+		@Path("/{bot}/{organization}/{channel}/file/{fileId}")
 		@Produces(MediaType.APPLICATION_OCTET_STREAM)
 		@ApiOperation(value = "Download file", produces = MediaType.APPLICATION_OCTET_STREAM)
 		@ApiResponses(value = { 
         @ApiResponse(code = 200, message = "File downloaded successfully"),
         @ApiResponse(code = 404, message = "File not found"),
         @ApiResponse(code = 500, message = "Internal server error")})
-		public Response getRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel, @PathParam("filename") String filename) {
+		public Response getRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel, @PathParam("fileId") String fileId) {
 					RESTfulChatResponse answerMsg = null;
 			try {
-				String path = bot+organization+channel+"-"+filename;
+				String path = bot+organization+channel+"-"+fileId;
 
 				CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
 				CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
@@ -2810,9 +2812,9 @@ public class SocialBotManagerService extends RESTService {
 				try {
 					MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
 					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
-					GridFSFile file = gridFSBucket.find(Filters.eq("filename", path)).first();
+					GridFSFile file = gridFSBucket.find(Filters.eq("ID", fileId)).first();
 					if (file == null) {
-						return Response.status(Response.Status.NOT_FOUND).entity("File "+path+" not found").build();
+						return Response.status(Response.Status.NOT_FOUND).entity("File with ID "+fileId+" not found").build();
 					}
 					Response.ResponseBuilder response = Response.ok(file.getObjectId().toHexString());
 					response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
