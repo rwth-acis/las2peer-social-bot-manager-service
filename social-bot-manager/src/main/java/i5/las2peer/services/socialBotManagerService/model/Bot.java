@@ -10,8 +10,6 @@ import javax.websocket.DeploymentException;
 import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
 public class Bot {
@@ -19,7 +17,6 @@ public class Bot {
 	private String id;
 	private String version = "1.0.0";
 	private String service;
-	private VLE vle;
 	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
@@ -111,14 +108,6 @@ public class Bot {
 
 	public void addGenerator(String s, ContentGenerator g) {
 		this.generatorList.put(s, g);
-	}
-
-	public VLE getVle() {
-		return vle;
-	}
-
-	public void setVle(VLE vle) {
-		this.vle = vle;
 	}
 
 	public String getVersion() {

@@ -111,7 +111,6 @@ import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
-import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
@@ -250,7 +249,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 		if (getConfig() == null) {
 			setConfig(new BotConfiguration());
-			getConfig().setServiceConfiguration(new HashMap<String, VLE>());
+			getConfig().setBotConfiguration(new HashMap<String, Bot>());
 		}
 		if (getBotAgents() == null) {
 			setBotAgents(new HashMap<String, BotAgent>());
@@ -443,7 +442,7 @@ public class SocialBotManagerService extends RESTService {
 					e3.printStackTrace();
 				}
 			}
-			return Response.ok().entity("vleList").build();
+			return Response.ok().entity("Bots restarted").build();
 		}
 
 		@GET
@@ -451,55 +450,42 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of bots") })
 		@ApiOperation(value = "Get all bots", notes = "Returns a list of all registered bots.")
 		public Response getBots() {
-			JSONObject vleList = new JSONObject();
+			JSONObject botList = new JSONObject();
 			// Iterate through VLEs
-			for (Entry<String, VLE> vleEntry : getConfig().getVLEs().entrySet()) {
-				String vleName = vleEntry.getKey();
-				VLE vle = vleEntry.getValue();
-				JSONObject botList = new JSONObject();
+			for (Entry<String, Bot> botEntry : getConfig().getBots().entrySet()) {
+				String botName = botEntry.getKey();
+				Bot b = botEntry.getValue();
 				// Iterate bots
-				for (Entry<String, Bot> botEntry : vle.getBots().entrySet()) {
-					Bot b = botEntry.getValue();
-					JSONObject jb = new JSONObject();
-					JSONObject ac = new JSONObject();
-					ac.putAll(b.getActive());
-					jb.put("active", ac);
-					jb.put("id", b.getId());
-					jb.put("name", b.getName());
-					jb.put("version", b.getVersion());
-					botList.put(botEntry.getValue().getName(), jb);
-				}
-				vleList.put(vleName, botList);
+				JSONObject jb = new JSONObject();
+				JSONObject ac = new JSONObject();
+				ac.putAll(b.getActive());
+				jb.put("active", ac);
+				jb.put("id", b.getId());
+				jb.put("name", b.getName());
+				jb.put("version", b.getVersion());
+				botList.put(botName, jb);
 			}
-			return Response.ok().entity(vleList).build();
+			return Response.ok().entity(botList).build();
 		}
 
 		@GET
-		@Path("/{vleName}")
+		@Path("/{botName}")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
-		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
-		public Response getBotsForVLE(@PathParam("vleName") String name) {
-			VLE vle = getConfig().getVLEs().get(name);
-			// Set<String> botList = new HashSet<String>();
-			JSONObject j = new JSONObject();
-			if (vle != null) {
-				Iterator<Entry<String, Bot>> it = vle.getBots().entrySet().iterator();
-				while (it.hasNext()) {
-					Map.Entry<String, Bot> pair = it.next();
-					Bot b = pair.getValue();
-					JSONObject jb = new JSONObject();
-					JSONObject ac = new JSONObject();
-					ac.putAll(b.getActive());
-					jb.put("active", ac);
-					jb.put("id", b.getId());
-					jb.put("name", b.getName());
-					jb.put("version", b.getVersion());
-					j.put(pair.getKey(), jb);
-					// it.remove(); // avoids a ConcurrentModificationException
-				}
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given name.")
+		public Response getBotsForVLE(@PathParam("botName") String name) {
+			Bot b = getConfig().getBots().get(name);
+			if (b==null){
+				return Response.status(Status.NOT_FOUND).entity("Bot "+name+" not found.").build();
 			}
-			return Response.ok().entity(j).build();
+			JSONObject bot = new JSONObject();
+			JSONObject ac = new JSONObject();
+			ac.putAll(b.getActive());
+			bot.put("active", ac);
+			bot.put("id", b.getId());
+			bot.put("name", b.getName());
+			bot.put("version", b.getVersion());
+			return Response.ok().entity(bot).build();
 		}
 
 		/**

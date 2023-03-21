@@ -3,25 +3,25 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.HashMap;
 
 public class BotConfiguration {
-	private HashMap<String, VLE> vles;
+	private HashMap<String, Bot> bots;
 
 	public BotConfiguration() {
-		vles = new HashMap<String, VLE>();
+		bots = new HashMap<String, Bot>();
 	}
 
-	public HashMap<String, VLE> getVLEs() {
-		return this.vles;
+	public HashMap<String, Bot> getBots() {
+		return this.bots;
 	}
 
-	public void setServiceConfiguration(HashMap<String, VLE> vles) {
-		this.vles = vles;
+	public void setBotConfiguration(HashMap<String, Bot> bots) {
+		this.bots = bots;
 	}
 
-	public void addServiceConfiguration(String key, VLE vle) {
-		this.vles.put(key, vle);
+	public void addBot(String key, Bot bot) {
+		this.bots.put(key, bot);
 	}
 
-	public VLE getServiceConfiguration(String key) {
-		return this.vles.get(key);
+	public Bot getBot(String key) {
+		return this.bots.get(key);
 	}
 }

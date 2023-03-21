@@ -41,9 +41,7 @@ import i5.las2peer.services.socialBotManagerService.model.NLUKnowledge;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
-import i5.las2peer.services.socialBotManagerService.model.VLE;
 import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
-import i5.las2peer.services.socialBotManagerService.model.VLEUser;
 import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -53,8 +51,6 @@ import net.minidev.json.parser.ParseException;
 public class BotParser {
 	private static BotParser instance = null;
 	private static final String botPass = "actingAgent";
-	private static final String classifierName = "i5.las2peer.services.tensorFlowClassifier.TensorFlowClassifier";
-	private static final String textToTextName = "i5.las2peer.services.tensorFlowTextToText.TensorFlowTextToText";
 
 	protected BotParser() {
 	}
@@ -70,12 +66,10 @@ public class BotParser {
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
-		HashMap<String, VLE> vles = new HashMap<String, VLE>();
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
 		HashMap<String, IncomingMessage> incomingMessages = new HashMap<String, IncomingMessage>();
 		HashMap<String, IncomingMessage> responses = new HashMap<String, IncomingMessage>();
 		HashMap<String, IntentEntity> intentEntities = new HashMap<String, IntentEntity>();
-		HashMap<String, VLEUser> users = new HashMap<String, VLEUser>();
 		HashMap<String, Bot> bots = new HashMap<String, Bot>();
         
         HashMap<String, NLUKnowledge> nluKnowledge = new HashMap<String, NLUKnowledge>();
@@ -84,13 +78,8 @@ public class BotParser {
 		HashMap<String, ServiceFunction> usfList = new HashMap<String, ServiceFunction>();
 		HashMap<String, ServiceFunctionAttribute> sfaList = new HashMap<String, ServiceFunctionAttribute>();
 
-		HashMap<String, ContentGenerator> gList = new HashMap<String, ContentGenerator>();
-
 		HashMap<String, IfThenBlock> itbList = new HashMap<String, IfThenBlock>();
 		HashMap<String, VLERoutine> rlist = new HashMap<String, VLERoutine>();
-
-		int vleCount = 0;
-		VLE vle = null;
 
 		// reset old bot if exist...
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
@@ -112,13 +101,8 @@ public class BotParser {
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 			BotModelNode elem = entry.getValue();
 			String nodeType = elem.getType();
-			// VLE
-			if (nodeType.equals("Instance")) {
-				vle = setVLEInstance(elem);
-				config.addServiceConfiguration(vle.getName(), vle);
-				vles.put(entry.getKey(), vle);
-				vleCount++;
-			} else if (nodeType.equals("Messenger")) {
+			
+			if (nodeType.equals("Messenger")) {
 				Messenger m = addMessenger(entry.getKey(), elem, config, database);
 				messengers.put(entry.getKey(), m);
 			} else if (nodeType.equals("Incoming Message")) {
@@ -132,11 +116,6 @@ public class BotParser {
 				NLUKnowledge nlu = addNLUKnowledge(entry.getKey(), elem, config);
 				nluKnowledge.put(entry.getKey(), nlu);
                 // VLE User              
-			} else if (nodeType.equals("User")) {
-				VLEUser u = addUser(elem);
-				u.setId(entry.getKey());
-				users.put(entry.getKey(), u);
-				// Bot
 			} else if (nodeType.equals("Bot")) {
 				try{
 					Bot bot = addBot(elem, botAgents);
@@ -163,23 +142,11 @@ public class BotParser {
 			} else if (nodeType.equals("Action Parameter")) {
 				ServiceFunctionAttribute sfa = addActionParameter(entry.getKey(), elem);
 				sfaList.put(entry.getKey(), sfa);
-			} else if (nodeType.equals("TextToText") || nodeType.equals("Classifier")) {
-				ContentGenerator g = new ContentGenerator();
-				g.setId(entry.getKey());
-				g.setName(nodeType);
-				if (nodeType.equals("TextToText")) {
-					g.setServiceName(textToTextName);
-				} else if (nodeType.equals("Classifier")) {
-					g.setServiceName(classifierName);
-				}
-				gList.put(entry.getKey(), g);
-			}
+			} 
 		
 		}
 
-		if (vleCount != 1) {
-			throw new ParseBotException("There must only be one VLE instance!");
-		} else if (users.isEmpty() && bots.isEmpty()) {
+		if (bots.isEmpty()) {
 			throw new ParseBotException("Missing VLE User!");
 		} else if (bsfList.isEmpty() && responses.isEmpty()) {
 			throw new ParseBotException("Missing Bot Action and Chat Response! (You need at least one chat response OR a bot action for the bot to work)");
@@ -187,7 +154,8 @@ public class BotParser {
 			throw new ParseBotException("Missing User Action, VLE Routine and Incoming Message!");
 		}
 
-		vle.setRoutines(rlist);
+		// ToDo 
+		//vle.setRoutines(rlist);
 
 		if (bots.size() == 0) {
 			throw new ParseBotException("Missing Bot!");
@@ -206,21 +174,7 @@ public class BotParser {
 			// HAS
 			if (type.equals("has")) {
 				// VLE has...
-				if (vles.get(source) != null) {
-					VLE v = vles.get(source);
-					// ...real user
-					if (users.get(target) != null) {
-						VLEUser u = users.get(target);
-						v.addUser(u.getName(), u);
-						u.setVle(v);
-						// ...bot
-					} else if (bots.get(target) != null) {
-						Bot b = bots.get(target);
-						v.addBot(b.getId(), b);
-						b.setVle(v);
-					}
-					// Bot has...
-				} else if (bots.get(source) != null) {
+				if (bots.get(source) != null) {
 					Bot b = bots.get(source);
 					// ...messenger / ChatMediator
 					if (messengers.get(target) != null) {
@@ -303,14 +257,7 @@ public class BotParser {
 				sfaList.get(target).setMappedTo(sfaList.get(source));
 				// USES
 			} else if (type.equals("uses")) {
-				if (gList.get(source) != null) {
-					checkGeneratorIns++;
-					ContentGenerator g = (gList.get(source));
-					ServiceFunctionAttribute sfa = sfaList.get(target);
-
-					sfa.setGenerator(g);
-					g.setInput(sfa);
-				} else if (itbList.get(source) != null) {
+				if (itbList.get(source) != null) {
 					IfThenBlock itb = itbList.get(source);
 					if (itbList.get(target) != null) {
 						// chain
@@ -339,15 +286,7 @@ public class BotParser {
 
 				// GENERATES
 			} else if (type.equals("generates")) {
-				if (gList.get(source) != null) {
-					checkGeneratorOuts++;
-
-					ContentGenerator g = (gList.get(source));
-					ServiceFunctionAttribute sfa = sfaList.get(target);
-
-					g.setOutput(sfa);
-					sfa.setGenerator(g);
-				} else if (itbList.get(source) != null) {
+				if (itbList.get(source) != null) {
 					IfThenBlock itb = itbList.get(source);
 					if (sfaList.get(target) != null) {
 						ServiceFunctionAttribute sAtt = sfaList.get(target);
