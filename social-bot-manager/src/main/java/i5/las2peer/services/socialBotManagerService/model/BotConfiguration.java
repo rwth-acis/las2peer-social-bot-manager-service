@@ -21,6 +21,10 @@ public class BotConfiguration {
 		this.bots.put(key, bot);
 	}
 
+	public void removeBot(String key) {
+		this.bots.remove(key);
+	}
+
 	public Bot getBot(String key) {
 		return this.bots.get(key);
 	}
