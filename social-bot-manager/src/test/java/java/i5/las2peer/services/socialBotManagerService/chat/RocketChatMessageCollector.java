@@ -76,6 +76,9 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
+					System.out.println("Email of user is " + email);
+					cm.setEmail(email);
+					cm.setRole(role);
 					// timestamp
 					cm.setTime(message.getMsgTimestamp().toInstant().toString());
 					// domain
