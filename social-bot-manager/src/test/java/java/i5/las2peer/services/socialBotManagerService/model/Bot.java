@@ -7,9 +7,9 @@ import java.util.HashSet;
 
 import javax.websocket.DeploymentException;
 
+import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
@@ -18,12 +18,10 @@ public class Bot {
 	private String id;
 	private String version = "1.0.0";
 	private String service;
-	private VLE vle;
 	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
 	private HashSet<Trigger> triggerList;
-	private HashMap<String, ContentGenerator> generatorList;
 
 	private HashMap<String, Messenger> messengers;
 
@@ -31,13 +29,17 @@ public class Bot {
 
 	private HashMap<String, RasaNlu> rasaServers;
 
+	private HashMap<String, JSONObject> serviceInformation;
+	private String address;
+	private HashMap<String, BotRoutine> routines;
+
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
 		triggerList = new HashSet<Trigger>();
-		generatorList = new HashMap<String, ContentGenerator>();
 		active = new HashMap<String, Boolean>();
 		this.messengers = new HashMap<String, Messenger>();
 		this.rasaServers = new HashMap<String, RasaNlu>();
+		setRoutines(new HashMap<String, BotRoutine>());
 	}
 
 	public String getName() {
@@ -100,26 +102,6 @@ public class Bot {
 		this.triggerList.add(t);
 	}
 
-	public HashMap<String, ContentGenerator> getGeneratorList() {
-		return generatorList;
-	}
-
-	public void setGeneratorList(HashMap<String, ContentGenerator> generatorList) {
-		this.generatorList = generatorList;
-	}
-
-	public void addGenerator(String s, ContentGenerator g) {
-		this.generatorList.put(s, g);
-	}
-
-	public VLE getVle() {
-		return vle;
-	}
-
-	public void setVle(VLE vle) {
-		this.vle = vle;
-	}
-
 	public String getVersion() {
 		return version;
 	}
@@ -159,9 +141,8 @@ public class Bot {
 		return this.messengers;
 	}
 
-	public void addMessenger(Messenger messenger) throws IOException, DeploymentException, ParseBotException {
-		messenger.setUrl(vle.getAddress());
-		System.out.println(vle.getAddress());
+	public void addMessenger(Messenger messenger, String url) throws IOException, DeploymentException, ParseBotException, AuthTokenException {
+		messenger.setUrl(url);
 		this.messengers.put(messenger.getName(), messenger);
 	}
 
@@ -219,5 +200,33 @@ public class Bot {
 
 	public void setBotAgent(String botAgent) {
 		this.botAgent = botAgent;
+	}
+
+	public HashMap<String, JSONObject> getServiceInformation() {
+		return serviceInformation;
+	}
+
+	public void setServiceInformation(HashMap<String, JSONObject> serviceInformation) {
+		this.serviceInformation = serviceInformation;
+	}
+
+	public void addServiceInformation(String name, JSONObject info) {
+		this.serviceInformation.put(name, info);
+	}
+
+    public String getAddress() {
+        return address;
+    }
+
+	public HashMap<String, BotRoutine> getRoutines() {
+		return routines;
+	}
+
+	public void setRoutines(HashMap<String, BotRoutine> routines) {
+		this.routines = routines;
+	}
+
+	public void addRoutine(String name, BotRoutine routine) {
+		this.routines.put(name, routine);
 	}
 }

@@ -662,7 +662,7 @@ public class Messenger {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
-						bot.getVle().getName(), contextOn, recognizedEntities.get(message.getChannel())));
+						"", contextOn, recognizedEntities.get(message.getChannel())));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
