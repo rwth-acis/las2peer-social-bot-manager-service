@@ -131,11 +131,9 @@ public class BotParser {
 
 		if (bots.isEmpty()) {
 			throw new ParseBotException("Missing Bot!");
-		} else if (bsfList.isEmpty() && responses.isEmpty()) {
-			throw new ParseBotException("Missing Bot Action and Chat Response! (You need at least one chat response OR a bot action for the bot to work)");
-		} else if (rlist.isEmpty() && incomingMessages.isEmpty()) {
-			throw new ParseBotException("Missing VLE Routine or Incoming Message!");
-		}
+		} else if (bsfList.isEmpty() && rlist.isEmpty() && incomingMessages.isEmpty()) {
+			throw new ParseBotException("Missing Bot Action and Chat interaction! (You need at least one chat interaction OR a bot action for the bot to work)");
+		} 
 
 		// ToDo 
 		bot.setRoutines(rlist);
