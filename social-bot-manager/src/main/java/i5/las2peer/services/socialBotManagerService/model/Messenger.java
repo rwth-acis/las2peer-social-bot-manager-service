@@ -501,7 +501,7 @@ public class Messenger {
 						}
 						
 						String response = state.getResponse();
-						if (state.getTriggeredFunctionId() != "") {
+						if (state.getTriggeredFunctionId() != "" && state.getTriggeredFunctionId() != null) {
 							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 							contextOn = true;
 						}
