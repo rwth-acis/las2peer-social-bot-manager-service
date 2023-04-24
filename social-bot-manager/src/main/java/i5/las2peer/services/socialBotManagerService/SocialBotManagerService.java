@@ -451,6 +451,8 @@ public class SocialBotManagerService extends RESTService {
 		public Response getBots() {
 			JSONObject botList = new JSONObject();
 			// Iterate through VLEs
+			Gson g = new Gson();
+			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			for (Entry<String, Bot> botEntry : getConfig().getBots().entrySet()) {
 				String botName = botEntry.getKey();
 				Bot b = botEntry.getValue();
@@ -462,6 +464,12 @@ public class SocialBotManagerService extends RESTService {
 				jb.put("id", b.getId());
 				jb.put("name", b.getName());
 				jb.put("version", b.getVersion());
+				try {
+					jb.put("nlu", p.parse(g.toJson(b.getRasaServers())));
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				botList.put(botName, jb);
 			}
 			return Response.ok().entity(botList).build();

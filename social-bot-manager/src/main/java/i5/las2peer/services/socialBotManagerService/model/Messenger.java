@@ -310,7 +310,11 @@ public class Messenger {
 
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
-				System.out.println(state);
+				if(state==null){
+					System.out.println("No current state, we will start from scratch.");
+				}else{
+					System.out.println("Current state: " + state.getIntentKeyword());
+				}
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
@@ -490,52 +494,32 @@ public class Messenger {
 				} else {
 					// check if skip is wished or not
 					if (state != null) {
+						System.out.println("Getting response for: "+state.intentKeyword);
+						System.out.println(state.getResponse());
 						if (state.getFollowingMessages().get("skip") != null) {
 							state = state.getFollowingMessages().get("skip");
 						}
-						IncomingMessage response = null;
-						// choose a response based on entity value
-						if (intent.getEntitieValues().size() == 1) {
-							boolean foundMatch = false;
-							ArrayList<IncomingMessage> emptyResponses = new ArrayList<IncomingMessage>();
-							for (IncomingMessage res : state.getResponseArray()) {
-								System.out.println(res.getTriggerEntity());
-								if (res.getTriggerEntity().equals(intent.getEntitieValues().get(0))) {
-									response = res;
-									foundMatch = true;
-									break;
-								}
-								if (res.getTriggerEntity().equals("")) {
-									System.out.println("now empty");
-									emptyResponses.add(res);
-								}
-							}
-							if (!foundMatch && !emptyResponses.isEmpty()) {
-								Random rand = new Random();
-								response = emptyResponses.get(rand.nextInt(emptyResponses.size()));
-							}
+						
+						String response = state.getResponse();
+						if (state.getTriggeredFunctionId() != "") {
+							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
+							contextOn = true;
 						}
-						if (response == null) {
-							response = state.getResponse(this.random);
-							if (response == null && state.getTriggeredFunctionId() != "") {
-								this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
-								contextOn = true;
-							}
-						}
+
 						if (state.getNluID() != "") {
 							System.out.println("New NluId is : " + state.getNluID());
 							this.currentNluModel.put(message.getChannel(), state.getNluID());
 						}
 						if (response != null) {
-							System.out.println("Debug - Response : " + response.getResponse());
-							if (response.getResponse() != "") {
+							System.out.println("Debug - Response : " + response);
+							if (response != "") {
 								// System.out.println("1");
 								String split = "";
 								// System.out.println("2");
 								// allows users to use linebreaks \n during the modeling for chat responses
-								for (int i = 0; i < response.getResponse().split("\\\\n").length; i++) {
+								for (int i = 0; i < response.split("\\\\n").length; i++) {
 									System.out.println(i);
-									split += response.getResponse().split("\\\\n")[i] + " \n ";
+									split += response.split("\\\\n")[i] + " \n ";
 								}
 								// System.out.println("3");
 								System.out.println(split);
@@ -566,7 +550,7 @@ public class Messenger {
 
 								}
 								// check if message parses buttons or is simple text
-								if(response.getType().equals("Interactive Message")){
+								if(state.getType().equals("Interactive Message")){
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
 									this.chatMediator.sendMessageToChannel(message.getChannel(), split, state.getFollowingMessages());
@@ -574,13 +558,13 @@ public class Messenger {
 								// check whether a file url is attached to the chat response and try to send it
 								// to
 								// the user
-								if (!response.getFileURL().equals("")) {
+								if (!state.getFileURL().equals("")) {
 									String fileName = "";
 									try {
 										// Replacable variable in url menteeEmail
-										String urlEmail = response.getFileURL();
+										String urlEmail = state.getFileURL();
 										if (message.getEmail() != null) {
-											urlEmail = response.getFileURL().replace("menteeEmail",
+											urlEmail = state.getFileURL().replace("menteeEmail",
 													message.getEmail());
 										}
 										System.out.println(urlEmail);
@@ -631,16 +615,16 @@ public class Messenger {
 										e.printStackTrace();
 										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
 										this.chatMediator.sendMessageToChannel(message.getChannel(),
-												response.getErrorMessage());
+												state.getErrorMessage());
 									}
 								}
-								if (response.getTriggeredFunctionId() != null) {
-									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+								if (state.getTriggeredFunctionId() != null) {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 									contextOn = true;
 								}
 							} else {
-								if (response.getTriggeredFunctionId() != "") {
-									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+								if (state.getTriggeredFunctionId() != "") {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 									contextOn = true;
 								} else {
 									System.out.println("No Bot Action was given to the Response");
