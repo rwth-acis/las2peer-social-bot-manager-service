@@ -139,7 +139,7 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
 		if (id.isPresent()) {
 			msg.id(Long.parseLong(id.get()));
@@ -162,7 +162,7 @@ public class SlackChatMediator extends EventChatMediator {
 			rtm.sendMessage(message);
 			System.out.println("Sent message with Exception: " + e.getMessage());
 			if (e.getMessage().toLowerCase().equals("timeout")) {
-				sendMessageToChannel(channel, text, null, id);
+				sendMessageToChannel(channel, text, null, "text", id);
 			}
 		}
 		try {

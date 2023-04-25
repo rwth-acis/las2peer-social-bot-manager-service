@@ -34,3 +34,7 @@
 build
 archiva_credentials.xml
 .vscode/settings.json
+.project
+bin/start_network.bat
+bin/start_network.sh
+.project

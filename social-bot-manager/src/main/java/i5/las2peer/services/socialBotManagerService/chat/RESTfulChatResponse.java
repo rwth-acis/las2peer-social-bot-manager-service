@@ -12,12 +12,15 @@ public class RESTfulChatResponse {
     private String message;
     private List<Object> interactiveElements;
     private String fileId;
+    private InteractiveChatElementType type;
 
-    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap) {
+    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
         this(text);
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
+        setType(type);
         for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
             String key = entry.getKey();
+            System.out.println("Interactive element:" +key);
             IncomingMessage value = entry.getValue();
             String intent = key;
             if(intent==null||intent=="") intent = value.getIntentKeyword();
@@ -55,4 +58,11 @@ public class RESTfulChatResponse {
         this.fileId = fileId;
     }
 
+    public InteractiveChatElementType getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = InteractiveChatElementType.valueOf(type.toUpperCase());
+    }
 }

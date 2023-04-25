@@ -1593,7 +1593,7 @@ public class SocialBotManagerService extends RESTService {
 					channel = chat.getChannelByEmail(s);
 
 					if (textArray[i] != null) {
-						chat.sendMessageToChannel(channel, textArray[i]);
+						chat.sendMessageToChannel(channel, textArray[i],"text");
 					}
 					i++;
 				}
@@ -1604,7 +1604,7 @@ public class SocialBotManagerService extends RESTService {
 					channel = chat.getChannelByEmail(s);
 
 					if (text != null && channel != null) {
-						chat.sendMessageToChannel(channel, text);
+						chat.sendMessageToChannel(channel, text,"text");
 					}
 
 				}
@@ -1616,7 +1616,7 @@ public class SocialBotManagerService extends RESTService {
 				email = body.getAsString("email");
 				channel = chat.getChannelByEmail(email);
 			}
-			chat.sendMessageToChannel(channel, "ContactList contacted.");
+			chat.sendMessageToChannel(channel, "ContactList contacted.","text");
 
 		}else {
 			if (body.containsKey("channel")) {
@@ -1628,7 +1628,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			System.out.println(channel);
 			if (text != null && !body.containsKey("fileBody")) {
-				chat.sendMessageToChannel(channel, text);
+				chat.sendMessageToChannel(channel, text,"text");
 			}
 			if (body.containsKey("blocks")) {
 				System.out.println("Body has blocks");
@@ -2357,7 +2357,7 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("Using email " + email);
 
 				String channel = chatMediator.getChannelByEmail(email);
-				chatMediator.sendMessageToChannel(channel, msgtext);
+				chatMediator.sendMessageToChannel(channel, msgtext,"text");
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -2389,7 +2389,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
 				String channel = chatMediator.getChannelByEmail(email);
-				chatMediator.sendMessageToChannel(channel, msgtext);
+				chatMediator.sendMessageToChannel(channel, msgtext,"text");
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -2537,10 +2537,10 @@ public class SocialBotManagerService extends RESTService {
 		public Response handleRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 		@FormDataParam("file") InputStream uploadedInputStream,
 		@FormDataParam("file") FormDataContentDisposition fileDetail) {
-					RESTfulChatResponse answerMsg = null;
+					RESTfulChatResponse answerMsg = new RESTfulChatResponse("");
 			try {
 				Bot b = null;
-				String addr = "";
+				String addr = service.address;
 				for(Bot botIterator: getConfig().getBots().values()){
 					if(botIterator.getName().equalsIgnoreCase(bot)){
 						b = botIterator;
@@ -2598,10 +2598,11 @@ public class SocialBotManagerService extends RESTService {
 							msgcollector.handle(encoded, fname, ftype, orgChannel);
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							System.out.println(answerMsg.getMessage());
 							if(fileId!=null) answerMsg.setFileID(fileId.toString());
 							System.out.println("handling file");
 							found = true;
-							MiniClient client = new MiniClient();
+							/*MiniClient client = new MiniClient();
 							System.out.println("Addr: "+addr);
 							client.setConnectorEndpoint(addr);
 
@@ -2617,6 +2618,7 @@ public class SocialBotManagerService extends RESTService {
 									e.printStackTrace();
 								}
 							}
+							*/
 						}
 					}
 					if(!found){
@@ -2631,7 +2633,8 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 
-			return Response.ok().entity(answerMsg).build();
+			Gson gson = new Gson();
+			return Response.ok().entity(gson.toJson(answerMsg)).build();
 		}
 		
 		@GET

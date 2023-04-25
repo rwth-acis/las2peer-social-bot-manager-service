@@ -21,6 +21,8 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
+import com.google.gson.Gson;
+
 import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
@@ -212,7 +214,7 @@ public class Messenger {
 				String response = state.getResponse(random).getResponse();
 				if( response != null && !response.equals(""))
 				{
-					this.chatMediator.sendMessageToChannel(channel, response, state.getFollowingMessages(), Optional.of(userid));
+					this.chatMediator.sendMessageToChannel(channel, response, state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
 				}
 				if(state.getFollowingMessages().size()== 0){
 					this.stateMap.remove(channel);
@@ -396,6 +398,9 @@ public class Messenger {
 								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
 										+ intent.getConfidence() + " confidence.");
 								// try any
+								Gson g = new Gson();
+								System.out.println("possible followup messages: "+ g.toJson(state.getFollowingMessages()));
+
 								if (state.getFollowingMessages().get("any") != null) {
 									state = state.getFollowingMessages().get("any");
 									stateMap.put(message.getChannel(), state);
@@ -553,7 +558,7 @@ public class Messenger {
 								if(state.getType().equals("Interactive Message")){
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
-									this.chatMediator.sendMessageToChannel(message.getChannel(), split, state.getFollowingMessages());
+									this.chatMediator.sendMessageToChannel(message.getChannel(), split, state.getFollowingMessages(),state.followupMessageType);
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
@@ -615,7 +620,7 @@ public class Messenger {
 										e.printStackTrace();
 										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
 										this.chatMediator.sendMessageToChannel(message.getChannel(),
-												state.getErrorMessage());
+												state.getErrorMessage(),state.getFollowupMessageType());
 									}
 								}
 								if (state.getTriggeredFunctionId() != null) {
