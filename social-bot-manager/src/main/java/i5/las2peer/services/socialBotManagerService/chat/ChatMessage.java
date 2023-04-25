@@ -17,6 +17,8 @@ public class ChatMessage {
 	private String currMessage;
 	private String messageId;
 	private String actionInfo; 
+	private InteractiveChatElementType followupMessageTypes;
+
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
 		this.user = user;
@@ -171,5 +173,13 @@ public class ChatMessage {
 			return true;
 		}
 		return false;
+	}
+	
+	public InteractiveChatElementType getFollowupMessageTypes() {
+		return followupMessageTypes;
+	}
+
+	public void setFollowupMessageTypes(String followupMessageTypes) {
+		this.followupMessageTypes = InteractiveChatElementType.valueOf(followupMessageTypes.toUpperCase());
 	}
 }

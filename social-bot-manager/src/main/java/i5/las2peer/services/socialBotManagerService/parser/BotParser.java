@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import javax.websocket.DeploymentException;
 import javax.ws.rs.core.MediaType;
 
+import com.google.gson.Gson;
+
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
@@ -81,7 +83,7 @@ public class BotParser {
 		HashMap<String, BotRoutine> rlist = new HashMap<String, BotRoutine>();
 
 		Bot bot = null;
-
+		Gson g = new Gson();
 		// NODES
 		for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
 			BotModelNode elem = entry.getValue();
@@ -126,7 +128,6 @@ public class BotParser {
 				ServiceFunctionAttribute sfa = addActionParameter(entry.getKey(), elem);
 				sfaList.put(entry.getKey(), sfa);
 			} 
-		
 		}
 
 		if (bots.isEmpty()) {
@@ -291,6 +292,17 @@ public class BotParser {
 			}
 		}
 
+		
+
+		for(IncomingMessage m : incomingMessages.values()){
+			String nluId = m.getNluID();
+			if(bot.getRasaServer(nluId)!=null){
+				bot.getRasaServer(nluId).addIntent(m.getIntentKeyword());
+			}else{
+				throw new ParseBotException("Missing NLU Knowledge, ID: "+ nluId);
+			}
+		}
+
 		// EDGES
 		for (Entry<String, BotModelEdge> entry : edges.entrySet()) {
 			BotModelEdge elem = entry.getValue();
@@ -429,7 +441,9 @@ public class BotParser {
 		String followupMessageType = null; 
 
 		// TODO: Reduce code duplication
+		try{
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
+			
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
 			String name = subVal.getName();
@@ -452,6 +466,10 @@ public class BotParser {
 			} else if (name.contentEquals("Followup Message Type")) {
 				followupMessageType = subVal.getValue();
 			}
+		}
+		} catch(Exception e){
+			System.out.println("Error: " + e.getMessage());
+			
 		}
 
 		if (intentKeyword == null) {

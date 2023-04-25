@@ -82,12 +82,16 @@ public class Bot {
 		return this.rasaServers.get(id);
 	}
 
+	public HashMap<String, RasaNlu> getRasaServers() {
+		return this.rasaServers;
+	}
+
 	public RasaNlu getFirstRasaServer() {
 		return (RasaNlu) this.rasaServers.values().toArray()[0];
 	}
 
-	public void addRasaServer(String id, String Url) {
-		this.rasaServers.put(id, new RasaNlu(Url));
+	public void addRasaServer(String id, String url) {
+		this.rasaServers.put(id, new RasaNlu(url));
 	}
 
 	public HashSet<Trigger> getTriggerList() {

@@ -40,7 +40,7 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 	
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		try {
 			// Get sequence IDs and find origin post
 			HashMap<String,String> args = new HashMap<String,String>();
