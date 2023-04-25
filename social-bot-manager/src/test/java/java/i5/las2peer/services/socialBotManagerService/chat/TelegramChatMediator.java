@@ -202,7 +202,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * Sends a plain text message to telegram messenger channel
 	 */
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 
 		System.out.println("send plain message to telegram channel " + channel + ", size: " + text.length());
 		assert channel != null;
