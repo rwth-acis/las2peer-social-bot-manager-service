@@ -2,13 +2,11 @@ package i5.las2peer.services.socialBotManagerService.chat;
 
 public class InteractiveChatElement {
     private String intent;
-    private InteractiveChatElementType type;
-    private String description;
+    private String label;
 
-    public InteractiveChatElement(String intent, String type, String description){
+    public InteractiveChatElement(String intent, String label){
         this.intent = intent;
-        this.type = InteractiveChatElementType.valueOf(type.toUpperCase());
-        this.description = description;
+        this.label = label;
     }
 
     public String getIntent() {
@@ -17,16 +15,10 @@ public class InteractiveChatElement {
     public void setIntent(String intent) {
         this.intent = intent;
     }
-    public InteractiveChatElementType getType() {
-        return type;
+    public String getLabel() {
+        return label;
     }
-    public void setType(InteractiveChatElementType type) {
-        this.type = type;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
+    public void setLabel(String label) {
+        this.label = label;
     }
 }

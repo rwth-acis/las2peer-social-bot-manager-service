@@ -2537,10 +2537,10 @@ public class SocialBotManagerService extends RESTService {
 		public Response handleRESTfulChatFile(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 		@FormDataParam("file") InputStream uploadedInputStream,
 		@FormDataParam("file") FormDataContentDisposition fileDetail) {
-					RESTfulChatResponse answerMsg = null;
+					RESTfulChatResponse answerMsg = new RESTfulChatResponse("");
 			try {
 				Bot b = null;
-				String addr = "";
+				String addr = service.address;
 				for(Bot botIterator: getConfig().getBots().values()){
 					if(botIterator.getName().equalsIgnoreCase(bot)){
 						b = botIterator;
@@ -2598,10 +2598,11 @@ public class SocialBotManagerService extends RESTService {
 							msgcollector.handle(encoded, fname, ftype, orgChannel);
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							System.out.println(answerMsg.getMessage());
 							if(fileId!=null) answerMsg.setFileID(fileId.toString());
 							System.out.println("handling file");
 							found = true;
-							MiniClient client = new MiniClient();
+							/*MiniClient client = new MiniClient();
 							System.out.println("Addr: "+addr);
 							client.setConnectorEndpoint(addr);
 
@@ -2617,6 +2618,7 @@ public class SocialBotManagerService extends RESTService {
 									e.printStackTrace();
 								}
 							}
+							*/
 						}
 					}
 					if(!found){
@@ -2631,7 +2633,8 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 
-			return Response.ok().entity(answerMsg).build();
+			Gson gson = new Gson();
+			return Response.ok().entity(gson.toJson(answerMsg)).build();
 		}
 		
 		@GET
