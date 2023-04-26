@@ -21,6 +21,8 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
+import com.google.gson.Gson;
+
 import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
@@ -396,6 +398,9 @@ public class Messenger {
 								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
 										+ intent.getConfidence() + " confidence.");
 								// try any
+								Gson g = new Gson();
+								System.out.println("possible followup messages: "+ g.toJson(state.getFollowingMessages()));
+
 								if (state.getFollowingMessages().get("any") != null) {
 									state = state.getFollowingMessages().get("any");
 									stateMap.put(message.getChannel(), state);
