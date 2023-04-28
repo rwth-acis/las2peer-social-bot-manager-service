@@ -1,7 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import org.web3j.abi.datatypes.Bool;
-
 public class ChatMessage {
 	private String channel;
 	private String user;
@@ -15,9 +13,6 @@ public class ChatMessage {
 	private String domain;
 	private String previousMessage;
 	private String currMessage;
-	private String messageId;
-	private String actionInfo; 
-	private InteractiveChatElementType followupMessageTypes;
 
 	public ChatMessage(String channel, String user, String text) {
 		this.channel = channel;
@@ -32,30 +27,10 @@ public class ChatMessage {
 		this.time = time;
 	}
 
-	public ChatMessage(String channel, String user, String text, String time, String messageId) {
-		this.channel = channel;
-		this.user = user;
-		this.text = text;
-		this.time = time;
-		this.messageId = messageId;
-	}
-
 	public ChatMessage(String channel, String user, String text, String fileName, String fileType, String body) {
 		this.channel = channel;
 		this.user = user;
 		this.text = text + fileName;
-		this.fileName = fileName;
-		this.fileType = fileType;
-		this.fileBody = body;
-	}
-
-	public ChatMessage(String channel, String user, String text, String time, String messageId, String fileName, String fileType,
-					   String body) {
-		this.channel = channel;
-		this.user = user;
-		this.text = text + fileName;
-		this.time = time;
-		this.messageId = messageId;
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;
@@ -70,18 +45,6 @@ public class ChatMessage {
 		this.fileName = fileName;
 		this.fileType = fileType;
 		this.fileBody = body;
-	}
-	// ChatMessage for actions
-	public ChatMessage(String channel, String user, String text, String time, String actionInfo, boolean action) {
-		this.channel = channel;
-		this.user = user;
-		this.text = text;
-		this.time = time;
-		this.actionInfo = actionInfo;
-	}
-
-	public  String getActionInfo(){
-		return this.actionInfo;
 	}
 
 	public void setText(String text) {
@@ -114,14 +77,6 @@ public class ChatMessage {
 
 	public void setRole(int role) {
 		this.role = role;
-	}
-
-	public String getMessageId() {
-		return messageId;
-	}
-
-	public void setMessageId(String messageId) {
-		this.messageId = messageId;
 	}
 
 	public String getFileName() {
@@ -173,13 +128,5 @@ public class ChatMessage {
 			return true;
 		}
 		return false;
-	}
-	
-	public InteractiveChatElementType getFollowupMessageTypes() {
-		return followupMessageTypes;
-	}
-
-	public void setFollowupMessageTypes(String followupMessageTypes) {
-		this.followupMessageTypes = InteractiveChatElementType.valueOf(followupMessageTypes.toUpperCase());
 	}
 }

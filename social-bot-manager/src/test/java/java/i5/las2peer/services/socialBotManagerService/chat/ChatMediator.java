@@ -3,8 +3,6 @@ package i5.las2peer.services.socialBotManagerService.chat;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
-import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -29,49 +27,33 @@ public abstract class ChatMediator {
 	 *
 	 * @param channel A channel ID valid for interacting with the chat service's API
 	 * @param text    The content of the chat message
-	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
-	 *                replies to it later on.
 	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
-	 */
-	public abstract void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id);
-
-	public abstract void editMessage(String channel, String messageId, String message, Optional<String> id);
-
-	public void editMessage(String channel, String messageId, String message) {
-		editMessage(channel, messageId, message, Optional.empty());
-	}
-
-	public abstract void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id);
-
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
-		sendBlocksMessageToChannel(channel, blocks, authToken, null, Optional.empty());
-	}
-
-	public abstract void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id);
-
-	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
-		updateBlocksMessageToChannel(channel, blocks, authToken, ts, Optional.empty());
-	}
-
-	/**
-	 * Sends a chat message to a channel.
-	 *
-	 * @param channel A channel ID valid for interacting with the chat service's API
-	 * @param text    The content of the chat message
-	 */
-	public void sendMessageToChannel(String channel, String text, String type ) {
-		sendMessageToChannel(channel, text, null,type);
-	}
-	/**
-	 * Sends a chat message to a channel.
-	 *
-	 * @param channel A channel ID valid for interacting with the chat service's API
-	 * @param text    The content of the chat message
-	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
 	 *                replies to it later on.
 	 */
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type) {
-		sendMessageToChannel(channel, text, hashMap,type,null);
+	public abstract void sendMessageToChannel(String channel, String text, Optional<String> id);
+
+	//Leo: commented this out because it still isn't used elsewhere
+
+	public abstract void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id);
+
+	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+		sendAttachmentMessageToChannel(channel, attachments, Optional.empty());
+	}
+
+	public abstract void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id);
+
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
+	}
+
+	/**
+	 * Sends a chat message to a channel.
+	 *
+	 * @param channel A channel ID valid for interacting with the chat service's API
+	 * @param text    The content of the chat message
+	 */
+	public void sendMessageToChannel(String channel, String text) {
+		sendMessageToChannel(channel, text, Optional.empty());
 	}
 
 	/**
@@ -110,9 +92,6 @@ public abstract class ChatMediator {
 												  String text, Optional<String> id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
 		File file = new File(fileName + "." + fileType);
-		if(fileType.equals("")){
-			file = new File(fileName);
-	    } 
 		try {
 			FileUtils.writeByteArrayToFile(file, decodedBytes);
 		} catch (IOException e) {
@@ -132,8 +111,8 @@ public abstract class ChatMediator {
 	 * @param fileType Type of the file to be generated
 	 * @param text Text to be sent with file
 	 */
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType,
-	String text) {
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String text,
+										 String fileType) {
 		sendFileMessageToChannel(channel, fileBody, fileName, fileType, text, Optional.empty());
 	}
 
@@ -196,10 +175,6 @@ public abstract class ChatMediator {
 			result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
 		}
 		return result.toString();
-	}
-
-	public String getAuthToken() {
-		return authToken;
 	}
 
 	// used to check whether given token is the real one

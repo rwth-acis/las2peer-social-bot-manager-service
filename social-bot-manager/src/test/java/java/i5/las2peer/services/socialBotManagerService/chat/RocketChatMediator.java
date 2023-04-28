@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 
-import javax.print.attribute.standard.Media;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -57,17 +56,12 @@ import com.rocketchat.core.model.TokenObject;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
-import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
-
-
-import javax.ws.rs.core.MediaType;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {
-	
-	// TODO Default url, should be set via env variable
-	private String url = "https://chat.tech4comp.dbis.rwth-aachen.de";
+
+	private final static String url = "https://chat.tech4comp.dbis.rwth-aachen.de";
 	RocketChatAPI client;
 	private String username;
 	private String password;
@@ -80,10 +74,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private boolean shouldCheckRooms = false;
 	private HashMap<String, Boolean> sendingMessage = new HashMap<String, Boolean>();
 
-	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) throws AuthTokenException{
+	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) {
 		super(authToken);
 		this.database = database;
-		setAuthData(authToken);
+		String[] auth = authToken.split(":");
+		username = auth[0];
+		password = auth[1];
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
 		}
@@ -91,18 +87,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
 		client.setPingInterval(15000);
 		client.connect(this);
-			MiniClient clientLoginTest = new MiniClient();
-			clientLoginTest.setConnectorEndpoint(url + "/api/v1/login");
-			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse r = null;
-			JSONObject reqBody = new JSONObject(); 
-			reqBody.put("username", username);
-			reqBody.put("password", password);
-			r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
-			if(r.getHttpCode() != 200){
-				throw new AuthTokenException("Authentication Token is faulty!");
-			}
-
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		this.rasa = rasa;
 		messageCollector.setDomain(url);
@@ -111,7 +95,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public RocketChatMediator(String authToken, SQLDatabase database) {
 		super(authToken);
 		this.database = database;
-		setAuthData(authToken);
+		String[] auth = authToken.split(":");
+		username = auth[0];
+		password = auth[1];
 		if (activeSubscriptions == null) {
 			activeSubscriptions = new HashSet<String>();
 		}
@@ -123,18 +109,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		messageCollector.setDomain(url);
 	}
 
-	private void setAuthData(String authToken){
-		// TODO some error handling? 
-		String[] auth = authToken.split(":");
-		username = auth[0];
-		password = auth[1];
-		if (auth.length>3){
-			url = auth[2]+":"+auth[3];
-		}
-	}
-
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
+
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending File Message to : " + room.getRoomData().getRoomId());
 		String newText = text.replace("\\n", "\n");
@@ -142,9 +119,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		WebTarget target = textClient.target(url + "/api/v1/rooms.upload/" + room.getRoomData().getRoomId());
 		try {
 			FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-			if(f.getName().toLowerCase().contains("json")){
-				filePart.setMediaType(MediaType.APPLICATION_JSON_TYPE);
-			}
 			FormDataMultiPart mp = new FormDataMultiPart();
 			FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
 					.bodyPart(filePart);
@@ -171,7 +145,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, String text,
+	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String text, String fileType,
 										 Optional<String> id) {
 		byte[] decodedBytes = java.util.Base64.getDecoder().decode(fileBody);
 		File file = new File(fileName + "." + fileType);
@@ -182,11 +156,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			e.printStackTrace();
 		}
 		sendFileMessageToChannel(channel, file, text, id);
-		file.delete();
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
@@ -425,17 +398,13 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		InputStream in = new ByteArrayInputStream(r.getRawResponse());
 		StringWriter writer = new StringWriter();
 		String encoding = StandardCharsets.UTF_8.name();
-		String res = "";
 		try {
 			IOUtils.copy(in, writer, encoding);
-			res = writer.toString();
-			writer.close();
-			in.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return res;
+		return writer.toString();
 	}
 
 	protected String getFileBase64(String userId, String file) {
@@ -505,7 +474,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		textClientHeader.put("X-Auth-Token", token);
 		ClientResponse r = textClient.sendRequest("GET", "api/v1/users.info?username=" + userName, "",
 				MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, textClientHeader);
-		System.out.println("response is" + r.getResponse());
+		System.out.println("respèone is" + r.getResponse());
 		JSONObject userObject = new JSONObject(r.getResponse());
 		JSONArray emails = userObject.getJSONObject("user").getJSONArray("emails");
 		return emails.getJSONObject(0).getString("address");
@@ -517,8 +486,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 
+
+	//Leo: sending of file messages is already implemented
 	@Override
-	public void editMessage(String channel, String messageId, String message, Optional<String> id){}
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id){}
 
 	@Override
 	public void onMessage(String arg0, RocketChatMessage message) {
@@ -537,7 +508,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					String fileName = j.getJSONObject("file").getString("name");
 					System.out.println(j);
 					if (fileType.equals("text/plain") || fileType.equals("application/pdf")
-							|| fileType.equals("image/png") || fileType.equals("audio/aac") || fileType.equals("audio/mpeg") || fileType.equals("audio/x-m4a")) {
+							|| fileType.equals("image/png")) {
 						String file = j.getJSONArray("attachments").getJSONObject(0).getString("title_link")
 								.substring(1);
 						JSONObject bodyJSON = new JSONObject();
@@ -555,23 +526,13 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
-		super.sendBlocksMessageToChannel(channel, blocks, authToken);
-	}
-
-	@Override
-	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
-
-	}
-
-	@Override
-	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
-		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		super.sendBlocksMessageToChannel(channel, blocks);
 	}
 
 	public RocketChatMessageCollector getMessageCollector() {

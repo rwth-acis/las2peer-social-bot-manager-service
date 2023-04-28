@@ -13,15 +13,13 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
-
 public class MoodleChatMediator extends ChatMediator {
 	private static final String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
 	private static String botId;
 	private long lastUpdated;
 	
 	
-	public MoodleChatMediator(String authToken) throws AuthTokenException{
+	public MoodleChatMediator(String authToken) {
 		super(authToken);
 		
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -29,15 +27,13 @@ public class MoodleChatMediator extends ChatMediator {
 		Instant instant = timestamp.toInstant();
 		lastUpdated = instant.getEpochSecond();
 		botId = getBotId();
+
 	}
 
-	protected String getBotId() throws AuthTokenException{
+	protected String getBotId() {
 		HashMap<String,String> args = new HashMap<String,String>();
 		try {
 			String response = sendRequest(domainName, "core_webservice_get_site_info", args);
-			if(response.contains("Invalid token")){
-				throw new AuthTokenException("Authentication Token is faulty!");
-			}
 			JSONObject json = new JSONObject(response);
 			return Integer.toString(json.getInt("userid"));
 		} catch (IOException e) {
@@ -47,7 +43,7 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
 		HashMap<String,String> args = new HashMap<String,String>();
 		args.put("messages[0][touserid]", channel);
 		args.put("messages[0][text]", text);
@@ -117,28 +113,24 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
 
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
-		super.sendBlocksMessageToChannel(channel, blocks, authToken);
+	public void sendBlocksMessageToChannel(String channel, String blocks) {
+		super.sendBlocksMessageToChannel(channel, blocks);
 	}
 
 	@Override
-	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
+	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
 
 	}
 
 	@Override
-	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
-		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
+	public void sendAttachmentMessageToChannel(String channel, String attachments) {
+		super.sendAttachmentMessageToChannel(channel, attachments);
 	}
-
-
-	@Override
-	public void editMessage(String channel, String messageId, String message, Optional<String> id){}
 
 	@Override
 	public void close() {

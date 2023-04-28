@@ -2,15 +2,15 @@ package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.HashSet;
 
-public class BotRoutine extends TriggerFunction{
+public class VLERoutine extends TriggerFunction{
 	private String name;
 	private String interval;
 	private String time;
 	private long lastUpdate;
 	private HashSet<Trigger> trigger;
-	private Bot bot;
+	private VLE vle;
 
-	public BotRoutine() {
+	public VLERoutine() {
 		this.setTrigger(new HashSet<Trigger>());
 	}
 
@@ -58,11 +58,11 @@ public class BotRoutine extends TriggerFunction{
 		this.trigger.add(tf);
 	}
 
-	public Bot getBot() {
-		return bot;
+	public VLE getVle() {
+		return vle;
 	}
 
-	public void setBot(Bot bot) {
-		this.bot = bot;
+	public void setVle(VLE vle) {
+		this.vle = vle;
 	}
 }
