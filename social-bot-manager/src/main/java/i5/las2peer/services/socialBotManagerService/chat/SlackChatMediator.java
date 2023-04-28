@@ -37,6 +37,9 @@ import com.slack.api.model.ConversationType;
 import com.slack.api.rtm.RTMClient;
 import com.slack.api.rtm.message.Message;
 import com.slack.api.rtm.message.Message.MessageBuilder;
+
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+
 import com.slack.api.methods.request.bots.*;
 
 import net.minidev.json.JSONArray;
@@ -136,7 +139,7 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
 		if (id.isPresent()) {
 			msg.id(Long.parseLong(id.get()));
@@ -159,7 +162,7 @@ public class SlackChatMediator extends EventChatMediator {
 			rtm.sendMessage(message);
 			System.out.println("Sent message with Exception: " + e.getMessage());
 			if (e.getMessage().toLowerCase().equals("timeout")) {
-				sendMessageToChannel(channel, text, id);
+				sendMessageToChannel(channel, text, null, "text", id);
 			}
 		}
 		try {
@@ -573,6 +576,13 @@ public class SlackChatMediator extends EventChatMediator {
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken,
+			HashMap<String, IncomingMessage> hashMap, Optional<String> optional) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'sendBlocksMessageToChannel'");
 	}
 
 }

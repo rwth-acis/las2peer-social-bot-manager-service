@@ -1,43 +1,50 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.DeploymentException;
-
-import com.slack.api.model.*;
-import com.slack.api.model.block.ActionsBlock;
-import com.slack.api.model.block.DividerBlock;
-import com.slack.api.model.block.SectionBlock;
-import com.slack.api.model.block.composition.OptionObject;
-import com.slack.api.model.block.composition.PlainTextObject;
-import com.slack.api.model.block.LayoutBlock;
-import com.slack.api.model.block.element.*;
-import net.minidev.json.parser.JSONParser;
-import org.apache.commons.io.FileUtils;
+import javax.ws.rs.core.UriBuilder;
 
 // TODO: Currently needed because of class with the same name in this package
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
-import com.slack.api.methods.response.channels.UsersLookupByEmailResponse;
+import com.slack.api.methods.response.users.UsersLookupByEmailResponse;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.methods.response.conversations.ConversationsListResponse;
 import com.slack.api.methods.response.files.FilesUploadResponse;
 import com.slack.api.methods.response.users.UsersConversationsResponse;
+import com.slack.api.model.Conversation;
+import com.slack.api.model.ConversationType;
 import com.slack.api.rtm.RTMClient;
 import com.slack.api.rtm.message.Message;
 import com.slack.api.rtm.message.Message.MessageBuilder;
 
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+
+import com.slack.api.methods.request.bots.*;
+
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
 
 public class SlackChatMediator extends EventChatMediator {
 	private Slack slack = null;
@@ -48,13 +55,25 @@ public class SlackChatMediator extends EventChatMediator {
 	public static HashMap<String, String> usersByChannel;
 	// Is needed to use the token when downloading user files
 	public static HashMap<String, String> botTokens = new HashMap<String, String>();
-	// When files are sent, it is not clear whether a bot or user sent them, differentiate using the id of the bot!
+	// When files are sent, it is not clear whether a bot or user sent them,
+	// differentiate using the id of the bot!
 	public static ArrayList<String> botIDs = new ArrayList<String>();
 
-	public SlackChatMediator(String authToken) throws IOException, DeploymentException {
+
+	// store the mediators so that you can restart them all at the same time
+	public static HashSet<SlackChatMediator> mediators = new HashSet<SlackChatMediator>();
+
+	public SlackChatMediator(String authToken) throws IOException, DeploymentException, AuthTokenException {
+
 		super(authToken);
 		this.slack = new Slack();
+		try{
 		this.rtm = this.slack.rtm(authToken);
+		} catch (Exception e){
+			if(e.toString().toLowerCase().contains("invalid_auth")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			} else throw e;
+		}
 		usersByChannel = new HashMap<String, String>();
 		this.rtm.addMessageHandler(messageCollector);
 		this.rtm.connect();
@@ -78,11 +97,49 @@ public class SlackChatMediator extends EventChatMediator {
 		this.botUser = rtm.getConnectedBotUser().toString();
 		botIDs.add(rtm.getConnectedBotUser().getId());
 		messageCollector.setDomain("https://slack.com/");
+		mediators.add(this);
 		System.out.println(this.botUser + " connected.");
 	}
 
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts,
+			Optional<String> id) {
+		JSONObject jsonBlocks = new JSONObject();
+		jsonBlocks.put("id", System.currentTimeMillis());
+		jsonBlocks.put("channel", channel);
+		jsonBlocks.put("blocks", blocks);
+		jsonBlocks.put("ts", ts);
+		id.ifPresent(s -> jsonBlocks.put("id", Long.parseLong(s)));
+		System.out.println(jsonBlocks);
+		try {
+			String line = null;
+			StringBuilder sb = new StringBuilder();
+			String res = null;
+			URL url = UriBuilder.fromPath("https://slack.com/api/chat.update").build().toURL();
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Authorization", "Bearer " + authToken);
+			connection.setRequestProperty("Content-type", "application/json; charset=utf-8");
+			connection.setDoOutput(true);
+			connection.connect();
+			byte[] outputBytes = jsonBlocks.toString().getBytes("UTF-8");
+			OutputStream os = connection.getOutputStream();
+			os.write(outputBytes);
+			os.close();
+
+			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+
+			while ((line = rd.readLine()) != null) {
+				sb.append(line);
+			}
+			res = sb.toString();
+			System.out.println(res);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
-	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
 		if (id.isPresent()) {
 			msg.id(Long.parseLong(id.get()));
@@ -101,15 +158,16 @@ public class SlackChatMediator extends EventChatMediator {
 			System.out.println("Message sent: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
-			this.reconnect();
+			reconnect();
 			rtm.sendMessage(message);
 			System.out.println("Sent message with Exception: " + e.getMessage());
 			if (e.getMessage().toLowerCase().equals("timeout")) {
-				sendMessageToChannel(channel, text, id);
+				sendMessageToChannel(channel, text, null, "text", id);
 			}
 		}
 		try {
-			// get the users email address if not done at the beginning (should only happen if a new user joined the
+			// get the users email address if not done at the beginning (should only happen
+			// if a new user joined the
 			// space)
 			if (usersByChannel.get(channel) == null) {
 				String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
@@ -123,302 +181,82 @@ public class SlackChatMediator extends EventChatMediator {
 
 	}
 
-	private List<LayoutBlock> parseBlocks(String blocks) {
-		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+	// @Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
+		// System.out.println("sending blocks now...");
+
+		JSONObject jsonBlocks = new JSONObject();
+		jsonBlocks.put("id", System.currentTimeMillis());
+		jsonBlocks.put("channel", channel);
+		jsonBlocks.put("blocks", blocks);
+		id.ifPresent(s -> jsonBlocks.put("id", Long.parseLong(s)));
 		try {
-			JSONArray block = (JSONArray) parser.parse(blocks);
-			JSONObject elementJson = new JSONObject();
-			JSONObject optionJson = new JSONObject();
-			JSONObject eTextJson = new JSONObject();
-			List<LayoutBlock> lb = new ArrayList<>();
-			String elements = "";
-			String options = "";
-			String textString = "";
-			PlainTextObject tempPlainText = new PlainTextObject();
-			String eTextString = "";
-			for (int i = 0; i < block.size(); i++) {
-				ArrayList<BlockElement> bList = new ArrayList<>();
-				ArrayList<OptionObject> oList = new ArrayList<>();
+			String line = null;
+			StringBuilder sb = new StringBuilder();
+			String res = null;
+			URL url = UriBuilder.fromPath("https://slack.com/api/chat.postMessage").build().toURL();
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Authorization", "Bearer " + authToken);
+			connection.setRequestProperty("Content-type", "application/json;charset=utf-8");
+			connection.setDoOutput(true);
+			connection.connect();
+			byte[] outputBytes = jsonBlocks.toString().getBytes("UTF-8");
+			OutputStream os = connection.getOutputStream();
+			os.write(outputBytes);
+			os.close();
 
-				JSONObject o = (JSONObject) block.get(i);
+			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
 
-				String type = o.getAsString("type");
-
-				//System.out.println(o.toString());
-				if (o.containsKey("text")) {
-					textString = o.getAsString("text");
-					JSONObject textJSON = (JSONObject) parser.parse(textString);
-
-					tempPlainText = PlainTextObject.builder()
-							.text(textJSON.getAsString("text"))
-							.build();
-
-					//System.out.println(tempPlainText);
-
-					SectionBlock sectionBlock = SectionBlock.builder()
-							.text(tempPlainText)
-							.build();
-
-					//System.out.println(sectionBlock);
-
-					lb.add(sectionBlock);
-				}
-				if(type.equals("divider")){
-					DividerBlock dividerBlock = DividerBlock.builder()
-							.build();
-
-					lb.add(dividerBlock);
-				}
-				if (o.containsKey("elements")) {
-					elements = o.getAsString("elements");
-					JSONArray elementsJson = (JSONArray) parser.parse(elements);
-
-					for (int x = 0; x < elementsJson.size(); x++) {
-						//System.out.println("element curr: " + elementJson);
-						elementJson = (JSONObject) elementsJson.get(x);
-						if (elementJson.containsKey("text")) {
-							//System.out.println("element " + x + " text element" + elementJson.toString());
-							eTextString = elementJson.getAsString("text");
-							eTextJson = (JSONObject) parser.parse(eTextString);
-
-							PlainTextObject eTempPlainText = PlainTextObject.builder()
-									.text(eTextJson.getAsString("text"))
-									.build();
-
-							if (elementJson.getAsString("type").equals("button")) {
-								ButtonElement buttonElement = ButtonElement.builder()
-										.text(eTempPlainText)
-										.build();
-
-								bList.add(buttonElement);
-							}
-						} else if (elementJson.getAsString("type").equals("checkboxes")) {
-							//System.out.println("element " + x + " checkbox element" + elementJson.toString());
-							options = elementJson.getAsString("options");
-							JSONArray optionsJson = (JSONArray) parser.parse(options);
-							//System.out.println(optionsJson.toString());
-
-							for (int z = 0; z < optionsJson.size(); z++) {
-								optionJson = (JSONObject) optionsJson.get(z);
-								String value = optionJson.getAsString("value");
-								String optionString = optionJson.getAsString("text");
-								String descriptionString = optionJson.getAsString("description");
-								JSONObject currOptionsJSON = (JSONObject) parser.parse(optionString);
-								JSONObject currDescriptionJSON = new JSONObject();
-								if(descriptionString != null){
-									currDescriptionJSON = (JSONObject) parser.parse(descriptionString);
-								}
-								else{
-									currDescriptionJSON.put("type","plain_text");
-									currDescriptionJSON.put("text"," ");
-
-								}
-
-								PlainTextObject oTempPlainText = PlainTextObject.builder()
-										.text(currOptionsJSON.getAsString("text"))
-										.build();
-
-								PlainTextObject dTempPlainText = PlainTextObject.builder()
-										.text(currDescriptionJSON.getAsString("text"))
-										.build();
-
-								//System.out.println("text" + oTempPlainText);
-
-								OptionObject oTempOptionObject = OptionObject.builder()
-										.value(currOptionsJSON.getAsString("value"))
-										.text(oTempPlainText)
-										.description(dTempPlainText)
-										.value(value)
-										.build();
-
-								//System.out.println("options" + oTempOptionObject);
-								oList.add(oTempOptionObject);
-							}
-
-							CheckboxesElement checkboxesElement = CheckboxesElement.builder()
-									.options(oList)
-									.build();
-
-							bList.add(checkboxesElement);
-						} else if (elementJson.getAsString("type").equals("radio_buttons")) {
-							//System.out.println("element " + x + " checkbox element" + elementJson.toString());
-							options = elementJson.getAsString("options");
-							JSONArray optionsJson = (JSONArray) parser.parse(options);
-							//System.out.println(optionsJson.toString());
-
-							for (int z = 0; z < optionsJson.size(); z++) {
-								optionJson = (JSONObject) optionsJson.get(z);
-								String value = optionJson.getAsString("value");
-								String optionString = optionJson.getAsString("text");
-								JSONObject currOptionsJSON = (JSONObject) parser.parse(optionString);
-
-								PlainTextObject oTempPlainText = PlainTextObject.builder()
-										.text(currOptionsJSON.getAsString("text"))
-										.build();
-
-								//System.out.println("text" + oTempPlainText);
-
-								OptionObject oTempOptionObject = OptionObject.builder()
-										.value(currOptionsJSON.getAsString("value"))
-										.text(oTempPlainText)
-										.value(value)
-										.build();
-
-								//System.out.println("options" + oTempOptionObject);
-								oList.add(oTempOptionObject);
-							}
-
-							RadioButtonsElement radioButtonsElement = RadioButtonsElement.builder()
-									.options(oList)
-									.build();
-
-							bList.add(radioButtonsElement);
-						}
-
-					}
-
-
-				}
-
-				//System.out.println("blist: " + bList);
-				if(!bList.isEmpty()){
-					ActionsBlock tempActionsBlockElement = ActionsBlock.builder()
-							.elements(bList)
-							.build();
-
-					//System.out.println("tempactions: " + tempActionsBlockElement);
-					lb.add(tempActionsBlockElement);
-
-				}
-
-
+			while ((line = rd.readLine()) != null) {
+				sb.append(line);
 			}
-
-			return lb;
-		} catch (Exception e) {
+			res = sb.toString();
+			System.out.println(res);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return null;
+
 	}
 
-
-//	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
-		//System.out.println("sending blocks now...");
-
-		List<LayoutBlock> lb = parseBlocks(blocks);
+	public void editMessage(String channel, String messageId, String message, Optional<String> id) {
+		System.out.println("now trying editing...");
 		MessageBuilder msg = Message.builder()
 				.id(System.currentTimeMillis())
-				.channel(channel)
-				.blocks(lb);
+				.channel(channel);
 
 		if (id.isPresent()) {
 			msg.id(Long.parseLong(id.get()));
 		}
-		String message = msg.build().toJSONString();
-		//System.out.println("message after adding blocks: " + message);
+		String msgString = msg.build().toJSONString();
 
 		try {
-			// make sure that the bot's name and profile pic is used
-			String userId = (slack.methods().authTest(req -> req.token(authToken))).getUserId();
-			String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile()
-					.getImageOriginal();
-			String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
-
-			ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
-					// ID
-					.blocks(lb).iconUrl(url).username(name));
-			System.out.println("Block sent: " + response.isOk());
+			ChatUpdateResponse response = slack.methods(authToken).chatUpdate(req -> req.channel(channel)
+					.blocksAsString(message).ts(messageId));
+			System.out.println("Chat updated: " + response.isOk());
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
-			this.reconnect();
-			rtm.sendMessage(message);
+			reconnect();
+			rtm.sendMessage(msgString);
 			System.out.println("Sent message with Exception: " + e.getMessage());
 			if (e.getMessage().toLowerCase().equals("timeout")) {
 				// TODO recursive call not the best idea
-				sendBlocksMessageToChannel(channel, blocks, id);
-			}
-		}
-		try {
-			// get the users email address if not done at the beginning (should only happen if a new user joined the
-			// space)
-			if (usersByChannel.get(channel) == null) {
-				String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
-						.getChannel().getUser();
-				usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
-						.getProfile().getEmail());
-			}
-		} catch (Exception e) {
-			System.out.println("Could not extract Email for reason + " + e);
-		}
-
-	}
-
-
-//	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
-		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		try {
-			JSONArray attachment = (JSONArray) parser.parse(attachments);
-			ArrayList<Attachment> attachmentList = new ArrayList<>();
-			List<LayoutBlock> lb = new ArrayList<>();
-
-			System.out.println("attachments: " + attachments);
-			for(Object arrayObject : attachment) {
-				String blocks = ((JSONObject) arrayObject).getAsString("blocks");
-				System.out.println("blocks: " + blocks);
-				lb = parseBlocks(blocks);
-			}
-
-			Attachment a = Attachment.builder().blocks(lb).build();
-			System.out.println("attachment a: " + a);
-			attachmentList.add(a);
-			System.out.println("attachmentsList: " + attachmentList.toString());
-			MessageBuilder msg = Message.builder()
-					.id(System.currentTimeMillis())
-					.channel(channel)
-					.attachments(attachmentList);
-
-			if (id.isPresent()) {
-				msg.id(Long.parseLong(id.get()));
-			}
-			String message = msg.build().toJSONString();
-			System.out.println("message after adding attachments: " + message);
-
-			try {
-				// make sure that the bot's name and profile pic is used
-				String userId = (slack.methods().authTest(req -> req.token(authToken))).getUserId();
-				String url = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getProfile()
-						.getImageOriginal();
-				String name = slack.methods().usersInfo(req -> req.token(authToken).user(userId)).getUser().getName();
-
-				ChatPostMessageResponse response = slack.methods(authToken).chatPostMessage(req -> req.channel(channel) // Channel
-						// ID
-						.attachments(attachmentList).iconUrl(url).username(name));
-				System.out.println("Attachment sent: " + response.isOk());
-			} catch (Exception e) {
-				this.messageCollector.setConnected(false);
-				this.reconnect();
-				rtm.sendMessage(message);
-				System.out.println("Sent attachment with Exception: " + e.getMessage());
-				if (e.getMessage().toLowerCase().equals("timeout")) {
-					sendAttachmentMessageToChannel(channel, attachments, id);
-				}
+				editMessage(channel, messageId, message, id);
 			}
 			try {
-				// get the users email address if not done at the beginning (should only happen if a new user joined the
+				// get the users email address if not done at the beginning (should only happen
+				// if a new user joined the
 				// space)
 				if (usersByChannel.get(channel) == null) {
 					String user = slack.methods().conversationsInfo(req -> req.token(authToken).channel(channel))
 							.getChannel().getUser();
-					usersByChannel.put(channel, slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
-							.getProfile().getEmail());
+					usersByChannel.put(channel,
+							slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser()
+									.getProfile().getEmail());
 				}
-			} catch (Exception e) {
-				System.out.println("Could not extract Email for reason + " + e);
+			} catch (Exception exception) {
+				System.out.println("Could not extract Email for reason + " + exception);
 			}
-		} catch(Exception e){
-			e.printStackTrace();
 		}
 	}
 
@@ -430,26 +268,26 @@ public class SlackChatMediator extends EventChatMediator {
 		// used to identity the message (in case it gets edited)
 		String time = o.getAsString("ts");
 
-		//System.out.println(user);
-		//System.out.println(channel);
-		//System.out.println(text);
+		// System.out.println(user);
+		// System.out.println(channel);
+		// System.out.println(text);
 
-		if(o.containsKey("subtype")){
-			if(o.getAsString("subtype").equals("message_changed")){
+		if (o.containsKey("subtype")) {
+			if (o.getAsString("subtype").equals("message_changed")) {
 				JSONParser parser = new JSONParser();
 				System.out.println("message subtype message_changed recognized...");
 
-				try{
+				try {
 					String currMessage = o.getAsString("message");
 					String prevMessage = o.getAsString("previous_message");
 
 					JSONObject currMessageJson = (JSONObject) parser.parse(currMessage);
 
 					System.out.println("now checking who edited answer...");
-					if(currMessageJson.containsKey("subtype")){
+					if (currMessageJson.containsKey("subtype")) {
 						// check if the bot edited an answer
 						System.out.println("subtype: " + currMessageJson.getAsString("subtype"));
-						if(currMessageJson.getAsString("subtype").equals("bot_message")){
+						if (currMessageJson.getAsString("subtype").equals("bot_message")) {
 							System.out.println("bot changed answer, ignore");
 							throw new InvalidChatMessageException();
 						}
@@ -459,22 +297,28 @@ public class SlackChatMediator extends EventChatMediator {
 					user = currMessageJson.getAsString("user");
 					text = currMessageJson.getAsString("text");
 
-					//System.out.println("creating new chat message: c: " + channel + " u: " + user + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " + ts);
+					// System.out.println("creating new chat message: c: " + channel + " u: " + user
+					// + " t: " + text + " cm: " + currMessage + " pm: " + prevMessage + " ts: " +
+					// ts);
 					ChatMessage msg = new ChatMessage(channel, user, text, time);
 					msg.setCurrMessage(currMessage);
 					msg.setPreviousMessage(prevMessage);
+					System.out.println("returning msg");
+					System.out.println(msg);
 					return msg;
-				} catch(Exception e){
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 			}
 		}
 
-		// Second part of the if clause if bcs the bot would for some reason react to its own message
+		// Second part of the if clause if bcs the bot would for some reason react to
+		// its own message
 		if (o.get("files") != null && !botIDs.contains(o.get("user"))) {
 			for (int i = 0; i < ((JSONArray) o.get("files")).size(); i++) {
-				// left it as for(...), but only sending 1 file at a time will be accepted currently
+				// left it as for(...), but only sending 1 file at a time will be accepted
+				// currently
 				try {
 					URL url = new URL(((JSONObject) ((JSONArray) o.get("files")).get(i)).getAsString("url_private"));
 					HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -513,23 +357,45 @@ public class SlackChatMediator extends EventChatMediator {
 		return new ChatMessage(channel, user, text, time);
 	}
 
+	public static String fetchEmailByUserId(String userId) {
+		Slack slackObj = new Slack();
+		for (String token : botTokens.values()) {
+			try {
+				String email = slackObj.methods().usersInfo(req -> req.token(token).user(userId)).getUser().getProfile()
+						.getEmail();
+				if (email != null) {
+					System.out.println("Slack group, extracted following email: " + email);
+					return email;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return "No Email?";
+
+	}
+
 	@Override
 	public Vector<ChatMessage> getMessages() {
 		Vector<ChatMessage> messages = this.messageCollector.getMessages();
-		this.reconnect();
+		if (!this.messageCollector.isConnected()) {
+			reconnect();
+		}
 		return messages;
 	}
 
-	/*public String getEmails(String channel) {
-		
-		if(usersByChannel.get(channel) == null)
-		{
-			return "No Email available at the moment";
-		}
-		System.out.println("Email is " + usersByChannel.get(channel));
-		return usersByChannel.get(channel); // slack.methods().usersInfo(req -> req.token(authToken).user(user)).getUser().getProfile().getEmail();
-	}
-	*/
+	/*
+	 * public String getEmails(String channel) {
+	 * 
+	 * if(usersByChannel.get(channel) == null)
+	 * {
+	 * return "No Email available at the moment";
+	 * }
+	 * System.out.println("Email is " + usersByChannel.get(channel));
+	 * return usersByChannel.get(channel); // slack.methods().usersInfo(req ->
+	 * req.token(authToken).user(user)).getUser().getProfile().getEmail();
+	 * }
+	 */
 	public String getBotUser() {
 		return this.botUser.toString();
 	}
@@ -558,23 +424,67 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	private void reconnect() {
+		System.out.println("Reconnecting all bots!");
 		if (!this.messageCollector.isConnected()) {
-			try {
-				this.rtm.close();
-				this.slack = new Slack();
-				this.rtm = this.slack.rtm(authToken);
+			for (SlackChatMediator scm : mediators) {
+				scm.messageCollector.setConnected(false);
+				System.out.println("Message Collector is connected: " + scm.messageCollector.isConnected());
+				reconnect(scm);
+			}
+		}
 
-				this.rtm.addMessageHandler(messageCollector);
-				this.rtm.connect();
-				this.botUser = rtm.getConnectedBotUser().toString();
-				this.messageCollector.setConnected(true);
-				System.out.println(this.botUser + " reconnected.");
+	}
+
+	public static void reconnect(SlackChatMediator scm) {
+		System.out.println("Reconnecting:" + scm.botUser);
+		if (!scm.messageCollector.isConnected()) {
+			try {
+				System.out.println(scm.botUser + " is reconnecting.");
+				scm.rtm.close();
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException i) {
+					i.printStackTrace();
+				}
+				scm.slack = new Slack();
+				scm.rtm = scm.slack.rtm(scm.authToken);
+				scm.rtm.removeMessageHandler(scm.messageCollector);
+				scm.messageCollector = new SlackChatMessageCollector();
+				scm.rtm.addMessageHandler(scm.messageCollector);
+				scm.rtm.connect();
+				System.out.println(scm.messageCollector.isConnected() + scm.rtm.getConnectedBotUser().toString());
+				if (!scm.rtm.getConnectedBotUser().toString().equals(scm.botUser)) {
+
+					System.out.println("Bot not online");
+					scm.reconnect();
+				} else {
+					scm.botUser = scm.rtm.getConnectedBotUser().toString();
+					scm.messageCollector.setConnected(true);
+
+					System.out.println(scm.botUser + " reconnected.");
+
+				}
 			} catch (IOException | DeploymentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException i) {
+					i.printStackTrace();
+				}
+				reconnect(scm);
+			} catch (Exception e) {
+				e.printStackTrace();
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException i) {
+					i.printStackTrace();
+				}
+				reconnect(scm);
 			}
 		}
 	}
+
 	@Override
 	public void sendFileMessageToChannel(String channel, File f, String text, Optional<String> id) {
 		ArrayList<String> channels = new ArrayList<String>();
@@ -582,8 +492,8 @@ public class SlackChatMediator extends EventChatMediator {
 		FilesUploadResponse response2;
 		try {
 			response2 = slack.methods(authToken).filesUpload(req -> req.channels(channels).file(f)
-					.content("Pretty stuff").filename(f.getName()).title(f.getName()));
-			System.out.println("File sent: " + response2.isOk());
+					.content("Pretty stuff").filename(f.getName()).title(f.getName()).initialComment(text));
+			System.out.println("File sent: " + response2.isOk() + text);
 		} catch (IOException | SlackApiException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -600,6 +510,7 @@ public class SlackChatMediator extends EventChatMediator {
 	public void close() {
 		try {
 			this.rtm.close();
+			mediators.remove(this);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -612,7 +523,7 @@ public class SlackChatMediator extends EventChatMediator {
 		System.out.println("action: " + action);
 		JSONParser p = new JSONParser();
 
-		try{
+		try {
 			System.out.println("now trying to handle message...");
 			String ts = ((JSONObject) p.parse(action.getAsString("container"))).getAsString("message_ts");
 			String channel = ((JSONObject) p.parse(action.getAsString("channel"))).getAsString("id");
@@ -661,10 +572,17 @@ public class SlackChatMediator extends EventChatMediator {
 			chatMessage.setEmail(user);
 
 			messageCollector.addMessage(chatMessage);
-		} catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken,
+			HashMap<String, IncomingMessage> hashMap, Optional<String> optional) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'sendBlocksMessageToChannel'");
 	}
 
 }
