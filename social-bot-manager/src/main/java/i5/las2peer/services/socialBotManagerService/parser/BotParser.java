@@ -64,7 +64,7 @@ public class BotParser {
 	}
 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
-			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
+			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
@@ -92,7 +92,8 @@ public class BotParser {
 			if (nodeType.equals("Bot")) {
 				try{
 					bot = addBot(elem, botAgents);
-					config.addBot(bot.getName(), bot);
+					bot.setAddress(address);
+					config.addBot(bot.getId(), bot);
 					bots.put(entry.getKey(), bot);
 				} catch (Exception e){
 					throw e;
@@ -250,7 +251,14 @@ public class BotParser {
 						throw new ParseBotException("Bot Action uses Messenger, but is not connected to Messenger");
 					}
 					sf.setMessengerName(m.getName());
-				} else if (responses.containsKey(source)){
+					// Incoming Message uses Bot Action
+				} else if (incomingMessages.containsKey(source)){
+                    IncomingMessage cr = incomingMessages.get(source);
+                    if (bsfList.get(target) != null) {
+						ServiceFunction botFunction = bsfList.get(target);
+						cr.setTriggeredFunctionId(botFunction.getId());
+					}
+                }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);

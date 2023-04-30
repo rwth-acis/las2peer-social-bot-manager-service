@@ -29,7 +29,7 @@ public class Bot {
 
 	private HashMap<String, RasaNlu> rasaServers;
 
-	private HashMap<String, JSONObject> serviceInformation;
+	private HashMap<String, JSONObject> serviceInformation = new HashMap<String, JSONObject>();
 	private String address;
 	private HashMap<String, BotRoutine> routines;
 
@@ -220,6 +220,9 @@ public class Bot {
 
     public String getAddress() {
         return address;
+    }
+	public void setAddress(String address) {
+        this.address =  address;
     }
 
 	public HashMap<String, BotRoutine> getRoutines() {

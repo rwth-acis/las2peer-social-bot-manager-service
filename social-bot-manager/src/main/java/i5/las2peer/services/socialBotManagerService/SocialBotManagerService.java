@@ -153,7 +153,6 @@ import org.bson.types.ObjectId;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
-
 /**
  * las2peer-SocialBotManager-Service
  *
@@ -176,6 +175,7 @@ public class SocialBotManagerService extends RESTService {
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
 	private String address; // address of running webconnector
+	private static String addressStatic; // address of running webconnector
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
 	private String restarterBotPW; // PW of restarterBot
@@ -187,7 +187,6 @@ public class SocialBotManagerService extends RESTService {
 	private String mongoDB;
 	private String mongoUri;
 	private String mongoAuth = "admin";
-
 
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
@@ -223,6 +222,7 @@ public class SocialBotManagerService extends RESTService {
 		setFieldValues(); // This sets the values of the configuration file
 		restarterBotNameStatic = restarterBotName;
 		restarterBotPWStatic = restarterBotPW;
+		addressStatic = address;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
 			@Override
 			public X509Certificate[] getAcceptedIssuers() {
@@ -549,7 +549,7 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, BotModel> old = null;
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-						nodes, edges, sbfservice.database);
+						nodes, edges, sbfservice.database, addressStatic);
 			} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException
 					| AuthTokenException e) {
 				e.printStackTrace();
