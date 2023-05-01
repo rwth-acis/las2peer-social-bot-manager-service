@@ -181,6 +181,12 @@ public class SocialBotManagerService extends RESTService {
 	private String restarterBotPW; // PW of restarterBot
 	private static String restarterBotPWStatic; // PW of restarterBot
 
+	private static String lrsAuthTokenStatic;
+	private static String lrsURLStatic;
+
+	private String lrsAuthToken;
+	private String lrsURL;
+
 	private String mongoHost;
 	private String mongoUser;
 	private String mongoPassword;
@@ -1041,6 +1047,8 @@ public class SocialBotManagerService extends RESTService {
 				cleanedJson.put("user", encryptThisString(cleanedJson.getAsString("user")));
 				if (cleanedJson.containsKey("email")) {
 					cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
+					JSONObject xAPI = createXAPIStatement(cleanedJson.getAsString("email"), name, m.getIntent().getKeyword(), m.getMessage().getText());
+					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
 				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
@@ -1077,6 +1085,84 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}).start();
 			return Response.ok().build();
+		}
+
+		public JSONObject createXAPIStatement(String userMail, String botName,
+				String intent, String text)
+				throws ParseException {
+			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			JSONObject actor = new JSONObject();
+			actor.put("objectType", "Agent");
+			JSONObject account = new JSONObject();
+
+			account.put("name", userMail);
+			account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
+			actor.put("account", account);
+
+			JSONObject verb = (JSONObject) p
+					.parse(new String(
+							"{'display':{'en-US':'sent_chat_message'},'id':'https://tech4comp.de/xapi/verb/sent_chat_message'}"));
+			JSONObject object = (JSONObject) p
+					.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
+							+ "'}, 'description':{'en-US':'" + intent
+							+ "'}, 'type':'https://tech4comp.de/xapi/activitytype/bot'},'id':'https://tech4comp.de/bot/"
+							+ botName+ "', 'objectType':'Activity'}"));
+			JSONObject context = (JSONObject) p.parse(new String(
+					"{'extensions':{'https://tech4comp.de/xapi/context/extensions/intent':{'botName':'"
+							+ botName + "','text':'"
+							+ text
+							+ "'}}}"));
+			JSONObject xAPI = new JSONObject();
+
+			xAPI.put("authority", p.parse(
+					new String(
+							"{'objectType': 'Agent','name': 'New Client', 'mbox': 'mailto:hello@learninglocker.net'}")));
+			xAPI.put("context", context); 
+			// xAPI.put("timestamp", java.time.LocalDateTime.now());
+			xAPI.put("actor", actor);
+			xAPI.put("object", object);
+			xAPI.put("verb", verb);
+			System.out.println(xAPI);
+			return xAPI;
+		}
+
+		public void sendXAPIStatement(JSONObject xAPI, String lrsAuthToken) {
+			// Copy pasted from LL service
+			// POST statements
+			try {
+				System.out.println(xAPI);
+				URL url = new URL(lrsURLStatic + "/data/xAPI/statements");
+				System.out.println(url + lrsAuthTokenStatic);
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setDoOutput(true);
+				conn.setDoInput(true);
+				conn.setRequestMethod("POST");
+				conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+				conn.setRequestProperty("X-Experience-API-Version", "1.0.3");
+				conn.setRequestProperty("Authorization", "Basic " + lrsAuthTokenStatic);
+				conn.setRequestProperty("Cache-Control", "no-cache");
+				conn.setUseCaches(false);
+
+				OutputStream os = conn.getOutputStream();
+				os.write(xAPI.toString().getBytes("utf-8"));
+				os.flush();
+
+				BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+				String line = "";
+				StringBuilder response = new StringBuilder();
+
+				while ((line = reader.readLine()) != null) {
+					response.append(line);
+				}
+				logger.info(response.toString());
+
+				conn.disconnect();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 		}
 
 		@DELETE
