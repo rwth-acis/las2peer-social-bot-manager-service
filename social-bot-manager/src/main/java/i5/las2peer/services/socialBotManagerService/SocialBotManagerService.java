@@ -1632,7 +1632,17 @@ public class SocialBotManagerService extends RESTService {
 							}
 						}
 					}
-					triggerChat(chat, triggeredBody);
+					if(response.containsKey("multiFiles")){
+						for(Object o : (JSONArray) response.get("multiFiles")){
+							JSONObject jsonO = (JSONObject) o;
+							System.out.println("handling multifiles");
+							jsonO.put("channel", triggeredBody.getAsString("channel"));
+							jsonO.put("email", triggeredBody.getAsString("email"));
+							triggerChat(chat, jsonO);
+						}
+					} else {
+						triggerChat(chat, triggeredBody);
+					}
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						System.out.println("Closed Context");
 						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
