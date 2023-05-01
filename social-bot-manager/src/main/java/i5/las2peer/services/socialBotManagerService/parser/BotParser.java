@@ -612,7 +612,7 @@ public class BotParser {
 	}
 
 	private ServiceFunction addAction(String key, BotModelNode elem, BotConfiguration config)
-			throws IOException, DeploymentException {
+			throws IOException, DeploymentException, ParseBotException {
 		ServiceFunction sf = new ServiceFunction();
 		sf.setId(key);
 		String actionType = "";
@@ -632,6 +632,12 @@ public class BotParser {
 			} else if (name.equals("Messenger Name")) {
 				messengerID = subVal.getValue();
 			}          
+		}
+		if(sfName.equals("")){
+			throw new ParseBotException("Bot Action missing function name");
+		}
+		if(service.equals("")){
+			throw new ParseBotException("Bot Action missing service name");
 		}
 
 		if (actionType.equals("SendMessage")) {
