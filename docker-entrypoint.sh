@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
-
+ENV_VARIABLE_NOT_SET=false
+check_if_exists () {
+    if [[ -z "$1" ]]; then
+        echo "$2 env variable is not set"
+        ENV_VARIABLE_NOT_SET=true
+    fi
+}
 # print all comands to console if DEBUG is set
 if [[ ! -z "${DEBUG}" ]]; then
     set -x
@@ -33,6 +39,12 @@ set_in_service_config mongoUser ${MONGO_USER}
 set_in_service_config mongoPassword ${MONGO_PASSWORD}
 set_in_service_config mongoAuth ${MONGO_AUTH}
 
+check_if_exists "$ADDRESS" "ADDRESS"
+
+if [ "$ENV_VARIABLE_NOT_SET" = true ] ; then
+    echo "Missing environment variables, exiting..."
+    exit 1
+fi
 
 # ensure the database is ready
 while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} --silent; do
