@@ -24,7 +24,7 @@ export CORE_VERSION=$(awk -F "=" '/core.version/ {print $2}' gradle.properties)
 function set_in_service_config {
     sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
 }
-cp $SERVICE_PROPERTY_FILE.sample $SERVICE_PROPERTY_FILE
+
 set_in_service_config databaseName ${DATABASE_NAME}
 set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
