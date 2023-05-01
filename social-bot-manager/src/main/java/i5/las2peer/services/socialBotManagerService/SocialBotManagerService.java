@@ -672,8 +672,13 @@ public class SocialBotManagerService extends RESTService {
 		@ApiOperation(value = "Handle webhook calls", notes = "Handles incoming webhook calls.")
 		public Response webhook(String body, @PathParam("botName") String botName) {
 			// check if bot exists
-			Bot bot = getConfig().getBot(botName);
-			
+			Bot bot = null;
+			for (String botId : getConfig().getBots().keySet()) {
+				if(getConfig().getBots().get(botId).getName().toLowerCase().equals(botName.toLowerCase())){
+					bot = getConfig().getBot(botId);
+					break;
+				}
+			}
 			if (bot == null)
 				return Response.status(HttpURLConnection.HTTP_NOT_FOUND).entity("Bot " + botName + " not found.").build();
 
@@ -690,6 +695,11 @@ public class SocialBotManagerService extends RESTService {
 				// handle webhook depending on the event (currently only chat_message supported)
 				if(event.equals("chat_message")) {
 					String messenger = parsedBody.getAsString("messenger");
+					if (!parsedBody.containsKey("messenger")) {
+						for (String m : bot.getMessengers().keySet()) {
+							messenger = m;
+						}
+					}
 					ChatMediator chat = bot.getMessenger(messenger).getChatMediator();
 
 					// send message
