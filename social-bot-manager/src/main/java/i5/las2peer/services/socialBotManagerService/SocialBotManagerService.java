@@ -217,11 +217,14 @@ public class SocialBotManagerService extends RESTService {
 		this.l2pcontext = l2pcontext;
 	}
 
-	public SocialBotManagerService() {
+	public SocialBotManagerService() throws Exception{
 		super();
 		setFieldValues(); // This sets the values of the configuration file
 		restarterBotNameStatic = restarterBotName;
 		restarterBotPWStatic = restarterBotPW;
+		if(address == null || address.equals("")){
+			throw new Exception("ADDRESS VARIABLE NEEDS TO BE SET!!!!!");
+		}
 		addressStatic = address;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
 			@Override
