@@ -82,6 +82,8 @@ public class BotParser {
 		HashMap<String, IfThenBlock> itbList = new HashMap<String, IfThenBlock>();
 		HashMap<String, BotRoutine> rlist = new HashMap<String, BotRoutine>();
 
+		HashMap<String, ServiceFunction> onBotStartList = new HashMap<String, ServiceFunction>();
+
 		Bot bot = null;
 		Gson g = new Gson();
 		// NODES
@@ -213,7 +215,11 @@ public class BotParser {
 					if (bsfListItem != null) {
 						bot.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
 						bsfListItem.addBot(bot);
+					} 
+					if(value.equals("start")){
+						bsfListItem.setOnStart(bot.getId());
 					}
+					
 				} else if (bots.get(source) != null) {
 					Bot v = bots.get(source);
 					BotRoutine r = rlist.get(target);
@@ -287,14 +293,16 @@ public class BotParser {
 				// TRIGGERS
 				// LEADSTO
 				// left precedes in the query so that older bots can still be used with the manager, but will need to get removed later on
-			} else if (type.equals("leadsTo") || type.equals("precedes") ) {
+			} else if (type.equals("leadsTo")  ) {
 				// IncomingMessage leads to...
 				if (incomingMessages.containsKey(source)) {
 					IncomingMessage sourceMessage = incomingMessages.get(source);
 					// ...another IncomingMessage
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
+						sourceMessage.addTriggerEntity(targetMessage, value);
 						sourceMessage.addFollowupMessage(value, targetMessage);
+						
 					}
 				}
 			}
@@ -341,14 +349,8 @@ public class BotParser {
 					// Incoming Message triggers...
 				} else if (incomingMessages.get(source) != null) {
 					IncomingMessage m = incomingMessages.get(source);
-					// ...Chat Response
-					if (responses.get(target) != null) {
-						IncomingMessage response = responses.get(target);
-						response.addTriggerEntity(value);
-						m.addResponse(response);
-						
-						// ...Bot Action
-					} else if (bsfList.get(target) != null) {
+					// ...Bot Action
+					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
 						m.setTriggeredFunction(botFunction);
 					}
@@ -780,6 +782,26 @@ public class BotParser {
 			}
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
+			}
+			if(s.getOnStart().containsKey(b.getId())){
+				MiniClient client = new MiniClient();
+				// client.setLogin(, password);
+				if(s.getActionType() == ActionType.SERVICE){
+					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
+				} else {
+					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+				}
+				HashMap<String, String> headers = new HashMap<String, String>();
+				client.setLogin("alice", "pwalice");
+				JSONObject body = new JSONObject();
+				String botName = "";
+				body.put("botId", b.getId());
+				body.put("botName", b.getName());
+				for(ServiceFunctionAttribute a : s.getAttributes()){
+					body.put(a.getName(), a.getContent());
+				}
+				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
+						body.toString(), s.getConsumes(), s.getProduces(), headers);
 			}
 		}
 		return jaf;
