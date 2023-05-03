@@ -757,23 +757,6 @@ public class BotParser {
 							b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
 						System.out.println("Information is: " + j);
 						b.addServiceInformation(s.getServiceName(), j);
-						if (s.getServiceName().equals("AssessmentHandler")) {
-							MiniClient client = new MiniClient();
-							// client.setLogin(, password);
-							client.setConnectorEndpoint(b.getAddress());
-							HashMap<String, String> headers = new HashMap<String, String>();
-							JSONObject botName = new JSONObject();
-							
-							System.out.println(b);
-
-							botName.put("botName", b.getId());
-							// client.setLogin("alice", "pwalice");
-							client.setLogin(b.getId(), "actingAgent");
-
-							ClientResponse result = client.sendRequest("POST", "AssessmentHandler/reset",
-									botName.toString(), MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
-
-						}
 					}
 					
 				} catch (Exception e) {

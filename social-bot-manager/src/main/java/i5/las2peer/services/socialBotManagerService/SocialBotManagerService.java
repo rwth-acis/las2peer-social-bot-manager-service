@@ -50,10 +50,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import com.slack.api.Slack;
 
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+
 
 import org.apache.tika.Tika;
 
@@ -129,7 +136,6 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.ConnectionString;
@@ -152,6 +158,9 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+
+
+
 
 /**
  * las2peer-SocialBotManager-Service
@@ -1475,7 +1484,11 @@ public class SocialBotManagerService extends RESTService {
 					mapWithStaticContent(triggeredFunctionAttribute, triggeredBody);
 				} else {
 					// TODO
-					System.out.println("Unknown mapping");
+					if(triggeredFunctionAttribute.getParameterType().equals("form")){
+						mapWithStaticFormContent(triggeredFunctionAttribute, triggeredBody);
+					} else {
+						System.out.println("Unknown mapping" + triggeredFunctionAttribute.getContentType() + triggeredFunctionAttribute.getParameterType());
+					}
 				}
 			}
 		}
@@ -1547,6 +1560,64 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
+	private void mapWithStaticFormContent(ServiceFunctionAttribute triggeredFunctionAttribute, JSONObject triggeredBody) {
+		if (triggeredFunctionAttribute.getContent().length() > 0) {
+			if (triggeredBody.containsKey(triggeredFunctionAttribute.getName())) {
+				JSONArray array = new JSONArray();
+				array.add(triggeredBody.get(triggeredFunctionAttribute.getName()));
+				array.add(triggeredFunctionAttribute.getContent());
+				if(triggeredBody.get("form") == null){
+					JSONObject form = new JSONObject();
+					form.put(triggeredFunctionAttribute.getName(), array);
+					triggeredBody.put("form",form);
+				} else {
+					JSONObject form = (JSONObject) triggeredBody.get("form");
+					form.put(triggeredFunctionAttribute.getName(), array);
+					triggeredBody.put("form",form);
+				}
+			} else	{
+				if(triggeredBody.get("form") == null){
+					JSONObject form = new JSONObject();
+					form.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
+					triggeredBody.put("form",form);
+				} else {
+					JSONObject form = (JSONObject) triggeredBody.get("form");
+					form.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
+					triggeredBody.put("form",form);
+				}
+			}
+
+		}
+		if (triggeredFunctionAttribute.getContentURL().length() > 0) {
+			URL url;
+			String body = "";
+			try {
+				url = new URL(triggeredFunctionAttribute.getContentURL());
+				HttpURLConnection con = (HttpURLConnection) url.openConnection();
+				con.setDoOutput(true);
+				con.setDoInput(true);
+
+				StringBuilder sb = new StringBuilder();
+				BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"));
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					sb.append(line + "\n");
+				}
+				br.close();
+
+				body = sb.toString();
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			triggeredBody.put(triggeredFunctionAttribute.getName(), body);
+		}
+	}
+
 	private void mapAttributes(JSONObject b, ServiceFunctionAttribute sfa, String functionPath,
 			HashMap<String, ServiceFunctionAttribute> attlist, JSONObject triggerAttributes) {
 		// get id of the trigger function
@@ -1595,13 +1666,58 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
 			ClientResponse r = null;
-			if (sf.getActionType().equals(ActionType.SERVICE)) {
-				r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
-						triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
-			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
-				r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
-						sf.getConsumes(), sf.getProduces(), headers);
+			if(triggeredBody.containsKey("form")){
+				try {
+					File f = new File("ZSF_01.txt");
+					System.out.println(f.exists());
+					FileDataBodyPart filePart = new FileDataBodyPart("text", f);
+					Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+					WebTarget target = textClient.target(sf.getServiceName() + functionPath.replace("{label1}","test"));
+					JSONObject form = (JSONObject) triggeredBody.get("form");
+					FormDataMultiPart mp = new FormDataMultiPart();
+					FormDataMultiPart multipart = new FormDataMultiPart();
+					for(String key : form.keySet()){
+						mp = mp.field(key, form.getAsString(key));
+					}
+					mp.bodyPart(filePart);
+					System.out.println("lel");
+					Response response = target.request().post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+					System.out.println("this is "  + response.getStatus());
+					
+				//	FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
+					//		.bodyPart(filePart);
+				/* FileDataBodyPart filePart = new FileDataBodyPart("file", f);
+					if(f.getName().toLowerCase().contains("json")){
+						filePart.setMediaType(MediaType.APPLICATION_JSON_TYPE);
+					}
+					FormDataMultiPart mp = new FormDataMultiPart();
+					FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
+							.bodyPart(filePart);
+					Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
+							.post(Entity.entity(multipart, multipart.getMediaType()));
+					System.out.println(response.getEntity().toString());
+					mp.close();
+					multipart.close();
+					try {
+						java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}*/
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				
+				}
+			} else {
+				if (sf.getActionType().equals(ActionType.SERVICE)) {
+					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
+							triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
+				} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
+					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
+							sf.getConsumes(), sf.getProduces(), headers);
+				}
 			}
+
 			System.out.println("Connect Success");
 			System.out.println(r.getResponse());
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
