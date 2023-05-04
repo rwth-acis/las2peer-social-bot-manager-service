@@ -20,6 +20,7 @@ import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.sql.Blob;
@@ -60,8 +61,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
-
-
+import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -1668,21 +1668,59 @@ public class SocialBotManagerService extends RESTService {
 			ClientResponse r = null;
 			if(triggeredBody.containsKey("form")){
 				try {
-					File f = new File("ZSF_01.txt");
-					System.out.println(f.exists());
-					FileDataBodyPart filePart = new FileDataBodyPart("text", f);
+					File f = null;
+					if(triggeredBody.containsKey("fileBody")){
+						byte[] decodedBytes = java.util.Base64.getDecoder().decode(triggeredBody.getAsString("fileBody"));
+						f = new File(triggeredBody.getAsString("fileName") + "." + triggeredBody.getAsString("fileType"));
+					/*	if(fileType.equals("")){
+							file = new File(fileName);
+						} */ 
+						try {
+							FileUtils.writeByteArrayToFile(f, decodedBytes);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+
+					String channel = triggeredBody.getAsString("channel");
 					Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+					functionPath.replace("[channel]",channel);
 					WebTarget target = textClient.target(sf.getServiceName() + functionPath.replace("{label1}","test"));
 					JSONObject form = (JSONObject) triggeredBody.get("form");
 					FormDataMultiPart mp = new FormDataMultiPart();
-					FormDataMultiPart multipart = new FormDataMultiPart();
 					for(String key : form.keySet()){
-						mp = mp.field(key, form.getAsString(key));
+						if(form.getAsString(key).equals("[channel]")){
+							mp = mp.field(key, channel);
+						} else {
+							mp = mp.field(key, form.getAsString(key));
+						}
+						
 					}
-					mp.bodyPart(filePart);
+					System.out.println(f.exists());
+					if(f.exists()){
+						FileDataBodyPart filePart = new FileDataBodyPart("text", f);
+						mp.bodyPart(filePart);
+					}
+					
 					System.out.println("lel");
 					Response response = target.request().post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
-					System.out.println("this is "  + response.getStatus());
+					String test = response.readEntity(String.class);
+					System.out.println("this is "  + test);
+					mp.close();
+					try {
+						java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "." + triggeredBody.getAsString("fileType")));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+					triggeredBody = new JSONObject();
+					triggeredBody.put("channel", channel);
+					triggeredBody.put("text", test);			
+					triggerChat(chat, triggeredBody);
+					return;
 					
 				//	FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
 					//		.bodyPart(filePart);
