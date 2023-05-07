@@ -302,7 +302,6 @@ public class BotParser {
 						IncomingMessage targetMessage = incomingMessages.get(target);
 						sourceMessage.addTriggerEntity(targetMessage, value);
 						sourceMessage.addFollowupMessage(value, targetMessage);
-						
 					}
 				}
 			}

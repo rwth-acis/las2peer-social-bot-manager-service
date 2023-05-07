@@ -67,6 +67,8 @@ public class Messenger {
 
 	private HashMap<String, IncomingMessage> storedSession;
 
+	private HashMap<String, HashMap<String,String>> userVariables;
+
 
 	private Random random;
 
@@ -133,6 +135,7 @@ public class Messenger {
 		this.triggeredFunction = new HashMap<String, String>();
 		this.defaultAnswered = new HashMap<String, Integer>();
 		this.storedSession = new HashMap<String, IncomingMessage>();
+		this.userVariables = new HashMap<String,HashMap<String,String>>();
 	}
 
 	public String getName() {
@@ -212,25 +215,28 @@ public class Messenger {
 					String response = state.getResponse(random).getResponse();
 					if (response != null && !response.equals("")) {
 						System.out.println("Found old message");
-						this.chatMediator.sendMessageToChannel(channel, response, "text");
+						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
 					}
 				}
 			} else if (state.getFollowingMessages().get("") != null) {
 				// check whether bot action needs to be triggered without user input
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
-				if (state.getResponse(random).triggeredFunctionId != null
+				if(!state.getResponse().equals("")){
+					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse()), "text");
+				} 
+			/* 	if (state.getResponse(random).triggeredFunctionId != null
 				&& !state.getResponse(random).triggeredFunctionId.equals("")) {
 					ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
 					this.triggeredFunction.put(channel, state.getResponse(random).triggeredFunctionId);
 					this.chatMediator.getMessageCollector().addMessage(chatMsg);
-				}
+				}*/
 			} else {
 				// If only message to be sent
 				String response = state.getResponse(random).getResponse();
 				if( response != null && !response.equals(""))
 				{
-					this.chatMediator.sendMessageToChannel(channel, response, state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
+					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
 				}
 				if(state.getFollowingMessages().size()== 0){
 					this.stateMap.remove(channel);
@@ -243,6 +249,33 @@ public class Messenger {
 
 	public String getContext(String channel, String user) {
 		return this.triggeredFunction.get(channel);
+	}
+
+	public HashMap<String, HashMap<String, String>> getUserVariables() {
+		return userVariables;
+	}
+
+	public void setUserVariables(HashMap<String, HashMap<String, String>> userVariables) {
+		this.userVariables = userVariables;
+	}
+
+	public void resetUserVariables(String channel) {
+		this.userVariables.get(channel).clear();
+	}
+
+	public void addVariable(String channel, String key, String value) {
+		HashMap<String, String> variables = this.getUserVariables().get(channel);
+		variables.put(key, value);
+		this.userVariables.put(channel, variables);
+	}
+
+	public String replaceVariables(String channel, String text) {
+		HashMap<String, String> variables = this.getUserVariables().get(channel);
+		for (String key : variables.keySet()){
+			String composed = "["+key+"]";
+			text = text.replace(composed, variables.get(key));
+		}
+		return text;
 	}
 
 	// Handles simple responses ("Chat Response") directly, logs all messages and
@@ -270,6 +303,9 @@ public class Messenger {
 //					this.triggeredFunction.put(message.getChannel(), initMap);
 //				}
 				
+				if (!this.userVariables.containsKey(message.getChannel())) {
+					this.userVariables.put(message.getChannel(), new HashMap<String,String>());
+				}
 				
 				if (this.defaultAnswered.get(message.getChannel()) == null) {
 					this.defaultAnswered.put(message.getChannel(), 0);
@@ -588,7 +624,7 @@ public class Messenger {
 								if(state.getType().equals("Interactive Message")){
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
-									this.chatMediator.sendMessageToChannel(message.getChannel(), split, state.getFollowingMessages(),state.followupMessageType);
+									this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to

@@ -1655,7 +1655,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			//client.setLogin("alice", "pwalice");
 			client.setLogin(botAgent.getLoginName(), botPass);
-
+			String userId= triggeredBody.getAsString("user");
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
 			triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
@@ -1666,6 +1666,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
 			ClientResponse r = null;
+			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			if(triggeredBody.containsKey("form")){
 				try {
 					File f = null;
@@ -1700,7 +1701,7 @@ public class SocialBotManagerService extends RESTService {
 					}
 					System.out.println(f.exists());
 					if(f.exists()){
-						FileDataBodyPart filePart = new FileDataBodyPart("text", f);
+						FileDataBodyPart filePart = new FileDataBodyPart("file", f);
 						mp.bodyPart(filePart);
 					}
 					
@@ -1718,8 +1719,14 @@ public class SocialBotManagerService extends RESTService {
 					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 					triggeredBody = new JSONObject();
 					triggeredBody.put("channel", channel);
-					triggeredBody.put("text", test);			
-					triggerChat(chat, triggeredBody);
+					triggeredBody.put("text", test);	
+					JSONObject jsonResponse = (JSONObject) parser.parse(test);
+					for(String key : jsonResponse.keySet()){
+						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));				
+					}		
+					bot.getMessenger(messengerID).setContextToBasic(channel,
+								userId);
+					//triggerChat(chat, triggeredBody);
 					return;
 					
 				//	FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg", newText).field("description", "")
@@ -1759,7 +1766,6 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Connect Success");
 			System.out.println(r.getResponse());
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
-				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				try {
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
 					System.out.println(response);
