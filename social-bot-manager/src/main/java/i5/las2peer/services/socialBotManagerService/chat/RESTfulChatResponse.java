@@ -24,7 +24,7 @@ public class RESTfulChatResponse {
             IncomingMessage value = entry.getValue();
             String intent = key;
             if(intent==null||intent=="") intent = value.getIntentKeyword();
-            InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel());
+            InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
             icel.add(ice);
         }
         interactiveElements = Arrays.asList(icel.toArray());
