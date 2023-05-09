@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
@@ -442,7 +443,7 @@ public class BotParser {
 		String intentKeyword = null;
         String NluID = null;
         Boolean containsFile = null;
-		String message = null;
+		ArrayList<String> messages = new ArrayList<String>();
 		String fileURL = null;
 		String errorMessage = null;
 		String type = null;
@@ -463,7 +464,16 @@ public class BotParser {
             } else if (name.contentEquals("IsFile")){
                 containsFile = Boolean.valueOf(subVal.getValue());
             } else if (name.contentEquals("Message")) {
-				message = subVal.getValue();
+				JSONParser p = new JSONParser(0);
+				try{
+					JSONObject o = (JSONObject) p.parse(subVal.getValue());
+					for (String tKey : o.keySet()){
+						messages.add(o.getAsString(tKey));
+					}
+				} catch (ParseException e ){
+					e.printStackTrace();
+					messages.add(subVal.getValue());
+				}
 			} else if (name.contentEquals("FileURL")) {
 				fileURL = subVal.getValue();
 			} else if (name.contentEquals("ErrorMessage")) {
@@ -491,7 +501,7 @@ public class BotParser {
 			intentKeyword = "0";
 		}
 
-		if (message == null) {
+		if (messages == null) {
 			throw new ParseBotException("Response is missing Message");
 		} 
 		if (fileURL == null) {
@@ -504,7 +514,7 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Type");
 		}
 		
-		return new IncomingMessage(intentKeyword, NluID, containsFile, message, fileURL, errorMessage, type, intentLabel, followupMessageType);
+		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)

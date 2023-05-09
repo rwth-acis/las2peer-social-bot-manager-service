@@ -212,7 +212,7 @@ public class Messenger {
 					state = storedSession.get(channel);
 					storedSession.remove(channel);
 					System.out.println("Restoring session");
-					String response = state.getResponse(random).getResponse();
+					String response = state.getResponse(random);
 					if (response != null && !response.equals("")) {
 						System.out.println("Found old message");
 						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
@@ -222,8 +222,8 @@ public class Messenger {
 				// check whether bot action needs to be triggered without user input
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
-				if(!state.getResponse().equals("")){
-					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse()), "text");
+				if(!state.getResponse(random).equals("")){
+					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), "text");
 				} 
 			/* 	if (state.getResponse(random).triggeredFunctionId != null
 				&& !state.getResponse(random).triggeredFunctionId.equals("")) {
@@ -233,7 +233,7 @@ public class Messenger {
 				}*/
 			} else {
 				// If only message to be sent
-				String response = state.getResponse(random).getResponse();
+				String response = state.getResponse(random);
 				if( response != null && !response.equals(""))
 				{
 					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
@@ -326,7 +326,9 @@ public class Messenger {
 						if (this.currentNluModel.get(message.getChannel()) == "0") {
 							continue;
 						} else {
-							incMsg = new IncomingMessage(intentKeyword, "", false,"",null,"",null, "","text");
+							ArrayList<String> empty = new ArrayList<String>();
+							empty.add("");
+							incMsg = new IncomingMessage(intentKeyword, "", false,empty,null,"",null, "","text");
 							incMsg.setEntityKeyword("newEntity");
 						}
 					}
@@ -571,7 +573,7 @@ public class Messenger {
 							state = state.getFollowingMessages().get("skip");
 						}
 						
-						String response = state.getResponse();
+						String response = state.getResponse(random);
 						if (state.getTriggeredFunctionId() != "" && state.getTriggeredFunctionId() != null) {
 							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 							contextOn = true;

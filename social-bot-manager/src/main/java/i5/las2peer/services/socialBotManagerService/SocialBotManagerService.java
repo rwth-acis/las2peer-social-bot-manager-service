@@ -955,8 +955,7 @@ public class SocialBotManagerService extends RESTService {
 										if (s.equals(expectedIntent)) {
 											i5.las2peer.services.socialBotManagerService.model.IncomingMessage incomingMessage = intentsHM
 													.get(s);
-											i5.las2peer.services.socialBotManagerService.model.IncomingMessage chatResponses = incomingMessage
-													.getResponse(new Random());
+											i5.las2peer.services.socialBotManagerService.model.IncomingMessage chatResponses = incomingMessage;
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
 											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
