@@ -64,7 +64,7 @@ public class BotParser {
 	}
 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
-			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database)
+			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
@@ -82,6 +82,8 @@ public class BotParser {
 		HashMap<String, IfThenBlock> itbList = new HashMap<String, IfThenBlock>();
 		HashMap<String, BotRoutine> rlist = new HashMap<String, BotRoutine>();
 
+		HashMap<String, ServiceFunction> onBotStartList = new HashMap<String, ServiceFunction>();
+
 		Bot bot = null;
 		Gson g = new Gson();
 		// NODES
@@ -92,7 +94,8 @@ public class BotParser {
 			if (nodeType.equals("Bot")) {
 				try{
 					bot = addBot(elem, botAgents);
-					config.addBot(bot.getName(), bot);
+					bot.setAddress(address);
+					config.addBot(bot.getId(), bot);
 					bots.put(entry.getKey(), bot);
 				} catch (Exception e){
 					throw e;
@@ -212,7 +215,11 @@ public class BotParser {
 					if (bsfListItem != null) {
 						bot.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
 						bsfListItem.addBot(bot);
+					} 
+					if(value.equals("start")){
+						bsfListItem.setOnStart(bot.getId());
 					}
+					
 				} else if (bots.get(source) != null) {
 					Bot v = bots.get(source);
 					BotRoutine r = rlist.get(target);
@@ -250,7 +257,14 @@ public class BotParser {
 						throw new ParseBotException("Bot Action uses Messenger, but is not connected to Messenger");
 					}
 					sf.setMessengerName(m.getName());
-				} else if (responses.containsKey(source)){
+					// Incoming Message uses Bot Action
+				} else if (incomingMessages.containsKey(source)){
+                    IncomingMessage cr = incomingMessages.get(source);
+                    if (bsfList.get(target) != null) {
+						ServiceFunction botFunction = bsfList.get(target);
+						cr.setTriggeredFunctionId(botFunction.getId());
+					}
+                }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
@@ -279,13 +293,14 @@ public class BotParser {
 				// TRIGGERS
 				// LEADSTO
 				// left precedes in the query so that older bots can still be used with the manager, but will need to get removed later on
-			} else if (type.equals("leadsTo") || type.equals("precedes") ) {
+			} else if (type.equals("leadsTo")  ) {
 				// IncomingMessage leads to...
 				if (incomingMessages.containsKey(source)) {
 					IncomingMessage sourceMessage = incomingMessages.get(source);
 					// ...another IncomingMessage
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
+						sourceMessage.addTriggerEntity(targetMessage, value);
 						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
 				}
@@ -333,14 +348,8 @@ public class BotParser {
 					// Incoming Message triggers...
 				} else if (incomingMessages.get(source) != null) {
 					IncomingMessage m = incomingMessages.get(source);
-					// ...Chat Response
-					if (responses.get(target) != null) {
-						IncomingMessage response = responses.get(target);
-						response.addTriggerEntity(value);
-						m.addResponse(response);
-						
-						// ...Bot Action
-					} else if (bsfList.get(target) != null) {
+					// ...Bot Action
+					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
 						m.setTriggeredFunction(botFunction);
 					}
@@ -604,7 +613,7 @@ public class BotParser {
 	}
 
 	private ServiceFunction addAction(String key, BotModelNode elem, BotConfiguration config)
-			throws IOException, DeploymentException {
+			throws IOException, DeploymentException, ParseBotException {
 		ServiceFunction sf = new ServiceFunction();
 		sf.setId(key);
 		String actionType = "";
@@ -624,6 +633,12 @@ public class BotParser {
 			} else if (name.equals("Messenger Name")) {
 				messengerID = subVal.getValue();
 			}          
+		}
+		if(sfName.equals("")){
+			throw new ParseBotException("Bot Action missing function name");
+		}
+		if(service.equals("")){
+			throw new ParseBotException("Bot Action missing service name");
 		}
 
 		if (actionType.equals("SendMessage")) {
@@ -741,23 +756,6 @@ public class BotParser {
 							b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
 						System.out.println("Information is: " + j);
 						b.addServiceInformation(s.getServiceName(), j);
-						if (s.getServiceName().equals("AssessmentHandler")) {
-							MiniClient client = new MiniClient();
-							// client.setLogin(, password);
-							client.setConnectorEndpoint(b.getAddress());
-							HashMap<String, String> headers = new HashMap<String, String>();
-							JSONObject botName = new JSONObject();
-							
-							System.out.println(b);
-
-							botName.put("botName", b.getId());
-							// client.setLogin("alice", "pwalice");
-							client.setLogin(b.getId(), "actingAgent");
-
-							ClientResponse result = client.sendRequest("POST", "AssessmentHandler/reset",
-									botName.toString(), MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
-
-						}
 					}
 					
 				} catch (Exception e) {
@@ -766,6 +764,26 @@ public class BotParser {
 			}
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
+			}
+			if(s.getOnStart().containsKey(b.getId())){
+				MiniClient client = new MiniClient();
+				// client.setLogin(, password);
+				if(s.getActionType() == ActionType.SERVICE){
+					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
+				} else {
+					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+				}
+				HashMap<String, String> headers = new HashMap<String, String>();
+				client.setLogin("alice", "pwalice");
+				JSONObject body = new JSONObject();
+				String botName = "";
+				body.put("botId", b.getId());
+				body.put("botName", b.getName());
+				for(ServiceFunctionAttribute a : s.getAttributes()){
+					body.put(a.getName(), a.getContent());
+				}
+				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
+						body.toString(), s.getConsumes(), s.getProduces(), headers);
 			}
 		}
 		return jaf;
