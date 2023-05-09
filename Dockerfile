@@ -1,5 +1,5 @@
 # first stage: build using gradle 
-FROM --platform=$BUILDPLATFORM gradle:7.5.0-jdk17 AS build
+FROM --platform=${BUILDPLATFORM:-amd64} gradle:7.5.0-jdk17 AS build
 
 ENV GRADLE_OPTS="-Xmx2048m -Xms512m -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true"
 
