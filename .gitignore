@@ -34,7 +34,7 @@
 build
 archiva_credentials.xml
 .vscode/settings.json
-.project
+.settings/org.eclipse.buildship.core.prefs
 bin/start_network.bat
 bin/start_network.sh
 .project
