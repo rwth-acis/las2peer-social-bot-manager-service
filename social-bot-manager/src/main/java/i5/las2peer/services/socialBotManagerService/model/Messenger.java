@@ -568,7 +568,7 @@ public class Messenger {
 					// check if skip is wished or not
 					if (state != null) {
 						System.out.println("Getting response for: "+state.intentKeyword);
-						System.out.println(state.getResponse());
+						System.out.println(state.getResponse(random));
 						if (state.getFollowingMessages().get("skip") != null) {
 							state = state.getFollowingMessages().get("skip");
 						}
