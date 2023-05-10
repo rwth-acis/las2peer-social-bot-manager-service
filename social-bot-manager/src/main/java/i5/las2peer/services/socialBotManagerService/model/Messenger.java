@@ -370,12 +370,13 @@ public class Messenger {
 				}else{
 					System.out.println("Current state: " + state.getIntentKeyword());
 				}
-				if (state != null && message.getText().startsWith("!")) {
+
+				if (state != null && message.getText().startsWith("!") && !state.getFollowingMessages().keySet().contains(intent.getKeyword())) {
 					if (!intent.getKeyword().equals("exit")) {
 						storedSession.put(message.getChannel(), state);
 						state = null;
 					}
-				}
+			 	}
 				if (state != null && message.getText().startsWith("!")
 						&& storedSession.containsKey(message.getChannel())) {
 					System.out.println("Dont start command inside command lol");
