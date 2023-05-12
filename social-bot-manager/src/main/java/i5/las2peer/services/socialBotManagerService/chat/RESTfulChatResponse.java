@@ -18,15 +18,17 @@ public class RESTfulChatResponse {
         this(text);
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
         setType(type);
-        for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
-            String key = entry.getKey();
-            System.out.println("Interactive element:" +key);
-            IncomingMessage value = entry.getValue();
-            String intent = key;
-            if(intent==null||intent=="") intent = value.getIntentKeyword();
-            InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
-            icel.add(ice);
+        if(hashMap != null){
+            for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
+                String key = entry.getKey();
+                IncomingMessage value = entry.getValue();
+                String intent = key;
+                if(intent==null||intent=="") intent = value.getIntentKeyword();
+                InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
+                icel.add(ice);
+            }
         }
+
         interactiveElements = Arrays.asList(icel.toArray());
     }
 
