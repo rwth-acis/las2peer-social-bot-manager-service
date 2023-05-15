@@ -154,13 +154,11 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
+import org.bson.BsonObjectId;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
-
-
-
 
 /**
  * las2peer-SocialBotManager-Service
@@ -1390,6 +1388,87 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
+	public void prepareRequestParameters(BotConfiguration botConfig, BotAgent botAgent, MessageInfo messageInfo,
+			String functionPath, JSONObject body, ServiceFunction botFunction)
+			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
+			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
+			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
+		String botId = botAgent.getIdentifier();
+		Bot bot = botConfig.getBots().get(botId);
+		if (bot != null) {
+			botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
+			functionPath = "";
+			if (botFunction.getActionType().equals(ActionType.SERVICE)) {
+				functionPath = botFunction.getFunctionPath();
+			} else if (botFunction.getActionType().equals(ActionType.OPENAPI)) {
+				functionPath = botFunction.getFunctionPath();
+			}
+			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
+			JSONObject triggerAttributes = new JSONObject();
+			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
+				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
+			}
+			// Patch attributes so that if a chat message is sent, it is sent
+			// to the same channel the action was triggered from.
+			// TODO: Handle multiple messengers
+			String mail = messageInfo.getMessage().getEmail();
+			if (mail == null)
+				mail = "";
+			body.put("email", messageInfo.getMessage().getEmail());
+			body.put("channel", messageInfo.getMessage().getChannel());
+			body.put("user", messageInfo.getMessage().getUser());
+			body.put("intent", messageInfo.getIntent().getKeyword());
+			body.put("time", messageInfo.getMessage().getTime());
+			if (messageInfo.getMessage().getMessageId() != null) {
+				body.put("message_id", messageInfo.getMessage().getMessageId());
+				// actionInfo needed for citbot...
+				body.put("actionInfo", messageInfo.getMessage().getMessageId());
+			}
+			if (messageInfo.getMessage().getFileBody() != null) {
+				body.put("fileBody", messageInfo.getMessage().getFileBody());
+				body.put("fileName", messageInfo.getMessage().getFileName());
+				body.put("fileType", messageInfo.getMessage().getFileType());
+			}
+			if (messageInfo.getMessage().getActionInfo() != null) {
+				body.put("actionInfo", messageInfo.getMessage().getActionInfo());
+			}
+
+			// Insert entities detected from the message
+			JSONObject entities = new JSONObject();
+			for (Entity entityName : messageInfo.getIntent().getEntities()) {
+				body.put(entityName.getEntityName(), entityName.getValue());// Kept for compatibility reasons
+				JSONObject entity = new JSONObject();
+				entity.put("value", entityName.getValue());
+				entity.put("confidence", entityName.getConfidence());
+				entities.put(entityName.getEntityName(), entity);
+			}
+
+			// Insert entities that was passed over from previous message
+			if (messageInfo.getRecognizedEntities() != null) {
+				for (Entity entityName : messageInfo.getRecognizedEntities()) {
+					JSONObject entity = new JSONObject();
+					entity.put("value", entityName.getValue());
+					entity.put("confidence", entityName.getConfidence());
+					entities.put(entityName.getEntityName(), entity);
+				}
+			}
+			if ((messageInfo.getMessage().getPreviousMessage() != null)
+					&& (messageInfo.getMessage().getCurrMessage() != null)) {
+				// if a message has been edited
+				body.put("previousMessage", messageInfo.getMessage().getPreviousMessage());
+				body.put("currMessage", messageInfo.getMessage().getCurrMessage());
+			}
+
+			body.put("entities", entities);
+			body.put("msg", messageInfo.getMessage().getText());
+			body.put("contextOn", messageInfo.contextActive());
+			body.put("functionPath", functionPath);
+			// return body;
+			// performTrigger(botConfig, botFunction, botAgent, functionPath, "", body);
+		}
+		// return null;
+	}
+
 	public void checkTriggerBot(BotConfiguration botConfig, JSONObject body, BotAgent botAgent, String triggerUID,
 			String triggerFunctionName) throws AgentNotFoundException, AgentOperationFailedException,
 			ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
@@ -1480,13 +1559,18 @@ public class SocialBotManagerService extends RESTService {
 						attlist, triggerAttributes, functionPath);
 			} else {
 				if (triggeredFunctionAttribute.hasStaticContent()) {
-					mapWithStaticContent(triggeredFunctionAttribute, triggeredBody);
-				} else {
-					// TODO
-					if(triggeredFunctionAttribute.getParameterType().equals("form")){
+					if (triggeredFunctionAttribute.getParameterType().equals("form")) {
 						mapWithStaticFormContent(triggeredFunctionAttribute, triggeredBody);
 					} else {
-						System.out.println("Unknown mapping" + triggeredFunctionAttribute.getContentType() + triggeredFunctionAttribute.getParameterType());
+						mapWithStaticContent(triggeredFunctionAttribute, triggeredBody);
+					}
+				} else {
+					// TODO
+					if (triggeredFunctionAttribute.getParameterType().equals("form")) {
+						mapWithStaticFormContent(triggeredFunctionAttribute, triggeredBody);
+					} else {
+						System.out.println("Unknown mapping" + triggeredFunctionAttribute.getContentType()
+								+ triggeredFunctionAttribute.getParameterType());
 					}
 				}
 			}
@@ -2768,6 +2852,41 @@ public class SocialBotManagerService extends RESTService {
 							chatMediator.getMessageCollector().addMessage(msg);
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							for (MessageInfo messageInfo : messageInfos) {
+								try {
+									System.out.println("here is run thread " + messageInfo.getTriggeredFunctionId());
+									/*
+									 * ClientResponse result = client.sendRequest("POST",
+									 * "SBFManager/bots/" + b.getName() + "/trigger/intent",
+									 * gson.toJson(messageInfo),
+									 * MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+									 */
+
+									String functionPath = "";
+									JSONObject body = new JSONObject();
+									BotAgent botAgent = getBotAgents().get(b.getName());
+									ServiceFunction sf = new ServiceFunction();
+									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
+											sf);
+									System.out.println(body);
+									if (body.containsKey("functionPath")) {
+										functionPath = body.getAsString("functionPath");
+										System.out.println(functionPath);
+										System.out.println(sf.getConsumes());
+										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
+										System.out.println(sf.getConsumes());
+										System.out.println("MIAMIAMIAMIAMIAMIAMI");
+										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
+										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+									}
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+							// chatMediator.sendMessageToChannel(orgChannel, "msgtext", new
+							// HashMap<String,IncomingMessage>(), "text", null);
+							
 							found = true;
 						}
 					}
@@ -2785,6 +2904,107 @@ public class SocialBotManagerService extends RESTService {
 			Gson gson = new Gson();
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
+		}
+
+		private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent,
+				String functionPath, String triggerUID,
+				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
+			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+				String userId = triggeredBody.getAsString("user");
+				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
+				String messengerID = sf.getMessengerName();
+
+				HashMap<String, String> headers = new HashMap<String, String>();
+				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					try {
+						File f = null;
+						if (triggeredBody.containsKey("fileBody")) {
+							byte[] decodedBytes = java.util.Base64.getDecoder()
+									.decode(triggeredBody.getAsString("fileBody"));
+							f = new File(triggeredBody.getAsString("fileName") + "."
+									+ triggeredBody.getAsString("fileType"));
+							/*
+							 * if(fileType.equals("")){
+							 * file = new File(fileName);
+							 * }
+							 */
+							try {
+								FileUtils.writeByteArrayToFile(f, decodedBytes);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+
+						String channel = triggeredBody.getAsString("channel");
+						Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+						functionPath.replace("[channel]", channel);
+						
+							
+						JSONObject form = (JSONObject) triggeredBody.get("form");
+						FormDataMultiPart mp = new FormDataMultiPart();
+						String queryParams = "?";
+						for (String key : form.keySet()) {
+							if(sf.getHttpMethod().equals("get")){
+								System.out.println(queryParams);
+								if (form.getAsString(key).equals("[channel]")) {
+									mp = mp.field(key, channel);
+								} else {
+									queryParams+=key+"="+form.getAsString(key)+"&";
+								}
+							} else {
+								if (form.getAsString(key).equals("[channel]")) {
+									mp = mp.field(key, channel);
+								} else {
+									mp = mp.field(key, form.getAsString(key));
+								}
+							}
+						}
+						WebTarget target = textClient
+								.target(sf.getServiceName() +functionPath+ queryParams);
+						if (f != null && f.exists()) {
+							FileDataBodyPart filePart = new FileDataBodyPart("file", f);
+							mp.bodyPart(filePart);
+						}
+
+						Response response = null;
+						if(sf.getHttpMethod().equals("get")){
+							response =  target.request().get();
+						} else {
+							response = target.request()
+								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+						}
+						
+						String test = response.readEntity(String.class);
+						mp.close();
+						try {
+							java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
+									+ triggeredBody.getAsString("fileType")));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+						/* triggeredBody = new JSONObject();
+						triggeredBody.put("channel", channel);
+						triggeredBody.put("text", test);
+						 */
+						JSONObject jsonResponse = (JSONObject) parser.parse(test);
+						for (String key : jsonResponse.keySet()) {
+							bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
+						}
+					 	bot.getMessenger(messengerID).setContextToBasic(channel,
+								userId);
+					 	// triggerChat(chat, triggeredBody);
+						return;
+
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+
+					}
+				
+
+			}
 		}
 
 		/**
@@ -2932,8 +3152,11 @@ public class SocialBotManagerService extends RESTService {
 				
 				try {
 					MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
-					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
-					GridFSFile file = gridFSBucket.find(Filters.eq("ID", fileId)).first();
+					GridFSBucket gridFSBucket = GridFSBuckets.create(database, "files");
+					gridFSBucket.find(Filters.empty());
+					ObjectId oId = new ObjectId(fileId);
+					BsonObjectId bId = new BsonObjectId(oId);
+					GridFSFile file = gridFSBucket.find(Filters.eq(bId)).first();
 					if (file == null) {
 						return Response.status(Response.Status.NOT_FOUND).entity("File with ID "+fileId+" not found").build();
 					}
