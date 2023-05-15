@@ -154,6 +154,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
+import org.bson.BsonObjectId;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
@@ -3151,8 +3152,11 @@ public class SocialBotManagerService extends RESTService {
 				
 				try {
 					MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
-					GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
-					GridFSFile file = gridFSBucket.find(Filters.eq("ID", fileId)).first();
+					GridFSBucket gridFSBucket = GridFSBuckets.create(database, "files");
+					gridFSBucket.find(Filters.empty());
+					ObjectId oId = new ObjectId(fileId);
+					BsonObjectId bId = new BsonObjectId(oId);
+					GridFSFile file = gridFSBucket.find(Filters.eq(bId)).first();
 					if (file == null) {
 						return Response.status(Response.Status.NOT_FOUND).entity("File with ID "+fileId+" not found").build();
 					}
