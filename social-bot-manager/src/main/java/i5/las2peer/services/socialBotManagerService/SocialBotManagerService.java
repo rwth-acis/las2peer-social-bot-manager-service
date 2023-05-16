@@ -2827,6 +2827,7 @@ public class SocialBotManagerService extends RESTService {
 		public Response handleRESTfulChat(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 				String input) {
 					RESTfulChatResponse answerMsg = null;
+					System.out.println("checking user email");
 					try{
 						UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
 							String email = userAgent.getEmail();
