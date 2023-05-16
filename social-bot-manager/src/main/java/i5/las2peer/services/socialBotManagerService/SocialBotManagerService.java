@@ -3191,6 +3191,50 @@ public class SocialBotManagerService extends RESTService {
 			return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 		}
 
+		@GET
+		@Path("/{bot}/{organization}/{channel}/{label1}/{label2}/files")
+		@Produces(MediaType.APPLICATION_JSON)
+		@ApiOperation(value = "Download file", produces = MediaType.APPLICATION_OCTET_STREAM)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "File downloaded successfully"),
+				@ApiResponse(code = 404, message = "File not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response getRESTfulChatFileIds(@PathParam("bot") String bot,
+				@PathParam("organization") String organization,
+				@PathParam("channel") String channel) {
+			if (userFileIds.containsKey(channel)) {
+				return Response.status(Status.BAD_REQUEST).entity(userFileIds.get(channel)).build();
+			} else {
+				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
+			}
+		}
+
+		@POST
+		@Path("/{bot}/{organization}/{channel}/{label1}/{label2}/files")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiOperation(value = "Download file", produces = MediaType.APPLICATION_OCTET_STREAM)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "File downloaded successfully"),
+				@ApiResponse(code = 404, message = "File not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response updateRESTfulChatFileIds(@PathParam("bot") String bot,
+				@PathParam("organization") String organization,
+				@PathParam("channel") String channel, @FormDataParam("files") byte[] files) {
+			String content = new String(files);
+			if(content.equals(null)){
+				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
+			}
+			try{
+				JSONObject o = (JSONObject) (new JSONParser(0)).parse(content);
+				userFileIds.put(channel, o);
+				return Response.status(Status.BAD_REQUEST).entity("cool").build();
+			} catch (Exception e ){
+				e.printStackTrace();
+				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
+			}
+		}
+
+
 		private String getFileType(InputStream uploadedInputStream) throws IOException {
 			Tika tika = new Tika();
 			return tika.detect(uploadedInputStream);
