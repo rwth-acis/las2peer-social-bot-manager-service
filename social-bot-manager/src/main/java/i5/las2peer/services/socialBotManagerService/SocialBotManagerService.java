@@ -2808,7 +2808,8 @@ public class SocialBotManagerService extends RESTService {
 	public static class RESTfulChatResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
-
+		// adding this temporarily to avoid needing to add stuff elsewhere
+		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 		/**
 		 * Handles RESTful chat requests.
 		 *
@@ -2828,10 +2829,11 @@ public class SocialBotManagerService extends RESTService {
 				String input) {
 					RESTfulChatResponse answerMsg = null;
 					System.out.println("checking user email");
+					String email = "";
 					try{
 						UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-							String email = userAgent.getEmail();
-							System.out.println("user has following email : " + email);
+						email = userAgent.getEmail();
+						emailToChannel.put(email, channel);
 					} catch (Exception e){
 						e.printStackTrace();
 					}
@@ -2885,6 +2887,7 @@ public class SocialBotManagerService extends RESTService {
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 										System.out.println(sf.getConsumes());
 										System.out.println("MIAMIAMIAMIAMIAMIAMI");
+										body.put("email", email);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
@@ -2922,7 +2925,7 @@ public class SocialBotManagerService extends RESTService {
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
-
+				String email = triggeredBody.getAsString("email");
 				HashMap<String, String> headers = new HashMap<String, String>();
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 					try {
@@ -2959,13 +2962,23 @@ public class SocialBotManagerService extends RESTService {
 								if (form.getAsString(key).equals("[channel]")) {
 									mp = mp.field(key, channel);
 								} else {
-									queryParams+=key+"="+form.getAsString(key)+"&";
+									queryParams+=key+"="+channel+"&";
+								}
+								if (form.getAsString(key).equals("[email]")) {
+									mp = mp.field(key, email);
+								} else {
+									queryParams+=key+"="+email+"&";
 								}
 							} else {
 								if (form.getAsString(key).equals("[channel]")) {
 									mp = mp.field(key, channel);
 								} else {
 									mp = mp.field(key, form.getAsString(key));
+								}
+								if (form.getAsString(key).equals("[email]")) {
+									mp = mp.field(key, email);
+								} else {
+									mp = mp.field(key, email);
 								}
 							}
 						}
@@ -3219,7 +3232,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@POST
-		@Path("/{bot}/{organization}/{channel}/{label1}/{label2}/files")
+		@Path("/{channel}/{label1}/{label2}/files")
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiOperation(value = "Download file", produces = MediaType.APPLICATION_OCTET_STREAM)
 		@ApiResponses(value = {
@@ -3230,6 +3243,10 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel, @FormDataParam("files") byte[] files) {
 			String content = new String(files);
+			if(emailToChannel.containsKey(channel)){
+				// kinda abusing code here
+				channel = emailToChannel.get(channel);
+			}
 			if(content.equals(null)){
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
