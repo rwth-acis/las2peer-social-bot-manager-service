@@ -82,6 +82,7 @@ import i5.las2peer.api.persistency.Envelope;
 import i5.las2peer.api.persistency.EnvelopeAccessDeniedException;
 import i5.las2peer.api.persistency.EnvelopeNotFoundException;
 import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
+import i5.las2peer.api.security.Agent;
 import i5.las2peer.api.security.AgentAccessDeniedException;
 import i5.las2peer.api.security.AgentAlreadyExistsException;
 import i5.las2peer.api.security.AgentException;
@@ -2826,6 +2827,13 @@ public class SocialBotManagerService extends RESTService {
 		public Response handleRESTfulChat(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 				String input) {
 					RESTfulChatResponse answerMsg = null;
+					try{
+						UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
+							String email = userAgent.getEmail();
+							System.out.println("user has following email : " + email);
+					} catch (Exception e){
+						e.printStackTrace();
+					}
 			try {
 				Bot b = null;
 				for(Bot botIterator: getConfig().getBots().values()){
