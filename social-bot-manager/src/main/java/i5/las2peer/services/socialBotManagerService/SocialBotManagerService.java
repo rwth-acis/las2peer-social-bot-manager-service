@@ -2806,7 +2806,7 @@ public class SocialBotManagerService extends RESTService {
 	@Path("/RESTfulChat")
 	public static class RESTfulChatResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
-
+		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
 
 		/**
 		 * Handles RESTful chat requests.
