@@ -2890,7 +2890,9 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
+										
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										answerMsg.setReqBody(body);
 									}
 								} catch (Exception e) {
 									e.printStackTrace();
@@ -3109,10 +3111,57 @@ public class SocialBotManagerService extends RESTService {
 							msgcollector.handle(encoded, fname, ftype, orgChannel);
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							String email = "";
+							for (MessageInfo messageInfo : messageInfos) {
+								try {
+									try{
+										UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
+										email = userAgent.getEmail();
+										emailToChannel.put(email, channel);
+									} catch (Exception e){
+										e.printStackTrace();
+									}
+									/*
+									 * ClientResponse result = client.sendRequest("POST",
+									 * "SBFManager/bots/" + b.getName() + "/trigger/intent",
+									 * gson.toJson(messageInfo),
+									 * MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+									 */
+
+									String functionPath = "";
+									JSONObject body = new JSONObject();
+									BotAgent botAgent = getBotAgents().get(b.getName());
+									ServiceFunction sf = new ServiceFunction();
+									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
+											sf);
+									System.out.println(body);
+									if (body.containsKey("functionPath")) {
+										functionPath = body.getAsString("functionPath");
+										System.out.println(functionPath);
+										System.out.println(sf.getConsumes());
+										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
+										body.put("email", email);
+										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										body.remove("fileBody");
+										for(String key : body.keySet()){
+											if(body.get(key) != null && body.get(key).toString().equals("[channel]")){
+												body.put(key, messageInfo.getMessage().getChannel());
+											}
+										}
+										answerMsg.setReqBody(body);
+									}
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
 							System.out.println(answerMsg.getMessage());
 							if(fileId!=null) answerMsg.setFileID(fileId.toString());
 							System.out.println("handling file");
 							found = true;
+
+							// start to perform bot action in case it is triggered
+							
 							/*MiniClient client = new MiniClient();
 							System.out.println("Addr: "+addr);
 							client.setConnectorEndpoint(addr);

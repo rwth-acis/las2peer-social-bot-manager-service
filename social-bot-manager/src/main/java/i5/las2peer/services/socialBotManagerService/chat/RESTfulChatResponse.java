@@ -7,15 +7,18 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+import net.minidev.json.JSONObject;
 
 public class RESTfulChatResponse {
     private String message;
     private List<Object> interactiveElements;
     private String fileId;
     private InteractiveChatElementType type;
+    private JSONObject reqBody;
 
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
         this(text);
+        reqBody = new JSONObject();
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
         setType(type);
         if(hashMap != null){
@@ -66,5 +69,13 @@ public class RESTfulChatResponse {
 
     public void setType(String type) {
         this.type = InteractiveChatElementType.valueOf(type.toUpperCase());
+    }
+
+    public JSONObject getReqBody() {
+        return reqBody;
+    }
+
+    public void setReqBody(JSONObject reqBody) {
+        this.reqBody = reqBody;
     }
 }
