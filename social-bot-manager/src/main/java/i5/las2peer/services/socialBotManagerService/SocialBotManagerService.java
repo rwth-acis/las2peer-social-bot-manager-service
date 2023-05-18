@@ -3288,8 +3288,7 @@ public class SocialBotManagerService extends RESTService {
 				@ApiResponse(code = 200, message = "File downloaded successfully"),
 				@ApiResponse(code = 404, message = "File not found"),
 				@ApiResponse(code = 500, message = "Internal server error") })
-		public Response updateRESTfulChatFileIds(@PathParam("bot") String bot,
-				@PathParam("organization") String organization,
+		public Response updateRESTfulChatFileIds(
 				@PathParam("channel") String channel, @FormDataParam("files") byte[] files) {
 			String content = new String(files);
 			if(emailToChannel.containsKey(channel)){
