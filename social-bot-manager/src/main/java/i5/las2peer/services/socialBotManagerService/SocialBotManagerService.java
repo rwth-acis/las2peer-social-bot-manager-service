@@ -2966,25 +2966,19 @@ public class SocialBotManagerService extends RESTService {
 							if(sf.getHttpMethod().equals("get")){
 								System.out.println(queryParams);
 								if (form.getAsString(key).equals("[channel]")) {
-									mp = mp.field(key, channel);
-								} else {
 									queryParams+=key+"="+channel+"&";
-								}
-								if (form.getAsString(key).equals("[email]")) {
-									mp = mp.field(key, email);
-								} else {
+								} else if (form.getAsString(key).equals("[email]")) {
 									queryParams+=key+"="+email+"&";
+								} else {
+									queryParams+=key+"="+form.getAsString(key)+"&";
 								}
 							} else {
 								if (form.getAsString(key).equals("[channel]")) {
 									mp = mp.field(key, channel);
+								} else  if (form.getAsString(key).equals("[email]")) {
+									mp = mp.field(key, email);
 								} else {
 									mp = mp.field(key, form.getAsString(key));
-								}
-								if (form.getAsString(key).equals("[email]")) {
-									mp = mp.field(key, email);
-								} else {
-									mp = mp.field(key, email);
 								}
 							}
 						}
