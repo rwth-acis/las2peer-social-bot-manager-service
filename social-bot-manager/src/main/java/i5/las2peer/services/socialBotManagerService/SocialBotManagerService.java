@@ -2927,6 +2927,7 @@ public class SocialBotManagerService extends RESTService {
 				String functionPath, String triggerUID,
 				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+				System.out.println("Starting Bot Action");
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
@@ -2987,6 +2988,7 @@ public class SocialBotManagerService extends RESTService {
 								}
 							}
 						}
+						System.out.println("Calling following URL: " + sf.getServiceName() +functionPath+ queryParams);
 						WebTarget target = textClient
 								.target(sf.getServiceName() +functionPath+ queryParams);
 						if (f != null && f.exists()) {
@@ -3003,6 +3005,8 @@ public class SocialBotManagerService extends RESTService {
 						}
 						
 						String test = response.readEntity(String.class);
+						System.out.println("RESPONSE IS");
+						System.out.println(test);
 						mp.close();
 						try {
 							java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
