@@ -2896,6 +2896,10 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println(body);
 										answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										answerMsg.setReqBody(body);
+										if(body.containsKey("resBody") && ((JSONObject)body.get("resBody")).containsKey("interactiveElements")){
+											List<Object> ils = (List<Object>) ((JSONObject)body.get("resBody")).get("interactiveElements");
+											answerMsg.setInteractiveElements(ils);;
+										}
 									}
 								} catch (Exception e) {
 									e.printStackTrace();
@@ -3020,7 +3024,8 @@ public class SocialBotManagerService extends RESTService {
 						}
 					 	bot.getMessenger(messengerID).setContextToBasic(channel,
 								userId);
-					 	// triggerChat(chat, triggeredBody);
+					 	triggeredBody.put("resBody", jsonResponse);
+								// triggerChat(chat, triggeredBody);
 						return;
 
 					} catch (Exception e) {
