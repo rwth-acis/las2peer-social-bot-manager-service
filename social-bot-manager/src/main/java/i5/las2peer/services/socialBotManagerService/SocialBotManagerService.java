@@ -2890,8 +2890,11 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
-										
+										RESTfulChatResponse oldAnswerMsg = answerMsg;
+
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										System.out.println(body);
+										answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										answerMsg.setReqBody(body);
 									}
 								} catch (Exception e) {
