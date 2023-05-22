@@ -2861,8 +2861,11 @@ public class SocialBotManagerService extends RESTService {
 							}
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
+							System.out.println("check1");
 							m.handleMessages(messageInfos, b);
+							System.out.println("check2");
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							System.out.println("check3");
 							for (MessageInfo messageInfo : messageInfos) {
 								try {
 									System.out.println("here is run thread " + messageInfo.getTriggeredFunctionId());

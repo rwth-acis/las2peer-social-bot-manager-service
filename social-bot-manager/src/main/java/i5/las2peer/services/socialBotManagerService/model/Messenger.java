@@ -383,6 +383,7 @@ public class Messenger {
 					this.chatMediator.sendMessageToChannel(message.getChannel(),
 							"Dont start command inside command lol","text");
 				}
+				System.out.println("Do we arrive here 1");
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
@@ -430,6 +431,7 @@ public class Messenger {
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							}
 						} else {
+							System.out.println("Do we arrive here 2");
 							// any is a static forward
 							// TODO include entities of intents
 							// If there is no next state, stay in the same state
@@ -442,6 +444,7 @@ public class Messenger {
 								stateMap.put(message.getChannel(), state);
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
+								System.out.println("Do we arrive here 3");
 								System.out.println("try follow up message");
 								// check if a file was received during a conversation and search for a follow up
 								// incoming message which expects a file.
