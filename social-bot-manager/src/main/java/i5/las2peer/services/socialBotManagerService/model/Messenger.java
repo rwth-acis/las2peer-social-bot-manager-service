@@ -614,12 +614,14 @@ public class Messenger {
 									// System.out.println(recognizedEntities.get(message.getChannel()));
 									for (String entityName : entitySplit2) {
 										System.out.println("entity name is " + entityName);
-										for (Entity entity : recognizedEntities.get(message.getChannel())) {
-											System.out.println("entity2 name is " + entity.getEntityName());
-											if (entityName.equals(entity.getEntityName())) {
-												System.out.println("replacing now " + entity.getValue());
-												String replace = "[" + entity.getEntityName() + "]";
-												split = split.replace(replace, entity.getValue());
+										if(recognizedEntities != null && recognizedEntities.get(message.getChannel()) != null){
+											for (Entity entity : recognizedEntities.get(message.getChannel())) {
+												System.out.println("entity2 name is " + entity.getEntityName());
+												if (entityName.equals(entity.getEntityName())) {
+													System.out.println("replacing now " + entity.getValue());
+													String replace = "[" + entity.getEntityName() + "]";
+													split = split.replace(replace, entity.getValue());
+												}
 											}
 										}
 									}
