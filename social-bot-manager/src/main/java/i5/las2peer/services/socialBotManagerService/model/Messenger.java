@@ -181,12 +181,14 @@ public class Messenger {
 		Collection<Entity> recognizedEntitiesNew = recognizedEntities.get(channel);
 		// System.out.println("now is reco");
 		// System.out.println(recognizedEntitiesNew);
-		for (Entity entity : entities) {
-			recognizedEntitiesNew.add(entity);
+		if(recognizedEntitiesNew != null){
+			for (Entity entity : entities) {
+				recognizedEntitiesNew.add(entity);
+			}
+			System.out.println(recognizedEntitiesNew);
+			// System.out.println("finish");
+			recognizedEntities.put(channel, recognizedEntitiesNew);
 		}
-		System.out.println(recognizedEntitiesNew);
-		// System.out.println("finish");
-		recognizedEntities.put(channel, recognizedEntitiesNew);
 	}
 	// set the context of the specified channel
 	/*
