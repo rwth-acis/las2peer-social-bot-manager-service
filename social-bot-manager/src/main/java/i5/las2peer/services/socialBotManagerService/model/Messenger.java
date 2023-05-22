@@ -432,6 +432,7 @@ public class Messenger {
 							}
 						} else {
 							System.out.println("Do we arrive here 2");
+							System.out.println(state.getFollowingMessages());
 							// any is a static forward
 							// TODO include entities of intents
 							// If there is no next state, stay in the same state
