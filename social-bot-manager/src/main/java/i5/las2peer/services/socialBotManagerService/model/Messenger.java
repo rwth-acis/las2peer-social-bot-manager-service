@@ -619,7 +619,7 @@ public class Messenger {
 										if(recognizedEntities != null && recognizedEntities.get(message.getChannel()) != null){
 											for (Entity entity : recognizedEntities.get(message.getChannel())) {
 												System.out.println("entity2 name is " + entity.getEntityName());
-												if (entityName.equals(entity.getEntityName())) {
+												if (entityName.equals(entity.getEntityName()) && entity.getValue() != null) {
 													System.out.println("replacing now " + entity.getValue());
 													String replace = "[" + entity.getEntityName() + "]";
 													split = split.replace(replace, entity.getValue());
