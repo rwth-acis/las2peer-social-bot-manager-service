@@ -15,12 +15,15 @@ public class RESTfulChatResponse {
     private String fileId;
     private InteractiveChatElementType type;
     private JSONObject reqBody;
+    private boolean isFile;
+
 
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
         this(text);
         reqBody = new JSONObject();
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
         setType(type);
+        isFile = false;
         if(hashMap != null){
             for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
                 String key = entry.getKey();
@@ -28,6 +31,9 @@ public class RESTfulChatResponse {
                 String intent = key;
                 if(intent==null||intent=="") intent = value.getIntentKeyword();
                 InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
+                if(value.expectsFile()){
+                    isFile = true;
+                }
                 icel.add(ice);
             }
         }
@@ -77,5 +83,13 @@ public class RESTfulChatResponse {
 
     public void setReqBody(JSONObject reqBody) {
         this.reqBody = reqBody;
+    }
+
+    public boolean isFile() {
+        return isFile;
+    }
+
+    public void setFile(boolean isFile) {
+        this.isFile = isFile;
     }
 }
