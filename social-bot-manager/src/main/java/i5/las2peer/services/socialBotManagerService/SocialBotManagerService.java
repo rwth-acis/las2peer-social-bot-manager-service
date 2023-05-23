@@ -2984,6 +2984,13 @@ public class SocialBotManagerService extends RESTService {
 									mp = mp.field(key, channel);
 								} else  if (form.getAsString(key).equals("[email]")) {
 									mp = mp.field(key, email);
+								} else if(form.getAsString(key).contains("[")) {
+									JSONObject entities = (JSONObject) triggeredBody.get("entities");
+									for(String eName : entities.keySet()){
+										if(form.getAsString(key).toLowerCase().contains(eName)){
+											mp = mp.field(key, ((JSONObject) entities.get(eName)).get("value").toString());
+										}
+									}
 								} else {
 									mp = mp.field(key, form.getAsString(key));
 								}
