@@ -3149,6 +3149,7 @@ public class SocialBotManagerService extends RESTService {
 										for(String mail : emailToChannel.keySet()){
 											System.out.println(mail);
 											if(emailToChannel.get(mail).equals(channel)){
+												System.out.println("found email, setting as attribute");
 												email = mail;
 												break;
 											}
