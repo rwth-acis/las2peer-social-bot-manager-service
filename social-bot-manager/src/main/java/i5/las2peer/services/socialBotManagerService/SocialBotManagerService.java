@@ -2965,7 +2965,12 @@ public class SocialBotManagerService extends RESTService {
 						Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 						functionPath = functionPath.replace("[channel]", channel);
 						functionPath = functionPath.replace("[email]", email);
-							
+						JSONObject entities = (JSONObject) triggeredBody.get("entities");
+						for(String eName : entities.keySet()){
+							if(functionPath.toLowerCase().contains("["+eName+"]")){
+								functionPath = functionPath.replace("["+eName+"]",((JSONObject) entities.get(eName)).get("value").toString());
+							}
+						}
 						JSONObject form = (JSONObject) triggeredBody.get("form");
 						FormDataMultiPart mp = new FormDataMultiPart();
 						String queryParams = "?";
@@ -2985,7 +2990,6 @@ public class SocialBotManagerService extends RESTService {
 								} else  if (form.getAsString(key).equals("[email]")) {
 									mp = mp.field(key, email);
 								} else if(form.getAsString(key).contains("[")) {
-									JSONObject entities = (JSONObject) triggeredBody.get("entities");
 									for(String eName : entities.keySet()){
 										if(form.getAsString(key).toLowerCase().contains(eName)){
 											mp = mp.field(key, ((JSONObject) entities.get(eName)).get("value").toString());
