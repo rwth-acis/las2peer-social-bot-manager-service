@@ -3129,6 +3129,12 @@ public class SocialBotManagerService extends RESTService {
 										emailToChannel.put(email, channel);
 									} catch (Exception e){
 										e.printStackTrace();
+										for(String mail : emailToChannel.keySet()){
+											if(emailToChannel.get(mail).equals(channel)){
+												email = mail;
+												break;
+											}
+										}
 									}
 									/*
 									 * ClientResponse result = client.sendRequest("POST",
