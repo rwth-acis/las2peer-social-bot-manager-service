@@ -2891,6 +2891,7 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println(sf.getConsumes());
 										System.out.println("MIAMIAMIAMIAMIAMIAMI");
 										body.put("email", email);
+										body.put("organization",organization);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
@@ -2965,6 +2966,7 @@ public class SocialBotManagerService extends RESTService {
 						Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 						functionPath = functionPath.replace("[channel]", channel);
 						functionPath = functionPath.replace("[email]", email);
+						functionPath = functionPath.replace("[organization]", triggeredBody.getAsString("organization"));
 						JSONObject entities = (JSONObject) triggeredBody.get("entities");
 						for(String eName : entities.keySet()){
 							if(functionPath.toLowerCase().contains("["+eName+"]")){
@@ -2981,6 +2983,8 @@ public class SocialBotManagerService extends RESTService {
 									queryParams+=key+"="+channel+"&";
 								} else if (form.getAsString(key).equals("[email]")) {
 									queryParams+=key+"="+email+"&";
+								} else if (form.getAsString(key).equals("[organization]")) {
+									queryParams+=key+"="+triggeredBody.getAsString("organization")+"&";
 								} else {
 									queryParams+=key+"="+form.getAsString(key)+"&";
 								}
@@ -2989,6 +2993,8 @@ public class SocialBotManagerService extends RESTService {
 									mp = mp.field(key, channel);
 								} else  if (form.getAsString(key).equals("[email]")) {
 									mp = mp.field(key, email);
+								} else  if (form.getAsString(key).equals("[organization]")) {
+									mp = mp.field(key, triggeredBody.get("organization").toString());
 								} else if(form.getAsString(key).contains("[")) {
 									for(String eName : entities.keySet()){
 										if(form.getAsString(key).toLowerCase().contains(eName)){
@@ -3167,6 +3173,7 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println(sf.getConsumes());
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 										body.put("email", email);
+										body.put("organization",organization);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										body.remove("fileBody");
