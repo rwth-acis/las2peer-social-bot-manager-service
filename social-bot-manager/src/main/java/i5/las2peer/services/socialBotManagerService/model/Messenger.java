@@ -318,8 +318,7 @@ public class Messenger {
 				if (message.getText().startsWith("!")) {
 					// Split at first occurring whitespace
 
-					String splitMessage[] = message.getText().split("\\s+", 2);
-
+					String splitMessage[] = message.getText().split("\\s+", 3);
 					// First word without '!' prefix
 					String intentKeyword = splitMessage[0].substring(1);
 					IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
@@ -331,7 +330,12 @@ public class Messenger {
 							ArrayList<String> empty = new ArrayList<String>();
 							empty.add("");
 							incMsg = new IncomingMessage(intentKeyword, "", false,empty,null,"",null, "","text");
-							incMsg.setEntityKeyword("newEntity");
+							if(splitMessage.length > 3){
+								incMsg.setEntityKeyword(splitMessage[1]);
+							} else {
+								incMsg.setEntityKeyword("newEntity");
+							}
+							
 						}
 					}
 
@@ -343,8 +347,8 @@ public class Messenger {
 					}
 					// Entity value is the rest of the message. The whole rest
 					// is in the second element, since we only split it into two parts.
-					if (splitMessage.length > 1) {
-						entityValue = splitMessage[1];
+					if (splitMessage.length > 2) {
+						entityValue = splitMessage[2];
 					}
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
@@ -377,7 +381,7 @@ public class Messenger {
 					if (!intent.getKeyword().equals("exit")) {
 						storedSession.put(message.getChannel(), state);
 						state = null;
-					}
+					} 
 			 	}
 				if (state != null && message.getText().startsWith("!")
 						&& storedSession.containsKey(message.getChannel())) {
