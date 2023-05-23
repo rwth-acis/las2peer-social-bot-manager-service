@@ -3305,6 +3305,7 @@ public class SocialBotManagerService extends RESTService {
 				@ApiResponse(code = 500, message = "Internal server error") })
 		public Response updateRESTfulChatFileIds(
 				@PathParam("channel") String channel, @FormDataParam("files") byte[] files) {
+			System.out.println("Received files for channel: "+channel );
 			String content = new String(files);
 			if(emailToChannel.containsKey(channel)){
 				// kinda abusing code here
