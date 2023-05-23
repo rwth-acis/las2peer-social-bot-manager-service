@@ -330,7 +330,7 @@ public class Messenger {
 							ArrayList<String> empty = new ArrayList<String>();
 							empty.add("");
 							incMsg = new IncomingMessage(intentKeyword, "", false,empty,null,"",null, "","text");
-							if(splitMessage.length > 2){
+							if(splitMessage.length > 1){
 								incMsg.setEntityKeyword(incMsg.getIntentKeyword());
 							} else {
 								incMsg.setEntityKeyword("newEntity");
@@ -338,13 +338,13 @@ public class Messenger {
 							
 						}
 					}
-
+					if(splitMessage.length > 1){
+						incMsg.setEntityKeyword(incMsg.getIntentKeyword());
+					} else {
+						incMsg.setEntityKeyword("newEntity");
+					}
 					String entityKeyword = incMsg.getEntityKeyword();
 					String entityValue = null;
-					if (entityKeyword == null) {
-						incMsg.setEntityKeyword("newEntity");
-						entityKeyword = "newEntity";
-					}
 					// Entity value is the rest of the message. The whole rest
 					// is in the second element, since we only split it into two parts.
 					if (splitMessage.length > 1) {
