@@ -2810,6 +2810,9 @@ public class SocialBotManagerService extends RESTService {
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
+
+		// adding this temporarily to avoid needing to add stuff elsewhere
+		static HashMap<String, Messenger> channelToMessenger = new HashMap<String, Messenger>();
 		/**
 		 * Handles RESTful chat requests.
 		 *
@@ -2850,6 +2853,7 @@ public class SocialBotManagerService extends RESTService {
 					boolean found = false;
 					for (Messenger m : b.getMessengers().values()) {
 						if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
+							channelToMessenger.put(channel, m);
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 							JSONParser p = new JSONParser();
 							JSONObject bodyInput = (JSONObject) p.parse(input);
@@ -2941,6 +2945,8 @@ public class SocialBotManagerService extends RESTService {
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
 				String email = triggeredBody.getAsString("email");
+				ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+				Messenger m = bot.getMessenger(messengerID);
 				HashMap<String, String> headers = new HashMap<String, String>();
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 					try {
@@ -2968,8 +2974,9 @@ public class SocialBotManagerService extends RESTService {
 						functionPath = functionPath.replace("[channel]", channel);
 						functionPath = functionPath.replace("[email]", email);
 						functionPath = functionPath.replace("[organization]", triggeredBody.getAsString("organization"));
+						functionPath = m.replaceVariables(channel, functionPath);
 						JSONObject entities = (JSONObject) triggeredBody.get("entities");
-						for(String eName : entities.keySet()){
+						for(String eName : entities.keySet()){;
 							if(functionPath.toLowerCase().contains("["+eName+"]")){
 								functionPath = functionPath.replace("["+eName+"]",((JSONObject) entities.get(eName)).get("value").toString());
 							}
@@ -3034,7 +3041,7 @@ public class SocialBotManagerService extends RESTService {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-						ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+
 						/* triggeredBody = new JSONObject();
 						triggeredBody.put("channel", channel);
 						triggeredBody.put("text", test);
@@ -3310,7 +3317,7 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
 			if (userFileIds.containsKey(channel)) {
-				return Response.status(Status.BAD_REQUEST).entity(userFileIds.get(channel)).build();
+				return Response.status(Status.ACCEPTED).entity(userFileIds.get(channel)).build();
 			} else {
 				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
 			}
@@ -3338,6 +3345,11 @@ public class SocialBotManagerService extends RESTService {
 			try{
 				JSONObject o = (JSONObject) (new JSONParser(0)).parse(content);
 				userFileIds.put(channel, o);
+				System.out.println(o);
+				Messenger m = channelToMessenger.get(channel);
+				for (String key : o.keySet()) {
+					m.addVariable(channel, key, o.getAsString(key));
+				}
 				return Response.status(Status.BAD_REQUEST).entity("cool").build();
 			} catch (Exception e ){
 				e.printStackTrace();
