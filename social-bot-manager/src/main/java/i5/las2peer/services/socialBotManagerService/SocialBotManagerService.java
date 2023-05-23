@@ -3147,6 +3147,7 @@ public class SocialBotManagerService extends RESTService {
 									} catch (Exception e){
 										e.printStackTrace();
 										for(String mail : emailToChannel.keySet()){
+											System.out.println(mail);
 											if(emailToChannel.get(mail).equals(channel)){
 												email = mail;
 												break;
