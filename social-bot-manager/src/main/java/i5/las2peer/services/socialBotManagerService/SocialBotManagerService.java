@@ -2963,8 +2963,8 @@ public class SocialBotManagerService extends RESTService {
 
 						String channel = triggeredBody.getAsString("channel");
 						Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-						functionPath.replace("[channel]", channel);
-						
+						functionPath = functionPath.replace("[channel]", channel);
+						functionPath = functionPath.replace("[email]", email);
 							
 						JSONObject form = (JSONObject) triggeredBody.get("form");
 						FormDataMultiPart mp = new FormDataMultiPart();
