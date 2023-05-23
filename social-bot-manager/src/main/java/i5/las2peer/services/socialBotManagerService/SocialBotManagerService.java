@@ -2892,6 +2892,7 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println("MIAMIAMIAMIAMIAMIAMI");
 										body.put("email", email);
 										body.put("organization",organization);
+										System.out.println(body);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
@@ -3168,7 +3169,6 @@ public class SocialBotManagerService extends RESTService {
 									ServiceFunction sf = new ServiceFunction();
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
 											sf);
-									System.out.println(body);
 									if (body.containsKey("functionPath")) {
 										functionPath = body.getAsString("functionPath");
 										System.out.println(functionPath);
@@ -3176,6 +3176,7 @@ public class SocialBotManagerService extends RESTService {
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 										body.put("email", email);
 										body.put("organization",organization);
+										System.out.println(body);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										body.remove("fileBody");
