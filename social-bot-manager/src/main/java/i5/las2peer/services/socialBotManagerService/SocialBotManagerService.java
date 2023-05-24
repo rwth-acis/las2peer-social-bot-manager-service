@@ -3312,16 +3312,19 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = {
 				@ApiResponse(code = 200, message = "File downloaded successfully"),
 				@ApiResponse(code = 404, message = "File not found"),
-				@ApiResponse(code = 500, message = "Internal server error") })
+				@ApiResponse(code = 500, message = "Internal server error") })gi
 		public Response getRESTfulChatFileIds(@PathParam("bot") String bot,
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
 			if (userFileIds.containsKey(channel)) {
 				JSONObject r = userFileIds.get(channel);
 				userFileIds.remove(channel);
+				if(r.containsKey("error")){
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(r).build();
+				}
 				return Response.status(Status.OK).entity(r).build();
 			} else {
-				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
+				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
 			}
 		}
 
