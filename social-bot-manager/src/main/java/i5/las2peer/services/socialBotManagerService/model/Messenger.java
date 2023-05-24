@@ -280,11 +280,12 @@ public class Messenger {
 
 	public String replaceVariables(String channel, String text) {
 		HashMap<String, String> variables = this.getUserVariables().get(channel);
-		for (String key : variables.keySet()){
-			String composed = "["+key+"]";
-			text = text.replace(composed, variables.get(key));
+		if(variables != null ){
+			for (String key : variables.keySet()){
+				String composed = "["+key+"]";
+				text = text.replace(composed, variables.get(key));
+			}
 		}
-		System.out.println("text before entity db stuff: " + text);
 		String split[] = text.split("\\[");
 		for (int i = 1; i < split.length ; i++){
 
@@ -298,8 +299,6 @@ public class Messenger {
 
 			}
 		}
-		
-		System.out.println("text after entity db stuff: " + text);
 		return text;
 	}
 
