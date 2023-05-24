@@ -3319,9 +3319,9 @@ public class SocialBotManagerService extends RESTService {
 		public Response getRESTfulChatFileIds(@PathParam("bot") String bot,
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
-			if (userFileIds.containsKey(channel)) {
-				JSONObject r = userFileIds.get(channel);
-				userFileIds.remove(channel);
+			if (userFileIds.containsKey(organization + "-" +channel)) {
+				JSONObject r = userFileIds.get(organization + "-" +channel);
+				userFileIds.remove(organization + "-" +channel);
 				if(r.containsKey("error")){
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(r).build();
 				}
