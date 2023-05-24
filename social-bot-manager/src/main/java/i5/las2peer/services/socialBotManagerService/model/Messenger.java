@@ -287,11 +287,15 @@ public class Messenger {
 		System.out.println("text before entity db stuff: " + text);
 		String split[] = text.split("\\[");
 		for (int i = 1; i < split.length ; i++){
+
 			String name = split[i].split("\\]")[0];
+			System.out.println("Removing entity " + name);
 			String val = getEntityValue(channel, name);
+			System.out.println("Removing with value " + val);
 			if(!val.equals("")){
 				String composed = "["+name+"]";
 				text = text.replace(composed, val);
+
 			}
 		}
 		
@@ -782,13 +786,16 @@ public class Messenger {
 			PreparedStatement stmt = null;
 			Connection conn = null;
 			ResultSet rs = null;
+
 			conn = db.getDataSource().getConnection();
 			stmt = conn.prepareStatement("SELECT value FROM attributes WHERE `channel`=? `attributes.key`=?");
 			stmt.setString(1, channel);
 			stmt.setString(2, entityName);
+			System.out.println("Executing query now " + stmt.toString());
 			rs = stmt.executeQuery();
 			if(rs.next()){
 				String val = rs.getString("value");
+				System.out.println("found value " + val);
 				if(val != null && !val.equals("")){
 					return val;
 				}
