@@ -3317,7 +3317,9 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
 			if (userFileIds.containsKey(channel)) {
-				return Response.status(Status.ACCEPTED).entity(userFileIds.get(channel)).build();
+				JSONObject r = userFileIds.get(channel);
+				userFileIds.remove(channel);
+				return Response.status(Status.OK).entity(r).build();
 			} else {
 				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
 			}
