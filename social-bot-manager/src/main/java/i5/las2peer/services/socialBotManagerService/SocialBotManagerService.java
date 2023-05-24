@@ -3192,8 +3192,7 @@ public class SocialBotManagerService extends RESTService {
 												body.put(key, messageInfo.getMessage().getChannel());
 											}
 											if(body.get(key) != null && body.get(key).toString().contains("[")&& body.get(key).toString().contains("]")){
-												System.out.println("replacing " + key +" "+body.get(key).toString() + " "+ m.replaceVariables(channel,body.get(key).toString()));
-												body.put(key, m.replaceVariables(channel,body.get(key).toString()));
+												body.put(key, m.replaceVariables(orgChannel,body.get(key).toString()));
 											}
 										}
 										answerMsg.setReqBody(body);
