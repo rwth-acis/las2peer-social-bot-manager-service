@@ -3191,6 +3191,9 @@ public class SocialBotManagerService extends RESTService {
 											if(body.get(key) != null && body.get(key).toString().equals("[channel]")){
 												body.put(key, messageInfo.getMessage().getChannel());
 											}
+											if(body.get(key) != null && body.get(key).toString().contains("\\[")&& body.get(key).toString().contains("\\]")){
+												body.put(key, m.replaceVariables(channel,body.get(key).toString() ));
+											}
 										}
 										answerMsg.setReqBody(body);
 									}
