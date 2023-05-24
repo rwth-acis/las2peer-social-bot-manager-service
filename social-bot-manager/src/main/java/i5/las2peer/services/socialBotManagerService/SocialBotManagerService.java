@@ -2836,7 +2836,7 @@ public class SocialBotManagerService extends RESTService {
 					try{
 						UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
 						email = userAgent.getEmail();
-						emailToChannel.put(email, channel);
+						emailToChannel.put(email, organization +"-"+channel);
 					} catch (Exception e){
 						e.printStackTrace();
 					}
@@ -2853,12 +2853,12 @@ public class SocialBotManagerService extends RESTService {
 					boolean found = false;
 					for (Messenger m : b.getMessengers().values()) {
 						if(m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator){
-							channelToMessenger.put(channel, m);
+							
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 							JSONParser p = new JSONParser();
 							JSONObject bodyInput = (JSONObject) p.parse(input);
 							String orgChannel = organization + "-" + channel;
-							
+							channelToMessenger.put(orgChannel, m);
 							String msgtext = bodyInput.getAsString("message");
 							if(msgtext==null || msgtext.equals("")){
 								return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
@@ -3151,7 +3151,7 @@ public class SocialBotManagerService extends RESTService {
 									try{
 										UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
 										email = userAgent.getEmail();
-										emailToChannel.put(email, channel);
+										emailToChannel.put(email, organization+"-"+channel);
 									} catch (Exception e){
 										e.printStackTrace();
 										for(String mail : emailToChannel.keySet()){
@@ -3355,6 +3355,9 @@ public class SocialBotManagerService extends RESTService {
 				userFileIds.put(channel, o);
 				System.out.println(o);
 				Messenger m = channelToMessenger.get(channel);
+				if(m == null){
+					m = channelToMessenger.get(channel.split("-")[1]);
+				}
 				for (String key : o.keySet()) {
 					m.addVariable(channel, key, o.getAsString(key));
 				}
