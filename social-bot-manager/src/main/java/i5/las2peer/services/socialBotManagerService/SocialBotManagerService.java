@@ -3312,7 +3312,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = {
 				@ApiResponse(code = 200, message = "File downloaded successfully"),
 				@ApiResponse(code = 404, message = "File not found"),
-				@ApiResponse(code = 500, message = "Internal server error") })gi
+				@ApiResponse(code = 500, message = "Internal server error") })
 		public Response getRESTfulChatFileIds(@PathParam("bot") String bot,
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
