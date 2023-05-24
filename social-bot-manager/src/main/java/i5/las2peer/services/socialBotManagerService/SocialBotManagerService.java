@@ -3188,10 +3188,12 @@ public class SocialBotManagerService extends RESTService {
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										body.remove("fileBody");
 										for(String key : body.keySet()){
+											System.out.println("checking " + key);
 											if(body.get(key) != null && body.get(key).toString().equals("[channel]")){
 												body.put(key, messageInfo.getMessage().getChannel());
 											}
 											if(body.get(key) != null && body.get(key).toString().contains("\\[")&& body.get(key).toString().contains("\\]")){
+												System.out.println("replacing " + key);
 												body.put(key, m.replaceVariables(channel,body.get(key).toString() ));
 											}
 										}
