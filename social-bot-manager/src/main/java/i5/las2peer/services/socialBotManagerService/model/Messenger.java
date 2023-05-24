@@ -284,6 +284,15 @@ public class Messenger {
 			String composed = "["+key+"]";
 			text = text.replace(composed, variables.get(key));
 		}
+		String split[] = text.split("[");
+		for (int i = 1; i < split.length ; i++){
+			String name = split[i].split("]")[0];
+			String val = getEntityValue(channel, name);
+			if(!val.equals("")){
+				String composed = "["+name+"]";
+				text = text.replace(composed, val);
+			}
+		}
 		return text;
 	}
 
@@ -763,6 +772,33 @@ public class Messenger {
 
 	public void close() {
 		chatMediator.close();
+	}
+
+	public String getEntityValue(String channel, String entityName){
+		try {
+			PreparedStatement stmt = null;
+			Connection conn = null;
+			ResultSet rs = null;
+			conn = db.getDataSource().getConnection();
+			stmt = conn.prepareStatement("SELECT value FROM attributes WHERE `channel`=? `attributes.key`=?");
+			stmt.setString(1, channel);
+			stmt.setString(2, entityName);
+			rs = stmt.executeQuery();
+			if(rs.next()){
+				String val = rs.getString("value");
+				if(val != null && !val.equals("")){
+					return val;
+				}
+				return "";
+				
+			}
+			return "";
+
+		} catch (Exception e){
+			
+			e.printStackTrace();
+			return "";
+		} 
 	}
 
 	private void safeEntities(ChatMessage msg, Bot bot, Intent intent){
