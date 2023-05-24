@@ -284,6 +284,7 @@ public class Messenger {
 			String composed = "["+key+"]";
 			text = text.replace(composed, variables.get(key));
 		}
+		System.out.println("text before entity db stuff: " + text);
 		String split[] = text.split("[");
 		for (int i = 1; i < split.length ; i++){
 			String name = split[i].split("]")[0];
@@ -293,6 +294,8 @@ public class Messenger {
 				text = text.replace(composed, val);
 			}
 		}
+		
+		System.out.println("text after entity db stuff: " + text);
 		return text;
 	}
 
