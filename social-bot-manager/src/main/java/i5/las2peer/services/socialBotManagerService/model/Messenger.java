@@ -788,7 +788,7 @@ public class Messenger {
 			ResultSet rs = null;
 
 			conn = db.getDataSource().getConnection();
-			stmt = conn.prepareStatement("SELECT value FROM attributes WHERE `channel`=? `attributes.key`=?");
+			stmt = conn.prepareStatement("SELECT value FROM attributes WHERE `channel`=? AND `attributes.key`=?");
 			stmt.setString(1, channel);
 			stmt.setString(2, entityName);
 			System.out.println("Executing query now " + stmt.toString());
