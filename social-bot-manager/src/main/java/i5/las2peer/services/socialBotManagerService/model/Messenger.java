@@ -285,9 +285,9 @@ public class Messenger {
 			text = text.replace(composed, variables.get(key));
 		}
 		System.out.println("text before entity db stuff: " + text);
-		String split[] = text.split("[");
+		String split[] = text.split("\\[");
 		for (int i = 1; i < split.length ; i++){
-			String name = split[i].split("]")[0];
+			String name = split[i].split("\\]")[0];
 			String val = getEntityValue(channel, name);
 			if(!val.equals("")){
 				String composed = "["+name+"]";
