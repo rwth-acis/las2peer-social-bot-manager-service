@@ -3325,7 +3325,8 @@ public class SocialBotManagerService extends RESTService {
 				if(r.containsKey("error")){
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(r).build();
 				}
-				return Response.status(Status.OK).entity(r).build();
+				Response response = handleRESTfulChat(bot, organization, channel, "!files");
+				return Response.status(Status.OK).entity(response).build();
 			} else {
 				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
 			}
