@@ -2984,36 +2984,38 @@ public class SocialBotManagerService extends RESTService {
 						JSONObject form = (JSONObject) triggeredBody.get("form");
 						FormDataMultiPart mp = new FormDataMultiPart();
 						String queryParams = "?";
-						for (String key : form.keySet()) {
-							if(sf.getHttpMethod().equals("get")){
-								System.out.println(queryParams);
-								if (form.getAsString(key).equals("[channel]")) {
-									queryParams+=key+"="+channel+"&";
-								} else if (form.getAsString(key).equals("[email]")) {
-									queryParams+=key+"="+email+"&";
-								} else if (form.getAsString(key).equals("[organization]")) {
-									queryParams+=key+"="+triggeredBody.getAsString("organization")+"&";
-								} else {
-									queryParams+=key+"="+form.getAsString(key)+"&";
-								}
-							} else {
-								if (form.getAsString(key).equals("[channel]")) {
-									mp = mp.field(key, channel);
-								} else  if (form.getAsString(key).equals("[email]")) {
-									mp = mp.field(key, email);
-								} else  if (form.getAsString(key).equals("[organization]")) {
-									mp = mp.field(key, triggeredBody.get("organization").toString());
-								} else if(form.getAsString(key).contains("[")) {
-									for(String eName : entities.keySet()){
-										if(form.getAsString(key).toLowerCase().contains(eName)){
-											mp = mp.field(key, ((JSONObject) entities.get(eName)).get("value").toString());
-										}
+						if(form != null){
+							for (String key : form.keySet()) {
+								if(sf.getHttpMethod().equals("get")){
+									System.out.println(queryParams);
+									if (form.getAsString(key).equals("[channel]")) {
+										queryParams+=key+"="+channel+"&";
+									} else if (form.getAsString(key).equals("[email]")) {
+										queryParams+=key+"="+email+"&";
+									} else if (form.getAsString(key).equals("[organization]")) {
+										queryParams+=key+"="+triggeredBody.getAsString("organization")+"&";
+									} else {
+										queryParams+=key+"="+form.getAsString(key)+"&";
 									}
 								} else {
-									mp = mp.field(key, form.getAsString(key));
+									if (form.getAsString(key).equals("[channel]")) {
+										mp = mp.field(key, channel);
+									} else  if (form.getAsString(key).equals("[email]")) {
+										mp = mp.field(key, email);
+									} else  if (form.getAsString(key).equals("[organization]")) {
+										mp = mp.field(key, triggeredBody.get("organization").toString());
+									} else if(form.getAsString(key).contains("[")) {
+										for(String eName : entities.keySet()){
+											if(form.getAsString(key).toLowerCase().contains(eName)){
+												mp = mp.field(key, ((JSONObject) entities.get(eName)).get("value").toString());
+											}
+										}
+									} else {
+										mp = mp.field(key, form.getAsString(key));
+									}
 								}
 							}
-						}
+						}	
 						System.out.println("Calling following URL: " + sf.getServiceName() +functionPath+ queryParams);
 						WebTarget target = textClient
 								.target(sf.getServiceName() +functionPath+ queryParams);
