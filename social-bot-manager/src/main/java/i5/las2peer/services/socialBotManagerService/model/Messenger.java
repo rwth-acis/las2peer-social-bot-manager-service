@@ -393,11 +393,21 @@ public class Messenger {
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				if(state==null){
 					System.out.println("No current state, we will start from scratch.");
+					if(message.getText().startsWith("!") && this.knownIntents.get(intent.getKeyword()) == null){
+						// in case a command is triggered which does not exist
+						this.chatMediator.sendMessageToChannel(message.getChannel(),"", new HashMap<String,IncomingMessage>(),"text");
+						return; 
+					}
 				}else{
 					System.out.println("Current state: " + state.getIntentKeyword());
 				}
 
 				if (state != null && message.getText().startsWith("!") && !state.getFollowingMessages().keySet().contains(intent.getKeyword())) {
+					if(this.knownIntents.get(intent.getKeyword()) == null){
+						// in case a command is triggered which does not exist
+						this.chatMediator.sendMessageToChannel(message.getChannel(),"", new HashMap<String,IncomingMessage>(),"text");
+						return; 
+					}
 					if (!intent.getKeyword().equals("exit")) {
 						storedSession.put(message.getChannel(), state);
 						state = null;
@@ -405,11 +415,10 @@ public class Messenger {
 			 	}
 				if (state != null && message.getText().startsWith("!")
 						&& storedSession.containsKey(message.getChannel())) {
-					System.out.println("Dont start command inside command lol");
-					this.chatMediator.sendMessageToChannel(message.getChannel(),
-							"Dont start command inside command lol","text");
+					//think about something else to do here
+				//	this.chatMediator.sendMessageToChannel(message.getChannel(),"Dont start command inside command lol","text");
 				}
-				System.out.println("Do we arrive here 1");
+				
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
@@ -457,8 +466,6 @@ public class Messenger {
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							}
 						} else {
-							System.out.println("Do we arrive here 2");
-							System.out.println(state.getFollowingMessages());
 							// any is a static forward
 							// TODO include entities of intents
 							// If there is no next state, stay in the same state
