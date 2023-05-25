@@ -3328,7 +3328,8 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject input = new JSONObject();
 				input.put("message", "!files");
 				Response response = handleRESTfulChat(bot, organization, channel, input.toString());
-				return Response.status(Status.OK).entity(response).build();
+				System.out.println(response.toString());
+				return Response.status(Status.OK).entity(response.toString()).build();
 			} else {
 				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
 			}
