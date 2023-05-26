@@ -3279,9 +3279,14 @@ public class SocialBotManagerService extends RESTService {
 					if (file == null) {
 						return Response.status(Response.Status.NOT_FOUND).entity("File with ID "+fileId+" not found").build();
 					}
-					Response.ResponseBuilder response = Response.ok(file.getObjectId().toHexString());
+					String extension = "";
+					if(file.getFilename().contains("json")){
+						extension = ".json";
+					} else if (file.getFilename().contains("pdf")){
+						extension = ".pdf";
+					}
+					Response.ResponseBuilder response = Response.ok(file.getFilename() + extension);
 					response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
-					System.out.println("file is called "  + file.getFilename() );
 					if(file.getFilename().contains("json")){
 						response.header("Content-Type", "application/json");
 					} else if (file.getFilename().contains("pdf")){
@@ -3309,7 +3314,6 @@ public class SocialBotManagerService extends RESTService {
 				} else if (path.contains("pdf")){
 					contentType = "application/pdf";
 				}
-				System.out.println("path is called "  + path );
 				return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
 							.header("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
 							.header("Content-Type", contentType)
