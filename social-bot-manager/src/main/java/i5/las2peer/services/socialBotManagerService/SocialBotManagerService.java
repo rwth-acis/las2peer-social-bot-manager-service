@@ -3281,7 +3281,11 @@ public class SocialBotManagerService extends RESTService {
 					}
 					Response.ResponseBuilder response = Response.ok(file.getObjectId().toHexString());
 					response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
-					
+					if(file.getFilename().contains("json")){
+						response.header("Content-Type", "application/json");
+					} else if (file.getFilename().contains("pdf")){
+						response.header("Content-Type", "application/pdf");
+					}
 					// Download the file to a ByteArrayOutputStream
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					gridFSBucket.downloadToStream(file.getObjectId(), baos);
@@ -3298,9 +3302,15 @@ public class SocialBotManagerService extends RESTService {
 				if (!file.exists()) {
 					return Response.status(Status.NOT_FOUND).entity("File not found.").build();
 				}
-
+				String contentType = "";
+				if(path.contains("json")){
+					contentType = "application/json";
+				} else if (path.contains("pdf")){
+					contentType = "application/pdf";
+				}
 				return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
 							.header("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
+							.header("Content-Type", contentType)
 							.build();
 
 			} catch (Exception e) {
