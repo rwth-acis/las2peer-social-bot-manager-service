@@ -3281,6 +3281,7 @@ public class SocialBotManagerService extends RESTService {
 					}
 					Response.ResponseBuilder response = Response.ok(file.getObjectId().toHexString());
 					response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
+					System.out.println("file is called "  + file.getFilename() );
 					if(file.getFilename().contains("json")){
 						response.header("Content-Type", "application/json");
 					} else if (file.getFilename().contains("pdf")){
@@ -3289,7 +3290,7 @@ public class SocialBotManagerService extends RESTService {
 					// Download the file to a ByteArrayOutputStream
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					gridFSBucket.downloadToStream(file.getObjectId(), baos);
-					return Response.ok(baos.toByteArray()).build();
+					return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM).build();
 				} catch (MongoException me) {
 					System.err.println(me);
 				} finally {
@@ -3308,7 +3309,8 @@ public class SocialBotManagerService extends RESTService {
 				} else if (path.contains("pdf")){
 					contentType = "application/pdf";
 				}
-				return Response.ok(file)
+				System.out.println("path is called "  + path );
+				return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
 							.header("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
 							.header("Content-Type", contentType)
 							.build();
