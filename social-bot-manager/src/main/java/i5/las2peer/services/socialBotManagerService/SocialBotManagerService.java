@@ -3301,7 +3301,7 @@ public class SocialBotManagerService extends RESTService {
 					}
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					gridFSBucket.downloadToStream(file.getObjectId(), baos);
-					return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM).header("Content-Type",contentType).header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"").build();
+					return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM).header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"").build();
 				} catch (MongoException me) {
 					System.err.println(me);
 				} finally {
