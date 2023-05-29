@@ -2903,7 +2903,10 @@ public class SocialBotManagerService extends RESTService {
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										System.out.println(body);
-										answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
+										System.out.println(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
+										if(oldAnswerMsg.getMessage() != answerMsg.getMessage()){
+											answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
+										}
 										answerMsg.setReqBody(body);
 										if(body.containsKey("resBody") && ((JSONObject)body.get("resBody")).containsKey("interactiveElements")){
 											List<Object> ils = (List<Object>) ((JSONObject)body.get("resBody")).get("interactiveElements");
