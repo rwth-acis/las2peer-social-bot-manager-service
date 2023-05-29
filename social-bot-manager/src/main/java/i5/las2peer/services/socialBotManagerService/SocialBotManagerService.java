@@ -3158,7 +3158,7 @@ public class SocialBotManagerService extends RESTService {
 										e.printStackTrace();
 										for(String mail : emailToChannel.keySet()){
 											System.out.println(mail);
-											if(emailToChannel.get(mail).equals(channel)){
+											if(emailToChannel.get(mail).equals(organization+"-"+channel)){
 												System.out.println("found email, setting as attribute");
 												email = mail;
 												break;
