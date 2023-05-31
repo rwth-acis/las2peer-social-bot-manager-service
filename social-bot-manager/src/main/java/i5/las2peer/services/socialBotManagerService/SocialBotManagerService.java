@@ -2904,7 +2904,7 @@ public class SocialBotManagerService extends RESTService {
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										System.out.println(body);
 										System.out.println(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
-										if((oldAnswerMsg.getMessage() != answerMsg.getMessage()) || (oldAnswerMsg.getMessage().equals(answerMsg.getMessage()))){
+										if((oldAnswerMsg.getMessage() != answerMsg.getMessage()) || (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))){
 											answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
 										answerMsg.setReqBody(body);
@@ -3360,7 +3360,9 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject input = new JSONObject();
 				input.put("message", "!files");
 				Response response = handleRESTfulChat(bot, organization, channel, input.toString());
+				System.out.println(response.getEntity());
 				JSONObject answer = (JSONObject) response.getEntity();
+				System.out.println(answer);
 				answer.put("files",r);
 				System.out.println(response.getEntity().toString());
 				return Response.status(Status.OK).entity(answer.toString()).build();
