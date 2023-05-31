@@ -3203,7 +3203,7 @@ public class SocialBotManagerService extends RESTService {
 											}
 										}
 										if(oldAnswerMsg.getMessage() != answerMsg.getMessage()){
-											answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
+										//	answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
 										answerMsg.setReqBody(body);
 									}
