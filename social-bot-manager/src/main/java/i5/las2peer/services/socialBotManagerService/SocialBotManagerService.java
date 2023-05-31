@@ -2905,7 +2905,7 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println(body);
 										System.out.println(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										if((oldAnswerMsg.getMessage() != answerMsg.getMessage()) || (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))){
-											answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
+											//answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
 										answerMsg.setReqBody(body);
 										if(body.containsKey("resBody") && ((JSONObject)body.get("resBody")).containsKey("interactiveElements")){
@@ -3360,12 +3360,15 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject input = new JSONObject();
 				input.put("message", "!files");
 				Response response = handleRESTfulChat(bot, organization, channel, input.toString());
-				System.out.println(response.getEntity());
-				JSONObject answer = (JSONObject) response.getEntity();
+				JSONParser p = new JSONParser(0);
+				try{
+					System.out.println("Trying to convert to jsonobject");
+					JSONObject answer = (JSONObject) p.parse(response.getEntity().toString());
 				System.out.println(answer);
 				answer.put("files",r);
-				System.out.println(response.getEntity().toString());
 				return Response.status(Status.OK).entity(answer.toString()).build();
+				} 
+				
 			} else {
 				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
 			}
