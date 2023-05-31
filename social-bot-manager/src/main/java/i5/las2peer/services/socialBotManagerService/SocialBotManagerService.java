@@ -3367,7 +3367,11 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println(answer);
 				answer.put("files",r);
 				return Response.status(Status.OK).entity(answer.toString()).build();
-				} 
+				} catch (Exception e )
+				{
+					e.printStackTrace();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(r).build();
+				}
 				
 			} else {
 				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
