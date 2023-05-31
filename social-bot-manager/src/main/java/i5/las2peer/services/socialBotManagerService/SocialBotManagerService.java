@@ -2977,6 +2977,7 @@ public class SocialBotManagerService extends RESTService {
 						functionPath = functionPath.replace("[channel]", channel);
 						functionPath = functionPath.replace("[email]", email);
 						functionPath = functionPath.replace("[organization]", triggeredBody.getAsString("organization"));
+						functionPath = functionPath.replace("[intent]", triggeredBody.getAsString("intent"));
 						functionPath = m.replaceVariables(channel, functionPath);
 						JSONObject entities = (JSONObject) triggeredBody.get("entities");
 						for(String eName : entities.keySet()){;
