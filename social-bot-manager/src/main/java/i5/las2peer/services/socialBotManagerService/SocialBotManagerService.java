@@ -3191,6 +3191,7 @@ public class SocialBotManagerService extends RESTService {
 										body.put("organization",organization);
 										System.out.println(body);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+										RESTfulChatResponse oldAnswerMsg = answerMsg;
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										body.remove("fileBody");
 										for(String key : body.keySet()){
@@ -3200,6 +3201,9 @@ public class SocialBotManagerService extends RESTService {
 											if(body.get(key) != null && body.get(key).toString().contains("[")&& body.get(key).toString().contains("]")){
 												body.put(key, m.replaceVariables(orgChannel,body.get(key).toString()));
 											}
+										}
+										if(oldAnswerMsg.getMessage() != answerMsg.getMessage()){
+											answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
 										answerMsg.setReqBody(body);
 									}
