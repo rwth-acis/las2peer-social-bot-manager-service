@@ -3128,7 +3128,7 @@ public class SocialBotManagerService extends RESTService {
 								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
 								System.out.println("gridFSBucket: files");
 								ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-								fileId = gridFSBucket.uploadFromStream(bot+organization+channel+"-"+fname, inputStream);
+								fileId = gridFSBucket.uploadFromStream(bot+"-"+organization+"-"+fname, inputStream);
 								System.out.println("File uploaded successfully with ID: " + fileId.toString());
 							} catch (MongoException me) {
 								System.err.println(me);
