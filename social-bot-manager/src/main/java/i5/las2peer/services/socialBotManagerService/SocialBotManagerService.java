@@ -2935,6 +2935,7 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 			Gson gson = new Gson();
+			System.out.println("Response to call is " + gson.toJson(answerMsg));
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
 		}
@@ -3250,6 +3251,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			Gson gson = new Gson();
+			System.out.println("Response to call is " + gson.toJson(answerMsg));
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 		}
 		
