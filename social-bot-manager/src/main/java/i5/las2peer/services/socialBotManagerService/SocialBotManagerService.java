@@ -3405,8 +3405,9 @@ public class SocialBotManagerService extends RESTService {
 			String content = new String(files);
 			if(emailToChannel.containsKey(channel)){
 				// kinda abusing code here
-				System.out.println("email is " + )
+				System.out.println("email is " + channel);
 				channel = emailToChannel.get(channel);
+				System.out.println("email is " + channel);
 			}
 			if(content.equals(null)){
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
