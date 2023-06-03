@@ -851,6 +851,7 @@ public class Messenger {
 			System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2");
 			try {
 				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.01");
+				db.getDataSource().close();
 				conn = db.getDataSource().getConnection();
 				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.1");
 				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
