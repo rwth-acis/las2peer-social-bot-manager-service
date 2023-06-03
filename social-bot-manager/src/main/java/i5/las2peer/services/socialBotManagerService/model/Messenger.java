@@ -391,7 +391,13 @@ public class Messenger {
 				}
 				System.out.println("Handling Step 3");
 				System.out.println("found following intent: " + intent.getKeyword());
-				safeEntities(message,bot, intent);
+				try{
+					safeEntities(message,bot, intent);
+
+				} catch (Exception e){
+					e.printStackTrace();
+				}
+				
 				System.out.println("Handling Step 3.1");
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
@@ -825,7 +831,14 @@ public class Messenger {
 		String user = msg.getUser();
 		String channel = msg.getChannel();
 		String b = bot.getId();
+		if(intent.getEntities() == null){
+			return;
+		}
+		if(intent.getEntitieValues() == null){
+			return;
+		}
 		intent.getEntities().forEach((entity) -> { 
+			System.out.println("storing: " + entity.getValue());
 			String k = entity.getEntityName();
 			String v = entity.getValue();
 			PreparedStatement stmt = null;
