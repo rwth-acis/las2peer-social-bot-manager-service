@@ -838,7 +838,7 @@ public class Messenger {
 			return;
 		}
 		intent.getEntities().forEach((entity) -> { 
-			System.out.println("storing: " + entity.getValue() + entity.getEntityName());
+			System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 1");
 			if(entity.getValue()==null){
 				return;
 			}
@@ -848,6 +848,7 @@ public class Messenger {
 			PreparedStatement stmt2 = null;
 			Connection conn = null;
 			ResultSet rs = null;
+			System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2");
 			try {
 
 				conn = db.getDataSource().getConnection();
@@ -858,6 +859,7 @@ public class Messenger {
 				stmt.setString(4, k);
 				rs = stmt.executeQuery();
 				boolean f = false;
+				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 3" + stmt.toString());
 				while (rs.next())
 					f = true;
 				if(f){
@@ -869,6 +871,7 @@ public class Messenger {
 					stmt2.setString(4, user);
 					stmt2.setString(5, k);
 					stmt2.executeUpdate();
+					System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 4" + stmt2.toString());
 				}else{
 					// Insert
 					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
@@ -878,6 +881,7 @@ public class Messenger {
 					stmt2.setString(4, k);
 					stmt2.setString(5, v);
 					stmt2.executeUpdate();
+					System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 5" + stmt2.toString());
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -904,6 +908,7 @@ public class Messenger {
 					e1.printStackTrace();
 				}
 			} finally {
+				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 6");
 				try {
 					if (rs != null)
 						rs.close();
