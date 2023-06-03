@@ -852,11 +852,13 @@ public class Messenger {
 			try {
 
 				conn = db.getDataSource().getConnection();
+				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.1");
 				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
 				stmt.setString(1, b);
 				stmt.setString(2, channel);
 				stmt.setString(3, user);
 				stmt.setString(4, k);
+				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.2");
 				rs = stmt.executeQuery();
 				boolean f = false;
 				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 3" + stmt.toString());
@@ -887,7 +889,7 @@ public class Messenger {
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();
-				
+				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 5.1");
 				try {
 					stmt2.close();
 					stmt2 = conn.prepareStatement(
