@@ -306,6 +306,7 @@ public class Messenger {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
+				System.out.println("Handling Step 1");
 				// // If a channel/user pair still isn't assigned to a state, assign it to null
 				// if (this.stateMap.get(message.getChannel()) == null) {
 				// 	HashMap<String, IncomingMessage> initMap = new HashMap<String, IncomingMessage>();
@@ -333,9 +334,11 @@ public class Messenger {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				Intent intent = null;
+				System.out.println("Handling Step 2");
 				// Special case: `!` commands
 				// System.out.println(this.knownIntents.toString());
 				if (message.getText().startsWith("!")) {
+					
 					// Split at first occurring whitespace
 
 					String splitMessage[] = message.getText().split("\\s+", 2);
@@ -386,7 +389,8 @@ public class Messenger {
 					}
 
 				}
-
+				System.out.println("Handling Step 3");
+				System.out.println("found following intent: " + intent.getKeyword());
 				safeEntities(message,bot, intent);
 
 				String triggeredFunctionId = null;
@@ -401,7 +405,7 @@ public class Messenger {
 				}else{
 					System.out.println("Current state: " + state.getIntentKeyword());
 				}
-
+				System.out.println("Handling Step 4");
 				if (state != null && message.getText().startsWith("!") && !state.getFollowingMessages().keySet().contains(intent.getKeyword())) {
 					if(this.knownIntents.get(intent.getKeyword()) == null){
 						// in case a command is triggered which does not exist
