@@ -886,9 +886,8 @@ public class Messenger {
 					System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 5" + stmt2.toString());
 				}
 			} catch (SQLException e) {
-				e.printStackTrace();
+				System.out.println("storing:  step 5.1'1" + e.toString());
 			} catch (Exception e) {
-				e.printStackTrace();
 				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 5.1");
 				try {
 					stmt2.close();
