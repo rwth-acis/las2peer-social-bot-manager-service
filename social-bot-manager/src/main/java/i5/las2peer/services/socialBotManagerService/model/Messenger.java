@@ -838,7 +838,7 @@ public class Messenger {
 			return;
 		}
 		intent.getEntities().forEach((entity) -> { 
-			System.out.println("storing: " + entity.getValue());
+			System.out.println("storing: " + entity.getValue() + entity.getEntityName());
 			if(entity.getValue()==null){
 				return;
 			}
