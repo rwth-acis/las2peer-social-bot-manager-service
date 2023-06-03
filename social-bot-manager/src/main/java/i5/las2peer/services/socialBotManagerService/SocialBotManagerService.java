@@ -3206,7 +3206,7 @@ public class SocialBotManagerService extends RESTService {
 											if(body.get(key) != null && body.get(key).toString().equals("[channel]")){
 												body.put(key, messageInfo.getMessage().getChannel());
 											}
-											if(body.get(key) != null && body.get(key).toString().contains("[")&& body.get(key).toString().contains("]")){
+											if(body.get(key) != null && body.get(key).toString().contains("[")&& body.get(key).toString().contains("]") && !key.equals("form")){
 												System.out.println("found " + key);
 												body.put(key, m.replaceVariables(orgChannel,body.get(key).toString()));
 												System.out.println("managed to replace " + key);
