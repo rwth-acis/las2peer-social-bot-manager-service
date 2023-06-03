@@ -800,10 +800,11 @@ public class Messenger {
 	}
 
 	public String getEntityValue(String channel, String entityName){
+		String val = "";
+		PreparedStatement stmt = null;
+		Connection conn = null;
+		ResultSet rs = null;
 		try {
-			PreparedStatement stmt = null;
-			Connection conn = null;
-			ResultSet rs = null;
 
 			conn = db.getDataSource().getConnection();
 			stmt = conn.prepareStatement("SELECT value FROM attributes WHERE `channel`=? AND `key`=? ORDER BY id DESC");
@@ -811,20 +812,39 @@ public class Messenger {
 			stmt.setString(2, entityName);
 			rs = stmt.executeQuery();
 			if(rs.next()){
-				String val = rs.getString("value");
-				if(val != null && !val.equals("")){
-					return val;
+				val = rs.getString("value");
+				if(val == null){
+					val = "";
 				}
-				return "";
-				
 			}
-			return "";
 
-		} catch (Exception e){
-			
+		} catch (Exception e){	
 			e.printStackTrace();
-			return "";
 		} 
+
+		try {
+			if (rs != null)
+				rs.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		;
+		try {
+			if (stmt != null)
+				stmt.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		;
+		try {
+			if (conn != null)
+				conn.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return val;
+		
 	}
 
 	private void safeEntities(ChatMessage msg, Bot bot, Intent intent){
@@ -851,7 +871,6 @@ public class Messenger {
 			System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2");
 			try {
 				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.01");
-				db.getDataSource().close();
 				conn = db.getDataSource().getConnection();
 				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.1");
 				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
