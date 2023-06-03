@@ -3405,13 +3405,14 @@ public class SocialBotManagerService extends RESTService {
 			String content = new String(files);
 			if(emailToChannel.containsKey(channel)){
 				// kinda abusing code here
+				System.out.println("email is " + )
 				channel = emailToChannel.get(channel);
 			}
 			if(content.equals(null)){
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
 			try{
-				JSONObject o = (JSONObject) (new JSONParser(0)).parse(content);
+				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(content);
 				userFileIds.put(channel, o);
 				System.out.println(o);
 				Messenger m = channelToMessenger.get(channel);
