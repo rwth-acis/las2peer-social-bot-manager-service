@@ -3363,6 +3363,7 @@ public class SocialBotManagerService extends RESTService {
 		public Response getRESTfulChatFileIds(@PathParam("bot") String bot,
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
+				System.out.println("Received get call, checking for channel " + organization + "-" +channel  + userFileIds.containsKey(organization + "-" +channel));
 			if (userFileIds.containsKey(organization + "-" +channel)) {
 				JSONObject r = userFileIds.get(organization + "-" +channel);
 				userFileIds.remove(organization + "-" +channel);
