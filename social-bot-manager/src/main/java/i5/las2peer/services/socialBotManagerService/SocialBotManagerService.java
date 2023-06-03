@@ -3048,7 +3048,7 @@ public class SocialBotManagerService extends RESTService {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-
+						System.out.println("Deletion done.");
 						/* triggeredBody = new JSONObject();
 						triggeredBody.put("channel", channel);
 						triggeredBody.put("text", test);
@@ -3057,9 +3057,11 @@ public class SocialBotManagerService extends RESTService {
 						for (String key : jsonResponse.keySet()) {
 							bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 						}
+						System.out.println("Stored Variables");
 					 	bot.getMessenger(messengerID).setContextToBasic(channel,
 								userId);
 					 	triggeredBody.put("resBody", jsonResponse);
+						 System.out.println("Done with perform trigger");
 								// triggerChat(chat, triggeredBody);
 						return;
 
@@ -3192,8 +3194,10 @@ public class SocialBotManagerService extends RESTService {
 										body.put("organization",organization);
 										System.out.println(body);
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+										System.out.println("Try getting new message");
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										System.out.println("New message handled");
 										body.remove("fileBody");
 										for(String key : body.keySet()){
 											if(body.get(key) != null && body.get(key).toString().equals("[channel]")){
@@ -3203,6 +3207,7 @@ public class SocialBotManagerService extends RESTService {
 												body.put(key, m.replaceVariables(orgChannel,body.get(key).toString()));
 											}
 										}
+										System.out.println("Replaced json body contents");
 										if(oldAnswerMsg.getMessage() != answerMsg.getMessage()){
 										//	answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
@@ -3212,7 +3217,7 @@ public class SocialBotManagerService extends RESTService {
 									e.printStackTrace();
 								}
 							}
-							System.out.println(answerMsg.getMessage());
+							System.out.println("new message is " + answerMsg.getMessage());
 							if(fileId!=null) answerMsg.setFileID(fileId.toString());
 							System.out.println("handling file");
 							found = true;
