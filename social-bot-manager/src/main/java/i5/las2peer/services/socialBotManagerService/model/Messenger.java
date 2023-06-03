@@ -392,17 +392,21 @@ public class Messenger {
 				System.out.println("Handling Step 3");
 				System.out.println("found following intent: " + intent.getKeyword());
 				safeEntities(message,bot, intent);
-
+				System.out.println("Handling Step 3.1");
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
+				System.out.println("Handling Step 3.2");
 				if(state==null){
 					System.out.println("No current state, we will start from scratch.");
 					if(message.getText().startsWith("!") && this.knownIntents.get(intent.getKeyword()) == null){
+						System.out.println("Handling Step 3.3");
 						// in case a command is triggered which does not exist
 						this.chatMediator.sendMessageToChannel(message.getChannel(),"", new HashMap<String,IncomingMessage>(),"text");
+						System.out.println("Handling Step 3.4");
 						return; 
 					}
 				}else{
+					System.out.println("Handling Step 3.5");
 					System.out.println("Current state: " + state.getIntentKeyword());
 				}
 				System.out.println("Handling Step 4");
