@@ -899,11 +899,16 @@ public class Messenger {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+				catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			} finally {
 				try {
 					if (rs != null)
 						rs.close();
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				;
 				try {
@@ -912,12 +917,14 @@ public class Messenger {
 					if (stmt2 != null)
 						stmt2.close();
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				;
 				try {
 					if (conn != null)
 						conn.close();
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				;
 			}
