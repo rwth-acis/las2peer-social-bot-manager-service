@@ -3190,7 +3190,6 @@ public class SocialBotManagerService extends RESTService {
 								}
 							}
 							System.out.println("new message is " + answerMsg.getMessage());
-							if(fileId!=null) answerMsg.setFileID(fileId.toString());
 							System.out.println("handling file");
 							found = true;
 
