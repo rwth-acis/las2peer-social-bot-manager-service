@@ -3114,40 +3114,7 @@ public class SocialBotManagerService extends RESTService {
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 							String fname = fileDetail.getFileName();
 							String ftype = getFileType(uploadedInputStream);
-							CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
-							CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
-							MongoClientSettings settings = MongoClientSettings.builder()
-									.uuidRepresentation(UuidRepresentation.STANDARD)
-									.applyConnectionString(new ConnectionString(service.mongoUri))
-									.codecRegistry(codecRegistry)
-									.build();
-							System.out.println("Connecting to: "+service.mongoUri);
-							// Create a new client and connect to the server
-							MongoClient mongoClient = MongoClients.create(settings);
-							ObjectId fileId = null;
-							try{
-								MongoDatabase database = mongoClient.getDatabase(service.mongoDB);
-								System.out.println("connected to "+ service.mongoDB);
-								GridFSBucket gridFSBucket = GridFSBuckets.create(database,"files");
-								System.out.println("gridFSBucket: files");
-								ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-								fileId = gridFSBucket.uploadFromStream(bot+"-"+organization+"-"+fname, inputStream);
-								System.out.println("File uploaded successfully with ID: " + fileId.toString());
-							} catch (MongoException me) {
-								System.err.println(me);
-								err = true;
-							} finally {
-								// Close the input stream and MongoDB client
-								try {
-									uploadedInputStream.close();
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-								mongoClient.close();
-							}
-							if(err){
-								return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error uploading file.").build();
-							}
+
         
 							RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator.getMessageCollector();
 							String orgChannel = organization + "-" + channel;
