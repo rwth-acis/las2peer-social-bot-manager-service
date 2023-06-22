@@ -424,6 +424,8 @@ public class BotParser {
 			String name = subVal.getName();
 			if (name.contentEquals("Name")) {
 				rasaName = subVal.getValue();
+				// is easiest way to remove this attribue from elements without needing to change more of the code
+				id = rasaName;
 			} else if(name.contentEquals("ID")){
                 id = subVal.getValue();
             } else if(name.contentEquals("URL")){
