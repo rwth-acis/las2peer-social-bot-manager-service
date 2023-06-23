@@ -780,7 +780,7 @@ public class Messenger {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
-						"", contextOn, recognizedEntities.get(message.getChannel())));
+						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

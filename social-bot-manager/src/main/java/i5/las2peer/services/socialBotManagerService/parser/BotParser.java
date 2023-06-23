@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.gson.Gson;
 
 import i5.las2peer.api.Context;
+import i5.las2peer.api.Service;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
@@ -216,10 +217,9 @@ public class BotParser {
 					if (bsfListItem != null) {
 						bot.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
 						bsfListItem.addBot(bot);
-					} 
-					if(value.equals("start")){
 						bsfListItem.setOnStart(bot.getId());
-					}
+				} 
+
 					
 				} else if (bots.get(source) != null) {
 					Bot v = bots.get(source);
@@ -308,8 +308,12 @@ public class BotParser {
 			}
 		}
 
-		
-
+		for(ServiceFunction sf : bsfList.values()){
+					if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
+						bot.addBotServiceFunction(sf.getId(), sf);
+						sf.addBot(bot);
+					}
+				}
 		for(IncomingMessage m : incomingMessages.values()){
 			String nluId = m.getNluID();
 			if(bot.getRasaServer(nluId)!=null){
@@ -424,6 +428,8 @@ public class BotParser {
 			String name = subVal.getName();
 			if (name.contentEquals("Name")) {
 				rasaName = subVal.getValue();
+				// is easiest way to remove this attribue from elements without needing to change more of the code
+				id = rasaName;
 			} else if(name.contentEquals("ID")){
                 id = subVal.getValue();
             } else if(name.contentEquals("URL")){
