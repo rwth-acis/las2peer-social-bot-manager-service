@@ -2948,6 +2948,7 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										body.put("organization",organization);
 										System.out.println(body);
+										sf.setMessengerName(messageInfo.getMessengerName());
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
