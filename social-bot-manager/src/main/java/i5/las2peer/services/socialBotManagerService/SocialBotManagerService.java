@@ -1781,6 +1781,7 @@ public class SocialBotManagerService extends RESTService {
 					FormDataMultiPart mp = new FormDataMultiPart();
 					String queryParams = "?";
 						if(form != null){
+							for (String key : form.keySet()) {
 								if(sf.getHttpMethod().equals("get")){
 									System.out.println(queryParams);
 									if (form.getAsString(key).equals("[channel]")) {
