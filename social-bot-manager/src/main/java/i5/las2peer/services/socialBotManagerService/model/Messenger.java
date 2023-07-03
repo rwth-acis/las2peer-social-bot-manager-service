@@ -82,7 +82,6 @@ public class Messenger {
 		this.db = database;
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
-		System.out.println("Messenger: " + chatService.toString());
 			switch (this.chatService) {
 			case SLACK:
 				this.chatMediator = new SlackChatMediator(token);
@@ -179,14 +178,10 @@ public class Messenger {
 	private void addEntityToRecognizedList(String channel, Collection<Entity> entities) {
 
 		Collection<Entity> recognizedEntitiesNew = recognizedEntities.get(channel);
-		// System.out.println("now is reco");
-		// System.out.println(recognizedEntitiesNew);
 		if(recognizedEntitiesNew != null){
 			for (Entity entity : entities) {
 				recognizedEntitiesNew.add(entity);
 			}
-			System.out.println(recognizedEntitiesNew);
-			// System.out.println("finish");
 			recognizedEntities.put(channel, recognizedEntitiesNew);
 		}
 	}
@@ -306,7 +301,6 @@ public class Messenger {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
-				System.out.println("Handling Step 1");
 				// // If a channel/user pair still isn't assigned to a state, assign it to null
 				// if (this.stateMap.get(message.getChannel()) == null) {
 				// 	HashMap<String, IncomingMessage> initMap = new HashMap<String, IncomingMessage>();
@@ -334,9 +328,7 @@ public class Messenger {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				Intent intent = null;
-				System.out.println("Handling Step 2");
 				// Special case: `!` commands
-				// System.out.println(this.knownIntents.toString());
 				if (message.getText().startsWith("!")) {
 					
 					// Split at first occurring whitespace
@@ -376,8 +368,6 @@ public class Messenger {
 
 					intent = new Intent(intentKeyword, entityKeyword, entityValue);
 				} else {
-					// System.out.println(message.getFileName() + " + " + message.getFileBody());
-					// System.out.println(Intent.replaceUmlaute(message.getText()));
 					if (bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
 						intent = bot.getRasaServer(currentNluModel.get(message.getChannel()))
 								.getIntent(Intent.replaceUmlaute(message.getText()));
@@ -389,7 +379,6 @@ public class Messenger {
 					}
 
 				}
-				System.out.println("Handling Step 3");
 				System.out.println("found following intent: " + intent.getKeyword());
 				try{
 					safeEntities(message,bot, intent);
@@ -398,24 +387,18 @@ public class Messenger {
 					e.printStackTrace();
 				}
 				
-				System.out.println("Handling Step 3.1");
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
-				System.out.println("Handling Step 3.2");
 				if(state==null){
 					System.out.println("No current state, we will start from scratch.");
 					if(message.getText().startsWith("!") && this.knownIntents.get(intent.getKeyword()) == null){
-						System.out.println("Handling Step 3.3");
 						// in case a command is triggered which does not exist
 						this.chatMediator.sendMessageToChannel(message.getChannel(),"", new HashMap<String,IncomingMessage>(),"text");
-						System.out.println("Handling Step 3.4");
 						return; 
 					}
 				}else{
-					System.out.println("Handling Step 3.5");
 					System.out.println("Current state: " + state.getIntentKeyword());
 				}
-				System.out.println("Handling Step 4");
 				if (state != null && message.getText().startsWith("!") && !state.getFollowingMessages().keySet().contains(intent.getKeyword())) {
 					if(this.knownIntents.get(intent.getKeyword()) == null){
 						// in case a command is triggered which does not exist
@@ -492,7 +475,6 @@ public class Messenger {
 								stateMap.put(message.getChannel(), state);
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
-								System.out.println("Do we arrive here 3");
 								System.out.println("try follow up message");
 								// check if a file was received during a conversation and search for a follow up
 								// incoming message which expects a file.
@@ -547,9 +529,7 @@ public class Messenger {
 								} else if (intent.getEntities().size() > 0
 										&& !this.triggeredFunction.containsKey(message.getChannel())) {
 									Collection<Entity> entities = intent.getEntities();
-									// System.out.println("try to use entity...");
 									for (Entity e : entities) {
-										System.out.println(e.getEntityName() + " (" + e.getValue() + ")");
 										state = this.knownIntents.get(e.getEntityName());
 										// Dont fully understand the point of this, maybe I added it and forgot...
 										// Added return for a quick fix, will need to check more in detail
@@ -566,7 +546,6 @@ public class Messenger {
 						}
 					} else {
 						if (state != null && state.getFollowingMessages().get("") != null) {
-							System.out.println("Empty leadsTo2");
 							if (message.getFileBody() != null) {
 								if (state.getFollowingMessages().get("").expectsFile()) {
 									state = state.getFollowingMessages().get("");
@@ -618,7 +597,6 @@ public class Messenger {
 					// check if skip is wished or not
 					if (state != null) {
 						System.out.println("Getting response for: "+state.intentKeyword);
-						System.out.println(state.getResponse(random));
 						if (state.getFollowingMessages().get("skip") != null) {
 							state = state.getFollowingMessages().get("skip");
 						}
@@ -630,42 +608,25 @@ public class Messenger {
 						}
 
 						if (state.getNluID() != "") {
-							System.out.println("New NluId is : " + state.getNluID());
 							this.currentNluModel.put(message.getChannel(), state.getNluID());
 						}
 						if (response != null) {
-							System.out.println("Debug - Response : " + response);
 							if (response != "") {
-								// System.out.println("1");
 								String split = "";
-								// System.out.println("2");
 								// allows users to use linebreaks \n during the modeling for chat responses
 								for (int i = 0; i < response.split("\\\\n").length; i++) {
-									System.out.println(i);
 									split += response.split("\\\\n")[i] + " \n ";
 								}
-								// System.out.println("3");
-								System.out.println(split);
-								// System.out.println("4");
 								if (split.contains("[") && split.contains("]")) {
-									// System.out.println("5");
 									String[] entitySplit1 = split.split("\\[");
-									// System.out.println("6");
 									ArrayList<String> entitySplit2 = new ArrayList<String>();
 									for (int i = 1; i < entitySplit1.length; i++) {
-										// System.out.println("7");
 										entitySplit2.add(entitySplit1[i].split("\\]")[0]);
-										// System.out.println(7 + i);
 									}
-									// System.out.println(entitySplit2);
-									// System.out.println(recognizedEntities.get(message.getChannel()));
 									for (String entityName : entitySplit2) {
-										System.out.println("entity name is " + entityName);
 										if(recognizedEntities != null && recognizedEntities.get(message.getChannel()) != null){
 											for (Entity entity : recognizedEntities.get(message.getChannel())) {
-												System.out.println("entity2 name is " + entity.getEntityName());
 												if (entityName.equals(entity.getEntityName()) && entity.getValue() != null) {
-													System.out.println("replacing now " + entity.getValue());
 													String replace = "[" + entity.getEntityName() + "]";
 													split = split.replace(replace, entity.getValue());
 												}
@@ -692,7 +653,6 @@ public class Messenger {
 											urlEmail = state.getFileURL().replace("menteeEmail",
 													message.getEmail());
 										}
-										System.out.println(urlEmail);
 										URL url = new URL(urlEmail);
 										HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
 										// Header for l2p services
@@ -700,13 +660,10 @@ public class Messenger {
 												.encodeToString((bot.getName() + ":actingAgent").getBytes()));
 
 										String fieldValue = httpConn.getHeaderField("Content-Disposition");
-										System.out.println(fieldValue);
 										if (fieldValue == null || !fieldValue.contains("filename=\"")) {
-											System.out.println("No file name available :(");
 											fieldValue = "pdf.pdf";
 										}
 										// parse the file name from the header field
-										System.out.println(fieldValue);
 										fileName = "pdf.pdf";
 										if (!fieldValue.equals("pdf.pdf")) {
 											fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10,
@@ -725,7 +682,6 @@ public class Messenger {
 										if (file_size < 1) {
 											file_size = 2048;
 										}
-										System.out.println("file size is " + file_size);
 										byte dataBuffer[] = new byte[file_size];
 										int bytesRead;
 										while ((bytesRead = in.read(dataBuffer, 0, file_size)) != -1) {
@@ -858,7 +814,6 @@ public class Messenger {
 			return;
 		}
 		intent.getEntities().forEach((entity) -> { 
-			System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 1");
 			if(entity.getValue()==null){
 				return;
 			}
@@ -868,20 +823,15 @@ public class Messenger {
 			PreparedStatement stmt2 = null;
 			Connection conn = null;
 			ResultSet rs = null;
-			System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2");
 			try {
-				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.01");
 				conn = db.getDataSource().getConnection();
-				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.1");
 				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
 				stmt.setString(1, b);
 				stmt.setString(2, channel);
 				stmt.setString(3, user);
 				stmt.setString(4, k);
-				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 2.2");
 				rs = stmt.executeQuery();
 				boolean f = false;
-				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 3" + stmt.toString());
 				while (rs.next())
 					f = true;
 				if(f){
@@ -893,7 +843,6 @@ public class Messenger {
 					stmt2.setString(4, user);
 					stmt2.setString(5, k);
 					stmt2.executeUpdate();
-					System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 4" + stmt2.toString());
 				}else{
 					// Insert
 					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
@@ -903,12 +852,11 @@ public class Messenger {
 					stmt2.setString(4, k);
 					stmt2.setString(5, v);
 					stmt2.executeUpdate();
-					System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 5" + stmt2.toString());
 				}
 			} catch (SQLException e) {
-				System.out.println("storing:  step 5.1'1" + e.toString());
+				e.printStackTrace();
 			} catch (Exception e) {
-				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 5.1");
+				e.printStackTrace();
 				try {
 					stmt2.close();
 					stmt2 = conn.prepareStatement(
@@ -919,7 +867,6 @@ public class Messenger {
 					stmt2.setString(4, k);
 					stmt2.setString(5, v);
 					stmt2.executeUpdate();
-					System.out.println("sql statement saved successfully");
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -929,7 +876,6 @@ public class Messenger {
 					e1.printStackTrace();
 				}
 			} finally {
-				System.out.println("storing: " + entity.getValue() + entity.getEntityName() + " step 6");
 				try {
 					if (rs != null)
 						rs.close();
