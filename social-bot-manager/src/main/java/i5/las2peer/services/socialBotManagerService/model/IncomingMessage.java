@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
+
 public class IncomingMessage {
 	String intentKeyword;
-	String intentLabel;
-	String followupMessageType;
 	String entityKeyword;
     String NluID;
     boolean containsFile;
+
 	String triggeredFunctionId;
 	HashMap<IncomingMessage,String> triggerEntity;
 	String fileURL;
@@ -19,9 +20,11 @@ public class IncomingMessage {
 
 	ArrayList<String> responses;
 
+
 	// Intent keywords used as keys
 	HashMap<String, IncomingMessage> followupMessages;
 
+	String triggeredFunctionId;
 
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
 			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
@@ -38,11 +41,15 @@ public class IncomingMessage {
 	}
 
 
+
 	public IncomingMessage(String intent, String NluID, Boolean containsFile,ArrayList<String> responses, String fileURL, String errorMessage, String type,String intentLabel, String followupType) {
+
+
 		if(intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else intentKeyword = "";
 		this.followupMessages = new HashMap<String, IncomingMessage>();
+
 		this.responses = responses;
 		this.containsFile = containsFile;
 		if (intentKeyword.equals("0") && containsFile){
@@ -51,7 +58,6 @@ public class IncomingMessage {
         if(NluID == ""){
             this.NluID = "";
         } else this.NluID = NluID;
-
 		this.fileURL = fileURL;
 		this.errorMessage  = errorMessage;
 		this.triggerEntity = new HashMap<IncomingMessage,String>();
@@ -93,6 +99,7 @@ public class IncomingMessage {
 	}
 
 
+
 	public String getResponse(Random random) {
 		if (responses.isEmpty()) {
 			return null;
@@ -101,6 +108,7 @@ public class IncomingMessage {
 		}
 	}
 	
+
 	public ArrayList<String> getResponseArray() {
 		if (responses.isEmpty()) {
 			return null;
@@ -119,8 +127,7 @@ public class IncomingMessage {
 
 	public boolean expectsFile() {
 		return this.containsFile;
-	}
-    
+	}  
 	public String getFileURL() {
 		return fileURL;
 	}
@@ -167,4 +174,5 @@ public class IncomingMessage {
 	public void setFollowupMessageType(String followupMessageType) {
 		this.followupMessageType = followupMessageType;
 	}
+
 }

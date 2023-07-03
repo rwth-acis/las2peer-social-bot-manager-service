@@ -43,43 +43,28 @@ public class TrainingHelper implements Runnable {
 		JSONObject json = new JSONObject();
 		json.put("config", config);
 		if (markdownTrainingData.contains("examples: |")) {
-		//	json.put("domain", markdownTrainingData.replace("\\t", ""));
-			json.put("nlu", markdownTrainingData);
-			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse response = client.sendRequest("POST", "model/train", markdownTrainingData,
-					MediaType.TEXT_PLAIN + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-	
-			String filename = response.getHeader("filename");
-			if (filename == null) {
-				this.success = false;
-				return;
-			}
-	
-			json = new JSONObject();
-			json.put("model_file", "models/" + filename);
-	
-			response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
-					MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-			this.success = response.getHttpCode() == 204;
+			json.put("domain", markdownTrainingData.replace("\\t", ""));
+			json.put("nlu", "");
 		} else {
 			json.put("nlu", markdownTrainingData);
-			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse response = client.sendRequest("POST", "model/train", json.toJSONString(),
-					MediaType.APPLICATION_JSON + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-	
-			String filename = response.getHeader("filename");
-			if (filename == null) {
-				this.success = false;
-				return;
-			}
-	
-			json = new JSONObject();
-			json.put("model_file", "models/" + filename);
-	
-			response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
-					MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-			this.success = response.getHttpCode() == 204;
 		}
+
+		HashMap<String, String> headers = new HashMap<String, String>();
+		ClientResponse response = client.sendRequest("POST", "model/train", json.toJSONString(),
+				MediaType.APPLICATION_JSON + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
+
+		String filename = response.getHeader("filename");
+		if (filename == null) {
+			this.success = false;
+			return;
+		}
+
+		json = new JSONObject();
+		json.put("model_file", "models/" + filename);
+
+		response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
+				MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
+		this.success = response.getHttpCode() == 204;
 	}
 
 	public boolean getSuccess() {

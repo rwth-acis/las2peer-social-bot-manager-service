@@ -1,56 +1,41 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/rwth-acis/Social-Bot-Framework/master/Logos/sbf-logo.svg" width=400px/>
-</p>
+![las2peer](https://rwth-acis.github.io/las2peer/logo/vector/las2peer-logo.svg)
 
-<p align="center">
-    <a href="https://github.com/rwth-acis/Social-Bot-Framework/blob/master/LICENSE">
-        <img alt="GitHub" src="https://img.shields.io/github/license/rwth-acis/Social-Bot-Framework.svg?color=blue">
-    </a>
-    <a href="https://github.com/rwth-acis/Social-Bot-Framework/releases">
-        <img alt="GitHub release" src="https://img.shields.io/github/release/rwth-acis/Social-Bot-Framework.svg">
-    </a>
-</p>
+# las2peer-Social-Bot-Manager-Service
+This is the core service of the Social Bot Framework. This [las2peer](https://github.com/rwth-acis/las2peer) service can read bot models (created with [SyncMeta](https://github.com/rwth-acis/syncmeta)) and respond to RESTful service methods. 
+The answer can either be another RESTful service call or a message to a Slack channel.
+Answers are generated from modeled rules. TensorFlow services are used for generative content. At the moment there are two different ones:
+- [las2peer-TensorFlow-TextToText-Service](https://github.com/rwth-acis/las2peer-TensorFlow-TextToText-Service)
+- [las2peer-TensorFlow-Classifier-Service](https://github.com/rwth-acis/las2peer-TensorFlow-Classifier-Service)
 
-# 🤖 Social Bot Framework - Bot Manager Service
+This service requires the [MobSOS Data-Processing](https://github.com/rwth-acis/mobsos-data-processing) and the [MobSOS Success-Modeling](https://github.com/rwth-acis/mobsos-success-modeling) service and has to be started in monitoring mode. 
 
-The Social Bot Framework is a versatile platform for developing and deploying bots for various communication channels, including Slack, Rocket.Chat. Telegram, and others.
-The framework allows you to create bot models using [SyncMeta](https://github.com/rwth-acis/syncmeta), a web-based modeling tool.
-The bot models can then be imported into the framework and used to respond to RESTful service methods.
-
-This repository contains the Bot-Manager-Service, which is the core service of the Social Bot Framework. The Bot-Manager-Service is a [las2peer](https://github.com/rwth-acis/las2peer) service that can read bot models and respond to RESTful service methods. The response can be another RESTful service call or a message to a communication channel.
-
-The Bot-Manager-Service requires the [MobSOS Data-Processing](https://github.com/rwth-acis/mobsos-data-processing) and the [MobSOS Success-Modeling](https://github.com/rwth-acis/mobsos-success-modeling) services and has to be started in monitoring mode.
-
-## 🚀 Installation
-
-To install the Bot-Manager-Service, you first need to clone this repository and build the service.
-
-### Build
-
-You can build the service using the following command:
+Build
+--------
+Execute the following command on your shell:
 
 ```shell
-gradlew build
+ant all 
 ```
 
-### Start
+Start
+--------
 
-To start the Bot-Manager-Service, use the following command:
+To start the data-processing service, use one of the available start scripts:
+
+Windows:
 
 ```shell
-./start_network.bat
+bin/start_network.bat
 ```
 
-On Unix/Mac systems, use the following command instead:
-
+Unix/Mac:
 ```shell
-./start_network.sh
+bin/start_network.sh
 ```
 
-## Update block messages
-
+Update block messages
+--------
 Set the response of the las2peer service (a JsonObject) to
-
 ```json
 {
   "blocks": "the content of the new block message",
@@ -59,10 +44,10 @@ Set the response of the las2peer service (a JsonObject) to
 }
 ```
 
-## 🐳 How to run using Docker
+How to run using Docker
+-------------------
 
-First, build the image:
-
+First build the image:
 ```bash
 docker build -t social-bot-manager . 
 ```
@@ -78,7 +63,7 @@ Note that you might need to setup your database with the tables found in [SBF.sq
 By default the database host is *mysql* and the port is *3306*.
 The REST-API will be available via *http://localhost:8080/SBFManager* and the las2peer node is available via port 9011.
 
-To customize your setup you can set further environment variables.
+In order to customize your setup you can set further environment variables.
 
 ### Node Launcher Variables
 
@@ -105,6 +90,7 @@ See [database](#Database) for a description of the settings.
 | RESTARTERBOTNAME | / | Name of restarterBot agent. Needed for auto-restart functionality |
 | RESTARTERBOTPW | / | Password for restarterBot agent. Needed for auto-restart functionality |
 
+
 ### Web Connector Variables
 
 Set [WebConnector properties](https://github.com/rwth-acis/las2peer-Template-Project/wiki/WebConnector-Configuration) with these variables.
@@ -126,3 +112,5 @@ Set [WebConnector properties](https://github.com/rwth-acis/las2peer-Template-Pro
 | Variable | Default | Description |
 |----------|---------|-------------|
 | DEBUG  | unset | Set to any value to get verbose output in the container entrypoint script. |
+
+

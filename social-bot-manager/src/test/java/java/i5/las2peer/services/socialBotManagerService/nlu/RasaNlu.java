@@ -3,7 +3,6 @@ package i5.las2peer.services.socialBotManagerService.nlu;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 
 import javax.ws.rs.core.MediaType;
 
@@ -17,22 +16,18 @@ import net.minidev.json.parser.ParseException;
 
 public class RasaNlu {
 	private String url;
-    private HashSet<String> intents; 
+    private String[] Intents; 
 	public RasaNlu(String url) {
 		this.url = url;
-        this.intents = new HashSet<String>();
+        this.Intents = new String[0];
 	}
 
-	public void addIntent(String intent){
-		this.intents.add(intent); 
-	}
-
-    public void setIntents(HashSet<String> intents){
-        this.intents = intents;
+    public void setIntents(String[] Intents){
+        this.Intents = Intents;
     }
 
     public String[] getIntents(){
-        return this.intents.toArray(new String[this.intents.size()]);
+        return this.Intents;
     }
     
 	public Intent getIntent(String input) {
