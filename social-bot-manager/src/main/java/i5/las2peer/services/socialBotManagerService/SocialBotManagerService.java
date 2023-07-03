@@ -522,7 +522,6 @@ public class SocialBotManagerService extends RESTService {
 			String returnString = "";
 			LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
 			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
-			// System.out.println(SocialBotManagerService.getBotAgents().keySet());
 			Set<String> list = SocialBotManagerService.getBotAgents().keySet();
 			ArrayList<String> oldArray = new ArrayList<String>();
 			// do agentid here maybe instead of loginname, as some people use the same login
@@ -804,7 +803,6 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("instanceAlias") String instanceAlias, @PathParam("intent") String expectedIntent,
 				@PathParam("token") String token) {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			System.out.println("name " + name + " , instance alias " + instanceAlias);
 
 			try {
 				String result = java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name());
@@ -815,7 +813,6 @@ public class SocialBotManagerService extends RESTService {
 
 				System.out.println("Handling message...");
 				JSONObject bodyInput = (JSONObject) p.parse(result);
-				System.out.println("Parsed json: " + bodyInput);
 
 				String channel = "";
 				String text = "";
@@ -1050,7 +1047,6 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject xAPI = createXAPIStatement(cleanedJson.getAsString("email"), name, m.getIntent().getKeyword(), m.getMessage().getText());
 					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
-				System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -1122,7 +1118,6 @@ public class SocialBotManagerService extends RESTService {
 			xAPI.put("actor", actor);
 			xAPI.put("object", object);
 			xAPI.put("verb", verb);
-			System.out.println(xAPI);
 			return xAPI;
 		}
 
@@ -1130,7 +1125,6 @@ public class SocialBotManagerService extends RESTService {
 			// Copy pasted from LL service
 			// POST statements
 			try {
-				System.out.println(xAPI);
 				URL url = new URL(lrsURLStatic + "/data/xAPI/statements");
 				System.out.println(url + lrsAuthTokenStatic);
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -1320,14 +1314,12 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
-			System.out.println(botFunction.getAttributes());
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
 				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
 			// TODO: Handle multiple messengers
-			System.out.println(messageInfo.getMessage().getEmail());
 			String mail = messageInfo.getMessage().getEmail();
 			if(mail==null) mail = "";
 			body.put("email", messageInfo.getMessage().getEmail());
@@ -1503,7 +1495,6 @@ public class SocialBotManagerService extends RESTService {
 									triggerAttributes);
 						}
 
-						System.out.println("Performing...");
 						performTrigger(botConfig, triggeredFunction, botAgent, functionPath, triggerUID, triggeredBody);
 					}
 				}
@@ -1548,7 +1539,6 @@ public class SocialBotManagerService extends RESTService {
 
 			}
 		} else {
-			System.out.println(triggeredFunctionAttribute.getName());
 			if (triggeredFunctionAttribute.getItb() != null) {
 				mapWithIfThen(triggeredFunctionAttribute.getItb(), triggeredFunctionAttribute, triggeredBody,
 						attlist, triggerAttributes, functionPath);
@@ -1579,7 +1569,6 @@ public class SocialBotManagerService extends RESTService {
 		while (ifThenIterator.getPrev() != null) {
 			ifThenIterator = ifThenIterator.getPrev();
 		}
-		System.out.println(triggerAttributes.toJSONString());
 		ServiceFunctionAttribute triggerAttribute = ifThenIterator.getSourceAttribute();
 		JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
 		String source = "";
@@ -1702,7 +1691,6 @@ public class SocialBotManagerService extends RESTService {
 		ServiceFunctionAttribute mappedTo = sfa.getMappedTo();
 		// attributes of the function that triggered the bot
 		JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
-		System.out.println("Aray now");
 		if (triggerAttributes.containsKey(mappedTo.getName())) {
 			String replaceWith = triggerAttributes.getAsString(mappedTo.getName());
 			if (functionPath.contains("{" + sfa.getName() + "}")) {
@@ -1783,7 +1771,6 @@ public class SocialBotManagerService extends RESTService {
 						if(form != null){
 							for (String key : form.keySet()) {
 								if(sf.getHttpMethod().equals("get")){
-									System.out.println(queryParams);
 									if (form.getAsString(key).equals("[channel]")) {
 										queryParams+=key+"="+channel+"&";
 									} else if (form.getAsString(key).equals("[email]")) {
@@ -1825,7 +1812,6 @@ public class SocialBotManagerService extends RESTService {
 						mp.bodyPart(filePart);
 					}
 					
-					System.out.println("lel");
 					WebTarget target = textClient.target(sf.getServiceName() + functionPath + queryParams);
 					if (f != null && f.exists()) {
 							FileDataBodyPart filePart = new FileDataBodyPart("file", f);
@@ -1839,7 +1825,6 @@ public class SocialBotManagerService extends RESTService {
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
 						}
 					String test = response.readEntity(String.class);
-					System.out.println("this is "  + test);
 					mp.close();
 					try {
 						java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "." + triggeredBody.getAsString("fileType")));
@@ -1903,7 +1888,6 @@ public class SocialBotManagerService extends RESTService {
 					for(String key : response.keySet()){
 						bot.getMessenger(messengerID).addVariable(channel, key, response.getAsString(key));				
 					}	
-					System.out.println(response);
 					triggeredBody.put("text", response.getAsString("text"));
 					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 					if (response.containsKey("fileBody")) {
@@ -1980,7 +1964,6 @@ public class SocialBotManagerService extends RESTService {
 		final long start = System.currentTimeMillis();
 		monitorEvent42.put("task", "Send message");
 
-		System.out.println(body);
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist
 			String email = body.getAsString("contactList");
@@ -2031,7 +2014,6 @@ public class SocialBotManagerService extends RESTService {
 				monitorEvent42.put("email", email);
 				channel = chat.getChannelByEmail(email);
 			}
-			System.out.println(channel);
 			if (text != null && !body.containsKey("fileBody")) {
 				chat.sendMessageToChannel(channel, text,"text");
 			}
@@ -2055,7 +2037,6 @@ public class SocialBotManagerService extends RESTService {
 
 					text = "";
 				}
-				System.out.println("text is sss" + text);
 				chat.sendFileMessageToChannel(channel, body.getAsString("fileBody"), body.getAsString("fileName"),
 						body.getAsString("fileType"), text);
 			}
@@ -2265,7 +2246,6 @@ public class SocialBotManagerService extends RESTService {
 
 	public void getXapiStatements(ArrayList<String> statements) {
 		System.out.println("Bot: Got " + statements.size() + " statements!");
-		System.out.println(statements.toString());
 
 		HashMap<String, ArrayList<String>> statementsPerCourse = new HashMap<String, ArrayList<String>>();
 		Collections.reverse(statements);
@@ -2369,7 +2349,6 @@ public class SocialBotManagerService extends RESTService {
 
 			if (restarterBot == null) {
 				MiniClient clientRestart = new MiniClient();
-				System.out.println(address);
 				clientRestart.setConnectorEndpoint(address);
 				clientRestart.setLogin("alice", "pwalice");
 				HashMap<String, String> headers = new HashMap<String, String>();
@@ -2414,7 +2393,6 @@ public class SocialBotManagerService extends RESTService {
 							ClientResponse result = client.sendRequest("POST",
 									"SBFManager/bots/" + m.getBotName() + "/trigger/intent", gson.toJson(m),
 									MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
-							System.out.println(result.getResponse());
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -2511,7 +2489,6 @@ public class SocialBotManagerService extends RESTService {
 									}
 									ClientResponse result = client.sendRequest("POST", path, body.toJSONString(),
 											MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
-									System.out.println(result.getResponse());
 									// }
 								}
 							}
@@ -2882,7 +2859,6 @@ public class SocialBotManagerService extends RESTService {
 		public Response handleRESTfulChat(@PathParam("bot") String bot, @PathParam("organization") String organization, @PathParam("channel") String channel,
 				String input) {
 					RESTfulChatResponse answerMsg = null;
-					System.out.println("checking user email");
 					String email = "";
 					try{
 						UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
@@ -2916,14 +2892,10 @@ public class SocialBotManagerService extends RESTService {
 							}
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
-							System.out.println("check1");
 							m.handleMessages(messageInfos, b);
-							System.out.println("check2");
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
-							System.out.println("check3");
 							for (MessageInfo messageInfo : messageInfos) {
 								try {
-									System.out.println("here is run thread " + messageInfo.getTriggeredFunctionId());
 									/*
 									 * ClientResponse result = client.sendRequest("POST",
 									 * "SBFManager/bots/" + b.getName() + "/trigger/intent",
@@ -2937,25 +2909,16 @@ public class SocialBotManagerService extends RESTService {
 									ServiceFunction sf = new ServiceFunction();
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
 											sf);
-									System.out.println(body);
 									if (body.containsKey("functionPath")) {
 										functionPath = body.getAsString("functionPath");
-										System.out.println(functionPath);
-										System.out.println(sf.getConsumes());
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
-										System.out.println(sf.getConsumes());
-										System.out.println("MIAMIAMIAMIAMIAMIAMI");
 										body.put("email", email);
 										body.put("organization",organization);
-										System.out.println(body);
 										sf.setMessengerName(messageInfo.getMessengerName());
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
-										System.out.println("MIAMIAMIAMIAMIAMIAMI2");
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
-										System.out.println(body);
-										System.out.println(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										if((oldAnswerMsg.getMessage() != answerMsg.getMessage()) || (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))){
 											//answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
@@ -2966,7 +2929,7 @@ public class SocialBotManagerService extends RESTService {
 										}
 									}
 								} catch (Exception e) {
-									e.printStackTrace();
+									
 								}
 							}
 							// chatMediator.sendMessageToChannel(orgChannel, "msgtext", new
@@ -2987,7 +2950,6 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 			Gson gson = new Gson();
-			System.out.println("Response to call is " + gson.toJson(answerMsg));
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
 		}
@@ -2996,7 +2958,6 @@ public class SocialBotManagerService extends RESTService {
 				String functionPath, String triggerUID,
 				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
-				System.out.println("Starting Bot Action");
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
@@ -3044,7 +3005,6 @@ public class SocialBotManagerService extends RESTService {
 						if(form != null){
 							for (String key : form.keySet()) {
 								if(sf.getHttpMethod().equals("get")){
-									System.out.println(queryParams);
 									if (form.getAsString(key).equals("[channel]")) {
 										queryParams+=key+"="+channel+"&";
 									} else if (form.getAsString(key).equals("[email]")) {
@@ -3090,8 +3050,6 @@ public class SocialBotManagerService extends RESTService {
 						}
 						
 						String test = response.readEntity(String.class);
-						System.out.println("RESPONSE IS");
-						System.out.println(test);
 						mp.close();
 						try {
 							java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
@@ -3100,7 +3058,6 @@ public class SocialBotManagerService extends RESTService {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-						System.out.println("Deletion done.");
 						/* triggeredBody = new JSONObject();
 						triggeredBody.put("channel", channel);
 						triggeredBody.put("text", test);
@@ -3109,11 +3066,9 @@ public class SocialBotManagerService extends RESTService {
 						for (String key : jsonResponse.keySet()) {
 							bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 						}
-						System.out.println("Stored Variables");
 					 	bot.getMessenger(messengerID).setContextToBasic(channel,
 								userId);
 					 	triggeredBody.put("resBody", jsonResponse);
-						 System.out.println("Done with perform trigger");
 								// triggerChat(chat, triggeredBody);
 						return;
 
@@ -3183,9 +3138,7 @@ public class SocialBotManagerService extends RESTService {
 									} catch (Exception e){
 										e.printStackTrace();
 										for(String mail : emailToChannel.keySet()){
-											System.out.println(mail);
 											if(emailToChannel.get(mail).equals(organization+"-"+channel)){
-												System.out.println("found email, setting as attribute");
 												email = mail;
 												break;
 											}
@@ -3206,33 +3159,22 @@ public class SocialBotManagerService extends RESTService {
 											sf);
 									if (body.containsKey("functionPath")) {
 										functionPath = body.getAsString("functionPath");
-										System.out.println(functionPath);
-										System.out.println(sf.getConsumes());
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 										body.put("email", email);
 										body.put("organization",organization);
-										System.out.println(body);
 										sf.setMessengerName(messageInfo.getMessengerName());
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
-										System.out.println("Try getting new message");
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
-										System.out.println("New message handled");
 										body.remove("fileBody");
-										System.out.println("File body removed");
-										System.out.println(body);
 										for(String key : body.keySet()){
-											System.out.println("replacing key" + key);
 											if(body.get(key) != null && body.get(key).toString().equals("[channel]")){
 												body.put(key, messageInfo.getMessage().getChannel());
 											}
 											if(body.get(key) != null && body.get(key).toString().contains("[")&& body.get(key).toString().contains("]") && !key.equals("form")){
-												System.out.println("found " + key);
 												body.put(key, m.replaceVariables(orgChannel,body.get(key).toString()));
-												System.out.println("managed to replace " + key);
 											}
 										}
-										System.out.println("Replaced json body contents");
 										if(oldAnswerMsg.getMessage() != answerMsg.getMessage()){
 										//	answerMsg.setMessage(oldAnswerMsg.getMessage()  + "\n" + answerMsg.getMessage());
 										}
@@ -3242,8 +3184,6 @@ public class SocialBotManagerService extends RESTService {
 									e.printStackTrace();
 								}
 							}
-							System.out.println("new message is " + answerMsg.getMessage());
-							System.out.println("handling file");
 							found = true;
 
 							// start to perform bot action in case it is triggered
@@ -3280,7 +3220,6 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			Gson gson = new Gson();
-			System.out.println("Response to call is " + gson.toJson(answerMsg));
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 		}
 		
@@ -3382,7 +3321,6 @@ public class SocialBotManagerService extends RESTService {
 		public Response getRESTfulChatFileIds(@PathParam("bot") String bot,
 				@PathParam("organization") String organization,
 				@PathParam("channel") String channel) {
-				System.out.println("Received get call, checking for channel " + organization + "-" +channel  + userFileIds.containsKey(organization + "-" +channel));
 			if (userFileIds.containsKey(organization + "-" +channel)) {
 				JSONObject r = userFileIds.get(organization + "-" +channel);
 				userFileIds.remove(organization + "-" +channel);
@@ -3394,9 +3332,7 @@ public class SocialBotManagerService extends RESTService {
 				Response response = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try{
-					System.out.println("Trying to convert to jsonobject");
 					JSONObject answer = (JSONObject) p.parse(response.getEntity().toString());
-				System.out.println(answer);
 				answer.put("files",r);
 				return Response.status(Status.OK).entity(answer.toString()).build();
 				} catch (Exception e )
@@ -3420,13 +3356,10 @@ public class SocialBotManagerService extends RESTService {
 				@ApiResponse(code = 500, message = "Internal server error") })
 		public Response updateRESTfulChatFileIds(
 				@PathParam("channel") String channel, @FormDataParam("files") byte[] files) {
-			System.out.println("Received files for channel: "+channel );
 			String content = new String(files);
 			if(emailToChannel.containsKey(channel)){
 				// kinda abusing code here
-				System.out.println("email is " + channel);
 				channel = emailToChannel.get(channel);
-				System.out.println("email is " + channel);
 			}
 			if(content.equals(null)){
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
@@ -3434,7 +3367,6 @@ public class SocialBotManagerService extends RESTService {
 			try{
 				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(content);
 				userFileIds.put(channel, o);
-				System.out.println(o);
 				Messenger m = channelToMessenger.get(channel);
 				if(m == null){
 					m = channelToMessenger.get(channel.split("-")[1]);
