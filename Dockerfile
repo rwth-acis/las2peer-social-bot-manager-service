@@ -1,5 +1,5 @@
 # first stage: build using gradle 
-FROM --platform=$BUILDPLATFORM gradle:7.5.0-jdk17 AS build
+FROM --platform=${BUILDPLATFORM:-amd64} gradle:7.5.0-jdk17 AS build
 
 ENV GRADLE_OPTS="-Xmx2048m -Xms512m -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true"
 
@@ -35,6 +35,8 @@ RUN chmod +x /app/docker-entrypoint.sh
 USER las2peer
 
 COPY --from=build --chown=las2peer:las2peer /src/social-bot-manager/export /app/social-bot-manager/export/
+COPY --from=build --chown=las2peer:las2peer /src/service /app/service/
+COPY --from=build --chown=las2peer:las2peer /src/lib /app/lib/
 
 RUN dos2unix /app/gradle.properties
 RUN dos2unix /app/docker-entrypoint.sh

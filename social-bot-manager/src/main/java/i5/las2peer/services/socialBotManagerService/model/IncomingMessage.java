@@ -11,14 +11,13 @@ public class IncomingMessage {
 	String entityKeyword;
     String NluID;
     boolean containsFile;
-	String response;
 	String triggeredFunctionId;
 	HashMap<IncomingMessage,String> triggerEntity;
 	String fileURL;
 	String errorMessage;
 	String type;
 
-	ArrayList<IncomingMessage> responses;
+	ArrayList<String> responses;
 
 	// Intent keywords used as keys
 	HashMap<String, IncomingMessage> followupMessages;
@@ -39,12 +38,12 @@ public class IncomingMessage {
 	}
 
 
-	public IncomingMessage(String intent, String NluID, Boolean containsFile,String response, String fileURL, String errorMessage, String type,String intentLabel, String followupType) {
+	public IncomingMessage(String intent, String NluID, Boolean containsFile,ArrayList<String> responses, String fileURL, String errorMessage, String type,String intentLabel, String followupType) {
 		if(intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else intentKeyword = "";
 		this.followupMessages = new HashMap<String, IncomingMessage>();
-		this.responses = new ArrayList<IncomingMessage>();
+		this.responses = responses;
 		this.containsFile = containsFile;
 		if (intentKeyword.equals("0") && containsFile){
 			intentKeyword = "anyFile";
@@ -53,8 +52,6 @@ public class IncomingMessage {
             this.NluID = "";
         } else this.NluID = NluID;
 
-		
-		this.response = response;
 		this.fileURL = fileURL;
 		this.errorMessage  = errorMessage;
 		this.triggerEntity = new HashMap<IncomingMessage,String>();
@@ -95,11 +92,8 @@ public class IncomingMessage {
 		// (this.followupMessages.put(replaceUmlaute(intentKeyword), msg);
 	}
 
-	public void addResponse(IncomingMessage response) {
-		this.responses.add(response);
-	}
 
-	public IncomingMessage getResponse(Random random) {
+	public String getResponse(Random random) {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
@@ -107,7 +101,7 @@ public class IncomingMessage {
 		}
 	}
 	
-	public ArrayList<IncomingMessage> getResponseArray() {
+	public ArrayList<String> getResponseArray() {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
@@ -126,10 +120,6 @@ public class IncomingMessage {
 	public boolean expectsFile() {
 		return this.containsFile;
 	}
-
-	public String getResponse(){
-        return this.response;
-    }
     
 	public String getFileURL() {
 		return fileURL;
