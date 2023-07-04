@@ -35,6 +35,7 @@ RUN chmod +x /app/docker-entrypoint.sh
 USER las2peer
 
 COPY --from=build --chown=las2peer:las2peer /src/social-bot-manager/export /app/social-bot-manager/export/
+COPY --from=build --chown=las2peer:las2peer /src/service /app/service/
 COPY --from=build --chown=las2peer:las2peer /src/lib /app/lib/
 
 RUN dos2unix /app/gradle.properties

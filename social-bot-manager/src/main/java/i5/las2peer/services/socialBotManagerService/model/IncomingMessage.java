@@ -4,20 +4,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import i5.las2peer.services.socialBotManagerService.model.ChatResponse;
-
 public class IncomingMessage {
 	String intentKeyword;
+	String intentLabel;
+	String followupMessageType;
 	String entityKeyword;
     String NluID;
     boolean containsFile;
+	String triggeredFunctionId;
+	HashMap<IncomingMessage,String> triggerEntity;
+	String fileURL;
+	String errorMessage;
+	String type;
 
-	ArrayList<ChatResponse> responses;
+	ArrayList<String> responses;
 
 	// Intent keywords used as keys
 	HashMap<String, IncomingMessage> followupMessages;
 
-	String triggeredFunctionId;
 
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
 			{ new String("Ö"), "Oe" }, { new String("ä"), "ae" }, { new String("ü"), "ue" }, { new String("ö"), "oe" },
@@ -34,12 +38,12 @@ public class IncomingMessage {
 	}
 
 
-	public IncomingMessage(String intent, String NluID, Boolean containsFile) {
+	public IncomingMessage(String intent, String NluID, Boolean containsFile,ArrayList<String> responses, String fileURL, String errorMessage, String type,String intentLabel, String followupType) {
 		if(intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else intentKeyword = "";
 		this.followupMessages = new HashMap<String, IncomingMessage>();
-		this.responses = new ArrayList<ChatResponse>();
+		this.responses = responses;
 		this.containsFile = containsFile;
 		if (intentKeyword.equals("0") && containsFile){
 			intentKeyword = "anyFile";
@@ -47,6 +51,13 @@ public class IncomingMessage {
         if(NluID == ""){
             this.NluID = "";
         } else this.NluID = NluID;
+
+		this.fileURL = fileURL;
+		this.errorMessage  = errorMessage;
+		this.triggerEntity = new HashMap<IncomingMessage,String>();
+		this.type = type;
+		this.followupMessageType = followupType;
+		this.intentLabel = intentLabel;
 	}
 
 	public String getIntentKeyword() {
@@ -81,11 +92,8 @@ public class IncomingMessage {
 		// (this.followupMessages.put(replaceUmlaute(intentKeyword), msg);
 	}
 
-	public void addResponse(ChatResponse response) {
-		this.responses.add(response);
-	}
 
-	public ChatResponse getResponse(Random random) {
+	public String getResponse(Random random) {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
@@ -93,7 +101,7 @@ public class IncomingMessage {
 		}
 	}
 	
-	public ArrayList<ChatResponse> getResponseArray() {
+	public ArrayList<String> getResponseArray() {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
@@ -112,5 +120,51 @@ public class IncomingMessage {
 	public boolean expectsFile() {
 		return this.containsFile;
 	}
+    
+	public String getFileURL() {
+		return fileURL;
+	}
+	
+	public String getErrorMessage() {
+		return errorMessage;
+	}
+    
+    public void setTriggeredFunctionId(String functionId){
+        this.triggeredFunctionId = functionId;
+    }
+    
+	public String getTriggerEntity(IncomingMessage m){
+        return this.triggerEntity.get(m);
+    }
 
+    public void addTriggerEntity(IncomingMessage m,String triggerEntity){
+        this.triggerEntity.put(m, triggerEntity);
+    }
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getIntentLabel() {
+		return intentLabel;
+	}
+
+
+	public void setIntentLabel(String intentLabel) {
+		this.intentLabel = intentLabel;
+	}
+
+
+	public String getFollowupMessageType() {
+		return followupMessageType;
+	}
+
+
+	public void setFollowupMessageType(String followupMessageType) {
+		this.followupMessageType = followupMessageType;
+	}
 }

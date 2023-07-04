@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Vector;
 
@@ -38,6 +39,7 @@ import com.pengrad.telegrambot.response.GetMeResponse;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import net.minidev.json.JSONObject;
 
 /**
@@ -200,7 +202,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * Sends a plain text message to telegram messenger channel
 	 */
 	@Override
-	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 
 		System.out.println("send plain message to telegram channel " + channel + ", size: " + text.length());
 		assert channel != null;
@@ -290,7 +292,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
 
 		System.out.println("send interactive message to telegram channel " + channel);
 		assert channel != null;
@@ -404,7 +406,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	@Override
 	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
-		sendBlocksMessageToChannel(channel, blocks, authToken, Optional.empty());
+		sendBlocksMessageToChannel(channel, blocks, authToken, null, Optional.empty());
 	}
 
 	/**

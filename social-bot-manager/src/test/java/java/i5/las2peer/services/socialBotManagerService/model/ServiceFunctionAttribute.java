@@ -10,7 +10,6 @@ public class ServiceFunctionAttribute {
 	private ServiceFunctionAttribute mappedTo;
 	private ArrayList<ServiceFunctionAttribute> childAttributes;
 	private ServiceFunctionAttribute parent;
-	private ContentGenerator generator;
 	private ServiceFunction function;
 	private IfThenBlock itb;
 
@@ -68,14 +67,6 @@ public class ServiceFunctionAttribute {
 
 	public void setSameAsTrigger(boolean sameAsTrigger) {
 		this.sameAsTrigger = sameAsTrigger;
-	}
-
-	public ContentGenerator getGenerator() {
-		return generator;
-	}
-
-	public void setGenerator(ContentGenerator generator) {
-		this.generator = generator;
 	}
 
 	public ServiceFunctionAttribute getMappedTo() {
@@ -151,7 +142,7 @@ public class ServiceFunctionAttribute {
 	public String toString() {		
 		return "ServiceFunctionAttribute [id=" + id + ", name=" + name + ", parameterType=" + parameterType
 				+ ", sameAsTrigger=" + sameAsTrigger + ", mappedTo=" + mappedTo + ", childAttributes=" + childAttributes
-				+ ", parent=" + parent + ", generator=" + generator + ", function=" + function + ", itb=" + itb
+				+ ", parent=" + parent + ", function=" + function + ", itb=" + itb
 				+ ", staticContent=" + staticContent + ", content=" + content + ", contentURL=" + contentURL
 				+ ", contentType=" + contentType + "]";
 	}

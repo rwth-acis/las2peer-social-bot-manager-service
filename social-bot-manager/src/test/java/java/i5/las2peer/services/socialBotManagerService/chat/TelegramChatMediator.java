@@ -1,9 +1,12 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Vector;
 
@@ -11,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
+import jnr.ffi.annotations.In;
 import net.minidev.json.JSONArray;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
@@ -35,6 +39,7 @@ import com.pengrad.telegrambot.response.GetMeResponse;
 
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import net.minidev.json.JSONObject;
 
 /**
@@ -54,10 +59,16 @@ public class TelegramChatMediator extends EventChatMediator {
 	private String url;
 	MiniClient client;
 
-	public TelegramChatMediator(String authToken) {
+	public TelegramChatMediator(String authToken) throws AuthTokenException{
 		super(authToken);
-
-		this.bot = new TelegramBot(authToken);
+		try{
+			this.bot = new TelegramBot(authToken);
+		} catch (Exception e){
+			if(e.toString().toLowerCase().contains("404")){
+				throw new AuthTokenException("Authentication Token is faulty!");
+			} else throw e;
+			
+		}
 		this.client = new MiniClient();
 		client.setConnectorEndpoint("https://api.telegram.org/bot" + authToken);
 		messageCollector = new TelegramMessageCollector();
@@ -105,9 +116,11 @@ public class TelegramChatMediator extends EventChatMediator {
 			JSONObject chat = (JSONObject) message.get("chat");
 			JSONObject from = (JSONObject) message.get("from");
 			JSONObject document = (JSONObject) message.get("document");
+			JSONObject audio = (JSONObject) message.get("audio");
 			String channel = chat.getAsString("id");
 			String user = from.getAsString("first_name");
 			String text = message.getAsString("text");
+			String messageId = message.getAsString("message_id");
 			if(event.containsKey("callback_query")){
 				// the data field can be used to know which button was clicked
 				// (the text returned is not the text from the button, but the text above the button, therefore irrelevant)
@@ -116,7 +129,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 			String timestamp = message.getAsString("date");
 
-			if (channel == null || user == null || (text == null && document == null) || timestamp == null)
+			if (channel == null || user == null || (text == null && document == null) || timestamp == null || messageId == null)
 				throw new InvalidChatMessageException("missing message fields");
 
 			this.showAction(channel, ChatAction.typing);
@@ -128,9 +141,16 @@ public class TelegramChatMediator extends EventChatMediator {
 				String fileId = document.getAsString("file_id");
 				String fileBody = getFile(fileId);
 				messageCollector
-						.addMessage(new ChatMessage(channel, user, text, timestamp, fileName, mimeType, fileBody));
-			} else {
-				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp));
+						.addMessage(new ChatMessage(channel, user, text, timestamp, messageId, fileName, mimeType, fileBody));
+			}
+			else if(audio !=null){
+				String fileId = audio.getAsString("file_id");
+				String mimeType = audio.getAsString("mime_type");
+				String fileBody = getFile(fileId);
+				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp, messageId, mimeType, fileBody));
+			}			
+			 else {
+				messageCollector.addMessage(new ChatMessage(channel, user, text, timestamp, messageId));
 			}
 
 		} catch (Exception e) {
@@ -145,7 +165,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * @see <a href="https://core.telegram.org/bots/api#setwebhook">Setting Telegram
 	 *      Webhook</a>
 	 */
-	public void settingWebhook(String url) {
+	public void settingWebhook(String url) throws AuthTokenException{
 		System.out.println("poppo");
 		this.url = url;
 		assert url != null : "url not initialized";
@@ -159,6 +179,9 @@ public class TelegramChatMediator extends EventChatMediator {
 		System.out.println("Setting Webhook");
 		ClientResponse result = client.sendRequest("GET", "setWebhook?url=" + url + path + super.authToken,
 				MediaType.TEXT_PLAIN);
+		if(result.getHttpCode() == 404){
+			throw new AuthTokenException("Authentication Token is faulty!");
+		}
 		System.out.println(result.getResponse());
 	}
 
@@ -179,7 +202,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * Sends a plain text message to telegram messenger channel
 	 */
 	@Override
-	public void sendMessageToChannel(String channel, String text, Optional<String> id) {
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 
 		System.out.println("send plain message to telegram channel " + channel + ", size: " + text.length());
 		assert channel != null;
@@ -193,7 +216,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	@Override
 	public void sendFileMessageToChannel(String channel, String fileBody, String fileName, String fileType, String text,
 			Optional<String> id) {
-		String caption = "";
+		String caption = text;
 		System.out.println("Send File to Telegram channel: " + channel);
 
 		try {
@@ -269,7 +292,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks, Optional<String> id) {
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id) {
 
 		System.out.println("send interactive message to telegram channel " + channel);
 		assert channel != null;
@@ -280,24 +303,9 @@ public class TelegramChatMediator extends EventChatMediator {
 		try{
 			JSONObject blocksJO = (JSONObject) p.parse(blocks);
 			String text = blocksJO.getAsString("text");
-			JSONArray blocksJA = (JSONArray) p.parse(blocksJO.getAsString("inline_keyboard"));
+			String inline_keyboard = blocksJO.getAsString("inline_keyboard");
 
-			InlineKeyboardButton[] allButtons = new InlineKeyboardButton[blocksJA.size()];
-
-			int i = 0;
-			for(Object o : blocksJA){
-				JSONArray currO = (JSONArray) o;
-
-				for(Object so : currO){
-					JSONObject currSO = (JSONObject) so;
-					InlineKeyboardButton button = new InlineKeyboardButton(currSO.getAsString("text"));
-					button.callbackData(currSO.getAsString("callback_data"));
-					allButtons[i] = button;
-					i++;
-				}
-			}
-
-			InlineKeyboardMarkup markup = new InlineKeyboardMarkup(allButtons);
+			InlineKeyboardMarkup markup = parseInlineKeyboardMarkup(inline_keyboard);
 
 			SendMessage request = new SendMessage(channel, text);
 			request.replyMarkup(markup);
@@ -309,23 +317,96 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	}
 
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id){
+
+	}
+
+	@Override
+	public void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts) {
+		super.updateBlocksMessageToChannel(channel, blocks, authToken, ts);
+	}
+
+	private InlineKeyboardMarkup parseInlineKeyboardMarkup(String blocks){
+		JSONParser p = new JSONParser();
+		try{
+			JSONArray blocksJA = (JSONArray) p.parse(blocks);
+
+			InlineKeyboardButton[][] allButtons = new InlineKeyboardButton[blocksJA.size()][];
+
+			int i = 0;
+			for(Object o : blocksJA){
+				JSONArray currO = (JSONArray) o;
+				InlineKeyboardButton[] currButtons = new InlineKeyboardButton[currO.size()];
+
+				int x = 0;
+				for(Object so : currO){
+					JSONObject currSO = (JSONObject) so;
+					String text = currSO.getAsString("text");
+					// currently used, since passed on unicodes get parsed wrong
+					// will be fixed soon
+					text = text.replaceAll(":check:", "\u2713");
+					InlineKeyboardButton button = new InlineKeyboardButton(text);
+					button.callbackData(currSO.getAsString("callback_data"));
+					if(currSO.containsKey("url")){
+						button.url(currSO.getAsString("url"));
+					}
+					currButtons[x] = button;
+					x++;
+				}
+
+				allButtons[i] = currButtons;
+				i++;
+			}
+
+			InlineKeyboardMarkup markup = new InlineKeyboardMarkup(allButtons);
+			return markup;
+		} catch (Exception e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public void editMessage(String channel, String messageId, String message, Optional<String> id) {
+
+		System.out.println("editing telegram message with id " + messageId + " and new message text " + message);
+
+		try{
+			JSONParser p = new JSONParser();
+			JSONObject messageTextJO = (JSONObject) p.parse(message);
+			String text = messageTextJO.getAsString("text");
+
+			String inline_keyboard = "";
+			try{
+				inline_keyboard = messageTextJO.getAsString("inline_keyboard");
+			} catch (Exception ex){
+				// create empty inline keyboard
+				inline_keyboard = "[[]]";
+			}
+
+			Object chatId = channel;
+			int messageIdInt = Integer.parseInt(messageId);
+			System.out.println("text: " + text + " inline keyboard: " + inline_keyboard);
+			EditMessageText request = new EditMessageText(chatId, messageIdInt, text);
+
+			InlineKeyboardMarkup markup = parseInlineKeyboardMarkup(inline_keyboard);
+			request.replyMarkup(markup);
+
+			BaseResponse res = bot.execute(request);
+			System.out.println("res: " + String.valueOf(res.isOk()) + " " + res.errorCode() + " " + res.description());
+		} catch(Exception e){
+			System.out.println("editing message did not work");
+			e.printStackTrace();
+		}
+
+	}
+
 	public TelegramMessageCollector getMessageCollector() {
 		return messageCollector;
 	}
 
 	@Override
-	public void sendBlocksMessageToChannel(String channel, String blocks) {
-		sendBlocksMessageToChannel(channel, blocks, Optional.empty());
-	}
-
-	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments, Optional<String> id) {
-
-	}
-
-	@Override
-	public void sendAttachmentMessageToChannel(String channel, String attachments) {
-		super.sendAttachmentMessageToChannel(channel, attachments);
+	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
+		sendBlocksMessageToChannel(channel, blocks, authToken, null, Optional.empty());
 	}
 
 	/**

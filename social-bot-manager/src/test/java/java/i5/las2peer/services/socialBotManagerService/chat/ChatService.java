@@ -1,6 +1,8 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubPRMediator;
 
 /**
  * This enum lists all available messenger services. The string value has to
@@ -22,6 +24,15 @@ public enum ChatService {
 
 	@JsonProperty("Moodle Forum")
 	MOODLE_FORUM("Moodle Forum", MoodleForumMediator.class),
+
+	@JsonProperty("GitHub Issues")
+	GITHUB_ISSUES("GitHub Issues", GitHubIssueMediator.class),
+
+	@JsonProperty("GitHub Pull Requests")
+	GITHUB_PR("GitHub Pull Requests", GitHubPRMediator.class),
+
+	@JsonProperty("RESTfulChat")
+	RESTful_Chat("RESTfulChat", RESTfulChatMediator.class),
 
 	UNKNOWN("", null);
 
