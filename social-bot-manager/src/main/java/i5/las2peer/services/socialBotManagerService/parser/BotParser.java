@@ -764,9 +764,30 @@ public class BotParser {
 
 					System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
 					if (s.getActionType().equals(ActionType.OPENAPI)) {
-						JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
-						System.out.println("Information is: " + j);
-						b.addServiceInformation(s.getServiceName(), j);
+						// wrapper for OpenAI calls
+						if (s.getServiceName().equals("https://api.openai.com/v1")) {
+							MiniClient client = new MiniClient();
+							client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+							HashMap<String, String> headers = new HashMap<String, String>();
+							String openai_api_key = "YOUR OPEN AI API KEY";
+							headers.put("Authorization", "Bearer " + openai_api_key);
+
+							JSONObject contentParameters = new JSONObject();
+							for (ServiceFunctionAttribute sfa : s.getAttributes()) {
+								System.out.println(sfa);
+								contentParameters.put(sfa.getName(), sfa.getContent());
+							}
+
+							ClientResponse result = client.sendRequest("POST", s.getFunctionName(),
+									contentParameters.toString(), MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
+
+						}
+						// default case
+						else {
+							JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
+							System.out.println("Information is: " + j);
+							b.addServiceInformation(s.getServiceName(), j);
+						}
 					} else {
 						JSONObject j = readJsonFromUrl(
 							b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
