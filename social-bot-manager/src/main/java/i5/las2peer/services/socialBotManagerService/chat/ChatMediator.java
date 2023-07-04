@@ -3,6 +3,8 @@ package i5.las2peer.services.socialBotManagerService.chat;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -27,10 +29,11 @@ public abstract class ChatMediator {
 	 *
 	 * @param channel A channel ID valid for interacting with the chat service's API
 	 * @param text    The content of the chat message
-	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
+	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
 	 *                replies to it later on.
+	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
 	 */
-	public abstract void sendMessageToChannel(String channel, String text, Optional<String> id);
+	public abstract void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id);
 
 	public abstract void editMessage(String channel, String messageId, String message, Optional<String> id);
 
@@ -38,10 +41,10 @@ public abstract class ChatMediator {
 		editMessage(channel, messageId, message, Optional.empty());
 	}
 
-	public abstract void sendBlocksMessageToChannel(String channel, String blocks, String authToken, Optional<String> id);
+	public abstract void sendBlocksMessageToChannel(String channel, String blocks, String authToken, HashMap<String, IncomingMessage> hashMap, Optional<String> id);
 
 	public void sendBlocksMessageToChannel(String channel, String blocks, String authToken) {
-		sendBlocksMessageToChannel(channel, blocks, authToken, Optional.empty());
+		sendBlocksMessageToChannel(channel, blocks, authToken, null, Optional.empty());
 	}
 
 	public abstract void updateBlocksMessageToChannel(String channel, String blocks, String authToken, String ts, Optional<String> id);
@@ -56,8 +59,19 @@ public abstract class ChatMediator {
 	 * @param channel A channel ID valid for interacting with the chat service's API
 	 * @param text    The content of the chat message
 	 */
-	public void sendMessageToChannel(String channel, String text) {
-		sendMessageToChannel(channel, text, Optional.empty());
+	public void sendMessageToChannel(String channel, String text, String type ) {
+		sendMessageToChannel(channel, text, null,type);
+	}
+	/**
+	 * Sends a chat message to a channel.
+	 *
+	 * @param channel A channel ID valid for interacting with the chat service's API
+	 * @param text    The content of the chat message
+	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
+	 *                replies to it later on.
+	 */
+	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type) {
+		sendMessageToChannel(channel, text, hashMap,type,null);
 	}
 
 	/**

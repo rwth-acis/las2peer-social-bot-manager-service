@@ -21,8 +21,12 @@ import java.util.Vector;
 
 import javax.websocket.DeploymentException;
 
+import com.google.gson.Gson;
+
 import i5.las2peer.services.socialBotManagerService.chat.*;
-import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubPRMediator;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -96,6 +100,24 @@ public class Messenger {
 				break;
 			case MOODLE_FORUM:
 				this.chatMediator = new MoodleForumMediator(token);
+				break;
+			case GITHUB_ISSUES:
+				try {
+					this.chatMediator = new GitHubIssueMediator(token);
+				} catch (GitHubAppHelper.GitHubAppHelperException e) {
+					throw new AuthTokenException(e.getMessage());
+				}
+				break;
+			case GITHUB_PR:
+				try {
+					this.chatMediator = new GitHubPRMediator(token);
+				} catch (GitHubAppHelper.GitHubAppHelperException e) {
+					throw new AuthTokenException(e.getMessage());
+				}
+				break;
+			case RESTful_Chat:
+				this.chatMediator = new RESTfulChatMediator(token);
+				System.out.println("RESTful Chat selected");
 				break;
 			default:
 				throw new ParseBotException("Unimplemented chat service: " + chatService);
@@ -394,7 +416,6 @@ public class Messenger {
 				//	this.chatMediator.sendMessageToChannel(message.getChannel(),"Dont start command inside command lol","text");
 				}
 				
-
 				// No conversation state present, starting from scratch
 				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
@@ -479,6 +500,7 @@ public class Messenger {
 								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
 										+ intent.getConfidence() + " confidence.");
 								// try any
+								
 								if (state.getFollowingMessages().get("any") != null) {
 									state = state.getFollowingMessages().get("any");
 									stateMap.put(message.getChannel(), state);
@@ -584,7 +606,7 @@ public class Messenger {
 							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 							contextOn = true;
 						}
-						
+
 						if (state.getNluID() != "") {
 							this.currentNluModel.put(message.getChannel(), state.getNluID());
 						}
@@ -614,23 +636,21 @@ public class Messenger {
 
 								}
 								// check if message parses buttons or is simple text
-								if(response.getType().equals("Interactive Message")){
-									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken());
+								if(state.getType().equals("Interactive Message")){
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
-
 									this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
-
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
 								// the user
-								if (!response.getFileURL().equals("")) {
+								if (!state.getFileURL().equals("")) {
 									String fileName = "";
 									try {
 										// Replacable variable in url menteeEmail
-										String urlEmail = response.getFileURL();
+										String urlEmail = state.getFileURL();
 										if (message.getEmail() != null) {
-											urlEmail = response.getFileURL().replace("menteeEmail",
+											urlEmail = state.getFileURL().replace("menteeEmail",
 													message.getEmail());
 										}
 										URL url = new URL(urlEmail);
@@ -676,16 +696,16 @@ public class Messenger {
 										e.printStackTrace();
 										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
 										this.chatMediator.sendMessageToChannel(message.getChannel(),
-												response.getErrorMessage());
+												state.getErrorMessage(),state.getFollowupMessageType());
 									}
 								}
-								if (response.getTriggeredFunctionId() != null) {
-									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+								if (state.getTriggeredFunctionId() != null) {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 									contextOn = true;
 								}
 							} else {
-								if (response.getTriggeredFunctionId() != "") {
-									this.triggeredFunction.put(message.getChannel(), response.getTriggeredFunctionId());
+								if (state.getTriggeredFunctionId() != "") {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 									contextOn = true;
 								} else {
 									System.out.println("No Bot Action was given to the Response");
@@ -715,8 +735,8 @@ public class Messenger {
 				if (state == null || !state.getIntentKeyword().contains("defaultX")) {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
-				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(), "", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
-
+				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
+						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

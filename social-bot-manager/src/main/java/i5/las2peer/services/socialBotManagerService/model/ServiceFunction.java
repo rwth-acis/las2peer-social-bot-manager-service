@@ -6,7 +6,6 @@ public class ServiceFunction extends TriggerFunction{
 	private String id;
 	private String serviceName;
 	private HashSet<Bot> bots;
-	private HashSet<VLEUser> users;
 	private String functionName;
 	private String functionPath;
 	private String httpMethod;
@@ -21,7 +20,6 @@ public class ServiceFunction extends TriggerFunction{
 	public ServiceFunction() {
 		setAttributes(new HashSet<ServiceFunctionAttribute>());
 		setBots(new HashSet<Bot>());
-		setUsers(new HashSet<VLEUser>());
 		setTrigger(new HashSet<Trigger>());
 		this.onStart = new HashMap<String,String>();
 	}
@@ -60,18 +58,6 @@ public class ServiceFunction extends TriggerFunction{
 
 	public void addBot(Bot b) {
 		this.bots.add(b);
-	}
-
-	public HashSet<VLEUser> getUsers() {
-		return users;
-	}
-
-	public void setUsers(HashSet<VLEUser> users) {
-		this.users = users;
-	}
-
-	public void addUser(VLEUser u) {
-		this.users.add(u);
 	}
 
 	public String getFunctionName() {

@@ -10,7 +10,6 @@ import javax.websocket.DeploymentException;
 import i5.las2peer.services.socialBotManagerService.chat.AuthTokenException;
 import i5.las2peer.services.socialBotManagerService.chat.ChatService;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
@@ -19,12 +18,10 @@ public class Bot {
 	private String id;
 	private String version = "1.0.0";
 	private String service;
-	private VLE vle;
 	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
 	private HashSet<Trigger> triggerList;
-	private HashMap<String, ContentGenerator> generatorList;
 
 	private HashMap<String, Messenger> messengers;
 
@@ -36,14 +33,13 @@ public class Bot {
 	private String address;
 	private HashMap<String, BotRoutine> routines;
 
-
 	public Bot() {
 		botServiceFunctions = new HashMap<String, ServiceFunction>();
 		triggerList = new HashSet<Trigger>();
-		generatorList = new HashMap<String, ContentGenerator>();
 		active = new HashMap<String, Boolean>();
 		this.messengers = new HashMap<String, Messenger>();
 		this.rasaServers = new HashMap<String, RasaNlu>();
+		setRoutines(new HashMap<String, BotRoutine>());
 	}
 
 	public String getName() {
@@ -86,12 +82,16 @@ public class Bot {
 		return this.rasaServers.get(id);
 	}
 
+	public HashMap<String, RasaNlu> getRasaServers() {
+		return this.rasaServers;
+	}
+
 	public RasaNlu getFirstRasaServer() {
 		return (RasaNlu) this.rasaServers.values().toArray()[0];
 	}
 
-	public void addRasaServer(String id, String Url) {
-		this.rasaServers.put(id, new RasaNlu(Url));
+	public void addRasaServer(String id, String url) {
+		this.rasaServers.put(id, new RasaNlu(url));
 	}
 
 	public HashSet<Trigger> getTriggerList() {
@@ -104,26 +104,6 @@ public class Bot {
 
 	public void addTrigger(Trigger t) {
 		this.triggerList.add(t);
-	}
-
-	public HashMap<String, ContentGenerator> getGeneratorList() {
-		return generatorList;
-	}
-
-	public void setGeneratorList(HashMap<String, ContentGenerator> generatorList) {
-		this.generatorList = generatorList;
-	}
-
-	public void addGenerator(String s, ContentGenerator g) {
-		this.generatorList.put(s, g);
-	}
-
-	public VLE getVle() {
-		return vle;
-	}
-
-	public void setVle(VLE vle) {
-		this.vle = vle;
 	}
 
 	public String getVersion() {
@@ -256,5 +236,4 @@ public class Bot {
 	public void addRoutine(String name, BotRoutine routine) {
 		this.routines.put(name, routine);
 	}
-
 }

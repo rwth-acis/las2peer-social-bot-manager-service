@@ -26,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.Collections;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -90,6 +89,7 @@ import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import i5.las2peer.security.BotAgent;
 import i5.las2peer.services.socialBotManagerService.chat.*;
+import i5.las2peer.services.socialBotManagerService.chat.github.GitHubWebhookReceiver;
 import i5.las2peer.services.socialBotManagerService.chat.xAPI.ChatStatement;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
@@ -101,16 +101,15 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelEdge;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
-import i5.las2peer.services.socialBotManagerService.model.ContentGenerator;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribute;
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
-import i5.las2peer.services.socialBotManagerService.model.VLE;
-import i5.las2peer.services.socialBotManagerService.model.VLERoutine;
+import i5.las2peer.services.socialBotManagerService.model.BotRoutine;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
@@ -153,7 +152,6 @@ import org.bson.types.ObjectId;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
-
 /**
  * las2peer-SocialBotManager-Service
  *
@@ -161,7 +159,8 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  *
  */
 @Api(value = "test")
-@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.0.19", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "", url = "")))
+@SwaggerDefinition(info = @Info(title = "las2peer Bot Manager Service", version = "1.6.0", description = "A las2peer service for managing social bots.", termsOfService = "", contact = @Contact(name = "Alexander Tobias Neumann", url = "", email = "neumann@dbis.rwth-aachen.de"), license = @License(name = "BSD 3-Clause License", url = "https://raw.githubusercontent.com/rwth-acis/las2peer-social-bot-manager-service/master/LICENSE")))
+
 @ServicePath("/SBFManager")
 @ManualDeployment
 public class SocialBotManagerService extends RESTService {
@@ -180,7 +179,6 @@ public class SocialBotManagerService extends RESTService {
 	private static String restarterBotNameStatic;
 	private String restarterBotPW; // PW of restarterBot
 	private static String restarterBotPWStatic; // PW of restarterBot
-
 
 	private static String lrsAuthTokenStatic;
 	private static String lrsURLStatic;
@@ -258,7 +256,7 @@ public class SocialBotManagerService extends RESTService {
 		}
 		if (getConfig() == null) {
 			setConfig(new BotConfiguration());
-			getConfig().setServiceConfiguration(new HashMap<String, VLE>());
+			getConfig().setBotConfiguration(new HashMap<String, Bot>());
 		}
 		if (getBotAgents() == null) {
 			setBotAgents(new HashMap<String, BotAgent>());
@@ -274,6 +272,32 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Failed to Connect: " + e.getMessage());
 		}
 
+		// mongo db connection for exchanging files 
+        mongoUri = "mongodb://"+mongoUser+":"+mongoPassword+"@"+mongoHost+"/?authSource="+mongoAuth;
+        // Construct a ServerApi instance using the ServerApi.builder() method
+        CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
+		CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
+		MongoClientSettings settings = MongoClientSettings.builder()
+				.uuidRepresentation(UuidRepresentation.STANDARD)
+				.applyConnectionString(new ConnectionString(mongoUri))
+				.codecRegistry(codecRegistry)
+				.build();
+		
+		// Create a new client and connect to the server
+		MongoClient mongoClient = MongoClients.create(settings);
+        // Create a new client and connect to the server
+		try {
+			MongoDatabase database = mongoClient.getDatabase(mongoDB);
+			// Send a ping to confirm a successful connection
+			Bson command = new BsonDocument("ping", new BsonInt64(1));
+			Document commandResult = database.runCommand(command);
+			System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
+		} catch (MongoException me) {
+			System.err.println(me);
+		} finally{
+			mongoClient.close();
+		}
+
 		if (rt == null) {
 			rt = Executors.newSingleThreadScheduledExecutor();
 			rt.scheduleAtFixedRate(new RoutineThread(), 0, BOT_ROUTINE_PERIOD, TimeUnit.SECONDS);
@@ -287,6 +311,8 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(BotModelResource.class);
 		getResourceConfig().register(TrainingResource.class);
 		getResourceConfig().register(this);
+		getResourceConfig().register(GitHubWebhookReceiver.class);
+		getResourceConfig().register(RESTfulChatResource.class);
 	}
 
 	@POST
@@ -423,7 +449,7 @@ public class SocialBotManagerService extends RESTService {
 					e3.printStackTrace();
 				}
 			}
-			return Response.ok().entity("vleList").build();
+			return Response.ok().entity("Bots restarted").build();
 		}
 
 		@GET
@@ -431,55 +457,50 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of bots") })
 		@ApiOperation(value = "Get all bots", notes = "Returns a list of all registered bots.")
 		public Response getBots() {
-			JSONObject vleList = new JSONObject();
+			JSONObject botList = new JSONObject();
 			// Iterate through VLEs
-			for (Entry<String, VLE> vleEntry : getConfig().getVLEs().entrySet()) {
-				String vleName = vleEntry.getKey();
-				VLE vle = vleEntry.getValue();
-				JSONObject botList = new JSONObject();
+			Gson g = new Gson();
+			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			for (Entry<String, Bot> botEntry : getConfig().getBots().entrySet()) {
+				String botName = botEntry.getKey();
+				Bot b = botEntry.getValue();
 				// Iterate bots
-				for (Entry<String, Bot> botEntry : vle.getBots().entrySet()) {
-					Bot b = botEntry.getValue();
-					JSONObject jb = new JSONObject();
-					JSONObject ac = new JSONObject();
-					ac.putAll(b.getActive());
-					jb.put("active", ac);
-					jb.put("id", b.getId());
-					jb.put("name", b.getName());
-					jb.put("version", b.getVersion());
-					botList.put(botEntry.getValue().getName(), jb);
+				JSONObject jb = new JSONObject();
+				JSONObject ac = new JSONObject();
+				ac.putAll(b.getActive());
+				jb.put("active", ac);
+				jb.put("id", b.getId());
+				jb.put("name", b.getName());
+				jb.put("version", b.getVersion());
+				try {
+					jb.put("nlu", p.parse(g.toJson(b.getRasaServers())));
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				vleList.put(vleName, botList);
+				botList.put(botName, jb);
 			}
-			return Response.ok().entity(vleList).build();
+			return Response.ok().entity(botList).build();
 		}
 
 		@GET
-		@Path("/{vleName}")
+		@Path("/{botName}")
 		@Produces(MediaType.APPLICATION_JSON)
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Returns bot information") })
-		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given VLE name.")
-		public Response getBotsForVLE(@PathParam("vleName") String name) {
-			VLE vle = getConfig().getVLEs().get(name);
-			// Set<String> botList = new HashSet<String>();
-			JSONObject j = new JSONObject();
-			if (vle != null) {
-				Iterator<Entry<String, Bot>> it = vle.getBots().entrySet().iterator();
-				while (it.hasNext()) {
-					Map.Entry<String, Bot> pair = it.next();
-					Bot b = pair.getValue();
-					JSONObject jb = new JSONObject();
-					JSONObject ac = new JSONObject();
-					ac.putAll(b.getActive());
-					jb.put("active", ac);
-					jb.put("id", b.getId());
-					jb.put("name", b.getName());
-					jb.put("version", b.getVersion());
-					j.put(pair.getKey(), jb);
-					// it.remove(); // avoids a ConcurrentModificationException
-				}
+		@ApiOperation(value = "Retrieve bot by name", notes = "Returns bot information by the given name.")
+		public Response getBotsForVLE(@PathParam("botName") String name) {
+			Bot b = getConfig().getBots().get(name);
+			if (b==null){
+				return Response.status(Status.NOT_FOUND).entity("Bot "+name+" not found.").build();
 			}
-			return Response.ok().entity(j).build();
+			JSONObject bot = new JSONObject();
+			JSONObject ac = new JSONObject();
+			ac.putAll(b.getActive());
+			bot.put("active", ac);
+			bot.put("id", b.getId());
+			bot.put("name", b.getName());
+			bot.put("version", b.getVersion());
+			return Response.ok().entity(bot).build();
 		}
 
 		/**
@@ -603,38 +624,18 @@ public class SocialBotManagerService extends RESTService {
 			try {
 				BotAgent botAgent = getBotAgents().get(botName);
 				if (botAgent == null) {
-					return Response.status(Status.NOT_FOUND).entity("Bot " + botName + " not found1").build();
+					return Response.status(Status.NOT_FOUND).entity("Botagent " + botName + " not found").build();
 				}
 				body = body.replace("$botId", botAgent.getIdentifier());
 				JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				JSONObject j = (JSONObject) p.parse(body);
 				String basePath = (String) j.get("basePath");
-				String[] s = basePath.split("/");
-				String service = s[s.length - 1];
-				VLE vle = getConfig().getServiceConfiguration(service);
+				Bot bot = getConfig().getBot(botName);
 
-				Bot bot = null;
-				for (Bot b : vle.getBots().values()) {
-					if (b.getName().equals(botName)) {
-						bot = b;
-						break;
-					}
-				}
 				if (bot == null) {
-					return Response.status(Status.NOT_FOUND).entity("Bot " + botName + " not found2").build();
+					return Response.status(Status.NOT_FOUND).entity("Bot " + botName + " not found").build();
 				}
-				String sepName = getConfig().getServiceConfiguration(service).getEnvironmentSeparator();
-
-				String sepValue;
-				if (sepName.equals("singleEnvironment")) {
-					sepValue = sepName;
-				} else {
-					sepValue = j.getAsString(sepName);
-				}
-
-				botIsActive.put(sepValue, true);
-				bot.setIdActive(sepValue, true);
-
+				
 				if (j.get("directJoin") == null) {
 					String joinPath = (String) j.get("joinPath");
 
@@ -681,7 +682,6 @@ public class SocialBotManagerService extends RESTService {
 					bot = getConfig().getBot(botId);
 					break;
 				}
-
 			}
 			if (bot == null)
 				return Response.status(HttpURLConnection.HTTP_NOT_FOUND).entity("Bot " + botName + " not found.").build();
@@ -732,23 +732,12 @@ public class SocialBotManagerService extends RESTService {
 				JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				JSONObject parsedBody = (JSONObject) p.parse(body);
 				String service = (String) parsedBody.get("serviceAlias");
-				VLE vle = getConfig().getServiceConfiguration(service);
-
-				if (!vle.getEnvironmentSeparator().equals("singleEnvironment")) {
-					if (vle == null || vle.getEnvironmentSeparator() == null
-							|| ((JSONObject) parsedBody.get("attributes")).get(vle.getEnvironmentSeparator()) == null
-							|| botIsActive.get(((JSONObject) parsedBody.get("attributes"))
-									.get(vle.getEnvironmentSeparator())) != true) {
-						return Response.status(Status.FORBIDDEN).entity("Bot is not active").build();
-					}
-				}
-
 				String triggerFunctionName = parsedBody.getAsString("functionName");
 				String triggerUID = parsedBody.getAsString("uid");
 
 				for (BotAgent botAgent : getBotAgents().values()) {
 					try {
-						this.sbfservice.checkTriggerBot(vle, parsedBody, botAgent, triggerUID, triggerFunctionName);
+						this.sbfservice.checkTriggerBot(config, parsedBody, botAgent, triggerUID, triggerFunctionName);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -768,6 +757,7 @@ public class SocialBotManagerService extends RESTService {
 		public Response triggerRoutine(String body, @PathParam("botName") String name) {
 			String returnString = "Routine is running.";
 			SocialBotManagerService sbf = this.sbfservice;
+			String addr = sbf.address;
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -777,27 +767,14 @@ public class SocialBotManagerService extends RESTService {
 						JSONObject j = (JSONObject) p.parse(body);
 						String service = (String) j.get("serviceAlias");
 
-						VLE vle = getConfig().getServiceConfiguration(service);
-						// System.out.println(vle);
 						JSONObject context = new JSONObject();
-						context.put("addr", vle.getAddress());
-						if (!vle.getEnvironmentSeparator().equals("singleEnvironment")) {
-							if (vle == null || vle.getEnvironmentSeparator() == null
-									|| ((JSONObject) j.get("attributes")).get(vle.getEnvironmentSeparator()) == null
-									|| botIsActive.get(((JSONObject) j.get("attributes"))
-											.get(vle.getEnvironmentSeparator())) != true) {
-								return;
-							} else {
-								JSONObject atts = (JSONObject) j.get("attributes");
-								context.put("env", atts.getAsString(vle.getEnvironmentSeparator()));
-							}
-						}
+						context.put("addr", addr);
 
 						String botFunctionId = j.getAsString("function");
 						BotAgent botAgent = getBotAgents().get(j.getAsString("bot"));
 
 						try {
-							sbf.checkRoutineTrigger(vle, j, botAgent, botFunctionId, context);
+							sbf.checkRoutineTrigger(config, j, botAgent, botFunctionId, context);
 							// checkTriggerBot(vle, j, botAgent, "", f);
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -947,12 +924,10 @@ public class SocialBotManagerService extends RESTService {
 						try {
 							BotAgent botAgent = getBotAgents().get(messageInfo.getBotName());
 							String service = messageInfo.getServiceAlias();
-							System.out.println("service name: " + service);
-							VLE vle = getConfig().getServiceConfiguration(service);
 
 							// get triggered function id, by getting bot, the messengers and then the intent
 							// hash map
-							HashMap<String, Bot> botsHM = vle.getBots();
+							HashMap<String, Bot> botsHM = getConfig().getBots();
 							// System.out.println("botsHM: " + botsHM);
 							String triggerdFunctionId = "";
 							for (Bot bot : botsHM.values()) {
@@ -982,7 +957,7 @@ public class SocialBotManagerService extends RESTService {
 							System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " "
 									+ newMessageInfo.getTriggeredFunctionId());
 							try {
-								sbf.performIntentTrigger(vle, botAgent, newMessageInfo);
+								sbf.performIntentTrigger(getConfig(), botAgent, newMessageInfo);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
@@ -1021,15 +996,17 @@ public class SocialBotManagerService extends RESTService {
 				public void run() {
 
 					// Identify bot
-					Collection<VLE> vles = getConfig().getVLEs().values();
 					Bot bot = null;
-
-					for (VLE vle : vles) {
-						Bot slackBot = vle.getBotByServiceToken(token, ChatService.SLACK);
-						if (slackBot != null) {
-							bot = slackBot;
+					
+					for (Bot b : getConfig().getBots().values()) {
+						if (bot.getMessenger(ChatService.SLACK) != null) {
+							ChatMediator mediator = bot.getMessenger(ChatService.SLACK)
+									.getChatMediator();
+							if (mediator.hasToken(token))
+								bot = b;
 						}
 					}
+
 					if (bot == null)
 						System.out.println("cannot relate slack action to a bot with token: " + token);
 					System.out.println("slack action: bot identified: " + bot.getName());
@@ -1087,11 +1064,8 @@ public class SocialBotManagerService extends RESTService {
 				public void run() {
 					try {
 						BotAgent botAgent = getBotAgents().get(m.getBotName());
-						String service = m.getServiceAlias();
-						VLE vle = getConfig().getServiceConfiguration(service);
-
 						try {
-							sbf.performIntentTrigger(vle, botAgent, m);
+							sbf.performIntentTrigger(config, botAgent, m);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -1191,13 +1165,10 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Bot deactivated") })
 		@ApiOperation(value = "Deactivate bot for unit", notes = "Deactivates a bot for a unit.")
 		public Response deactivateBot(@PathParam("botName") String bot, @PathParam("unit") String unit) {
-			Collection<VLE> vles = getConfig().getVLEs().values();
-			for (VLE vle : vles) {
-				Bot b = vle.getBots().get(bot);
-				if (b != null) {
-					b.setIdActive(unit, false);
-					return Response.ok().entity(bot + " deactivated.").build();
-				}
+			Bot b = getConfig().getBots().get(bot);
+			if (b != null) {
+				b.setIdActive(unit, false);
+				return Response.ok().entity(bot + " deactivated.").build();
 			}
 
 			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
@@ -1213,74 +1184,49 @@ public class SocialBotManagerService extends RESTService {
 				@ApiResponse(code = HttpURLConnection.HTTP_NOT_ACCEPTABLE, message = "Messenger names do not all match!") })
 		@ApiOperation(value = "Deactivate bot for unit", notes = "Deactivates a bot for a unit.")
 		public Response deactivateBotAll(@PathParam("botAgentId") String bot, JSONObject body) {
-			Collection<VLE> vles = getConfig().getVLEs().values();
-			for (VLE vle : vles) {
-				Bot b = vle.getBots().get(bot);
-				if (b != null) {
-					ArrayList messengers = (ArrayList) body.get("messengers");
-					if (b.deactivateAllWithCheck(messengers)) {
-						vle.getBots().remove(bot);
-						if (restarterBot != null) {
-							Envelope env = null;
-							HashMap<String, BotModel> old = null;
-							if (restarterBotNameStatic != null && restarterBotPWStatic != null
-									&& !restarterBotNameStatic.equals("") && !restarterBotPWStatic.equals("")) {
-								try {
-									restarterBot = (BotAgent) Context.getCurrent().fetchAgent(Context.getCurrent()
-											.getUserAgentIdentifierByLoginName(restarterBotNameStatic));
-									restarterBot.unlock(restarterBotPWStatic);
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-							}
+			Bot b = getConfig().getBot(bot);
+			if (b != null) {
+				ArrayList messengers = (ArrayList) body.get("messengers");
+				if (b.deactivateAllWithCheck(messengers)) {
+					getConfig().removeBot(bot);
+					if (restarterBot != null) {
+						Envelope env = null;
+						HashMap<String, BotModel> old = null;
+						if (restarterBotNameStatic != null && restarterBotPWStatic != null
+								&& !restarterBotNameStatic.equals("") && !restarterBotPWStatic.equals("")) {
 							try {
-								// try to add project to project list (with service group agent)
-								env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
-								old = (HashMap<String, BotModel>) env.getContent();
-								for (Object object : messengers) {
-									HashMap<String, String> jsonObject = (HashMap<String, String>) object;
-									if (old.containsKey(jsonObject.get("authToken"))) {
-										old.remove(jsonObject.get("authToken"));
-									}
-								}
-								env.setContent(old);
-								Context.get().storeEnvelope(env, restarterBot);
-							} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
-									| EnvelopeOperationFailedException e) {
+								restarterBot = (BotAgent) Context.getCurrent().fetchAgent(Context.getCurrent()
+										.getUserAgentIdentifierByLoginName(restarterBotNameStatic));
+								restarterBot.unlock(restarterBotPWStatic);
+							} catch (Exception e) {
 								e.printStackTrace();
 							}
 						}
-						return Response.ok().entity(bot + " deactivated.").build();
-					} else {
-						return Response.status(HttpURLConnection.HTTP_NOT_ACCEPTABLE).entity(bot + " not deactivated.")
-								.build();
+						try {
+							// try to add project to project list (with service group agent)
+							env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
+							old = (HashMap<String, BotModel>) env.getContent();
+							for (Object object : messengers) {
+								HashMap<String, String> jsonObject = (HashMap<String, String>) object;
+								if (old.containsKey(jsonObject.get("authToken"))) {
+									old.remove(jsonObject.get("authToken"));
+								}
+							}
+							env.setContent(old);
+							Context.get().storeEnvelope(env, restarterBot);
+						} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
+								| EnvelopeOperationFailedException e) {
+							e.printStackTrace();
+						}
 					}
+					return Response.ok().entity(bot + " deactivated.").build();
+				} else {
+					return Response.status(HttpURLConnection.HTTP_NOT_ACCEPTABLE).entity(bot + " not deactivated.")
+							.build();
 				}
 			}
 
 			return Response.status(Status.NOT_FOUND).entity(bot + " not found.").build();
-		}
-
-		@GET
-		@Path("/{botName}/generators")
-		@Produces(MediaType.APPLICATION_JSON)
-		@ApiResponses(value = {
-				@ApiResponse(code = HttpURLConnection.HTTP_OK, message = "List of content generators") })
-		@ApiOperation(value = "Get content generators", notes = "Returns a list of content generators specified for that bot.")
-		public Response getContentGenerators(@PathParam("botName") String service) {
-			VLE vle = null;
-			if (getConfig() != null) {
-				vle = getConfig().getServiceConfiguration(service);
-			}
-			if (vle != null) {
-				HashMap<String, ContentGenerator> cgl = new HashMap<String, ContentGenerator>();
-				for (Bot b : vle.getBots().values()) {
-					cgl.putAll(b.getGeneratorList());
-				}
-				return Response.ok().entity(cgl).build();
-			} else {
-				return Response.ok().entity(new HashMap<String, ContentGenerator>()).build();
-			}
 		}
 
 		@POST
@@ -1296,13 +1242,11 @@ public class SocialBotManagerService extends RESTService {
 				public void run() {
 
 					// Identify bot
-					Collection<VLE> vles = getConfig().getVLEs().values();
 					Bot bot = null;
 
-					for (VLE vle : vles) {
-						Bot teleBot = vle.getBotByServiceToken(token, ChatService.TELEGRAM);
-						if (teleBot != null) {
-							bot = teleBot;
+					for (Bot b : getConfig().getBots().values()) {
+						if (b.getMessenger(ChatService.TELEGRAM) != null) {
+							bot = b;
 						}
 					}
 					if (bot == null)
@@ -1327,12 +1271,12 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-	public void checkRoutineTrigger(VLE vle, JSONObject j, BotAgent botAgent, String botFunctionId, JSONObject context)
+	public void checkRoutineTrigger(BotConfiguration botConfig, JSONObject j, BotAgent botAgent, String botFunctionId, JSONObject context)
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
 			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
 			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
 		String botId = botAgent.getIdentifier();
-		Bot bot = vle.getBots().get(botId);
+		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null) {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(botFunctionId);
@@ -1344,20 +1288,20 @@ public class SocialBotManagerService extends RESTService {
 
 			JSONObject triggerAttributes = (JSONObject) j.get("attributes");
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
-				formAttributes(vle, sfa, bot, body, functionPath, attlist, triggerAttributes);
+				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
-			performTrigger(vle, botFunction, botAgent, functionPath, "", body);
+			performTrigger(botConfig, botFunction, botAgent, functionPath, "", body);
 		}
 	}
 
 	// TODO: Use entity value, handle environment separator, handle other things
 	// than static content
-	public void performIntentTrigger(VLE vle, BotAgent botAgent, MessageInfo messageInfo)
+	public void performIntentTrigger(BotConfiguration botConfig, BotAgent botAgent, MessageInfo messageInfo)
 			throws ServiceNotFoundException, ServiceNotAvailableException, InternalServiceException,
 			ServiceMethodNotFoundException, ServiceInvocationFailedException, ServiceAccessDeniedException,
 			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
 		String botId = botAgent.getIdentifier();
-		Bot bot = vle.getBots().get(botId);
+		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null) {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
@@ -1371,7 +1315,7 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
-				formAttributes(vle, sfa, bot, body, functionPath, attlist, triggerAttributes);
+				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
@@ -1519,7 +1463,7 @@ public class SocialBotManagerService extends RESTService {
 			ServiceNotAuthorizedException, ParseBotException {
 		String botId = botAgent.getIdentifier();
 
-		Bot bot = vle.getBots().get(botId);
+		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null && !(triggerUID.toLowerCase().equals(botAgent.getIdentifier().toLowerCase()))) {
 
 			// get all triggers of the bot
@@ -1547,12 +1491,11 @@ public class SocialBotManagerService extends RESTService {
 
 						JSONObject triggerAttributes = (JSONObject) body.get("attributes");
 						for (ServiceFunctionAttribute triggeredFunctionAttribute : triggeredFunction.getAttributes()) {
-							formAttributes(vle, triggeredFunctionAttribute, bot, triggeredBody, functionPath, attlist,
+							formAttributes(botConfig, triggeredFunctionAttribute, bot, triggeredBody, functionPath, attlist,
 									triggerAttributes);
 						}
 
 						performTrigger(botConfig, triggeredFunction, botAgent, functionPath, triggerUID, triggeredBody);
-
 					}
 				}
 			}
@@ -1563,7 +1506,7 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	// Aaron : if name of body is empty add as part of an array of contents ?
-	private void formAttributes(VLE vle, ServiceFunctionAttribute triggeredFunctionAttribute, Bot bot,
+	private void formAttributes(BotConfiguration botConfig, ServiceFunctionAttribute triggeredFunctionAttribute, Bot bot,
 			JSONObject triggeredBody, String functionPath, HashMap<String, ServiceFunctionAttribute> attlist,
 			JSONObject triggerAttributes) throws ServiceNotFoundException, ServiceNotAvailableException,
 			InternalServiceException, ServiceMethodNotFoundException, ServiceInvocationFailedException,
@@ -1581,21 +1524,14 @@ public class SocialBotManagerService extends RESTService {
 					} else
 						triggeredBody.put(subsfa.getName(), triggerAttributes.get(mappedTo.getName()));
 				} else {
-					// Use AI to generate body
-					ContentGenerator g = subsfa.getGenerator();
-					if (g != null) {
-						mapWithContentGenerator(triggeredBody, g, subsfa.getName(), subsfa.getContentType(),
-								functionPath, attlist, triggerAttributes, vle.getEnvironmentSeparator());
+					if (triggeredFunctionAttribute.getItb() != null) {
+						mapWithIfThen(triggeredFunctionAttribute.getItb(), triggeredFunctionAttribute,
+								triggeredBody, attlist, triggerAttributes, functionPath);
 					} else {
-						if (triggeredFunctionAttribute.getItb() != null) {
-							mapWithIfThen(triggeredFunctionAttribute.getItb(), triggeredFunctionAttribute,
-									triggeredBody, attlist, triggerAttributes, functionPath);
+						if (subsfa.hasStaticContent()) {
+							mapWithStaticContent(subsfa, triggeredBody);
 						} else {
-							if (subsfa.hasStaticContent()) {
-								mapWithStaticContent(subsfa, triggeredBody);
-							} else {
-								// TODO no match!
-							}
+							// TODO no match!
 						}
 					}
 
@@ -1691,7 +1627,6 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-
 	private void mapWithStaticFormContent(ServiceFunctionAttribute triggeredFunctionAttribute, JSONObject triggeredBody) {
 		if (triggeredFunctionAttribute.getContent().length() > 0) {
 			if (triggeredBody.containsKey(triggeredFunctionAttribute.getName())) {
@@ -1775,12 +1710,12 @@ public class SocialBotManagerService extends RESTService {
 		}
 	}
 
-	private void performTrigger(VLE vle, ServiceFunction sf, BotAgent botAgent, String functionPath, String triggerUID,
+	private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent, String functionPath, String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
-				client.setConnectorEndpoint(vle.getAddress());
+				client.setConnectorEndpoint(address);
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
@@ -1949,8 +1884,6 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(r.getResponse());
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
 				try {
-					Bot bot = vle.getBots().get(botAgent.getIdentifier());
-					String messengerID = sf.getMessengerName();
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
 					for(String key : response.keySet()){
 						bot.getMessenger(messengerID).addVariable(channel, key, response.getAsString(key));				
@@ -2000,17 +1933,17 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
+			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
 				// TODO Anonymous agent error
 				MiniClient client = new MiniClient();
-				client.setConnectorEndpoint(vle.getAddress());
+				client.setConnectorEndpoint(bot.getAddress());
 				HashMap<String, String> headers = new HashMap<String, String>();
 				ClientResponse result = client.sendRequest("GET", "SBFManager/email/" + triggerUID, "",
 						MediaType.TEXT_HTML, MediaType.TEXT_HTML, headers);
 				String mail = result.getResponse().trim();
 				triggeredBody.put("email", mail);
 			}
-			Bot bot = vle.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
 			if (messengerID == null || bot.getMessenger(messengerID) == null) {
 				System.out.println("Bot Action is missing Messenger");
@@ -2048,7 +1981,7 @@ public class SocialBotManagerService extends RESTService {
 					channel = chat.getChannelByEmail(s);
 
 					if (textArray[i] != null) {
-						chat.sendMessageToChannel(channel, textArray[i]);
+						chat.sendMessageToChannel(channel, textArray[i],"text");
 					}
 					i++;
 				}
@@ -2059,7 +1992,7 @@ public class SocialBotManagerService extends RESTService {
 					channel = chat.getChannelByEmail(s);
 
 					if (text != null && channel != null) {
-						chat.sendMessageToChannel(channel, text);
+						chat.sendMessageToChannel(channel, text,"text");
 					}
 
 				}
@@ -2071,7 +2004,7 @@ public class SocialBotManagerService extends RESTService {
 				email = body.getAsString("email");
 				channel = chat.getChannelByEmail(email);
 			}
-			chat.sendMessageToChannel(channel, "ContactList contacted.");
+			chat.sendMessageToChannel(channel, "ContactList contacted.","text");
 
 		}else {
 			if (body.containsKey("channel")) {
@@ -2082,7 +2015,7 @@ public class SocialBotManagerService extends RESTService {
 				channel = chat.getChannelByEmail(email);
 			}
 			if (text != null && !body.containsKey("fileBody")) {
-				chat.sendMessageToChannel(channel, text);
+				chat.sendMessageToChannel(channel, text,"text");
 			}
 			if (body.containsKey("blocks")) {
 				System.out.println("Body has blocks");
@@ -2338,26 +2271,23 @@ public class SocialBotManagerService extends RESTService {
 		System.out.println("\u001B[33mDebug --- Partition: " + statementsPerCourse.toString() + "\u001B[0m");
 
 		// Check if any bots take xAPI statements first
-		HashMap<String, VLE> vles = config.getVLEs();
-		for (Entry<String, VLE> vleEntry : vles.entrySet()) {
-			HashMap<String, Bot> bots = vleEntry.getValue().getBots();
+			HashMap<String, Bot> bots = config.getBots();
 
-			for (Entry<String, Bot> botEntry : bots.entrySet()) {
-				HashMap<String, Messenger> messengers = botEntry.getValue().getMessengers();
-				String botName = botEntry.getValue().getName();
-				for (Entry<String, Messenger> messengerEntry : messengers.entrySet()) {
-					ChatMediator mediator = messengerEntry.getValue().getChatMediator();
-					if (mediator instanceof MoodleForumMediator) {
-						MoodleForumMediator moodleMediator = (MoodleForumMediator) mediator;
-						if (courseMap != null && courseMap.containsKey(botName)) {
-							if (statementsPerCourse.containsKey(courseMap.get(botName))) {
-								System.out.println("\u001B[33mDebug --- Statement: "
-										+ statementsPerCourse.get(courseMap.get(botName)) + "\u001B[0m");
-								moodleMediator.handle(statementsPerCourse.get(courseMap.get(botName)));
-							}
-						} else {
-							moodleMediator.handle(statements);
+		for (Entry<String, Bot> botEntry : bots.entrySet()) {
+			HashMap<String, Messenger> messengers = botEntry.getValue().getMessengers();
+			String botName = botEntry.getValue().getName();
+			for (Entry<String, Messenger> messengerEntry : messengers.entrySet()) {
+				ChatMediator mediator = messengerEntry.getValue().getChatMediator();
+				if (mediator instanceof MoodleForumMediator) {
+					MoodleForumMediator moodleMediator = (MoodleForumMediator) mediator;
+					if (courseMap != null && courseMap.containsKey(botName)) {
+						if (statementsPerCourse.containsKey(courseMap.get(botName))) {
+							System.out.println("\u001B[33mDebug --- Statement: "
+									+ statementsPerCourse.get(courseMap.get(botName)) + "\u001B[0m");
+							moodleMediator.handle(statementsPerCourse.get(courseMap.get(botName)));
 						}
+					} else {
+						moodleMediator.handle(statements);
 					}
 				}
 			}
@@ -2442,7 +2372,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
-			for (Bot bot : getConfig().getBots().values()) {
+				for (Bot bot : getConfig().getBots().values()) {
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 					for (MessageInfo m : messageInfos) {
 						ChatStatement chatStatement = ChatStatement.generate(m.getMessage().getUser(), m.getBotName(),
@@ -2560,11 +2490,13 @@ public class SocialBotManagerService extends RESTService {
 									ClientResponse result = client.sendRequest("POST", path, body.toJSONString(),
 											MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 									// }
+								}
 							}
 						}
+					
 					}
 				}
-			}
+				
 		}
 
 	}
@@ -2807,7 +2739,7 @@ public class SocialBotManagerService extends RESTService {
 				System.out.println("Using email " + email);
 
 				String channel = chatMediator.getChannelByEmail(email);
-				chatMediator.sendMessageToChannel(channel, msgtext);
+				chatMediator.sendMessageToChannel(channel, msgtext,"text");
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -2839,7 +2771,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
 				String channel = chatMediator.getChannelByEmail(email);
-				chatMediator.sendMessageToChannel(channel, msgtext);
+				chatMediator.sendMessageToChannel(channel, msgtext,"text");
 
 			} catch (Exception e) {
 				e.printStackTrace();
