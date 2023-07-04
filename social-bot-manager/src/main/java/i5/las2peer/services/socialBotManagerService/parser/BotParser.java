@@ -668,11 +668,22 @@ public class BotParser {
 			// service alias should contain base path, so that /swagger can be added
 			// afterwards
 			try {
-				functionURL = new URL(service);
-				sf.setFunctionName(sfName);
-				sf.setFunctionPath(service);
-				sf.setServiceName(service);
-				sf.setActionType(ActionType.OPENAPI);
+				if (service.equals("https://api.openai.com/v1")) {
+					functionURL = new URL(service);
+					sf.setFunctionName(sfName);
+					sf.setFunctionPath(sfName);
+					sf.setServiceName(service);
+					sf.setActionType(ActionType.OPENAPI);
+					sf.setHttpMethod("POST");
+					sf.setConsumes(MediaType.APPLICATION_JSON);
+					sf.setProduces(MediaType.APPLICATION_JSON);
+				} else {
+					functionURL = new URL(service);
+					sf.setFunctionName(sfName);
+					sf.setFunctionPath(service);
+					sf.setServiceName(service);
+					sf.setActionType(ActionType.OPENAPI);
+				}
 				// maybe check here whether there is a swagger.json? if not, return null
 			} catch (Exception e) {
 				System.out.println("Given URL in service alias is not correct");
@@ -766,20 +777,21 @@ public class BotParser {
 					if (s.getActionType().equals(ActionType.OPENAPI)) {
 						// wrapper for OpenAI calls
 						if (s.getServiceName().equals("https://api.openai.com/v1")) {
-							MiniClient client = new MiniClient();
-							client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
-							HashMap<String, String> headers = new HashMap<String, String>();
-							String openai_api_key = "YOUR OPEN AI API KEY";
-							headers.put("Authorization", "Bearer " + openai_api_key);
+							;
+							// MiniClient client = new MiniClient();
+							// client.setConnectorEndpoint(s.getServiceName());
+							// HashMap<String, String> headers = new HashMap<String, String>();
+							// String openai_api_key = "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";
+							// headers.put("Authorization", "Bearer " + openai_api_key);
+					
+							// JSONObject contentParameters = new JSONObject();
+							// for (ServiceFunctionAttribute sfa : s.getAttributes()) {
+							// 	System.out.println(sfa);
+							// 	contentParameters.put(sfa.getName(), sfa.getContent());
+							// }
 
-							JSONObject contentParameters = new JSONObject();
-							for (ServiceFunctionAttribute sfa : s.getAttributes()) {
-								System.out.println(sfa);
-								contentParameters.put(sfa.getName(), sfa.getContent());
-							}
-
-							ClientResponse result = client.sendRequest("POST", s.getFunctionName(),
-									contentParameters.toString(), MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON, headers);
+							//ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), s.getFunctionPath(),
+							//		contentParameters.toString(), s.getConsumes(), s.getProduces(), headers);
 
 						}
 						// default case
@@ -800,28 +812,29 @@ public class BotParser {
 				}
 			}
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
+				System.out.println("ADDING SERVICE INFORMATION");
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
-			if(s.getOnStart().containsKey(b.getId())){
-				MiniClient client = new MiniClient();
-				// client.setLogin(, password);
-				if(s.getActionType() == ActionType.SERVICE){
-					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
-				} else {
-					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
-				}
-				HashMap<String, String> headers = new HashMap<String, String>();
-				client.setLogin("alice", "pwalice");
-				JSONObject body = new JSONObject();
-				String botName = "";
-				body.put("botId", b.getId());
-				body.put("botName", b.getName());
-				for(ServiceFunctionAttribute a : s.getAttributes()){
-					body.put(a.getName(), a.getContent());
-				}
-				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
-						body.toString(), s.getConsumes(), s.getProduces(), headers);
-			}
+			// if(s.getOnStart().containsKey(b.getId())){
+			// 	MiniClient client = new MiniClient();
+			// 	// client.setLogin(, password);
+			// 	if(s.getActionType() == ActionType.SERVICE){
+			// 		client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
+			// 	} else {
+			// 		client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+			// 	}
+			// 	HashMap<String, String> headers = new HashMap<String, String>();
+			// 	client.setLogin("alice", "pwalice");
+			// 	JSONObject body = new JSONObject();
+			// 	String botName = "";
+			// 	body.put("botId", b.getId());
+			// 	body.put("botName", b.getName());
+			// 	for(ServiceFunctionAttribute a : s.getAttributes()){
+			// 		body.put(a.getName(), a.getContent());
+			// 	}
+			// 	ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
+			// 			body.toString(), s.getConsumes(), s.getProduces(), headers);
+			// }
 		}
 		return jaf;
 	}

@@ -1315,11 +1315,18 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
-				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
+				if (botFunction.getServiceName().equals("https://api.openai.com/v1")) {
+					body.put(sfa.getName(), sfa.getContent());
+				} else {
+					formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
+				}
 			}
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
 			// TODO: Handle multiple messengers
+			//if (botFunction.getServiceName().equals("https://api.openai.com/v1")) {
+			//	;
+			//} else {
 			String mail = messageInfo.getMessage().getEmail();
 			if(mail==null) mail = "";
 			body.put("email", messageInfo.getMessage().getEmail());
@@ -1370,6 +1377,7 @@ public class SocialBotManagerService extends RESTService {
 			body.put("entities", entities);
 			body.put("msg", messageInfo.getMessage().getText());
 			body.put("contextOn", messageInfo.contextActive());
+			
 			botFunction.setMessengerName(messageInfo.getMessengerName());
 			performTrigger(botConfig, botFunction, botAgent, functionPath, "", body);
 		}
@@ -1717,20 +1725,37 @@ public class SocialBotManagerService extends RESTService {
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
 				client.setConnectorEndpoint(address);
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
-				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
+				if (sf.getServiceName().equals("https://api.openai.com/v1")) {
+					client.setConnectorEndpoint(sf.getServiceName());
+				} else {
+					client.setConnectorEndpoint(sf.getServiceName() + functionPath);
+				}
 			}
 			//client.setLogin("alice", "pwalice");
 			//client.setLogin(botAgent.getLoginName(), botPass);
-			String userId= triggeredBody.getAsString("user");
+			String userId = triggeredBody.getAsString("user");
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
-			triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
-			triggeredBody.put("botId", bot.getId());
-			triggeredBody.put("botName", bot.getName());
 			String channel = triggeredBody.getAsString("channel");
 			HashMap<String, String> headers = new HashMap<String, String>();
-			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
+			JSONObject openaiBody = new JSONObject();
+			if (sf.getServiceName().equals("https://api.openai.com/v1")) {
+				String openai_api_key = "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";
+				headers.put("Authorization", "Bearer " + openai_api_key);
+				for (ServiceFunctionAttribute sfa : sf.getAttributes()) {
+					openaiBody.put(sfa.getName(), sfa.getContent());
+				}
+				System.out.println(sf.getServiceName() + functionPath + " ; " + openaiBody.toJSONString() + " "
+					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + openaiBody.toJSONString());
+			} else {
+				triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
+				triggeredBody.put("botId", bot.getId());
+				triggeredBody.put("botName", bot.getName());
+				System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
+			
+			}
+			
 			ClientResponse r = null;
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			if(triggeredBody.containsKey("form")){
@@ -1875,8 +1900,14 @@ public class SocialBotManagerService extends RESTService {
 					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getServiceName() + functionPath,
 							triggeredBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
 				} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
-					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
+					if (sf.getServiceName().equals("https://api.openai.com/v1")) {
+						System.out.println("SERVICE FUNCTION SEND REQUEST");
+						r = client.sendRequest(sf.getHttpMethod().toUpperCase(), sf.getFunctionPath(),
+							openaiBody.toJSONString(), sf.getConsumes(), sf.getProduces(), headers);
+					} else {
+						r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
 							sf.getConsumes(), sf.getProduces(), headers);
+					}
 				}
 			}
 
@@ -1887,7 +1918,8 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
 					for(String key : response.keySet()){
 						bot.getMessenger(messengerID).addVariable(channel, key, response.getAsString(key));				
-					}	
+					}
+					// Need to convert openAI response to our expected response	
 					triggeredBody.put("text", response.getAsString("text"));
 					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 					if (response.containsKey("fileBody")) {
