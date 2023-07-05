@@ -453,10 +453,16 @@ public class Messenger {
 								if (state == null || state.expectsFile()) {
 									if(this.knownIntents.get("0") != null){
 										state = this.knownIntents.get("0");
-									} else{ 
-									state = this.knownIntents.get("default");
+									} else { 
+										if(intent.getEntitieValues().size() > 0){
+											state = this.knownIntents.get(intent.getEntitieValues().get(0));
+											if(state == null){
+												state = this.knownIntents.get("default");
+											}
+										}
+										
+									}
 								}
-							}
 								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
 										+ " confidence.");
 								stateMap.put(message.getChannel(), state);
@@ -490,6 +496,25 @@ public class Messenger {
 									state = checkDefault(state, message);
 								} else {
 									state = state.getFollowingMessages().get(intent.getKeyword());
+									stateMap.put(message.getChannel(), state);
+									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+								}
+							} else if (intent.getEntitieValues().size() > 0 && state.getFollowingMessages().get(intent.getEntitieValues().get(0)) != null) {
+								System.out.println("try follow up message with entity");
+								// check if a file was received during a conversation and search for a follow up
+								// incoming message which expects a file.
+								if (message.getFileBody() != null) {
+									if (state.getFollowingMessages().get(intent.getEntitieValues().get(0)).expectsFile()) {
+										state = state.getFollowingMessages().get(intent.getEntitieValues().get(0));
+										stateMap.put(message.getChannel(), state);
+										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+									} else {
+										state = checkDefault(state, message);
+									}
+								} else if (state.getFollowingMessages().get(intent.getEntitieValues().get(0)).expectsFile()) {
+									state = checkDefault(state, message);
+								} else {
+									state = state.getFollowingMessages().get(intent.getEntitieValues().get(0));
 									stateMap.put(message.getChannel(), state);
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 								}
