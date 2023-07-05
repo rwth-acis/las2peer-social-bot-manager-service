@@ -1740,7 +1740,7 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, String> headers = new HashMap<String, String>();
 			JSONObject openaiBody = new JSONObject();
 			if (sf.getServiceName().equals("https://api.openai.com/v1")) {
-				String openai_api_key = "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";
+				String openai_api_key = "OPEN API KEY";
 				headers.put("Authorization", "Bearer " + openai_api_key);
 				for (ServiceFunctionAttribute sfa : sf.getAttributes()) {
 					openaiBody.put(sfa.getName(), sfa.getContent());
