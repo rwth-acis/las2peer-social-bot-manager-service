@@ -30,7 +30,7 @@ set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
 set_in_service_config databaseUser ${DATABASE_USER}
 set_in_service_config databasePassword ${DATABASE_PASSWORD}
-set_in_service_config address ${ADDRESS}
+set_in_service_config webconnectorUrl ${WEBCONNECTOR_URL}
 set_in_service_config restarterBotName ${RESTARTERBOTNAME}
 set_in_service_config restarterBotPW ${RESTARTERBOTPW}
 set_in_service_config mongoHost ${MONGO_HOST}
@@ -41,7 +41,7 @@ set_in_service_config mongoAuth ${MONGO_AUTH}
 set_in_service_config lrsURL ${LRS_URL}
 set_in_service_config lrsAuthToken ${LRS_AUTH_TOKEN} 
 
-check_if_exists "$ADDRESS" "ADDRESS"
+check_if_exists "$WEBCONNECTOR_URL" "WEBCONNECTOR_URL"
 
 if [ "$ENV_VARIABLE_NOT_SET" = true ] ; then
     echo "Missing environment variables, exiting..."

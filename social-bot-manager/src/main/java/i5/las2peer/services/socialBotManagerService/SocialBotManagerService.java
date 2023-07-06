@@ -173,8 +173,8 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
-	private String address; // address of running webconnector
-	private static String addressStatic; // address of running webconnector
+	private String webconnectorUrl; // address of running webconnector
+	private static String webconnectorUrlStatic; // address of running webconnector
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
 	private String restarterBotPW; // PW of restarterBot
@@ -227,10 +227,10 @@ public class SocialBotManagerService extends RESTService {
 		setFieldValues(); // This sets the values of the configuration file
 		restarterBotNameStatic = restarterBotName;
 		restarterBotPWStatic = restarterBotPW;
-		if(address == null || address.equals("")){
-			throw new Exception("ADDRESS VARIABLE NEEDS TO BE SET!!!!!");
+		if (webconnectorUrl == null || webconnectorUrl.equals("")) {
+			throw new Exception("webconnectorUrl VARIABLE NEEDS TO BE SET!!!!!");
 		}
-		addressStatic = address;
+		webconnectorUrlStatic = webconnectorUrl;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
 			@Override
 			public X509Certificate[] getAcceptedIssuers() {
@@ -556,7 +556,7 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, BotModel> old = null;
 			try {
 				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-						nodes, edges, sbfservice.database, addressStatic);
+						nodes, edges, sbfservice.database, webconnectorUrlStatic);
 			} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException
 					| AuthTokenException e) {
 				e.printStackTrace();
@@ -757,7 +757,7 @@ public class SocialBotManagerService extends RESTService {
 		public Response triggerRoutine(String body, @PathParam("botName") String name) {
 			String returnString = "Routine is running.";
 			SocialBotManagerService sbf = this.sbfservice;
-			String addr = sbf.address;
+			String addr = sbf.webconnectorUrl;
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -1715,7 +1715,7 @@ public class SocialBotManagerService extends RESTService {
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
-				client.setConnectorEndpoint(address);
+				client.setConnectorEndpoint(webconnectorUrl);
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
 			}
@@ -2349,7 +2349,7 @@ public class SocialBotManagerService extends RESTService {
 
 			if (restarterBot == null) {
 				MiniClient clientRestart = new MiniClient();
-				clientRestart.setConnectorEndpoint(address);
+				clientRestart.setConnectorEndpoint(webconnectorUrl);
 				clientRestart.setLogin("alice", "pwalice");
 				HashMap<String, String> headers = new HashMap<String, String>();
 				try {
@@ -2385,7 +2385,7 @@ public class SocialBotManagerService extends RESTService {
 					// TODO: Handle multiple environments (maybe?)
 
 					MiniClient client = new MiniClient();
-					client.setConnectorEndpoint(address);
+					client.setConnectorEndpoint(webconnectorUrl);
 
 					HashMap<String, String> headers = new HashMap<String, String>();
 					for (MessageInfo m : messageInfos) {
@@ -3103,7 +3103,7 @@ public class SocialBotManagerService extends RESTService {
 					RESTfulChatResponse answerMsg = new RESTfulChatResponse("");
 			try {
 				Bot b = null;
-				String addr = service.address;
+				String addr = service.webconnectorUrl;
 				for(Bot botIterator: getConfig().getBots().values()){
 					if(botIterator.getName().equalsIgnoreCase(bot)){
 						b = botIterator;
