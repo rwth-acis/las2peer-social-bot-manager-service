@@ -24,7 +24,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'adopt'
-    - run: mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} ${{ env.DB_DATABASE }} < ./mysql-init-files/initDB.sql
+    - run: mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} ${{ env.DB_DATABASE }} < ./SBF.sql
     - name: Grant Gradle permissions
       run: chmod +x gradlew
     - name: Test with Gradle
