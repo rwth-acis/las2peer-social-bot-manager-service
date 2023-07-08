@@ -346,8 +346,7 @@ public class Messenger {
 				
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
-				if(state==null){
-					Context.
+				if (state == null) {
 					System.out.println("No current state, we will start from scratch.");
 					if(message.getText().startsWith("!") && this.knownIntents.get(intent.getKeyword()) == null){
 						// in case a command is triggered which does not exist
