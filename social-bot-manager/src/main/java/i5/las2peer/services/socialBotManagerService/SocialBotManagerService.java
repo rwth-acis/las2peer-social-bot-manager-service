@@ -315,6 +315,31 @@ public class SocialBotManagerService extends RESTService {
 		getResourceConfig().register(RESTfulChatResource.class);
 	}
 
+	/**
+	 * Returns the custom message descriptions for the service.
+	 */
+	@Override
+	public Map<String, String> getCustomMessageDescriptions() {
+		Map<String, String> descriptions = new HashMap<>();
+		descriptions.put(
+				"SERVICE_CUSTOM_MESSAGE_1",
+				"Monitors whenever a bot gets initialized");
+		descriptions.put(
+				"SERVICE_CUSTOM_MESSAGE_2",
+				"(deprecated) Was used to log the user messages.");
+		descriptions.put(
+				"SERVICE_CUSTOM_MESSAGE_42",
+				"| Key         | Description                                                                                                 |"
+						+ "|-------------|-------------------------------------------------------------------------------------------------------------|"
+						+ "| task        | Represents the task being performed.                                                                         |"
+						+ "| email       | Represents the email address associated with the user.                                              |"
+						+ "| time        | Represents the time taken to perform the task, calculated as the difference between the current time and `start` time. |");
+		descriptions.put(
+				"SERVICE_CUSTOM_MESSAGE_80",
+				"Logs the whole json body of the request.");
+		return descriptions;
+	}
+
 	@POST
 	@Path("/trainAndLoad")
 	@Consumes(MediaType.APPLICATION_JSON + ";charset=utf-8")
