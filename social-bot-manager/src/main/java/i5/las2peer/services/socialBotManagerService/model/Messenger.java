@@ -60,15 +60,16 @@ public class Messenger {
 	// Is additionally used to check if we are currently communicating with a
 	// service(if set, then yes otherwise no)
 	private HashMap<String, String> triggeredFunction;
-	// Keep up with how many times a default message was given out in a conversation
-	// state
-	private HashMap<String, Integer> defaultAnswered;
-
+	/**
+	 * Key: channel ID
+	 * Value: number of times a default message was given out in a conversation
+	 * state
+	 */
+	private HashMap<String, Integer> defaultAnswerCount;
 
 	private HashMap<String, IncomingMessage> storedSession;
 
-	private HashMap<String, HashMap<String,String>> userVariables;
-
+	private HashMap<String, HashMap<String, String>> userVariables;
 
 	private Random random;
 
@@ -77,12 +78,12 @@ public class Messenger {
 	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 
-//		this.rasa = new RasaNlu(rasaUrl);
-//        this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
+		// this.rasa = new RasaNlu(rasaUrl);
+		// this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
 		this.db = database;
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
-			switch (this.chatService) {
+		switch (this.chatService) {
 			case SLACK:
 				this.chatMediator = new SlackChatMediator(token);
 				break;
@@ -121,8 +122,8 @@ public class Messenger {
 				break;
 			default:
 				throw new ParseBotException("Unimplemented chat service: " + chatService);
-			}
-			System.out.println("no exceptions");
+		}
+		System.out.println("no exceptions");
 
 		this.name = id;
 		this.knownIntents = new HashMap<String, IncomingMessage>();
@@ -132,9 +133,9 @@ public class Messenger {
 		// Initialize the assessment setup
 		this.currentNluModel = new HashMap<String, String>();
 		this.triggeredFunction = new HashMap<String, String>();
-		this.defaultAnswered = new HashMap<String, Integer>();
+		this.defaultAnswerCount = new HashMap<String, Integer>();
 		this.storedSession = new HashMap<String, IncomingMessage>();
-		this.userVariables = new HashMap<String,HashMap<String,String>>();
+		this.userVariables = new HashMap<String, HashMap<String, String>>();
 	}
 
 	public String getName() {
@@ -162,15 +163,15 @@ public class Messenger {
 
 	public IncomingMessage checkDefault(IncomingMessage state, ChatMessage message) {
 		if (this.knownIntents.get("defaultX") != null && Integer.valueOf(
-				this.knownIntents.get("defaultX").getIntentKeyword().split("defaultX")[1]) > this.defaultAnswered
+				this.knownIntents.get("defaultX").getIntentKeyword().split("defaultX")[1]) > this.defaultAnswerCount
 						.get(message.getChannel())) {
 			IncomingMessage newState = this.knownIntents.get("defaultX");
 			newState.followupMessages = state.followupMessages;
 			state = newState;
-			this.defaultAnswered.put(message.getChannel(), this.defaultAnswered.get(message.getChannel()) + 1);
+			this.defaultAnswerCount.put(message.getChannel(), this.defaultAnswerCount.get(message.getChannel()) + 1);
 		} else {
 			state = this.knownIntents.get("default");
-			this.defaultAnswered.put(message.getChannel(), 0);
+			this.defaultAnswerCount.put(message.getChannel(), 0);
 		}
 		return state;
 	}
@@ -178,7 +179,7 @@ public class Messenger {
 	private void addEntityToRecognizedList(String channel, Collection<Entity> entities) {
 
 		Collection<Entity> recognizedEntitiesNew = recognizedEntities.get(channel);
-		if(recognizedEntitiesNew != null){
+		if (recognizedEntitiesNew != null) {
 			for (Entity entity : entities) {
 				recognizedEntitiesNew.add(entity);
 			}
@@ -204,7 +205,7 @@ public class Messenger {
 		if (state != null) {
 			if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
 				System.out.println("Conversation flow ended now");
-				if(storedSession.containsKey(channel)){
+				if (storedSession.containsKey(channel)) {
 					stateMap.put(channel, storedSession.get(channel));
 					state = storedSession.get(channel);
 					storedSession.remove(channel);
@@ -220,29 +221,36 @@ public class Messenger {
 				// check whether bot action needs to be triggered without user input
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
-				if(!state.getResponse(random).equals("")){
-					if(this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null && !state.getFollowingMessages().isEmpty() ){
-						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),"text");
-					
+				if (!state.getResponse(random).equals("")) {
+					if (this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null
+							&& !state.getFollowingMessages().isEmpty()) {
+						this.chatMediator.sendMessageToChannel(channel,
+								replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),
+								"text");
+
 					} else {
-						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), "text");
-					
+						this.chatMediator.sendMessageToChannel(channel,
+								replaceVariables(channel, state.getResponse(random)), "text");
+
 					}
-				} 
-			/* 	if (state.getResponse(random).triggeredFunctionId != null
-				&& !state.getResponse(random).triggeredFunctionId.equals("")) {
-					ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
-					this.triggeredFunction.put(channel, state.getResponse(random).triggeredFunctionId);
-					this.chatMediator.getMessageCollector().addMessage(chatMsg);
-				}*/
+				}
+				/*
+				 * if (state.getResponse(random).triggeredFunctionId != null
+				 * && !state.getResponse(random).triggeredFunctionId.equals("")) {
+				 * ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
+				 * this.triggeredFunction.put(channel,
+				 * state.getResponse(random).triggeredFunctionId);
+				 * this.chatMediator.getMessageCollector().addMessage(chatMsg);
+				 * }
+				 */
 			} else {
 				// If only message to be sent
 				String response = state.getResponse(random);
-				if( response != null && !response.equals(""))
-				{
-					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
+				if (response != null && !response.equals("")) {
+					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
+							state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
 				}
-				if(state.getFollowingMessages().size()== 0){
+				if (state.getFollowingMessages().size() == 0) {
 					this.stateMap.remove(channel);
 
 				}
@@ -275,19 +283,19 @@ public class Messenger {
 
 	public String replaceVariables(String channel, String text) {
 		HashMap<String, String> variables = this.getUserVariables().get(channel);
-		if(variables != null ){
-			for (String key : variables.keySet()){
-				String composed = "["+key+"]";
+		if (variables != null) {
+			for (String key : variables.keySet()) {
+				String composed = "[" + key + "]";
 				text = text.replace(composed, variables.get(key));
 			}
 		}
 		String split[] = text.split("\\[");
-		for (int i = 1; i < split.length ; i++){
+		for (int i = 1; i < split.length; i++) {
 
 			String name = split[i].split("\\]")[0];
 			String val = getEntityValue(channel, name);
-			if(!val.equals("")){
-				String composed = "["+name+"]";
+			if (!val.equals("")) {
+				String composed = "[" + name + "]";
 				text = text.replace(composed, val);
 
 			}
@@ -324,61 +332,10 @@ public class Messenger {
 					this.userVariables.put(message.getChannel(), new HashMap<String,String>());
 				}
 				
-				if (this.defaultAnswered.get(message.getChannel()) == null) {
-					this.defaultAnswered.put(message.getChannel(), 0);
+				if (this.defaultAnswerCount.get(message.getChannel()) == null) {
+					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
-				Intent intent = null;
-				// Special case: `!` commands
-				if (message.getText().startsWith("!")) {
-					
-					// Split at first occurring whitespace
-
-					String splitMessage[] = message.getText().split("\\s+", 2);
-					// First word without '!' prefix
-					String intentKeyword = splitMessage[0].substring(1);
-					IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
-					// TODO: Log this? (`!` command with unknown intent / keyword)
-					if (incMsg == null && !intentKeyword.toLowerCase().equals("exit")) {
-						if (this.currentNluModel.get(message.getChannel()) == "0") {
-							continue;
-						} else {
-							ArrayList<String> empty = new ArrayList<String>();
-							empty.add("");
-							incMsg = new IncomingMessage(intentKeyword, "", false,empty,null,"",null, "","text");
-							if(splitMessage.length > 1){
-								incMsg.setEntityKeyword(incMsg.getIntentKeyword());
-							} else {
-								incMsg.setEntityKeyword("newEntity");
-							}
-							
-						}
-					}
-					if(splitMessage.length > 1){
-						incMsg.setEntityKeyword(incMsg.getIntentKeyword());
-					} else {
-						incMsg.setEntityKeyword("newEntity");
-					}
-					String entityKeyword = incMsg.getEntityKeyword();
-					String entityValue = null;
-					// Entity value is the rest of the message. The whole rest
-					// is in the second element, since we only split it into two parts.
-					if (splitMessage.length > 1) {
-						entityValue = splitMessage[1];
-					}
-
-					intent = new Intent(intentKeyword, entityKeyword, entityValue);
-				} else {
-					if (bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
-						intent = bot.getRasaServer(currentNluModel.get(message.getChannel()))
-								.getIntent(Intent.replaceUmlaute(message.getText()));
-					} else {
-						// if the given id is not fit to any server, pick the first one. (In case
-						// someone specifies only
-						// one server and does not give an ID)
-						intent = bot.getFirstRasaServer().getIntent(Intent.replaceUmlaute(message.getText()));
-					}
-
-				}
+				Intent intent = this.determineIntent(message, bot);
 				System.out.println("found following intent: " + intent.getKeyword());
 				try{
 					safeEntities(message,bot, intent);
@@ -390,6 +347,7 @@ public class Messenger {
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				if(state==null){
+					Context.
 					System.out.println("No current state, we will start from scratch.");
 					if(message.getText().startsWith("!") && this.knownIntents.get(intent.getKeyword()) == null){
 						// in case a command is triggered which does not exist
@@ -758,7 +716,7 @@ public class Messenger {
 					}
 				}
 				if (state == null || !state.getIntentKeyword().contains("defaultX")) {
-					this.defaultAnswered.put(message.getChannel(), 0);
+					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
 						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
@@ -780,7 +738,7 @@ public class Messenger {
 		chatMediator.close();
 	}
 
-	public String getEntityValue(String channel, String entityName){
+	public String getEntityValue(String channel, String entityName) {
 		String val = "";
 		PreparedStatement stmt = null;
 		Connection conn = null;
@@ -792,16 +750,16 @@ public class Messenger {
 			stmt.setString(1, channel);
 			stmt.setString(2, entityName);
 			rs = stmt.executeQuery();
-			if(rs.next()){
+			if (rs.next()) {
 				val = rs.getString("value");
-				if(val == null){
+				if (val == null) {
 					val = "";
 				}
 			}
 
-		} catch (Exception e){	
+		} catch (Exception e) {
 			e.printStackTrace();
-		} 
+		}
 
 		try {
 			if (rs != null)
@@ -825,21 +783,21 @@ public class Messenger {
 		}
 
 		return val;
-		
+
 	}
 
-	private void safeEntities(ChatMessage msg, Bot bot, Intent intent){
+	private void safeEntities(ChatMessage msg, Bot bot, Intent intent) {
 		String user = msg.getUser();
 		String channel = msg.getChannel();
 		String b = bot.getId();
-		if(intent.getEntities() == null){
+		if (intent.getEntities() == null) {
 			return;
 		}
-		if(intent.getEntitieValues() == null){
+		if (intent.getEntitieValues() == null) {
 			return;
 		}
-		intent.getEntities().forEach((entity) -> { 
-			if(entity.getValue()==null){
+		intent.getEntities().forEach((entity) -> {
+			if (entity.getValue() == null) {
 				return;
 			}
 			String k = entity.getEntityName();
@@ -850,7 +808,8 @@ public class Messenger {
 			ResultSet rs = null;
 			try {
 				conn = db.getDataSource().getConnection();
-				stmt = conn.prepareStatement("SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
+				stmt = conn.prepareStatement(
+						"SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
 				stmt.setString(1, b);
 				stmt.setString(2, channel);
 				stmt.setString(3, user);
@@ -859,18 +818,20 @@ public class Messenger {
 				boolean f = false;
 				while (rs.next())
 					f = true;
-				if(f){
+				if (f) {
 					// Update
-					stmt2 = conn.prepareStatement("UPDATE attributes SET `value`=? WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
+					stmt2 = conn.prepareStatement(
+							"UPDATE attributes SET `value`=? WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
 					stmt2.setString(1, v);
 					stmt2.setString(2, b);
 					stmt2.setString(3, channel);
 					stmt2.setString(4, user);
 					stmt2.setString(5, k);
 					stmt2.executeUpdate();
-				}else{
+				} else {
 					// Insert
-					stmt2 = conn.prepareStatement("INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
+					stmt2 = conn.prepareStatement(
+							"INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
 					stmt2.setString(1, b);
 					stmt2.setString(2, channel);
 					stmt2.setString(3, user);
@@ -895,8 +856,7 @@ public class Messenger {
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}
-				catch (Exception e1) {
+				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
@@ -925,6 +885,63 @@ public class Messenger {
 				}
 				;
 			}
-		 });
+		});
+	}
+
+	private Intent determineIntent(ChatMessage message, Bot bot) {
+		Intent intent = null;
+
+		// Special case: `!` commands
+		if (message.getText().startsWith("!")) {
+
+			// Split at first occurring whitespace
+
+			String splitMessage[] = message.getText().split("\\s+", 2);
+			// First word without '!' prefix
+			String intentKeyword = splitMessage[0].substring(1);
+			IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
+			// TODO: Log this? (`!` command with unknown intent / keyword)
+			if (incMsg == null && !intentKeyword.toLowerCase().equals("exit")) {
+				if (this.currentNluModel.get(message.getChannel()) == "0") {
+					return null;
+				} else {
+					ArrayList<String> empty = new ArrayList<String>();
+					empty.add("");
+					incMsg = new IncomingMessage(intentKeyword, "", false, empty, null, "", null, "", "text");
+					if (splitMessage.length > 1) {
+						incMsg.setEntityKeyword(incMsg.getIntentKeyword());
+					} else {
+						incMsg.setEntityKeyword("newEntity");
+					}
+
+				}
+			}
+			if (splitMessage.length > 1) {
+				incMsg.setEntityKeyword(incMsg.getIntentKeyword());
+			} else {
+				incMsg.setEntityKeyword("newEntity");
+			}
+			String entityKeyword = incMsg.getEntityKeyword();
+			String entityValue = null;
+			// Entity value is the rest of the message. The whole rest
+			// is in the second element, since we only split it into two parts.
+			if (splitMessage.length > 1) {
+				entityValue = splitMessage[1];
+			}
+
+			intent = new Intent(intentKeyword, entityKeyword, entityValue);
+		} else {
+			if (bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
+				intent = bot.getRasaServer(currentNluModel.get(message.getChannel()))
+						.getIntent(Intent.replaceUmlaute(message.getText()));
+			} else {
+				// if the given id is not fit to any server, pick the first one. (In case
+				// someone specifies only
+				// one server and does not give an ID)
+				intent = bot.getFirstRasaServer().getIntent(Intent.replaceUmlaute(message.getText()));
+			}
+
+		}
+		return intent;
 	}
 }
