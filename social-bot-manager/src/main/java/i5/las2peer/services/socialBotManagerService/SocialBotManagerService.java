@@ -319,8 +319,8 @@ public class SocialBotManagerService extends RESTService {
 	 * Returns the custom message descriptions for the service.
 	 */
 	@Override
-	public Map<String, String> getCustomMessageDescriptions() {
-		Map<String, String> descriptions = new HashMap<>();
+	public HashMap<String, String> getCustomMessageDescriptions() {
+		HashMap<String, String> descriptions = new HashMap<>();
 		descriptions.put(
 				"SERVICE_CUSTOM_MESSAGE_1",
 				"Monitors whenever a bot gets initialized");
