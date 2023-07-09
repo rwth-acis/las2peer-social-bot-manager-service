@@ -226,7 +226,7 @@ public class Messenger {
 				stateMap.put(channel, state);
 				if(!state.getResponse(random).equals("")){
 					if(this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null && !state.getFollowingMessages().isEmpty() ){
-						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),state.getType());
+						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),state.getFollowupMessageType());
 					
 					} else {
 						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), "text");
