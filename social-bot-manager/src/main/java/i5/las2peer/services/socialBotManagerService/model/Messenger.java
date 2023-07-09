@@ -219,7 +219,7 @@ public class Messenger {
 						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
 					}
 				}
-			} else if (state.getFollowingMessages().get("") != null || state.getFollowingMessages().get("0") != null) {
+			} else if (state.getFollowingMessages().get("") != null) {
 				// check whether bot action needs to be triggered without user input		
 				System.out.println("Triggering next message as empty leadsTo found");		
 				state = state.getFollowingMessages().get("");
@@ -244,7 +244,7 @@ public class Messenger {
 				String response = state.getResponse(random);
 				if( response != null && !response.equals(""))
 				{ // actually not necessary, as the message contained in the incoming message should have been sent before the service call, thus not after the call is done
-					 this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
+				//	 this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
 				}
 				if(state.getFollowingMessages().size()== 0){
 					this.stateMap.remove(channel);
