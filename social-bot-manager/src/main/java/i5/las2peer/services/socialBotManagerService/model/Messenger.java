@@ -459,6 +459,8 @@ public class Messenger {
 											if(state == null){
 												state = this.knownIntents.get("default");
 											}
+										} else {
+											state = this.knownIntents.get("default");
 										}
 										
 									}
