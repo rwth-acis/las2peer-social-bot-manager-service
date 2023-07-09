@@ -201,6 +201,9 @@ public class Messenger {
 	public void setContextToBasic(String channel, String userid) {
 		triggeredFunction.remove(channel);
 		IncomingMessage state = this.stateMap.get(channel);
+		for(String key : state.getFollowingMessages().keySet()){
+			System.out.println(key);
+		}
 		if (state != null) {
 			if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
 				System.out.println("Conversation flow ended now");
@@ -217,12 +220,13 @@ public class Messenger {
 					}
 				}
 			} else if (state.getFollowingMessages().get("") != null) {
-				// check whether bot action needs to be triggered without user input
+				// check whether bot action needs to be triggered without user input		
+				System.out.println("Triggering next message as empty leadsTo found");		
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				if(!state.getResponse(random).equals("")){
 					if(this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null && !state.getFollowingMessages().isEmpty() ){
-						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),"text");
+						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),state.getFollowupMessageType());
 					
 					} else {
 						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, state.getResponse(random)), "text");
@@ -240,7 +244,7 @@ public class Messenger {
 				String response = state.getResponse(random);
 				if( response != null && !response.equals(""))
 				{ // actually not necessary, as the message contained in the incoming message should have been sent before the service call, thus not after the call is done
-					// this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
+				//	 this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
 				}
 				if(state.getFollowingMessages().size()== 0){
 					this.stateMap.remove(channel);
