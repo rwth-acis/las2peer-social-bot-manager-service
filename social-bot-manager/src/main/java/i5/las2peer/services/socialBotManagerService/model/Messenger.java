@@ -216,7 +216,7 @@ public class Messenger {
 						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
 					}
 				}
-			} else if (state.getFollowingMessages().get("") != null) {
+			} else if (state.getFollowingMessages().get("") != null || state.getFollowingMessages().get("0") != null) {
 				// check whether bot action needs to be triggered without user input		
 				System.out.println("Triggering next message as empty leadsTo found");		
 				state = state.getFollowingMessages().get("");
