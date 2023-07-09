@@ -217,7 +217,8 @@ public class Messenger {
 					}
 				}
 			} else if (state.getFollowingMessages().get("") != null) {
-				// check whether bot action needs to be triggered without user input
+				// check whether bot action needs to be triggered without user input		
+				System.out.println("Triggering next message as empty leadsTo found");		
 				state = state.getFollowingMessages().get("");
 				stateMap.put(channel, state);
 				if(!state.getResponse(random).equals("")){

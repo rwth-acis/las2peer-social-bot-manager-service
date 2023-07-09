@@ -3066,6 +3066,7 @@ public class SocialBotManagerService extends RESTService {
 						for (String key : jsonResponse.keySet()) {
 							bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 						}
+						System.out.println("Finished Bot Action Call");
 					 	bot.getMessenger(messengerID).setContextToBasic(channel,
 								userId);
 					 	triggeredBody.put("resBody", jsonResponse);
