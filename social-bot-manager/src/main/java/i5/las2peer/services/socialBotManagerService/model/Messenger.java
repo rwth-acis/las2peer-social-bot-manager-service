@@ -363,6 +363,7 @@ public class Messenger {
 				String triggeredFunctionId = null;
 				final IncomingMessage previousIncomingMessage = this.stateMap.get(message.getChannel());
 				UUID conversationId = null;
+				Boolean contextOn = false;
 				boolean messageIsCommand = message.getText().startsWith("!");
 
 				if (!this.userVariables.containsKey(message.getChannel())) {
@@ -376,32 +377,22 @@ public class Messenger {
 				System.out.println("found following intent: " + intent.getKeyword());
 				try {
 					safeEntities(message, bot, intent);
-
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
 				if (previousIncomingMessage == null) {
 					conversationId = UUID.randomUUID();
-
 					System.out.println("No current state, we will start from scratch. Generated Conversation  id is: "
 							+ conversationId.toString());
-
-					if (messageIsCommand && this.knownIntents.get(intent.getKeyword()) == null) {
-						// in case a command is triggered which does not exist
-						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
-								new HashMap<String, IncomingMessage>(), "text");
-						return;
-					}
 				} else {
 					conversationId = previousIncomingMessage.getConversationId();
 					System.out.println(
 							"Current state: " + previousIncomingMessage.getIntentKeyword() + " with conversation id: "
 									+ conversationId.toString());
 				}
-				if (previousIncomingMessage != null && messageIsCommand
-						&& !previousIncomingMessage.getFollowingMessages().keySet().contains(intent.getKeyword())) {
-					if (this.knownIntents.get(intent.getKeyword()) == null) {
+
+				if (messageIsCommand) {
+					if (!this.knownIntents.containsKey(intent.getKeyword())) {
 						// in case a command is triggered which does not exist
 						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
 								new HashMap<String, IncomingMessage>(), "text");
@@ -411,27 +402,23 @@ public class Messenger {
 						storedSession.put(message.getChannel(), previousIncomingMessage);
 						previousIncomingMessage = null;
 					}
-				}
-				if (previousIncomingMessage != null && messageIsCommand
-						&& storedSession.containsKey(message.getChannel())) {
-					// think about something else to do here
-					// this.chatMediator.sendMessageToChannel(message.getChannel(),"Dont start
-					// command inside command lol","text");
+
+					if (storedSession.containsKey(message.getChannel())) {
+						// think about something else to do here
+						// this.chatMediator.sendMessageToChannel(message.getChannel(),"Dont start
+						// command inside command lol","text");
+					}
 				}
 
-				// No conversation state present, starting from scratch
-				// TODO: Tweak this
 				if (!this.triggeredFunction.containsKey(message.getChannel())) {
 					if (intent.getKeyword().equals("exit")) {
 						recognizedEntities.remove(message.getChannel());
-						previousIncomingMessage = this.knownIntents.get(intent.getKeyword());
-						stateMap.put(message.getChannel(), previousIncomingMessage);
+						this.updateConversationState(message.getChannel(), this.knownIntents.get(intent.getKeyword()),
+								conversationId);
 						if (storedSession.containsKey(message.getCurrMessage())) {
 							storedSession.remove(message.getChannel());
 						}
-					} else
-					// add file case to default if part
-					if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
+					} else if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
 						if (previousIncomingMessage == null) {
 							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
 							if (message.getFileName() != null) {
@@ -622,28 +609,7 @@ public class Messenger {
 						}
 						// System.out.println(state.getIntentKeyword() + " set");
 					}
-					// If a user sends a file, without wanting to use intent extraction on the name,
-					// then intent
-					// extraction will still be done, but the result ignored in this case
-				} else if (message.getFileName() != null) {
-					if (this.knownIntents.get("0").expectsFile()) {
-						previousIncomingMessage = this.knownIntents.get("0");
-						// System.out.println(state.getResponse(random));
-					} else {
-						// if no Incoming Message is fitting, return default message
-						intent = new Intent("default", "", "");
-					}
-					// Default message if the message does not contain a file or the Intent was too
-					// low
-				} else if (intent.getConfidence() < 0.40f) {
-					intent = new Intent("default", "", "");
-				}
 
-				Boolean contextOn = false;
-				if (this.triggeredFunction.containsKey(message.getChannel())) {
-					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
-					contextOn = true;
-				} else {
 					// check if skip is wished or not
 					if (previousIncomingMessage != null) {
 						System.out.println("Getting response for: " + previousIncomingMessage.intentKeyword);
@@ -794,6 +760,26 @@ public class Messenger {
 							this.recognizedEntities.remove(message.getChannel());
 						}
 					}
+					// If a user sends a file, without wanting to use intent extraction on the name,
+					// then intent
+					// extraction will still be done, but the result ignored in this case
+				} else if (message.getFileName() != null) {
+					if (this.knownIntents.get("0").expectsFile()) {
+						previousIncomingMessage = this.knownIntents.get("0");
+						// System.out.println(state.getResponse(random));
+					} else {
+						// if no Incoming Message is fitting, return default message
+						intent = new Intent("default", "", "");
+					}
+					// Default message if the message does not contain a file or the Intent was too
+					// low
+				} else if (intent.getConfidence() < 0.40f) {
+					intent = new Intent("default", "", "");
+				}
+
+				if (this.triggeredFunction.containsKey(message.getChannel())) {
+					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+					contextOn = true;
 				}
 				if (previousIncomingMessage == null
 						|| !previousIncomingMessage.getIntentKeyword().contains("defaultX")) {
@@ -805,7 +791,6 @@ public class Messenger {
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 	public void setUrl(String Url) throws AuthTokenException {
@@ -1024,6 +1009,10 @@ public class Messenger {
 
 		}
 		return intent;
+	}
+
+	private void handleFunctionContext() {
+
 	}
 
 	/**
