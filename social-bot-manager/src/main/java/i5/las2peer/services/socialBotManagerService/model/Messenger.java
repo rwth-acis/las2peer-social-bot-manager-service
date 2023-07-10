@@ -32,6 +32,8 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import jnr.ffi.annotations.In;
+
 import java.util.UUID;
 
 public class Messenger {
@@ -52,7 +54,7 @@ public class Messenger {
 	 * Key: intent keyword
 	 * Value: IncomingMessage object
 	 */
-	private HashMap<String, IncomingMessage> knownIntents;
+	private HashMap<String, IncomingMessage> rootChildren;
 
 	/**
 	 * Used for keeping conversation state per channel
@@ -155,7 +157,7 @@ public class Messenger {
 		System.out.println("no exceptions");
 
 		this.name = id;
-		this.knownIntents = new HashMap<String, IncomingMessage>();
+		this.rootChildren = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.recognizedEntities = new HashMap<String, Collection<Entity>>();
 		this.random = new Random();
@@ -177,13 +179,13 @@ public class Messenger {
 
 	public void addMessage(IncomingMessage msg) {
 		if (msg.getIntentKeyword().contains("defaultX")) {
-			this.knownIntents.put("defaultX", msg);
+			this.rootChildren.put("defaultX", msg);
 		} else
-			this.knownIntents.put(msg.getIntentKeyword(), msg);
+			this.rootChildren.put(msg.getIntentKeyword(), msg);
 	}
 
-	public HashMap<String, IncomingMessage> getKnownIntents() {
-		return this.knownIntents;
+	public HashMap<String, IncomingMessage> getRootChildren() {
+		return this.rootChildren;
 	}
 
 	public ChatMediator getChatMediator() {
@@ -191,15 +193,15 @@ public class Messenger {
 	}
 
 	public IncomingMessage checkDefault(IncomingMessage state, ChatMessage message) {
-		if (this.knownIntents.get("defaultX") != null && Integer.valueOf(
-				this.knownIntents.get("defaultX").getIntentKeyword().split("defaultX")[1]) > this.defaultAnswerCount
+		if (this.rootChildren.get("defaultX") != null && Integer.valueOf(
+				this.rootChildren.get("defaultX").getIntentKeyword().split("defaultX")[1]) > this.defaultAnswerCount
 						.get(message.getChannel())) {
-			IncomingMessage newState = this.knownIntents.get("defaultX");
+			IncomingMessage newState = this.rootChildren.get("defaultX");
 			newState.followupMessages = state.followupMessages;
 			state = newState;
 			this.defaultAnswerCount.put(message.getChannel(), this.defaultAnswerCount.get(message.getChannel()) + 1);
 		} else {
-			state = this.knownIntents.get("default");
+			state = this.rootChildren.get("default");
 			this.defaultAnswerCount.put(message.getChannel(), 0);
 		}
 		return state;
@@ -362,9 +364,19 @@ public class Messenger {
 
 				String triggeredFunctionId = null;
 				final IncomingMessage previousIncomingMessage = this.stateMap.get(message.getChannel());
+				IncomingMessage currentContext = previousIncomingMessage;
 				UUID conversationId = null;
 				Boolean contextOn = false;
+				/**
+				 * Check if the message is a command or a normal message
+				 */
 				boolean messageIsCommand = message.getText().startsWith("!");
+				/**
+				 * Check if the bot is currently in a function context. This is the case if
+				 * the bot is currently communicating with a service.
+				 */
+				boolean inFunctionContext = this.triggeredFunction.containsKey(message.getChannel());
+				boolean messageContainsFile = message.getFileName() != null;
 
 				if (!this.userVariables.containsKey(message.getChannel())) {
 					this.userVariables.put(message.getChannel(), new HashMap<String, String>());
@@ -386,21 +398,24 @@ public class Messenger {
 							+ conversationId.toString());
 				} else {
 					conversationId = previousIncomingMessage.getConversationId();
+					if (conversationId == null) {
+						throw new Error("Conversation id of Previous IncomingMessage is null");
+					}
 					System.out.println(
 							"Current state: " + previousIncomingMessage.getIntentKeyword() + " with conversation id: "
 									+ conversationId.toString());
 				}
 
 				if (messageIsCommand) {
-					if (!this.knownIntents.containsKey(intent.getKeyword())) {
+					if (!this.rootChildren.containsKey(intent.getKeyword())) {
 						// in case a command is triggered which does not exist
 						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
 								new HashMap<String, IncomingMessage>(), "text");
 						return;
 					}
 					if (!intent.getKeyword().equals("exit")) {
-						storedSession.put(message.getChannel(), previousIncomingMessage);
-						previousIncomingMessage = null;
+						this.storeContextInSession(message.getChannel(), currentContext);
+						currentContext = null; // move back to root state
 					}
 
 					if (storedSession.containsKey(message.getChannel())) {
@@ -410,383 +425,377 @@ public class Messenger {
 					}
 				}
 
-				if (!this.triggeredFunction.containsKey(message.getChannel())) {
-					if (intent.getKeyword().equals("exit")) {
-						recognizedEntities.remove(message.getChannel());
-						this.updateConversationState(message.getChannel(), this.knownIntents.get(intent.getKeyword()),
-								conversationId);
-						if (storedSession.containsKey(message.getCurrMessage())) {
-							storedSession.remove(message.getChannel());
-						}
-					} else if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
-						if (previousIncomingMessage == null) {
-							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
-							if (message.getFileName() != null) {
-								// check whether incoming message with intent expects file or without intent,
-								// such that
-								// you can send a file regardless the intent
-								if (this.knownIntents.get(intent.getKeyword()) != null
-										&& this.knownIntents.get(intent.getKeyword()).expectsFile()) {
-									previousIncomingMessage = this.knownIntents.get(intent.getKeyword());
-									// get("0") refers to an empty intent that is accessible from the start state
-								} else if (this.knownIntents.get("anyFile") != null) {
-									previousIncomingMessage = this.knownIntents.get("anyFile");
-								} else {
-									previousIncomingMessage = this.knownIntents.get("default");
-								}
-								stateMap.put(message.getChannel(), previousIncomingMessage);
-								recognizedEntities.put(message.getChannel(), intent.getEntities());
-							} else {
-								previousIncomingMessage = this.knownIntents.get(intent.getKeyword());
-								// Incoming Message which expects file should not be chosen when no file was
-								// sent
-								if (previousIncomingMessage == null || previousIncomingMessage.expectsFile()) {
-									if (this.knownIntents.get("0") != null) {
-										previousIncomingMessage = this.knownIntents.get("0");
-									} else {
-										if (intent.getEntitieValues().size() > 0) {
-											previousIncomingMessage = this.knownIntents
-													.get(intent.getEntitieValues().get(0));
-											if (previousIncomingMessage == null) {
-												previousIncomingMessage = this.knownIntents.get("default");
-											}
-										}
-
-									}
-								}
-								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
-										+ " confidence.");
-								stateMap.put(message.getChannel(), previousIncomingMessage);
-								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-							}
-						} else {
-							// any is a static forward
-							// TODO include entities of intents
-							// If there is no next state, stay in the same state
-							if (previousIncomingMessage.getFollowingMessages() == null
-									|| previousIncomingMessage.getFollowingMessages().isEmpty()) {
-								System.out.println("no follow up messages");
-								previousIncomingMessage = this.knownIntents.get(intent.getKeyword());
-								this.currentNluModel.put(message.getChannel(), "0");
-								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
-										+ " confidence.");
-								stateMap.put(message.getChannel(), previousIncomingMessage);
-								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-							} else if (previousIncomingMessage.getFollowingMessages()
-									.get(intent.getKeyword()) != null) {
-								System.out.println("try follow up message");
-								// check if a file was received during a conversation and search for a follow up
-								// incoming message which expects a file.
-								if (message.getFileBody() != null) {
-									if (previousIncomingMessage.getFollowingMessages().get(intent.getKeyword())
-											.expectsFile()) {
-										previousIncomingMessage = previousIncomingMessage.getFollowingMessages()
-												.get(intent.getKeyword());
-										stateMap.put(message.getChannel(), previousIncomingMessage);
-										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-									} else {
-										previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-									}
-								} else if (previousIncomingMessage.getFollowingMessages().get(intent.getKeyword())
-										.expectsFile()) {
-									previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-								} else {
-									previousIncomingMessage = previousIncomingMessage.getFollowingMessages()
-											.get(intent.getKeyword());
-									stateMap.put(message.getChannel(), previousIncomingMessage);
-									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-								}
-							} else if (intent.getEntitieValues().size() > 0
-									&& previousIncomingMessage.getFollowingMessages()
-											.get(intent.getEntitieValues().get(0)) != null) {
-								System.out.println("try follow up message with entity");
-								// check if a file was received during a conversation and search for a follow up
-								// incoming message which expects a file.
-								if (message.getFileBody() != null) {
-									if (previousIncomingMessage.getFollowingMessages()
-											.get(intent.getEntitieValues().get(0))
-											.expectsFile()) {
-										previousIncomingMessage = previousIncomingMessage.getFollowingMessages()
-												.get(intent.getEntitieValues().get(0));
-										stateMap.put(message.getChannel(), previousIncomingMessage);
-										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-									} else {
-										previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-									}
-								} else if (previousIncomingMessage.getFollowingMessages()
-										.get(intent.getEntitieValues().get(0))
-										.expectsFile()) {
-									previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-								} else {
-									previousIncomingMessage = previousIncomingMessage.getFollowingMessages()
-											.get(intent.getEntitieValues().get(0));
-									stateMap.put(message.getChannel(), previousIncomingMessage);
-									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-								}
-							} else {
-								// System.out.println("\u001B[33mDebug --- Followups: " +
-								// state.getFollowingMessages() + "\u001B[0m");
-								// System.out.println("\u001B[33mDebug --- Emptiness: " +
-								// state.getFollowingMessages().keySet().isEmpty() + "\u001B[0m");
-								// System.out.println("\u001B[33mDebug --- State: " + state.getIntentKeyword() +
-								// "\u001B[0m");
-								System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
-										+ intent.getConfidence() + " confidence.");
-								// try any
-
-								if (previousIncomingMessage.getFollowingMessages().get("any") != null) {
-									previousIncomingMessage = previousIncomingMessage.getFollowingMessages().get("any");
-									stateMap.put(message.getChannel(), previousIncomingMessage);
-									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-									// In a conversation state, if no fitting intent was found and an empty leadsTo
-									// label is found
-								} else if (previousIncomingMessage.getFollowingMessages().get("") != null
-										|| previousIncomingMessage.getFollowingMessages().get("anyFile") != null) {
-									if (message.getFileBody() != null) {
-										if (previousIncomingMessage.getFollowingMessages().get("anyFile") != null) {
-											previousIncomingMessage = previousIncomingMessage.getFollowingMessages()
-													.get("anyFile");
-											stateMap.put(message.getChannel(), previousIncomingMessage);
-											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-										} else {
-											previousIncomingMessage = this.knownIntents.get("default");
-										}
-
-									} else {
-										if (previousIncomingMessage.getFollowingMessages().get("") != null) {
-											previousIncomingMessage = previousIncomingMessage.getFollowingMessages()
-													.get("");
-											stateMap.put(message.getChannel(), previousIncomingMessage);
-											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-										} else {
-											previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-										}
-									}
-								} else if (intent.getEntities().size() > 0
-										&& !this.triggeredFunction.containsKey(message.getChannel())) {
-									Collection<Entity> entities = intent.getEntities();
-									for (Entity e : entities) {
-										previousIncomingMessage = this.knownIntents.get(e.getEntityName());
-										// Dont fully understand the point of this, maybe I added it and forgot...
-										// Added return for a quick fix, will need to check more in detail
-										if (previousIncomingMessage != null) {
-											stateMap.put(message.getChannel(), previousIncomingMessage);
-											return;
-										}
-									}
-
-								} else {
-									previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-								}
-							}
-						}
-					} else {
-						if (previousIncomingMessage != null
-								&& previousIncomingMessage.getFollowingMessages().get("") != null) {
-							if (message.getFileBody() != null) {
-								if (previousIncomingMessage.getFollowingMessages().get("").expectsFile()) {
-									previousIncomingMessage = previousIncomingMessage.getFollowingMessages().get("");
-								} else {
-									previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-								}
-							} else {
-								if (!previousIncomingMessage.getFollowingMessages().get("").expectsFile()) {
-									previousIncomingMessage = previousIncomingMessage.getFollowingMessages().get("");
-									stateMap.put(message.getChannel(), previousIncomingMessage);
-									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
-								} else {
-									previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-								}
-							}
-						} else {
-							if (previousIncomingMessage != null) {
-								previousIncomingMessage = checkDefault(previousIncomingMessage, message);
-							} else {
-								System.out.println(intent.getKeyword() + " not detected with " + intent.getConfidence()
-										+ " confidence.");
-								previousIncomingMessage = this.knownIntents.get("default");
-							}
-						}
-						// System.out.println(state.getIntentKeyword() + " set");
-					}
-
-					// check if skip is wished or not
-					if (previousIncomingMessage != null) {
-						System.out.println("Getting response for: " + previousIncomingMessage.intentKeyword);
-						if (previousIncomingMessage.getFollowingMessages().get("skip") != null) {
-							previousIncomingMessage = previousIncomingMessage.getFollowingMessages().get("skip");
-						}
-
-						String response = previousIncomingMessage.getResponse(random);
-						if (previousIncomingMessage.getTriggeredFunctionId() != ""
-								&& previousIncomingMessage.getTriggeredFunctionId() != null) {
-							this.triggeredFunction.put(message.getChannel(),
-									previousIncomingMessage.getTriggeredFunctionId());
-							contextOn = true;
-						}
-
-						if (previousIncomingMessage.getNluID() != "") {
-							this.currentNluModel.put(message.getChannel(), previousIncomingMessage.getNluID());
-						}
-						if (response != null) {
-							if (response != "") {
-								String split = "";
-								// allows users to use linebreaks \n during the modeling for chat responses
-								for (int i = 0; i < response.split("\\\\n").length; i++) {
-									split += response.split("\\\\n")[i] + " \n ";
-								}
-								if (split.contains("[") && split.contains("]")) {
-									String[] entitySplit1 = split.split("\\[");
-									ArrayList<String> entitySplit2 = new ArrayList<String>();
-									for (int i = 1; i < entitySplit1.length; i++) {
-										entitySplit2.add(entitySplit1[i].split("\\]")[0]);
-									}
-									for (String entityName : entitySplit2) {
-										if (recognizedEntities != null
-												&& recognizedEntities.get(message.getChannel()) != null) {
-											for (Entity entity : recognizedEntities.get(message.getChannel())) {
-												if (entityName.equals(entity.getEntityName())
-														&& entity.getValue() != null) {
-													String replace = "[" + entity.getEntityName() + "]";
-													split = split.replace(replace, entity.getValue());
-												}
-											}
-										}
-									}
-
-								}
-								// check if message parses buttons or is simple text
-								if (previousIncomingMessage.getType().equals("Interactive Message")) {
-									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
-											this.chatMediator.getAuthToken(),
-											previousIncomingMessage.getFollowingMessages(),
-											java.util.Optional.empty());
-								} else {
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											replaceVariables(message.getChannel(), split),
-											previousIncomingMessage.getFollowingMessages(),
-											previousIncomingMessage.followupMessageType);
-								}
-								// check whether a file url is attached to the chat response and try to send it
-								// to
-								// the user
-								if (!previousIncomingMessage.getFileURL().equals("")) {
-									String fileName = "";
-									try {
-										// Replacable variable in url menteeEmail
-										String urlEmail = previousIncomingMessage.getFileURL();
-										if (message.getEmail() != null) {
-											urlEmail = previousIncomingMessage.getFileURL().replace("menteeEmail",
-													message.getEmail());
-										}
-										URL url = new URL(urlEmail);
-										HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-										// Header for l2p services
-										httpConn.addRequestProperty("Authorization", "Basic " + Base64.getEncoder()
-												.encodeToString((bot.getName() + ":actingAgent").getBytes()));
-
-										String fieldValue = httpConn.getHeaderField("Content-Disposition");
-										if (fieldValue == null || !fieldValue.contains("filename=\"")) {
-											fieldValue = "pdf.pdf";
-										}
-										// parse the file name from the header field
-										fileName = "pdf.pdf";
-										if (!fieldValue.equals("pdf.pdf")) {
-											fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10,
-													fieldValue.length() - 1);
-										} else {
-											// check if name is part of url
-											if (urlEmail.contains(".pdf") || urlEmail.contains(".png")
-													|| urlEmail.contains(".svg") || urlEmail.contains(".json")
-													|| urlEmail.contains(".txt")) {
-												fileName = urlEmail.split("/")[urlEmail.split("/").length - 1];
-											}
-										}
-										InputStream in = httpConn.getInputStream();
-										FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-										int file_size = httpConn.getContentLength();
-										if (file_size < 1) {
-											file_size = 2048;
-										}
-										byte dataBuffer[] = new byte[file_size];
-										int bytesRead;
-										while ((bytesRead = in.read(dataBuffer, 0, file_size)) != -1) {
-											fileOutputStream.write(dataBuffer, 0, bytesRead);
-										}
-										fileOutputStream.close();
-										this.chatMediator.sendFileMessageToChannel(message.getChannel(),
-												new File(fileName), "");
-
-									} catch (Exception e) {
-										System.out.println("Could not extract File for reason " + e);
-										e.printStackTrace();
-										java.nio.file.Files.deleteIfExists(Paths.get(fileName));
-										this.chatMediator.sendMessageToChannel(message.getChannel(),
-												previousIncomingMessage.getErrorMessage(),
-												previousIncomingMessage.getFollowupMessageType());
-									}
-								}
-								if (previousIncomingMessage.getTriggeredFunctionId() != null) {
-									this.triggeredFunction.put(message.getChannel(),
-											previousIncomingMessage.getTriggeredFunctionId());
-									contextOn = true;
-								}
-							} else {
-								if (previousIncomingMessage.getTriggeredFunctionId() != "") {
-									this.triggeredFunction.put(message.getChannel(),
-											previousIncomingMessage.getTriggeredFunctionId());
-									contextOn = true;
-								} else {
-									System.out.println("No Bot Action was given to the Response");
-								}
-							}
-						}
-						if (this.triggeredFunction.containsKey(message.getChannel())) {
-							triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
-						} else
-							triggeredFunctionId = previousIncomingMessage.getTriggeredFunctionId();
-						// If conversation flow is terminated, reset state
-						if (previousIncomingMessage.getFollowingMessages().isEmpty()) {
-							this.stateMap.remove(message.getChannel());
-							if (storedSession.containsKey(message.getChannel())
-									&& !this.triggeredFunction.containsKey(message.getChannel())) {
-
-								stateMap.put(message.getChannel(), storedSession.get(message.getChannel()));
-								storedSession.remove(message.getChannel());
-							} else if (storedSession.containsKey(message.getChannel())
-									&& this.triggeredFunction.containsKey(message.getChannel())) {
-								this.stateMap.put(message.getChannel(), previousIncomingMessage);
-							}
-							this.recognizedEntities.remove(message.getChannel());
-						}
-					}
-					// If a user sends a file, without wanting to use intent extraction on the name,
-					// then intent
-					// extraction will still be done, but the result ignored in this case
-				} else if (message.getFileName() != null) {
-					if (this.knownIntents.get("0").expectsFile()) {
-						previousIncomingMessage = this.knownIntents.get("0");
-						// System.out.println(state.getResponse(random));
-					} else {
+				if (inFunctionContext) {
+					if (message.getFileName() == null && intent.getConfidence() < 0.40f) {
+						// Default message if the message does not contain a file or the Intent was too
+						// low
+						intent = new Intent("default", "", "");
+					} else if (!this.rootChildren.get("0").expectsFile()) {
 						// if no Incoming Message is fitting, return default message
 						intent = new Intent("default", "", "");
 					}
-					// Default message if the message does not contain a file or the Intent was too
-					// low
-				} else if (intent.getConfidence() < 0.40f) {
-					intent = new Intent("default", "", "");
+
+					if (currentContext == null || this.rootChildren.get("0") == null
+							|| !currentContext.getIntentKeyword().contains("defaultX")) {
+						this.defaultAnswerCount.put(message.getChannel(), 0);
+					}
+					messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
+							"", contextOn, recognizedEntities.get(message.getChannel()), this.getName()));
+					return;
 				}
 
-				if (this.triggeredFunction.containsKey(message.getChannel())) {
-					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
-					contextOn = true;
+				// not in function context
+				if (intent.getKeyword().equals("exit")) {
+					this.recognizedEntities.remove(message.getChannel());
+					currentContext = this.storedSession.get(message.getChannel()); // get previous context from stored
+																					// session
+					this.storedSession.remove(message.getChannel()); // remove stored session
 				}
-				if (previousIncomingMessage == null
-						|| !previousIncomingMessage.getIntentKeyword().contains("defaultX")) {
+
+				if (intent.getConfidence() >= 0.40 || messageContainsFile) {
+					if (currentContext == null) {
+						recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
+						if (messageContainsFile) {
+							if (this.rootChildren.get(intent.getKeyword()) != null
+									&& this.rootChildren.get(intent.getKeyword()).expectsFile()) {
+								currentContext = this.rootChildren.get(intent.getKeyword());
+								// get("0") refers to an empty intent that is accessible from the start state
+							} else if (this.rootChildren.containsKey("anyFile")) {
+								currentContext = this.rootChildren.get("anyFile");
+							} else {
+								currentContext = this.rootChildren.get("default");
+							}
+							this.updateConversationState(message.getChannel(), currentContext, conversationId);
+							recognizedEntities.put(message.getChannel(), intent.getEntities());
+						} else {
+							currentContext = this.rootChildren.get(intent.getKeyword());
+							if (currentContext == null || currentContext.expectsFile()) {
+								if (this.rootChildren.get("0") != null) {
+									currentContext = this.rootChildren.get("0");
+								} else {
+									if (intent.getEntitieValues().size() > 0) {
+										currentContext = this.rootChildren
+												.get(intent.getEntitieValues().get(0));
+										if (currentContext == null) {
+											currentContext = this.rootChildren.get("default");
+										}
+									}
+
+								}
+							}
+							System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
+									+ " confidence. for conversation id: " + conversationId.toString());
+							this.updateConversationState(message.getChannel(), currentContext, conversationId);
+							addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+						}
+					} else {
+						// any is a static forward
+						// TODO include entities of intents
+						// If there is no next state, stay in the same state
+						if (currentContext.getFollowingMessages() == null
+								|| currentContext.getFollowingMessages().isEmpty()) {
+							System.out.println("no follow up messages");
+							currentContext = this.rootChildren.get(intent.getKeyword());
+							this.currentNluModel.put(message.getChannel(), "0");
+							System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
+									+ " confidence.");
+							this.updateConversationState(message.getChannel(), currentContext, conversationId);
+							addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+						} else if (currentContext.getFollowingMessages()
+								.get(intent.getKeyword()) != null) {
+							System.out.println("try follow up message");
+							// check if a file was received during a conversation and search for a follow up
+							// incoming message which expects a file.
+							if (message.getFileBody() != null) {
+								if (currentContext.getFollowingMessages().get(intent.getKeyword())
+										.expectsFile()) {
+									currentContext = currentContext.getFollowingMessages()
+											.get(intent.getKeyword());
+									this.updateConversationState(message.getChannel(), currentContext, conversationId);
+									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+								} else {
+									currentContext = checkDefault(currentContext, message);
+								}
+							} else if (currentContext.getFollowingMessages().get(intent.getKeyword())
+									.expectsFile()) {
+								currentContext = checkDefault(currentContext, message);
+							} else {
+								currentContext = currentContext.getFollowingMessages()
+										.get(intent.getKeyword());
+								this.updateConversationState(message.getChannel(), currentContext, conversationId);
+								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+							}
+						} else if (intent.getEntitieValues().size() > 0
+								&& currentContext.getFollowingMessages()
+										.get(intent.getEntitieValues().get(0)) != null) {
+							System.out.println("try follow up message with entity");
+							// check if a file was received during a conversation and search for a follow up
+							// incoming message which expects a file.
+							if (message.getFileBody() != null) {
+								if (currentContext.getFollowingMessages()
+										.get(intent.getEntitieValues().get(0))
+										.expectsFile()) {
+									currentContext = currentContext.getFollowingMessages()
+											.get(intent.getEntitieValues().get(0));
+									this.updateConversationState(message.getChannel(), currentContext, conversationId);
+									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+								} else {
+									currentContext = checkDefault(currentContext, message);
+								}
+							} else if (currentContext.getFollowingMessages()
+									.get(intent.getEntitieValues().get(0))
+									.expectsFile()) {
+								currentContext = checkDefault(currentContext, message);
+							} else {
+								currentContext = currentContext.getFollowingMessages()
+										.get(intent.getEntitieValues().get(0));
+								this.updateConversationState(message.getChannel(), currentContext, conversationId);
+								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+							}
+						} else {
+							// System.out.println("\u001B[33mDebug --- Followups: " +
+							// state.getFollowingMessages() + "\u001B[0m");
+							// System.out.println("\u001B[33mDebug --- Emptiness: " +
+							// state.getFollowingMessages().keySet().isEmpty() + "\u001B[0m");
+							// System.out.println("\u001B[33mDebug --- State: " + state.getIntentKeyword() +
+							// "\u001B[0m");
+							System.out.println(intent.getKeyword() + " not found in state map. Confidence: "
+									+ intent.getConfidence() + " confidence.");
+							// try any
+
+							if (currentContext.getFollowingMessages().get("any") != null) {
+								currentContext = currentContext.getFollowingMessages().get("any");
+								this.updateConversationState(message.getChannel(), currentContext, conversationId);
+								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+								// In a conversation state, if no fitting intent was found and an empty leadsTo
+								// label is found
+							} else if (currentContext.getFollowingMessages().get("") != null
+									|| currentContext.getFollowingMessages().get("anyFile") != null) {
+								if (message.getFileBody() != null) {
+									if (currentContext.getFollowingMessages().get("anyFile") != null) {
+										currentContext = currentContext.getFollowingMessages()
+												.get("anyFile");
+										this.updateConversationState(message.getChannel(), currentContext,
+												conversationId);
+										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+									} else {
+										currentContext = this.rootChildren.get("default");
+									}
+
+								} else {
+									if (currentContext.getFollowingMessages().get("") != null) {
+										currentContext = currentContext.getFollowingMessages()
+												.get("");
+										this.updateConversationState(message.getChannel(), currentContext,
+												conversationId);
+										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+									} else {
+										currentContext = checkDefault(currentContext, message);
+									}
+								}
+							} else if (intent.getEntities().size() > 0
+									&& !this.triggeredFunction.containsKey(message.getChannel())) {
+								Collection<Entity> entities = intent.getEntities();
+								for (Entity e : entities) {
+									currentContext = this.rootChildren.get(e.getEntityName());
+									// Dont fully understand the point of this, maybe I added it and forgot...
+									// Added return for a quick fix, will need to check more in detail
+									if (currentContext != null) {
+										this.updateConversationState(message.getChannel(), currentContext,
+												conversationId);
+										return;
+									}
+								}
+
+							} else {
+								currentContext = checkDefault(currentContext, message);
+							}
+						}
+					}
+				} else {
+					if (currentContext == null) {
+						System.out.println(intent.getKeyword() + " not detected with " + intent.getConfidence()
+								+ " confidence.");
+						currentContext = this.rootChildren.get("default");
+					} else if (currentContext.getFollowingMessages().containsKey("")) {
+						if (message.getFileBody() != null) {
+							if (currentContext.getFollowingMessages().get("").expectsFile()) {
+								currentContext = currentContext.getFollowingMessages().get("");
+							} else {
+								currentContext = checkDefault(currentContext, message);
+							}
+						} else {
+							if (!currentContext.getFollowingMessages().get("").expectsFile()) {
+								currentContext = currentContext.getFollowingMessages().get("");
+								this.updateConversationState(message.getChannel(), currentContext, conversationId);
+								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
+							} else {
+								currentContext = checkDefault(currentContext, message);
+							}
+						}
+					}
+				}
+
+				// check if skip is wished or not
+				if (currentContext != null) {
+					System.out.println("Getting response for: " + currentContext.intentKeyword);
+					if (currentContext.getFollowingMessages().get("skip") != null) {
+						currentContext = currentContext.getFollowingMessages().get("skip");
+					}
+
+					String response = currentContext.getResponse(random);
+					if (currentContext.getTriggeredFunctionId() != ""
+							&& currentContext.getTriggeredFunctionId() != null) {
+						this.triggeredFunction.put(message.getChannel(),
+								currentContext.getTriggeredFunctionId());
+						contextOn = true;
+					}
+
+					if (currentContext.getNluID() != "") {
+						this.currentNluModel.put(message.getChannel(), currentContext.getNluID());
+					}
+					if (response != null) {
+						if (response != "") {
+							String split = "";
+							// allows users to use linebreaks \n during the modeling for chat responses
+							for (int i = 0; i < response.split("\\\\n").length; i++) {
+								split += response.split("\\\\n")[i] + " \n ";
+							}
+							if (split.contains("[") && split.contains("]")) {
+								String[] entitySplit1 = split.split("\\[");
+								ArrayList<String> entitySplit2 = new ArrayList<String>();
+								for (int i = 1; i < entitySplit1.length; i++) {
+									entitySplit2.add(entitySplit1[i].split("\\]")[0]);
+								}
+								for (String entityName : entitySplit2) {
+									if (recognizedEntities != null
+											&& recognizedEntities.get(message.getChannel()) != null) {
+										for (Entity entity : recognizedEntities.get(message.getChannel())) {
+											if (entityName.equals(entity.getEntityName())
+													&& entity.getValue() != null) {
+												String replace = "[" + entity.getEntityName() + "]";
+												split = split.replace(replace, entity.getValue());
+											}
+										}
+									}
+								}
+
+							}
+							// check if message parses buttons or is simple text
+							if (currentContext.getType().equals("Interactive Message")) {
+								this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
+										this.chatMediator.getAuthToken(),
+										currentContext.getFollowingMessages(),
+										java.util.Optional.empty());
+							} else {
+								this.chatMediator.sendMessageToChannel(message.getChannel(),
+										replaceVariables(message.getChannel(), split),
+										currentContext.getFollowingMessages(),
+										currentContext.followupMessageType);
+							}
+							// check whether a file url is attached to the chat response and try to send it
+							// to
+							// the user
+							if (!currentContext.getFileURL().equals("")) {
+								String fileName = "";
+								try {
+									// Replacable variable in url menteeEmail
+									String urlEmail = currentContext.getFileURL();
+									if (message.getEmail() != null) {
+										urlEmail = currentContext.getFileURL().replace("menteeEmail",
+												message.getEmail());
+									}
+									URL url = new URL(urlEmail);
+									HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+									// Header for l2p services
+									httpConn.addRequestProperty("Authorization", "Basic " + Base64.getEncoder()
+											.encodeToString((bot.getName() + ":actingAgent").getBytes()));
+
+									String fieldValue = httpConn.getHeaderField("Content-Disposition");
+									if (fieldValue == null || !fieldValue.contains("filename=\"")) {
+										fieldValue = "pdf.pdf";
+									}
+									// parse the file name from the header field
+									fileName = "pdf.pdf";
+									if (!fieldValue.equals("pdf.pdf")) {
+										fileName = fieldValue.substring(fieldValue.indexOf("filename=\"") + 10,
+												fieldValue.length() - 1);
+									} else {
+										// check if name is part of url
+										if (urlEmail.contains(".pdf") || urlEmail.contains(".png")
+												|| urlEmail.contains(".svg") || urlEmail.contains(".json")
+												|| urlEmail.contains(".txt")) {
+											fileName = urlEmail.split("/")[urlEmail.split("/").length - 1];
+										}
+									}
+									InputStream in = httpConn.getInputStream();
+									FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+									int file_size = httpConn.getContentLength();
+									if (file_size < 1) {
+										file_size = 2048;
+									}
+									byte dataBuffer[] = new byte[file_size];
+									int bytesRead;
+									while ((bytesRead = in.read(dataBuffer, 0, file_size)) != -1) {
+										fileOutputStream.write(dataBuffer, 0, bytesRead);
+									}
+									fileOutputStream.close();
+									this.chatMediator.sendFileMessageToChannel(message.getChannel(),
+											new File(fileName), "");
+
+								} catch (Exception e) {
+									System.out.println("Could not extract File for reason " + e);
+									e.printStackTrace();
+									java.nio.file.Files.deleteIfExists(Paths.get(fileName));
+									this.chatMediator.sendMessageToChannel(message.getChannel(),
+											currentContext.getErrorMessage(),
+											currentContext.getFollowupMessageType());
+								}
+							}
+							if (currentContext.getTriggeredFunctionId() != null) {
+								this.triggeredFunction.put(message.getChannel(),
+										currentContext.getTriggeredFunctionId());
+								contextOn = true;
+							}
+						} else {
+							if (currentContext.getTriggeredFunctionId() != "") {
+								this.triggeredFunction.put(message.getChannel(),
+										currentContext.getTriggeredFunctionId());
+								contextOn = true;
+							} else {
+								System.out.println("No Bot Action was given to the Response");
+							}
+						}
+					}
+					if (this.triggeredFunction.containsKey(message.getChannel())) {
+						triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+					} else
+						triggeredFunctionId = currentContext.getTriggeredFunctionId();
+					// If conversation flow is terminated, reset state
+					if (currentContext.getFollowingMessages().isEmpty()) {
+						this.stateMap.remove(message.getChannel());
+						if (storedSession.containsKey(message.getChannel())
+								&& !this.triggeredFunction.containsKey(message.getChannel())) {
+
+							stateMap.put(message.getChannel(), storedSession.get(message.getChannel()));
+							storedSession.remove(message.getChannel());
+						} else if (storedSession.containsKey(message.getChannel())
+								&& this.triggeredFunction.containsKey(message.getChannel())) {
+							this.updateConversationState(message.getChannel(), currentContext, conversationId);
+						}
+						this.recognizedEntities.remove(message.getChannel());
+					}
+				}
+
+				triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+				contextOn = true;
+				if (currentContext == null
+						|| !currentContext.getIntentKeyword().contains("defaultX")) {
 					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
-						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName()));
+						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(), conversationId));
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -965,7 +974,7 @@ public class Messenger {
 			String splitMessage[] = message.getText().split("\\s+", 2);
 			// First word without '!' prefix
 			String intentKeyword = splitMessage[0].substring(1);
-			IncomingMessage incMsg = this.knownIntents.get(intentKeyword);
+			IncomingMessage incMsg = this.rootChildren.get(intentKeyword);
 			// TODO: Log this? (`!` command with unknown intent / keyword)
 			if (incMsg == null && !intentKeyword.toLowerCase().equals("exit")) {
 				if (this.currentNluModel.get(message.getChannel()) == "0") {
@@ -1011,8 +1020,16 @@ public class Messenger {
 		return intent;
 	}
 
-	private void handleFunctionContext() {
-
+	/**
+	 * Stores the currentContext in the session for the given channel.
+	 * 
+	 * @param channelId      The channel id for which the context should be stored.
+	 * @param currentContext The context to store.
+	 */
+	private void storeContextInSession(String channelId, IncomingMessage currentContext) {
+		if (currentContext != null) {
+			this.stateMap.put(channelId, currentContext);
+		}
 	}
 
 	/**

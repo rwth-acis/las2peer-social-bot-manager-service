@@ -1066,6 +1066,8 @@ public class SocialBotManagerService extends RESTService {
 			Gson gson = new Gson();
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			JSONObject monitorMetaData = new JSONObject();
+			System.out.println("Got info: " + body);
 			try {
 				JSONObject message = (JSONObject) parser.parse(body);
 				JSONObject cleanedJson = (JSONObject) message.get("message");
@@ -1080,6 +1082,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 			// If no action should be triggered, just return
@@ -1747,7 +1750,12 @@ public class SocialBotManagerService extends RESTService {
 	private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent, String functionPath,
 			String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
+		JSONObject xesEvent = new JSONObject();
+
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+					triggeredBody.get("conversationId").toString(), triggeredBody.get("intent").toString(),
+					botAgent.getIdentifier().toString(), "bot");
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
 				client.setConnectorEndpoint(webconnectorUrl);
@@ -1977,7 +1985,9 @@ public class SocialBotManagerService extends RESTService {
 					e.printStackTrace();
 				}
 			}
-
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+					triggeredBody.get("conversationId").toString(), triggeredBody.get("intent").toString(),
+					botAgent.getIdentifier().toString(), "bot");
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
@@ -1998,6 +2008,9 @@ public class SocialBotManagerService extends RESTService {
 
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 			triggerChat(chat, triggeredBody);
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, xesEvent.toJSONString(),
+					triggeredBody.get("conversationId").toString(), triggeredBody.get("intent").toString(),
+					botAgent.getIdentifier().toString(), "bot");
 		}
 	}
 
