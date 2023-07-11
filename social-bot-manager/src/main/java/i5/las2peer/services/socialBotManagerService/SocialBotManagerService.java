@@ -965,7 +965,7 @@ public class SocialBotManagerService extends RESTService {
 								for (Messenger m : messengers.values()) {
 									// System.out.println("messenger: " + m);
 									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m
-											.getKnownIntents();
+											.getRootChildren();
 									// System.out.println("intentsHM: " + intentsHM);
 									for (String s : intentsHM.keySet()) {
 										if (s.equals(expectedIntent)) {
@@ -1754,8 +1754,8 @@ public class SocialBotManagerService extends RESTService {
 
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
-					triggeredBody.get("conversationId").toString(), triggeredBody.get("intent").toString(),
-					botAgent.getIdentifier().toString(), "bot");
+					triggeredBody.get("conversationId").toString(), functionPath,
+					botAgent.getIdentifier().toString(), "bot", "start");
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
 				client.setConnectorEndpoint(webconnectorUrl);
@@ -1892,6 +1892,9 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					// triggerChat(chat, triggeredBody);
+					l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+							triggeredBody.get("conversationId").toString(), functionPath,
+							botAgent.getIdentifier().toString(), "bot", "complete");
 					return;
 
 					// FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg",
@@ -1986,8 +1989,8 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
-					triggeredBody.get("conversationId").toString(), triggeredBody.get("intent").toString(),
-					botAgent.getIdentifier().toString(), "bot");
+					triggeredBody.get("conversationId").toString(), functionPath,
+					botAgent.getIdentifier().toString(), "bot", "start");
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
@@ -2010,7 +2013,7 @@ public class SocialBotManagerService extends RESTService {
 			triggerChat(chat, triggeredBody);
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, xesEvent.toJSONString(),
 					triggeredBody.get("conversationId").toString(), triggeredBody.get("intent").toString(),
-					botAgent.getIdentifier().toString(), "bot");
+					botAgent.getIdentifier().toString(), "bot", null);
 		}
 	}
 
