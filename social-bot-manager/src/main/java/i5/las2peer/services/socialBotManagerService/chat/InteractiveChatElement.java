@@ -5,6 +5,10 @@ public class InteractiveChatElement {
     private String label;
     private boolean isFile; 
 
+    public InteractiveChatElement(String intent, String label) {
+        this(intent, label, false);
+    }
+
     public InteractiveChatElement(String intent, String label, boolean isFile){
         this.intent = intent;
         this.label = label;
