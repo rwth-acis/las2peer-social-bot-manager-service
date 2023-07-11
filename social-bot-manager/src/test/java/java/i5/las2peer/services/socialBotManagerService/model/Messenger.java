@@ -145,7 +145,7 @@ public class Messenger {
 			this.knownIntents.put(msg.getIntentKeyword(), msg);
 	}
 
-	public HashMap<String, IncomingMessage> getKnownIntents() {
+	public HashMap<String, IncomingMessage> getRootChildren() {
 		return this.knownIntents;
 	}
 
