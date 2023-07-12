@@ -509,7 +509,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiOperation(value = "Init Bot", notes = "Reads the configuration file.")
 		public Response init(BotModel botModel) {
 			sbfservice.setL2pcontext(Context.getCurrent());
-			BotParser bp = BotParser.getInstance();
+			BotParser bp = BotParser.getInstance(Context.getCurrent());
 
 			String returnString = "";
 			LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
