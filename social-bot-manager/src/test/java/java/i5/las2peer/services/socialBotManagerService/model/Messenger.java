@@ -23,6 +23,7 @@ import javax.websocket.DeploymentException;
 
 import com.google.gson.Gson;
 
+import i5.las2peer.api.Context;
 import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
@@ -68,7 +69,7 @@ public class Messenger {
 
 	private SQLDatabase db;
 
-	public Messenger(String id, String chatService, String token, SQLDatabase database)
+	public Messenger(String id, String chatService, String token, SQLDatabase database, Context context)
 			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 
 //		this.rasa = new RasaNlu(rasaUrl);

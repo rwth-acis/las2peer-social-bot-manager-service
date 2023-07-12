@@ -23,6 +23,8 @@ import javax.websocket.DeploymentException;
 
 import com.google.gson.Gson;
 
+import i5.las2peer.api.Context;
+import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
@@ -102,12 +104,15 @@ public class Messenger {
 
 	private HashMap<String, HashMap<String, String>> userVariables;
 
+	private Context l2pContext;
+
 	private Random random;
 
 	private SQLDatabase db;
 
-	public Messenger(String id, String chatService, String token, SQLDatabase database)
+	public Messenger(String id, String chatService, String token, SQLDatabase database, Context l2pContext)
 			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
+		this.l2pContext = l2pContext;
 
 		// this.rasa = new RasaNlu(rasaUrl);
 		// this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
@@ -681,6 +686,12 @@ public class Messenger {
 								}
 
 							}
+							String activityName = currentContext.getIntentKeyword() + ":response";
+							this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
+									conversationId.toString(), activityName, bot.getName(), "bot", "start");
+							this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
+									conversationId.toString(), activityName, bot.getName(), "bot", "complete");
+
 							// check if message parses buttons or is simple text
 							if (currentContext.getType().equals("Interactive Message")) {
 								this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
@@ -688,6 +699,7 @@ public class Messenger {
 										currentContext.getFollowingMessages(),
 										java.util.Optional.empty());
 							} else {
+
 								this.chatMediator.sendMessageToChannel(message.getChannel(),
 										replaceVariables(message.getChannel(), split),
 										currentContext.getFollowingMessages(),
