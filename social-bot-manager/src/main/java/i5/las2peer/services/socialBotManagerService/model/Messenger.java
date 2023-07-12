@@ -679,9 +679,11 @@ public class Messenger {
 								}
 								String activityName = state.getIntentKeyword() + ":response";
 							this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
-									conversationId.toString(), activityName, bot.getName(), "bot", "start");
+									conversationId.toString(), activityName, bot.getName(), "bot", "start",
+									System.currentTimeMillis());
 							this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
-									conversationId.toString(), activityName, bot.getName(), "bot", "complete");
+									conversationId.toString(), activityName, bot.getName(), "bot", "complete",
+									System.currentTimeMillis());
 							// check if message parses buttons or is simple text
 							if (state.getType().equals("Interactive Message")) {
 								this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
