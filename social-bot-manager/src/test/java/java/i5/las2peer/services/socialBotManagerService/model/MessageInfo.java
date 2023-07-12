@@ -14,9 +14,16 @@ public class MessageInfo {
 	String serviceAlias;
 	boolean contextWithService;
 	Collection<Entity> recognizedEntities;
+	String conversationId;
 
 	public MessageInfo(ChatMessage message, Intent intent, String triggeredFunctionId, String botName,
 			String serviceAlias, boolean contextWithService, Collection<Entity> recognizedEntities) {
+		this(message, intent, triggeredFunctionId, botName, serviceAlias, contextWithService, recognizedEntities, "");
+	}
+
+	public MessageInfo(ChatMessage message, Intent intent, String triggeredFunctionId, String botName,
+			String serviceAlias, boolean contextWithService, Collection<Entity> recognizedEntities,
+			String conversationId) {
 		this.message = message;
 		this.intent = intent;
 		this.triggeredFunctionId = triggeredFunctionId;
@@ -24,6 +31,7 @@ public class MessageInfo {
 		this.serviceAlias = serviceAlias;
 		this.contextWithService = contextWithService;
 		this.recognizedEntities = recognizedEntities;
+		this.conversationId = conversationId;
 	}
 
 	public ChatMessage getMessage() {
@@ -52,6 +60,10 @@ public class MessageInfo {
 
 	public void setRecognizedEntities(Collection<Entity> entities) {
 		this.recognizedEntities = entities;
+	}
+
+	public String getConversationId() {
+		return conversationId;
 	}
 
 	public Collection<Entity> getRecognizedEntities() {

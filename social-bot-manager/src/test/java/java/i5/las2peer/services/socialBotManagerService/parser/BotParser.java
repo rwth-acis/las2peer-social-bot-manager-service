@@ -52,11 +52,20 @@ import net.minidev.json.parser.ParseException;
 public class BotParser {
 	private static BotParser instance = null;
 	private static final String botPass = "actingAgent";
+	private static Context l2pContext;
 
 	protected BotParser() {
 	}
 
 	public static BotParser getInstance() {
+		if (instance == null) {
+			instance = new BotParser();
+		}
+		return instance;
+	}
+
+	public static BotParser getInstance(Context context) {
+		l2pContext = context;
 		if (instance == null) {
 			instance = new BotParser();
 		}
@@ -397,7 +406,7 @@ public class BotParser {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
 		
-		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database);
+		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database, l2pContext);
 		return newMessenger;
 
 	}

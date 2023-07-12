@@ -541,93 +541,102 @@ public class SocialBotManagerService extends RESTService {
 		@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "Init successful.") })
 		@ApiOperation(value = "Init Bot", notes = "Reads the configuration file.")
 		public Response init(BotModel botModel) {
-			sbfservice.setL2pcontext(Context.getCurrent());
-			BotParser bp = BotParser.getInstance();
+			try {
+				sbfservice.setL2pcontext(Context.getCurrent());
+				BotParser bp = BotParser.getInstance();
 
-			String returnString = "";
-			LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
-			LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
-			Set<String> list = SocialBotManagerService.getBotAgents().keySet();
-			ArrayList<String> oldArray = new ArrayList<String>();
-			// do agentid here maybe instead of loginname, as some people use the same login
-			// name
-			for (String entry : list) {
-				oldArray.add(entry);
-			}
-			String botToken = "";
-			for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
-				if (entry.getValue().getType().equals("Messenger")) {
-					for (Entry<String, BotModelNodeAttribute> subEntry : entry.getValue().getAttributes().entrySet()) {
-						BotModelNodeAttribute subElem = subEntry.getValue();
-						BotModelValue subVal = subElem.getValue();
-						if (subVal.getName().equals("Authentication Token")) {
-							botToken = subVal.getValue();
+				String returnString = "";
+				LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
+				LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
+				Set<String> list = SocialBotManagerService.getBotAgents().keySet();
+				ArrayList<String> oldArray = new ArrayList<String>();
+				// do agentid here maybe instead of loginname, as some people use the same login
+				// name
+				for (String entry : list) {
+					oldArray.add(entry);
+				}
+				String botToken = "";
+				for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
+					if (entry.getValue().getType().equals("Messenger")) {
+						for (Entry<String, BotModelNodeAttribute> subEntry : entry.getValue().getAttributes()
+								.entrySet()) {
+							BotModelNodeAttribute subElem = subEntry.getValue();
+							BotModelValue subVal = subElem.getValue();
+							if (subVal.getName().equals("Authentication Token")) {
+								botToken = subVal.getValue();
+							}
 						}
 					}
 				}
-			}
-			if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
-					&& !restarterBotPWStatic.equals("")) {
-				try {
-					restarterBot = (BotAgent) Context.getCurrent()
-							.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
-					restarterBot.unlock(restarterBotPWStatic);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-
-			Envelope env = null;
-			HashMap<String, BotModel> old = null;
-			try {
-				bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
-						nodes, edges, sbfservice.database, webconnectorUrlStatic);
-			} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException
-					| AuthTokenException e) {
-				e.printStackTrace();
-				if (e.toString().toLowerCase().contains("login name longer")) {
-					return Response.status(Status.BAD_REQUEST).entity("Bot Name needs to have at least 4 characters!")
-							.build();
-				}
-				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-			}
-			// initialized = true;
-			JSONObject logData = new JSONObject();
-			logData.put("status", "initialized");
-			env = null;
-			old = null;
-			if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
-					&& !restarterBotPWStatic.equals("")) {
-				try {
-					// try to add project to project list (with service group agent)
-					env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
-					old = (HashMap<String, BotModel>) env.getContent();
-					old.put(botToken, botModel);
-					env.setContent(old);
-					Context.get().storeEnvelope(env, restarterBot);
-				} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
-						| EnvelopeOperationFailedException e) {
-					System.out.println(e);
+				if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
+						&& !restarterBotPWStatic.equals("")) {
 					try {
-						env = Context.get().createEnvelope(restarterBotNameStatic, restarterBot);
-						env.setPublic();
-						old = new HashMap<String, BotModel>();
+						restarterBot = (BotAgent) Context.getCurrent()
+								.fetchAgent(
+										Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
+						restarterBot.unlock(restarterBotPWStatic);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
+				Envelope env = null;
+				HashMap<String, BotModel> old = null;
+				try {
+					bp.parseNodesAndEdges(SocialBotManagerService.getConfig(), SocialBotManagerService.getBotAgents(),
+							nodes, edges, sbfservice.database, webconnectorUrlStatic);
+				} catch (ParseBotException | IllegalArgumentException | IOException | DeploymentException
+						| AuthTokenException e) {
+					e.printStackTrace();
+					if (e.toString().toLowerCase().contains("login name longer")) {
+						return Response.status(Status.BAD_REQUEST)
+								.entity("Bot Name needs to have at least 4 characters!")
+								.build();
+					}
+					return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+				}
+				// initialized = true;
+				JSONObject logData = new JSONObject();
+				logData.put("status", "initialized");
+				env = null;
+				old = null;
+				if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
+						&& !restarterBotPWStatic.equals("")) {
+					try {
+						// try to add project to project list (with service group agent)
+						env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
+						old = (HashMap<String, BotModel>) env.getContent();
 						old.put(botToken, botModel);
-						// System.out.println(botToken);
 						env.setContent(old);
 						Context.get().storeEnvelope(env, restarterBot);
-					} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (Exception e2) {
-						e2.printStackTrace();
+					} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
+							| EnvelopeOperationFailedException e) {
+						System.out.println(e);
+						try {
+							env = Context.get().createEnvelope(restarterBotNameStatic, restarterBot);
+							env.setPublic();
+							old = new HashMap<String, BotModel>();
+							old.put(botToken, botModel);
+							// System.out.println(botToken);
+							env.setContent(old);
+							Context.get().storeEnvelope(env, restarterBot);
+						} catch (EnvelopeOperationFailedException | EnvelopeAccessDeniedException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (Exception e2) {
+							e2.printStackTrace();
+						}
+
 					}
-
 				}
-			}
-			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
+				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 
-			return Response.ok().entity(returnString).build();
+				return Response.ok().entity(returnString).build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			}
+
 		}
 
 		/**
@@ -965,7 +974,7 @@ public class SocialBotManagerService extends RESTService {
 								for (Messenger m : messengers.values()) {
 									// System.out.println("messenger: " + m);
 									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m
-											.getKnownIntents();
+											.getRootChildren();
 									// System.out.println("intentsHM: " + intentsHM);
 									for (String s : intentsHM.keySet()) {
 										if (s.equals(expectedIntent)) {
@@ -1066,6 +1075,8 @@ public class SocialBotManagerService extends RESTService {
 			Gson gson = new Gson();
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+			JSONObject xesEvent = new JSONObject();
+			System.out.println("Got info: " + body);
 			try {
 				JSONObject message = (JSONObject) parser.parse(body);
 				JSONObject cleanedJson = (JSONObject) message.get("message");
@@ -1077,9 +1088,24 @@ public class SocialBotManagerService extends RESTService {
 					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
+
+				String activityName = ((JSONObject) message.get("intent")).get("intentKeyword").toString();
+
+				xesEvent.put("user", encryptThisString(cleanedJson.getAsString("user")));
+
+				Context.get().monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, xesEvent.toJSONString(),
+						message.get("conversationId").toString(),
+						activityName,
+						message.get("botName").toString(), "bot", "start", System.currentTimeMillis());
+				Context.get().monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, xesEvent.toJSONString(),
+						message.get("conversationId").toString(),
+						activityName,
+						message.get("botName").toString(), "bot", "complete", System.currentTimeMillis());
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 			// If no action should be triggered, just return
@@ -1332,6 +1358,7 @@ public class SocialBotManagerService extends RESTService {
 			ServiceNotAuthorizedException, ParseBotException, AgentNotFoundException, AgentOperationFailedException {
 		String botId = botAgent.getIdentifier();
 		Bot bot = botConfig.getBots().get(botId);
+
 		if (bot != null) {
 			System.out.println("Bot " + botAgent.getLoginName() + " triggered:");
 			ServiceFunction botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
@@ -1401,6 +1428,7 @@ public class SocialBotManagerService extends RESTService {
 			body.put("entities", entities);
 			body.put("msg", messageInfo.getMessage().getText());
 			body.put("contextOn", messageInfo.contextActive());
+			body.put("conversationId", messageInfo.getConversationId());
 			botFunction.setMessengerName(messageInfo.getMessengerName());
 			performTrigger(botConfig, botFunction, botAgent, functionPath, "", body);
 		}
@@ -1747,7 +1775,12 @@ public class SocialBotManagerService extends RESTService {
 	private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent, String functionPath,
 			String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
+		JSONObject xesEvent = new JSONObject();
+		System.out.println("Triggered body: " + triggeredBody.toJSONString());
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+					triggeredBody.get("conversationId").toString(), functionPath,
+					botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
 				client.setConnectorEndpoint(webconnectorUrl);
@@ -1884,6 +1917,9 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					// triggerChat(chat, triggeredBody);
+					l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+							triggeredBody.get("conversationId").toString(), functionPath,
+							botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 					return;
 
 					// FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg",
@@ -1977,8 +2013,11 @@ public class SocialBotManagerService extends RESTService {
 					e.printStackTrace();
 				}
 			}
-
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+					triggeredBody.get("conversationId").toString(), functionPath,
+					botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
+			// deprecated
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
 				// TODO Anonymous agent error
@@ -2002,6 +2041,7 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	public void triggerChat(ChatMediator chat, JSONObject body) {
+
 		String text = body.getAsString("text");
 		String blocks = body.getAsString("blocks");
 		String channel = null;

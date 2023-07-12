@@ -1,6 +1,7 @@
 package i5.las2peer.services.socialBotManagerService.model;
 
 import java.util.Collection;
+import java.util.UUID;
 
 import i5.las2peer.services.socialBotManagerService.chat.ChatMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
@@ -15,6 +16,7 @@ public class MessageInfo {
 	boolean contextWithService;
 	Collection<Entity> recognizedEntities;
 	String messengerName = "";
+	String conversationId;
 
 
 
@@ -39,6 +41,20 @@ public class MessageInfo {
 		this.contextWithService = contextWithService;
 		this.recognizedEntities = recognizedEntities;
 		this.messengerName = messengerName;
+	}
+
+	public MessageInfo(ChatMessage message, Intent intent, String triggeredFunctionId, String botName,
+			String serviceAlias, boolean contextWithService, Collection<Entity> recognizedEntities,
+			String messengerName, UUID conversationId) {
+		this.message = message;
+		this.intent = intent;
+		this.triggeredFunctionId = triggeredFunctionId;
+		this.botName = botName;
+		this.serviceAlias = serviceAlias;
+		this.contextWithService = contextWithService;
+		this.recognizedEntities = recognizedEntities;
+		this.messengerName = messengerName;
+		this.conversationId = conversationId.toString();
 	}
 
 	public ChatMessage getMessage() {
@@ -75,6 +91,10 @@ public class MessageInfo {
 
 	public String getMessengerName() {
 		return messengerName;
+	}
+
+	public String getConversationId() {
+		return conversationId;
 	}
 
 	public void setMessengerName(String messengerName) {

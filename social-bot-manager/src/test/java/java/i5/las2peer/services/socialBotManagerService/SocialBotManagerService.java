@@ -509,7 +509,7 @@ public class SocialBotManagerService extends RESTService {
 		@ApiOperation(value = "Init Bot", notes = "Reads the configuration file.")
 		public Response init(BotModel botModel) {
 			sbfservice.setL2pcontext(Context.getCurrent());
-			BotParser bp = BotParser.getInstance();
+			BotParser bp = BotParser.getInstance(Context.getCurrent());
 
 			String returnString = "";
 			LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
@@ -921,7 +921,7 @@ public class SocialBotManagerService extends RESTService {
 								for (Messenger m : messengers.values()) {
 									// System.out.println("messenger: " + m);
 									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m
-											.getKnownIntents();
+											.getRootChildren();
 									// System.out.println("intentsHM: " + intentsHM);
 									for (String s : intentsHM.keySet()) {
 										if (s.equals(expectedIntent)) {

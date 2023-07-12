@@ -53,4 +53,11 @@ services:
     command: run --enable-api -m models --cors "*" --debug
     ports:
       - "5005:5005"
-  
+  mongo:
+      image: mongo
+      restart: always
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      ports:
+        - 8086:27017
