@@ -93,6 +93,10 @@ public class MessageInfo {
 		return messengerName;
 	}
 
+	public String getConversationId() {
+		return conversationId;
+	}
+
 	public void setMessengerName(String messengerName) {
 		this.messengerName = messengerName;
 	}
