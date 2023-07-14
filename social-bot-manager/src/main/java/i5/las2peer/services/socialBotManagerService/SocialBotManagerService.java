@@ -1756,8 +1756,9 @@ public class SocialBotManagerService extends RESTService {
 						//subsfa are the single messages
 						for (ServiceFunctionAttribute subsfa : sfa.getChildAttributes()) {
 							HashMap<String, String> subsfaMap = new HashMap<String, String>();
-							//subsubsfa are the role and content parameters
+							//subsubsfa are the role and content parameters of the message
 							for (ServiceFunctionAttribute subsubsfa : subsfa.getChildAttributes()) {
+								// put the parameters into a map
 								subsfaMap.put(subsubsfa.getName(), subsubsfa.getContent());
 							}
 							JSONObject jsonsubSfaMap = new JSONObject(subsfaMap);
@@ -1935,15 +1936,23 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			System.out.println("Connect Success");
-			System.out.println(r.getResponse());
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
 				try {
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
 					for(String key : response.keySet()){
 						bot.getMessenger(messengerID).addVariable(channel, key, response.getAsString(key));				
 					}
-					// Need to convert openAI response to our expected response	
-					triggeredBody.put("text", response.getAsString("text"));
+					// Need to convert openAI response to our expected response
+					// response["choices"][0]["message"]["content"]	
+					JSONArray choices = (JSONArray) response.get("choices");
+					System.out.println(choices);
+					JSONObject choicesObj = (JSONObject) choices.get(0);
+					JSONObject message = (JSONObject) choicesObj.get("message");
+					System.out.println(message);
+					String textResponse = message.getAsString("content");
+					System.out.println(textResponse);
+					triggeredBody.put("text", textResponse);
+
 					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 					if (response.containsKey("fileBody")) {
 						triggeredBody.put("fileBody", response.getAsString("fileBody"));
@@ -1975,6 +1984,7 @@ public class SocialBotManagerService extends RESTService {
 							triggerChat(chat, jsonO);
 						}
 					} else {
+						System.out.println("TRIGGER CHAT");
 						triggerChat(chat, triggeredBody);
 					}
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
