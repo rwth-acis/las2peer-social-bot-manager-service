@@ -195,9 +195,13 @@ public class BotParser {
 					ServiceFunctionAttribute sfaParent = sfaList.get(source);
 					// ...Parameter
 					if (sfaList.get(target) != null) {
+						System.out.println("PARAMETER HAS CHILD");
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
-						sfaChild.setParent(sfaParent);
+						//sfaChild.setParent(sfaParent);
+						//System.out.println("PARENT ATTRIBUTE");
+						//System.out.println(sfaParent);
+						System.out.println("HELLO");
 					}
 					// Incoming Message has...
 				} else if (incomingMessages.get(source) != null) {
@@ -308,12 +312,15 @@ public class BotParser {
 			}
 		}
 
+		System.out.println("AFTER EDGES");
+
+
 		for(ServiceFunction sf : bsfList.values()){
-					if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
-						bot.addBotServiceFunction(sf.getId(), sf);
-						sf.addBot(bot);
-					}
-				}
+			if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
+				bot.addBotServiceFunction(sf.getId(), sf);
+				sf.addBot(bot);
+			}
+		}
 		for(IncomingMessage m : incomingMessages.values()){
 			String nluId = m.getNluID();
 			if(bot.getRasaServer(nluId)!=null){
@@ -367,7 +374,9 @@ public class BotParser {
 					+ " inputs and " + checkGeneratorOuts + " outputs.");
 		}
 
+		System.out.println("BEFORE SWAGGERHELPER");
 		JSONArray jaf = swaggerHelperFunction(bot);
+		System.out.println("AFTER SWAGGERHELPER");
 
 		JSONObject j = new JSONObject();
 		j.put("triggerFunctions", jaf);
@@ -712,6 +721,7 @@ public class BotParser {
 			} else if (name.equals("Name")) {
 				sfa.setName(subVal.getValue());
 			} else if (name.equals("Static")) {
+				System.out.println(Boolean.parseBoolean(subVal.getValue()));
 				sfa.setStaticContent(Boolean.parseBoolean(subVal.getValue()));
 			} else if (name.equals("Content")) {
 				sfa.setContent(subVal.getValue());

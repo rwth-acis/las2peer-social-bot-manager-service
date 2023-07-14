@@ -1315,11 +1315,11 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
-				if (botFunction.getServiceName().equals("https://api.openai.com/v1")) {
-					body.put(sfa.getName(), sfa.getContent());
-				} else {
-					formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
-				}
+				//if (botFunction.getServiceName().equals("https://api.openai.com/v1")) {
+				//	body.put(sfa.getName(), sfa.getContent());
+				//} else {
+				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
+				//}
 			}
 			// Patch attributes so that if a chat message is sent, it is sent
 			// to the same channel the action was triggered from.
@@ -1520,11 +1520,15 @@ public class SocialBotManagerService extends RESTService {
 			InternalServiceException, ServiceMethodNotFoundException, ServiceInvocationFailedException,
 			ServiceAccessDeniedException, ServiceNotAuthorizedException, ParseBotException {
 		// Attributes of the triggered function
+		//System.out.println(triggeredFunctionAttribute.getName());
 		if (triggeredFunctionAttribute.isSameAsTrigger()) {
+			System.out.println("TRIGGERDFUNCTIONATTRIBUTES SAME AS TRIGGER");
 			mapAttributes(triggeredBody, triggeredFunctionAttribute, functionPath, attlist, triggerAttributes);
-		} else if (triggeredFunctionAttribute.getName() == "body") {
+		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { //triggeredFunctionAttribute.getName() == "body", doesn't make sense?
+			System.out.println("TRIGGERDFUNCTIONATTRIBUTE = BODY");
 			JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
 			for (ServiceFunctionAttribute subsfa : triggeredFunctionAttribute.getChildAttributes()) {
+				//Same as trigger is never set because the edge doesn't even exist in the frontend
 				if (subsfa.isSameAsTrigger()) {
 					ServiceFunctionAttribute mappedTo = subsfa.getMappedTo();
 					if (triggerBody.get(mappedTo.getName()) != null) {
@@ -1539,7 +1543,7 @@ public class SocialBotManagerService extends RESTService {
 						if (subsfa.hasStaticContent()) {
 							mapWithStaticContent(subsfa, triggeredBody);
 						} else {
-							// TODO no match!
+							// no match
 						}
 					}
 
@@ -1739,13 +1743,32 @@ public class SocialBotManagerService extends RESTService {
 			String channel = triggeredBody.getAsString("channel");
 			HashMap<String, String> headers = new HashMap<String, String>();
 			JSONObject openaiBody = new JSONObject();
+			//HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
+			//JSONObject triggerAttributes = new JSONObject();
 			if (sf.getServiceName().equals("https://api.openai.com/v1")) {
 				String openai_api_key = System.getenv("OPENAI_API_KEY");
 				headers.put("Authorization", "Bearer " + openai_api_key);
 				for (ServiceFunctionAttribute sfa : sf.getAttributes()) {
-					openaiBody.put(sfa.getName(), sfa.getContent());
+					// if content is empty and has child attributes, then sf is messages
+					if (sfa.getContent().isEmpty() && !sfa.getChildAttributes().isEmpty()){
+						System.out.println("CONTENT IS EMPTY AND HAS CHILD ATTRIBUTES");
+						JSONArray jsonArray = new JSONArray();
+						//subsfa are the single messages
+						for (ServiceFunctionAttribute subsfa : sfa.getChildAttributes()) {
+							HashMap<String, String> subsfaMap = new HashMap<String, String>();
+							//subsubsfa are the role and content parameters
+							for (ServiceFunctionAttribute subsubsfa : subsfa.getChildAttributes()) {
+								subsfaMap.put(subsubsfa.getName(), subsubsfa.getContent());
+							}
+							JSONObject jsonsubSfaMap = new JSONObject(subsfaMap);
+							jsonArray.add(jsonsubSfaMap);
+						}
+						openaiBody.put(sfa.getName(), jsonArray);
+					} else {
+						openaiBody.put(sfa.getName(), sfa.getContent());
+					}
 				}
-				System.out.println(sf.getServiceName() + functionPath + " ; " + openaiBody.toJSONString() + " "
+				System.out.println(sf.getServiceName() + "/" + functionPath + " ; " + openaiBody.toJSONString() + " "
 					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + openaiBody.toJSONString());
 			} else {
 				triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
