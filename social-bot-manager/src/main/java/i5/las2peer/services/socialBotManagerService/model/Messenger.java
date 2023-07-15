@@ -48,7 +48,6 @@ public class Messenger {
 
 	// Key: intent keyword
 	private HashMap<String, IncomingMessage> knownIntents;
-
 	// Used for keeping conversation state per channel
 	private HashMap<String, IncomingMessage> stateMap;
 	// Used for keeping remembering entities during conversation state per channel

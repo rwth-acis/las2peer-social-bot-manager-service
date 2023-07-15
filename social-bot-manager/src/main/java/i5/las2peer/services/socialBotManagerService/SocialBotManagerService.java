@@ -1748,12 +1748,13 @@ public class SocialBotManagerService extends RESTService {
 			if (sf.getServiceName().equals("https://api.openai.com/v1")) {
 				String openai_api_key = System.getenv("OPENAI_API_KEY");
 				headers.put("Authorization", "Bearer " + openai_api_key);
+
 				for (ServiceFunctionAttribute sfa : sf.getAttributes()) {
 					// if content is empty and has child attributes, then sf is messages
 					if (sfa.getContent().isEmpty() && !sfa.getChildAttributes().isEmpty()){
 						System.out.println("CONTENT IS EMPTY AND HAS CHILD ATTRIBUTES");
 						JSONArray jsonArray = new JSONArray();
-						//subsfa are the single messages
+						//subsfa are the single messages specfied in the bot model
 						for (ServiceFunctionAttribute subsfa : sfa.getChildAttributes()) {
 							HashMap<String, String> subsfaMap = new HashMap<String, String>();
 							//subsubsfa are the role and content parameters of the message
@@ -1763,6 +1764,19 @@ public class SocialBotManagerService extends RESTService {
 							}
 							JSONObject jsonsubSfaMap = new JSONObject(subsfaMap);
 							jsonArray.add(jsonsubSfaMap);
+						}
+						// Get the collected chat messages and add them to the json array
+						ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+						//for (ChatMessage msg : chat.getConversationPath()) {
+						for (ChatMessage msg : chat.getMessages()) {
+							System.out.println("USER MESSAGES");
+							System.out.println(msg.toString());
+							HashMap<String, String> msgMap = new HashMap<String, String>();
+							//subsubsfa are the role and content parameters of the message
+							msgMap.put("role", "user");
+							msgMap.put("content", msg.getText());
+							JSONObject jsonmsgMap = new JSONObject(msgMap);
+							jsonArray.add(jsonmsgMap);
 						}
 						openaiBody.put(sfa.getName(), jsonArray);
 					} else {
@@ -1936,6 +1950,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			System.out.println("Connect Success");
+			System.out.println(r.getResponse());
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
 				try {
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
@@ -1952,7 +1967,7 @@ public class SocialBotManagerService extends RESTService {
 					String textResponse = message.getAsString("content");
 					System.out.println(textResponse);
 					triggeredBody.put("text", textResponse);
-
+					
 					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 					if (response.containsKey("fileBody")) {
 						triggeredBody.put("fileBody", response.getAsString("fileBody"));

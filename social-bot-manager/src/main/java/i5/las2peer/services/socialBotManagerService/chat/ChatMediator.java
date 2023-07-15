@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +19,9 @@ import java.util.*;
 
 public abstract class ChatMediator {
 	private ChatMessageCollector messageCollector;
+	// Used for storing the conversation path
+	//private ChatMessageCollector conversationPathCollector;
+
 	protected String authToken;
 
 	public ChatMediator(String authToken) {
@@ -147,6 +151,14 @@ public abstract class ChatMediator {
 	public abstract Vector<ChatMessage> getMessages();
 
 	/**
+	 * Gets all messages the mediator has received or sent
+	 *
+	 * @return A Vector containing all ChatMessages received or sent
+	 *         
+	 */
+	//public abstract Vector<ChatMessage> getConversationPath();
+
+	/**
 	 * Gets the IM channel ID for the user registered under the given E-Mail
 	 * address.
 	 *
@@ -214,6 +226,10 @@ public abstract class ChatMediator {
 	public ChatMessageCollector getMessageCollector() {
 		return messageCollector;
 	}
+
+	// public ChatMessageCollector getConversationPathCollector() {
+	// 	return conversationPathCollector;
+	// }
 
 	public abstract void close();
 }

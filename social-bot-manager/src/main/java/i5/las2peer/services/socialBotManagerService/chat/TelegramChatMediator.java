@@ -52,6 +52,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	TelegramBot bot;
 	private TelegramMessageCollector messageCollector;
+	//private TelegramMessageCollector conversationPathCollector;
 
 	/**
 	 * URL address of the SBF manager service
