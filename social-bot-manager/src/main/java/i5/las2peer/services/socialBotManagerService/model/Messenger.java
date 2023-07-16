@@ -647,6 +647,11 @@ public class Messenger {
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
 									this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
+									// if sendMessageToChannel was successful then add to conversation, need to change sendMessageToChannel to return state
+									ConversationMessage conversationMsg = new ConversationMessage("", "assistant", replaceVariables(message.getChannel(), split));
+									Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
+									conversation.add(conversationMsg);
+									conversationMap.put(message.getChannel(), conversation);
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
@@ -749,6 +754,7 @@ public class Messenger {
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
 				conversation.add(conversationMsg);
 				conversationMap.put(message.getChannel(), conversation);
+				// TODO: if message was sent to channel, then add to conversation path here after the user message
 				
 			} catch (Exception e) {
 				e.printStackTrace();

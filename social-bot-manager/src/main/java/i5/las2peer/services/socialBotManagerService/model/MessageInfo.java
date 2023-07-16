@@ -14,6 +14,7 @@ public class MessageInfo {
 	String serviceAlias;
 	boolean contextWithService;
 	Collection<Entity> recognizedEntities;
+	String conversationId;
 	String messengerName = "";
 
 
