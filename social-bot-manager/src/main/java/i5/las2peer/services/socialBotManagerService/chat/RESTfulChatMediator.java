@@ -23,9 +23,10 @@ public class RESTfulChatMediator extends ChatMediator{
     }
 
     @Override
-    public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+    public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
         RESTfulChatResponse rcr = new RESTfulChatResponse(text, hashMap,type);
         chatsession.put(channel, rcr);
+        return Boolean.TRUE;
     }
 
     @Override

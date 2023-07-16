@@ -139,8 +139,9 @@ public class SlackChatMediator extends EventChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		MessageBuilder msg = Message.builder().id(System.currentTimeMillis()).channel(channel).text(text);
+		Boolean messageSent = Boolean.FALSE;
 		if (id.isPresent()) {
 			msg.id(Long.parseLong(id.get()));
 		}
@@ -156,6 +157,7 @@ public class SlackChatMediator extends EventChatMediator {
 																													// ID
 					.text(text).iconUrl(url).username(name));
 			System.out.println("Message sent: " + response.isOk());
+			messageSent = Boolean.TRUE;
 		} catch (Exception e) {
 			this.messageCollector.setConnected(false);
 			reconnect();
@@ -178,7 +180,7 @@ public class SlackChatMediator extends EventChatMediator {
 		} catch (Exception e) {
 			System.out.println("Could not extract Email for reason + " + e);
 		}
-
+		return messageSent;
 	}
 
 	// @Override

@@ -334,6 +334,8 @@ public class Messenger {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
 				Intent intent = null;
+				Boolean messageSent = Boolean.FALSE;
+				String botMessage = "";
 				// Special case: `!` commands
 				if (message.getText().startsWith("!")) {
 					
@@ -646,12 +648,10 @@ public class Messenger {
 								if(state.getType().equals("Interactive Message")){
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
-									this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
-									// if sendMessageToChannel was successful then add to conversation, need to change sendMessageToChannel to return state
-									ConversationMessage conversationMsg = new ConversationMessage("", "assistant", replaceVariables(message.getChannel(), split));
-									Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
-									conversation.add(conversationMsg);
-									conversationMap.put(message.getChannel(), conversation);
+									messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
+									if (messageSent == Boolean.TRUE) {
+										botMessage = replaceVariables(message.getChannel(), split);
+									}
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
@@ -750,11 +750,16 @@ public class Messenger {
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
 						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
 				//ConversationMessage conversationMsg = new ConversationMessage(message.getConversationId(), "user", message.getText());
-				ConversationMessage conversationMsg = new ConversationMessage("", "user", message.getText());
+				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
-				conversation.add(conversationMsg);
+				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
-				// TODO: if message was sent to channel, then add to conversation path here after the user message
+				// if message was sent to channel, then add to conversation path here after the user message
+				if (messageSent = Boolean.TRUE) {
+					ConversationMessage botConvMsg = new ConversationMessage("", "assistant", botMessage);
+					conversation.add(botConvMsg);
+					conversationMap.put(message.getChannel(), conversation);
+				}
 				
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -190,10 +190,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
+		Boolean messageSent = Boolean.FALSE;
 		if (sendingMessage.get(channel) != null) {
 			while (sendingMessage.get(channel) == true) {
 
@@ -267,6 +268,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						}
 					} else {
 						room.sendMessage(newText);
+						//messageSent = Boolean.TRUE;
 						//ChatMessage botMessage = new ChatMessage(channel, "assistant", newText);
 						//conversationPathCollector.addMessage(botMessage);
 						sendingMessage.put(channel, false);
@@ -279,7 +281,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 
 		});
-
+		messageSent = Boolean.TRUE;
+		return messageSent;
 	}
 
 	@Override
