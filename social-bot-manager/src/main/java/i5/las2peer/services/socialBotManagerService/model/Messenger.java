@@ -46,6 +46,8 @@ public class Messenger {
 	 */
 	private ChatService chatService;
 
+	private HashMap<String, Collection<ConversationMessage>> conversationMap;
+
 	// Key: intent keyword
 	private HashMap<String, IncomingMessage> knownIntents;
 	// Used for keeping conversation state per channel
@@ -124,6 +126,7 @@ public class Messenger {
 			System.out.println("no exceptions");
 
 		this.name = id;
+		this.conversationMap = new HashMap<String, Collection<ConversationMessage>>();
 		this.knownIntents = new HashMap<String, IncomingMessage>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.recognizedEntities = new HashMap<String, Collection<Entity>>();
@@ -142,6 +145,10 @@ public class Messenger {
 
 	public ChatService getChatService() {
 		return chatService;
+	}
+
+	public HashMap<String, Collection<ConversationMessage>> getConversationMap() {
+		return conversationMap;
 	}
 
 	public void addMessage(IncomingMessage msg) {
@@ -430,6 +437,7 @@ public class Messenger {
 					if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
 						if (state == null) {
 							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
+							conversationMap.put(message.getChannel(), new ArrayList<ConversationMessage>());
 							if (message.getFileName() != null) {
 								// check whether incoming message with intent expects file or without intent,
 								// such that
@@ -736,6 +744,12 @@ public class Messenger {
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
 						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
+				//ConversationMessage conversationMsg = new ConversationMessage(message.getConversationId(), "user", message.getText());
+				ConversationMessage conversationMsg = new ConversationMessage("", "user", message.getText());
+				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
+				conversation.add(conversationMsg);
+				conversationMap.put(message.getChannel(), conversation);
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

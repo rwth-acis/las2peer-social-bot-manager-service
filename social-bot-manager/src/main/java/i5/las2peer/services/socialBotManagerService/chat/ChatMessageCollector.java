@@ -33,12 +33,12 @@ public class ChatMessageCollector {
 
 	// Copies messages in a thread-safe manner and returns the copy.
 	public Vector<ChatMessage> getMessages() {
-		// Vector<ChatMessage> messages;
-		// synchronized (this.messages) {
-		// 	messages = new Vector<ChatMessage>(this.messages);
-		// 	this.messages.clear();
-		// }
-		return this.messages;
+		Vector<ChatMessage> messages;
+		synchronized (this.messages) {
+			messages = new Vector<ChatMessage>(this.messages);
+			this.messages.clear();
+		}
+		return messages;
 	}
 
 	public boolean isConnected() {

@@ -110,6 +110,7 @@ import i5.las2peer.services.socialBotManagerService.model.ServiceFunctionAttribu
 import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.BotRoutine;
+import i5.las2peer.services.socialBotManagerService.model.ConversationMessage;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
@@ -1765,16 +1766,13 @@ public class SocialBotManagerService extends RESTService {
 							JSONObject jsonsubSfaMap = new JSONObject(subsfaMap);
 							jsonArray.add(jsonsubSfaMap);
 						}
-						// Get the collected chat messages and add them to the json array
-						ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
-						//for (ChatMessage msg : chat.getConversationPath()) {
-						for (ChatMessage msg : chat.getMessages()) {
+						// Get the channel's conversation and add them to the json array
+						HashMap<String, Collection<ConversationMessage>> conversation = bot.getMessenger(messengerID).getConversationMap();
+						for (ConversationMessage msg : conversation.get(channel)) {
 							System.out.println("USER MESSAGES");
-							System.out.println(msg.toString());
 							HashMap<String, String> msgMap = new HashMap<String, String>();
-							//subsubsfa are the role and content parameters of the message
-							msgMap.put("role", "user");
-							msgMap.put("content", msg.getText());
+							msgMap.put("role", msg.getRole());
+							msgMap.put("content", msg.getContent());
 							JSONObject jsonmsgMap = new JSONObject(msgMap);
 							jsonArray.add(jsonmsgMap);
 						}
@@ -2453,6 +2451,7 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
 				for (Bot bot : getConfig().getBots().values()) {
+					System.out.println("CREATING NEW MESSAGEINFOS ARRAY");
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 					for (MessageInfo m : messageInfos) {
 						ChatStatement chatStatement = ChatStatement.generate(m.getMessage().getUser(), m.getBotName(),
