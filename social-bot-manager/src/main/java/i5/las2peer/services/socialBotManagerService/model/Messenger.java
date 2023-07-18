@@ -648,6 +648,7 @@ public class Messenger {
 								if(state.getType().equals("Interactive Message")){
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
+									// TODO: Block sending message to channel if the service is replacing the bot message with its own message
 									messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
 									if (messageSent == Boolean.TRUE) {
 										botMessage = replaceVariables(message.getChannel(), split);
