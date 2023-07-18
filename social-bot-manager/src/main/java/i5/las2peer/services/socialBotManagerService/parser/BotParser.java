@@ -791,6 +791,7 @@ public class BotParser {
 				System.out.println("ADDING SERVICE INFORMATION");
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
+			
 			if (s.getOnStart().containsKey(b.getId())){
 				MiniClient client = new MiniClient();
 				// client.setLogin(, password);
@@ -806,7 +807,12 @@ public class BotParser {
 				body.put("botId", b.getId());
 				body.put("botName", b.getName());
 				for(ServiceFunctionAttribute a : s.getAttributes()){
-					body.put(a.getName(), a.getContent());
+					if (a.getContent().isEmpty()){
+						JSONArray jsonArray = new JSONArray();
+						body.put(a.getName(), jsonArray);
+					} else {
+						body.put(a.getName(), a.getContent());
+					}
 				}
 				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
 						body.toString(), s.getConsumes(), s.getProduces(), headers);

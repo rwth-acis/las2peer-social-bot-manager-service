@@ -1549,6 +1549,7 @@ public class SocialBotManagerService extends RESTService {
 								// sfa's content is empty, treat sfa as a list and subsfa as a list item
 								if (triggeredFunctionAttribute.getContent().isEmpty()) {
 									HashMap<String, String> listItemMap = new HashMap<String, String>();
+									// Put the attributes of the list item into a map
 									for (ServiceFunctionAttribute listItemAttributes : subsfa.getChildAttributes()) {
 										listItemMap.put(listItemAttributes.getName(), listItemAttributes.getContent());
 									}
@@ -2429,7 +2430,6 @@ public class SocialBotManagerService extends RESTService {
 			SimpleDateFormat df2 = new SimpleDateFormat("HH:mm");
 			Gson gson = new Gson();
 				for (Bot bot : getConfig().getBots().values()) {
-					System.out.println("CREATING NEW MESSAGEINFOS ARRAY");
 					ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 					for (MessageInfo m : messageInfos) {
 						ChatStatement chatStatement = ChatStatement.generate(m.getMessage().getUser(), m.getBotName(),
