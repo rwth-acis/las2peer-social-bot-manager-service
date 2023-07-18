@@ -677,22 +677,11 @@ public class BotParser {
 			// service alias should contain base path, so that /swagger can be added
 			// afterwards
 			try {
-				if (service.equals("https://api.openai.com/v1")) {
-					functionURL = new URL(service);
-					sf.setFunctionName(sfName);
-					sf.setFunctionPath(sfName);
-					sf.setServiceName(service);
-					sf.setActionType(ActionType.OPENAPI);
-					sf.setHttpMethod("POST");
-					sf.setConsumes(MediaType.APPLICATION_JSON);
-					sf.setProduces(MediaType.APPLICATION_JSON);
-				} else {
-					functionURL = new URL(service);
-					sf.setFunctionName(sfName);
-					sf.setFunctionPath(service);
-					sf.setServiceName(service);
-					sf.setActionType(ActionType.OPENAPI);
-				}
+				functionURL = new URL(service);
+				sf.setFunctionName(sfName);
+				sf.setFunctionPath(service);
+				sf.setServiceName(service);
+				sf.setActionType(ActionType.OPENAPI);
 				// maybe check here whether there is a swagger.json? if not, return null
 			} catch (Exception e) {
 				System.out.println("Given URL in service alias is not correct");
@@ -777,58 +766,50 @@ public class BotParser {
 
 		allFunctions.putAll(b.getBotServiceFunctions());
 		for (ServiceFunction s : allFunctions.values()) {
-			if (s.getActionType().equals(ActionType.OPENAPI)) {
-				// case for OpenAI calls
-				if (s.getServiceName().equals("https://api.openai.com/v1")) {
-					System.out.println("OPEN AI CASE NO SWAGGER JSON");
-				}
-			} else {
-				// try to get swagger information
-				
-				if (b.getServiceInformation().get(s.getServiceName()) == null
-						/*&& s.getActionType().equals(ActionType.SERVICE)*/ ) {
-					try {
+			// try to get swagger information
+			if (b.getServiceInformation().get(s.getServiceName()) == null
+					/*&& s.getActionType().equals(ActionType.SERVICE)*/ ) {
+				try {
 
-						System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
-						if (s.getActionType().equals(ActionType.OPENAPI)) {
-							JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
-							System.out.println("Information is: " + j);
-							b.addServiceInformation(s.getServiceName(), j);
-						} else {
-							JSONObject j = readJsonFromUrl(
-							b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
-							System.out.println("Information is: " + j);
-							b.addServiceInformation(s.getServiceName(), j);
-						}
-						
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-				if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
-					System.out.println("ADDING SERVICE INFORMATION");
-					addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
-				}
-				if (s.getOnStart().containsKey(b.getId())){
-					MiniClient client = new MiniClient();
-					// client.setLogin(, password);
-					if(s.getActionType() == ActionType.SERVICE){
-						client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
+					System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
+					if (s.getActionType().equals(ActionType.OPENAPI)) {
+						JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
+						System.out.println("Information is: " + j);
+						b.addServiceInformation(s.getServiceName(), j);
 					} else {
-						client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+						JSONObject j = readJsonFromUrl(
+						b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
+						System.out.println("Information is: " + j);
+						b.addServiceInformation(s.getServiceName(), j);
 					}
-					HashMap<String, String> headers = new HashMap<String, String>();
-					client.setLogin("alice", "pwalice");
-					JSONObject body = new JSONObject();
-					String botName = "";
-					body.put("botId", b.getId());
-					body.put("botName", b.getName());
-					for(ServiceFunctionAttribute a : s.getAttributes()){
-						body.put(a.getName(), a.getContent());
-					}
-					ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
-							body.toString(), s.getConsumes(), s.getProduces(), headers);
+					
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
+			}
+			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
+				System.out.println("ADDING SERVICE INFORMATION");
+				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
+			}
+			if (s.getOnStart().containsKey(b.getId())){
+				MiniClient client = new MiniClient();
+				// client.setLogin(, password);
+				if(s.getActionType() == ActionType.SERVICE){
+					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
+				} else {
+					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+				}
+				HashMap<String, String> headers = new HashMap<String, String>();
+				client.setLogin("alice", "pwalice");
+				JSONObject body = new JSONObject();
+				String botName = "";
+				body.put("botId", b.getId());
+				body.put("botName", b.getName());
+				for(ServiceFunctionAttribute a : s.getAttributes()){
+					body.put(a.getName(), a.getContent());
+				}
+				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
+						body.toString(), s.getConsumes(), s.getProduces(), headers);
 			}
 		}
 		return jaf;
