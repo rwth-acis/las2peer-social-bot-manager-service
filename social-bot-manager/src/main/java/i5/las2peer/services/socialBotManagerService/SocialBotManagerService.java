@@ -1526,41 +1526,44 @@ public class SocialBotManagerService extends RESTService {
 		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { //triggeredFunctionAttribute.getName() == "body", doesn't make sense?
 			System.out.println("TRIGGERDFUNCTIONATTRIBUTE = BODY");
 			JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
-			for (ServiceFunctionAttribute subsfa : triggeredFunctionAttribute.getChildAttributes()) {
-				//Same as trigger is never set because the edge doesn't even exist in the frontend
-				if (subsfa.isSameAsTrigger()) {
-					ServiceFunctionAttribute mappedTo = subsfa.getMappedTo();
-					if (triggerBody.get(mappedTo.getName()) != null) {
-						triggeredBody.put(subsfa.getName(), triggerBody.get(mappedTo.getName()));
-					} else
-						triggeredBody.put(subsfa.getName(), triggerAttributes.get(mappedTo.getName()));
-				} else {
-					if (triggeredFunctionAttribute.getItb() != null) {
-						mapWithIfThen(triggeredFunctionAttribute.getItb(), triggeredFunctionAttribute,
-								triggeredBody, attlist, triggerAttributes, functionPath);
+			// sfa has child attributes
+			if (!triggeredFunctionAttribute.getChildAttributes().isEmpty()){
+				JSONArray jsonArray = new JSONArray();
+
+				for (ServiceFunctionAttribute subsfa : triggeredFunctionAttribute.getChildAttributes()) {
+					//Same as trigger is never set because the edge doesn't even exist in the frontend
+					if (subsfa.isSameAsTrigger()) {
+						ServiceFunctionAttribute mappedTo = subsfa.getMappedTo();
+						if (triggerBody.get(mappedTo.getName()) != null) {
+							triggeredBody.put(subsfa.getName(), triggerBody.get(mappedTo.getName()));
+						} else
+							triggeredBody.put(subsfa.getName(), triggerAttributes.get(mappedTo.getName()));
 					} else {
-						if (subsfa.hasStaticContent()) {
-							mapWithStaticContent(subsfa, triggeredBody);
+						if (triggeredFunctionAttribute.getItb() != null) {
+							mapWithIfThen(triggeredFunctionAttribute.getItb(), triggeredFunctionAttribute,
+									triggeredBody, attlist, triggerAttributes, functionPath);
 						} else {
-							// if the content of the child attribute of the sfa is empty, treat it as a list
-							if (subsfa.getContent().isEmpty()) {
-								System.out.println("CONTENT IS EMPTY AND HAS CHILD ATTRIBUTES, TREAT AS LIST");
-								JSONArray jsonArray = new JSONArray();
-								for (ServiceFunctionAttribute listItem : subsfa.getChildAttributes()) {
+							if (subsfa.hasStaticContent()) {
+								mapWithStaticContent(subsfa, triggeredBody);
+							} else {
+								// sfa's content is empty, treat sfa as a list and subsfa as a list item
+								if (triggeredFunctionAttribute.getContent().isEmpty()) {
 									HashMap<String, String> listItemMap = new HashMap<String, String>();
-									//listItemSfa are the attributes of the list item
-									for (ServiceFunctionAttribute listItemSfa : listItem.getChildAttributes()) {
-										// put the parameters into a map
-										listItemMap.put(listItemSfa.getName(), listItemSfa.getContent());
+									for (ServiceFunctionAttribute listItemAttributes : subsfa.getChildAttributes()) {
+										listItemMap.put(listItemAttributes.getName(), listItemAttributes.getContent());
 									}
 									JSONObject jsonlistItemMap = new JSONObject(listItemMap);
 									jsonArray.add(jsonlistItemMap);
 								}
-								triggeredBody.put(subsfa.getName(), jsonArray);
 							}
 						}
 					}
 				}
+				if (triggeredFunctionAttribute.getContent().isEmpty()) {
+					triggeredBody.put(triggeredFunctionAttribute.getName(), jsonArray);
+				} 
+			} else { //sfa has no child attributes
+				triggeredBody.put(triggeredFunctionAttribute.getName(), triggeredFunctionAttribute.getContent());
 			}
 		} else {
 			if (triggeredFunctionAttribute.getItb() != null) {
@@ -1769,7 +1772,6 @@ public class SocialBotManagerService extends RESTService {
 			triggeredBody.put("botName", bot.getName());
 			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
 				+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
-			
 			
 			ClientResponse r = null;
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
