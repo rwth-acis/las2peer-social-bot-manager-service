@@ -16,6 +16,7 @@ public class IncomingMessage {
 	String fileURL;
 	String errorMessage;
 	String type;
+	boolean openAIEnhance;
 
 	ArrayList<String> responses;
 
@@ -123,6 +124,14 @@ public class IncomingMessage {
     
 	public String getFileURL() {
 		return fileURL;
+	}
+
+	public boolean getOpenAIEnhance() {
+		return this.openAIEnhance;
+	}
+
+	public void setOpenAIEnhance(boolean flag) {
+		this.openAIEnhance = flag;
 	}
 	
 	public String getErrorMessage() {

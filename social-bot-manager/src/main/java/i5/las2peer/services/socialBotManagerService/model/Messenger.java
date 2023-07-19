@@ -205,6 +205,7 @@ public class Messenger {
 	 */
 
 	public void setContextToBasic(String channel, String userid) {
+		System.out.println("SET CONTEXT TO BASIC");
 		triggeredFunction.remove(channel);
 		IncomingMessage state = this.stateMap.get(channel);
 		if (state != null) {
@@ -244,8 +245,9 @@ public class Messenger {
 			} else {
 				// If only message to be sent
 				String response = state.getResponse(random);
-				if( response != null && !response.equals(""))
+				if( response != null && !response.equals("") && !state.getOpenAIEnhance())
 				{
+					System.out.println("SET CONTEXT TO BASIC: SEND MESSAGE TO CHANNEL");
 					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
 				}
 				if(state.getFollowingMessages().size()== 0){
@@ -649,8 +651,16 @@ public class Messenger {
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
 									// TODO: Block sending message to channel if the service is replacing the bot message with its own message
-									messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
-									if (messageSent == Boolean.TRUE) {
+									if (state.getOpenAIEnhance()) {
+										System.out.println("STATE HAS OPENAIENHANCE");
+										System.out.println(state.getOpenAIEnhance());
+										messageSent = true;
+									} else {
+										System.out.println("STATE DOES NOT HAS OPENAIENHANCE");
+										System.out.println(state.getOpenAIEnhance());
+										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
+									}
+									if (messageSent) {
 										botMessage = replaceVariables(message.getChannel(), split);
 									}
 								}

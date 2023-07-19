@@ -268,6 +268,10 @@ public class BotParser {
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
 						cr.setTriggeredFunctionId(botFunction.getId());
+						// toggle incoming message's openaienhance flag here
+						if (botFunction.getServiceName().equals("openai") && botFunction.getFunctionName().equals("personalize")){
+							cr.setOpenAIEnhance(true);
+						}
 					}
                 }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
