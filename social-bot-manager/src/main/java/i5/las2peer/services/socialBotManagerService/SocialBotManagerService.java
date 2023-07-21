@@ -1075,7 +1075,6 @@ public class SocialBotManagerService extends RESTService {
 			Gson gson = new Gson();
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			JSONObject xesEvent = new JSONObject();
 			System.out.println("Got info: " + body);
 			try {
 				JSONObject message = (JSONObject) parser.parse(body);
@@ -1088,20 +1087,6 @@ public class SocialBotManagerService extends RESTService {
 					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
-
-				String activityName = ((JSONObject) message.get("intent")).get("intentKeyword").toString();
-
-				xesEvent.put("user", encryptThisString(cleanedJson.getAsString("user")));
-
-				Context.get().monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, xesEvent.toJSONString(),
-						message.get("conversationId").toString(),
-						activityName,
-						message.get("botName").toString(), "bot", "start", System.currentTimeMillis());
-				Context.get().monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, xesEvent.toJSONString(),
-						message.get("conversationId").toString(),
-						activityName,
-						message.get("botName").toString(), "bot", "complete", System.currentTimeMillis());
-
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

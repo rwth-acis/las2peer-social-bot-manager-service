@@ -25,6 +25,7 @@ import com.google.gson.Gson;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
+import i5.las2peer.services.socialBotManagerService.SocialBotManagerService;
 import i5.las2peer.services.socialBotManagerService.chat.*;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubAppHelper;
 import i5.las2peer.services.socialBotManagerService.chat.github.GitHubIssueMediator;
@@ -383,12 +384,22 @@ public class Messenger {
 					e.printStackTrace();
 				}
 
+				String encryptedUser = SocialBotManagerService.encryptThisString(message.getUser());
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				if (state == null) {
 					conversationId = UUID.randomUUID();
 					System.out.println("No current state, we will start from scratch. Generated Conversation  id is: "
 							+ conversationId.toString());
+					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, encryptedUser,
+							conversationId.toString(),
+							intent.getKeyword(),
+							bot.getName(), "bot", "start", System.currentTimeMillis());
+					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, encryptedUser,
+							conversationId.toString(),
+							intent.getKeyword(),
+							bot.getName(), "bot", "complete", System.currentTimeMillis());
+
 					if (message.getText().startsWith("!") && this.rootChildren.get(intent.getKeyword()) == null) {
 						// in case a command is triggered which does not exist
 						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
@@ -397,6 +408,14 @@ public class Messenger {
 					}
 				} else {
 					conversationId = state.getConversationId();
+					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, encryptedUser,
+							conversationId.toString(),
+							intent.getKeyword(),
+							bot.getName(), "bot", "start", System.currentTimeMillis());
+					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, encryptedUser,
+							conversationId.toString(),
+							intent.getKeyword(),
+							bot.getName(), "bot", "complete", System.currentTimeMillis());
 					if (conversationId == null) {
 						throw new Error("Conversation id of Previous IncomingMessage is null");
 					}
@@ -678,15 +697,15 @@ public class Messenger {
 
 								}
 								String activityName = state.getIntentKeyword() + ":response";
-							this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
-									conversationId.toString(), activityName, bot.getName(), "bot", "start",
-									System.currentTimeMillis());
-							this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
-									conversationId.toString(), activityName, bot.getName(), "bot", "complete",
-									System.currentTimeMillis());
-							// check if message parses buttons or is simple text
-							if (state.getType().equals("Interactive Message")) {
-								this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
+								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
+										conversationId.toString(), activityName, bot.getName(), "bot", "start",
+										System.currentTimeMillis());
+								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
+										conversationId.toString(), activityName, bot.getName(), "bot", "complete",
+										System.currentTimeMillis());
+								// check if message parses buttons or is simple text
+								if (state.getType().equals("Interactive Message")) {
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
 											this.chatMediator.getAuthToken(), state.getFollowingMessages(),
 											java.util.Optional.empty());
 								} else {
