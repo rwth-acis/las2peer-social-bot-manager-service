@@ -1978,6 +1978,22 @@ public class SocialBotManagerService extends RESTService {
 					} else {
 						System.out.println("TRIGGER CHAT");
 						triggerChat(chat, triggeredBody);
+						// if the response is from the openai service, 
+						// replace the last message in the conversation map which should be the normal bot response with the enhanced bot message 
+						if (Boolean.parseBoolean(response.getAsString("openai"))) {
+							System.out.println("UPDATING CONVERSATION PATH WITH OPENAI GENERATED RESPONSE");
+
+							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID).getConversationMap();
+							Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
+							ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
+							ConversationMessage botMsg = convList.get(convList.size()-1);
+							String convId = botMsg.getConversationId();
+							convList.remove(botMsg);
+							ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant", triggeredBody.getAsString("text"));
+							convList.add(newConvMsg);
+							conv = convList;
+							bot.getMessenger(messengerID).updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+						}
 					}
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						System.out.println("Closed Context");

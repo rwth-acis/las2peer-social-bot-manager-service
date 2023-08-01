@@ -151,6 +151,10 @@ public class Messenger {
 		return conversationMap;
 	}
 
+	public void updateConversationInConversationMap(String channel, Collection<ConversationMessage> conversation) {
+		conversationMap.put(channel, conversation);
+	}
+
 	public void addMessage(IncomingMessage msg) {
 		if (msg.getIntentKeyword().contains("defaultX")) {
 			this.knownIntents.put("defaultX", msg);
@@ -765,11 +769,13 @@ public class Messenger {
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
 				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
+				System.out.println("USER MESSAGE " + userConvMsg.getContent() + "WAS ADDED TO CONVERSATION PATH");
 				// if message was sent to channel, then add to conversation path here after the user message
 				if (messageSent = Boolean.TRUE) {
 					ConversationMessage botConvMsg = new ConversationMessage("", "assistant", botMessage);
 					conversation.add(botConvMsg);
 					conversationMap.put(message.getChannel(), conversation);
+					System.out.println("BOT MESSAGE " + botConvMsg.getContent() + "WAS ADDED TO CONVERSATION PATH");
 				}
 				
 			} catch (Exception e) {
