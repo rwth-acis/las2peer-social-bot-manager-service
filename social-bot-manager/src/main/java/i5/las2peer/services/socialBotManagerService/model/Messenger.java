@@ -700,10 +700,12 @@ public class Messenger {
 
 								}
 								String activityName = state.getIntentKeyword() + ":response";
-								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
+								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
+										remarks.toJSONString(),
 										conversationId.toString(), activityName, bot.getId(), "bot", "start",
 										System.currentTimeMillis());
-								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, "",
+								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
+										remarks.toJSONString(),
 										conversationId.toString(), activityName, bot.getId(), "bot", "complete",
 										System.currentTimeMillis());
 								// check if message parses buttons or is simple text

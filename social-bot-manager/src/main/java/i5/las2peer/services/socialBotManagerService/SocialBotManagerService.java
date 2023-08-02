@@ -1760,10 +1760,11 @@ public class SocialBotManagerService extends RESTService {
 	private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent, String functionPath,
 			String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
-		JSONObject xesEvent = new JSONObject();
 		System.out.println("Triggered body: " + triggeredBody.toJSONString());
+		JSONObject remarks = new JSONObject();
+		remarks.put("user", encryptThisString(triggeredBody.getAsString("email")));
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
-			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
 					triggeredBody.get("conversationId").toString(), functionPath,
 					botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
 			MiniClient client = new MiniClient();
@@ -1902,7 +1903,7 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					// triggerChat(chat, triggeredBody);
-					l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+					l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
 							triggeredBody.get("conversationId").toString(), functionPath,
 							botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 					return;
@@ -1998,7 +1999,7 @@ public class SocialBotManagerService extends RESTService {
 					e.printStackTrace();
 				}
 			}
-			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, xesEvent.toJSONString(),
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
 					triggeredBody.get("conversationId").toString(), functionPath,
 					botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
