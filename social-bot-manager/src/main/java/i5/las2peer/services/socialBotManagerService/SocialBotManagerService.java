@@ -1762,17 +1762,21 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 		System.out.println("Triggered body: " + triggeredBody.toJSONString());
 		JSONObject remarks = new JSONObject();
+		String serviceEndpoint = "";
 		remarks.put("user", encryptThisString(triggeredBody.getAsString("email")));
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
-			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-					triggeredBody.get("conversationId").toString(), functionPath,
-					botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
 				client.setConnectorEndpoint(webconnectorUrl);
+				serviceEndpoint = webconnectorUrl;
 			} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 				client.setConnectorEndpoint(sf.getServiceName() + functionPath);
+				serviceEndpoint = sf.getServiceName() + functionPath;
 			}
+			remarks.put("serviceEndpoint", serviceEndpoint);
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
+					triggeredBody.get("conversationId").toString(), functionPath,
+					botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
 			// client.setLogin("alice", "pwalice");
 			// client.setLogin(botAgent.getLoginName(), botPass);
 			String userId = triggeredBody.getAsString("user");
