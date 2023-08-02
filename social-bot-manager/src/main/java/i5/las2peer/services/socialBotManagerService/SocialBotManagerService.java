@@ -947,7 +947,8 @@ public class SocialBotManagerService extends RESTService {
 											i5.las2peer.services.socialBotManagerService.model.IncomingMessage chatResponses = incomingMessage;
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
-											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
+											//get first trigger function for now
+											triggerdFunctionId = chatResponses.getTriggeredFunctionIds().get(0);
 											messengerName = m.getName();
 										}
 									}
@@ -1976,8 +1977,20 @@ public class SocialBotManagerService extends RESTService {
 							triggerChat(chat, jsonO);
 						}
 					} else {
-						System.out.println("TRIGGER CHAT");
-						triggerChat(chat, triggeredBody);
+						// if the response is the first of a chain response that should later be personalized, do not trigger chat, add the response to the conversationpath
+						if (sf.getFunctionName().equals("test")){
+							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID).getConversationMap();
+							Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
+							ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
+							ConversationMessage botMsg = convList.get(convList.size()-1);
+							String convId = botMsg.getConversationId();
+							ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant", triggeredBody.getAsString("text"));
+							conv.add(newConvMsg);
+							bot.getMessenger(messengerID).updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+						} else{
+							System.out.println("TRIGGER CHAT");
+							triggerChat(chat, triggeredBody);
+						}
 						// if the response is from the openai service, 
 						// replace the last message in the conversation map which should be the normal bot response with the enhanced bot message 
 						if (Boolean.parseBoolean(response.getAsString("openai"))) {
