@@ -1763,7 +1763,7 @@ public class SocialBotManagerService extends RESTService {
 		System.out.println("Triggered body: " + triggeredBody.toJSONString());
 		JSONObject remarks = new JSONObject();
 		String serviceEndpoint = "";
-		remarks.put("user", encryptThisString(triggeredBody.getAsString("email")));
+		remarks.put("user", encryptThisString(triggeredBody.getAsString("user")));
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			MiniClient client = new MiniClient();
 			if (sf.getActionType().equals(ActionType.SERVICE)) {
