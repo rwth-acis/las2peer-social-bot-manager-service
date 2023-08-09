@@ -39,3 +39,4 @@ bin/start_network.bat
 bin/start_network.sh
 .project
 mysql
+.env
