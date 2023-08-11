@@ -1775,7 +1775,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 			remarks.put("serviceEndpoint", serviceEndpoint);
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-					triggeredBody.get("conversationId").toString(), functionPath,
+					triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
 					botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
 			// client.setLogin("alice", "pwalice");
 			// client.setLogin(botAgent.getLoginName(), botPass);
@@ -1908,7 +1908,7 @@ public class SocialBotManagerService extends RESTService {
 							userId);
 					// triggerChat(chat, triggeredBody);
 					l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-							triggeredBody.get("conversationId").toString(), functionPath,
+							triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
 							botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 					return;
 
@@ -2004,7 +2004,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-					triggeredBody.get("conversationId").toString(), functionPath,
+					triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
 					botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			// deprecated
