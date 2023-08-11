@@ -328,6 +328,13 @@ public class SocialBotManagerService extends RESTService {
 				"SERVICE_CUSTOM_MESSAGE_2",
 				"(deprecated) Was used to log the user messages.");
 		descriptions.put(
+				"SERVICE_CUSTOM_MESSAGE_3",
+				"Logs whenever a new bot gets created. " +
+						"| Key         | Description     					        |"
+						+ "|---------------|--------------------------------|"
+						+ "| botName       | Represents the bot name.       |"
+						+ "| agentId       | Represents the agent of the bot|");
+		descriptions.put(
 				"SERVICE_CUSTOM_MESSAGE_42",
 				"| Key         | Description                                                                                                 |"
 						+ "|-------------|-------------------------------------------------------------------------------------------------------------|"
@@ -626,7 +633,6 @@ public class SocialBotManagerService extends RESTService {
 						} catch (Exception e2) {
 							e2.printStackTrace();
 						}
-
 					}
 				}
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());

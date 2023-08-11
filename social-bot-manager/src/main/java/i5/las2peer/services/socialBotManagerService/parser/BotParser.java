@@ -581,7 +581,12 @@ public class BotParser {
 					e2.printStackTrace();
 					throw new IllegalArgumentException(e2);
 				}
+				JSONObject monitoringMessage = new JSONObject();
+				monitoringMessage.put("botName", botName);
+				monitoringMessage.put("agentId", botAgent.getIdentifier());
 				// runningAt = botAgent.getRunningAtNode();
+				Context.getCurrent().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,
+						monitoringMessage.toJSONString());
 				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
