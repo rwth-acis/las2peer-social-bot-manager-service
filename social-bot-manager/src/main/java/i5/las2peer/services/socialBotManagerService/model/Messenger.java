@@ -407,14 +407,7 @@ public class Messenger {
 				if (state == null) {
 
 					System.out.println("No current state, we will start from scratch. ");
-					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-							conversationId.toString(),
-							intent.getKeyword(),
-							bot.getId(), "bot", "start", System.currentTimeMillis());
-					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-							conversationId.toString(),
-							intent.getKeyword(),
-							bot.getId(), "bot", "complete", System.currentTimeMillis());
+
 
 					if (message.getText().startsWith("!") && this.rootChildren.get(intent.getKeyword()) == null) {
 						// in case a command is triggered which does not exist
@@ -424,14 +417,6 @@ public class Messenger {
 					}
 				} else {
 					conversationId = state.getConversationId();
-					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-							conversationId.toString(),
-							intent.getKeyword(),
-							bot.getId(), "bot", "start", System.currentTimeMillis());
-					this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-							conversationId.toString(),
-							intent.getKeyword(),
-							bot.getId(), "bot", "complete", System.currentTimeMillis());
 					if (conversationId == null) {
 						throw new Error("Conversation id of Previous IncomingMessage is null");
 					}
@@ -444,6 +429,14 @@ public class Messenger {
 				} else {
 					conversationId = this.lastUserMessage.get(message.getChannel()).getConversationId();
 				}
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+						conversationId.toString(),
+						intent.getKeyword(),
+						bot.getId(), "bot", "start", System.currentTimeMillis());
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+						conversationId.toString(),
+						intent.getKeyword(),
+						bot.getId(), "bot", "complete", System.currentTimeMillis());
 
 				if (state != null && message.getText().startsWith("!")
 						&& !state.getFollowingMessages().keySet().contains(intent.getKeyword())) {
