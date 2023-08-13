@@ -39,6 +39,7 @@ set_in_service_config mongoUser ${MONGO_USER}
 set_in_service_config mongoPassword ${MONGO_PASSWORD}
 set_in_service_config mongoAuth ${MONGO_AUTH}
 set_in_service_config lrsURL ${LRS_URL}
+set_in_service_config lrsURLStatic ${LRS_URL}
 set_in_service_config lrsAuthToken ${LRS_AUTH_TOKEN} 
 
 check_if_exists "$WEBCONNECTOR_URL" "WEBCONNECTOR_URL"

@@ -1171,6 +1171,10 @@ public class SocialBotManagerService extends RESTService {
 			// Copy pasted from LL service
 			// POST statements
 			try {
+				if (lrsURLStatic == null || lrsAuthTokenStatic == null) {
+					return;
+				}
+
 				URL url = new URL(lrsURLStatic + "/data/xAPI/statements");
 				System.out.println(url + lrsAuthTokenStatic);
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
