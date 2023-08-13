@@ -452,6 +452,7 @@ public class Messenger {
 					if (intent.getKeyword().equals("exit")) {
 						recognizedEntities.remove(message.getChannel());
 						state = this.rootChildren.get(intent.getKeyword());
+						state.setConversationId(conversationId);
 						this.updateConversationState(message.getChannel(), state, conversationId);
 						if (storedSession.containsKey(message.getCurrMessage())) {
 							storedSession.remove(message.getChannel());
@@ -474,10 +475,12 @@ public class Messenger {
 								} else {
 									state = this.rootChildren.get("default");
 								}
+								state.setConversationId(conversationId);
 								this.updateConversationState(message.getChannel(), state, conversationId);
 								recognizedEntities.put(message.getChannel(), intent.getEntities());
 							} else {
 								state = this.rootChildren.get(intent.getKeyword());
+								state.setConversationId(conversationId);
 								// Incoming Message which expects file should not be chosen when no file was
 								// sent
 								if (state == null || state.expectsFile()) {
@@ -492,9 +495,11 @@ public class Messenger {
 										}
 
 									}
+									state.setConversationId(conversationId);
 								}
 								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
 										+ " confidence.");
+
 								this.updateConversationState(message.getChannel(), state, conversationId);
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							}
@@ -505,6 +510,7 @@ public class Messenger {
 							if (state.getFollowingMessages() == null || state.getFollowingMessages().isEmpty()) {
 								System.out.println("no follow up messages");
 								state = this.rootChildren.get(intent.getKeyword());
+								state.setConversationId(conversationId);
 								this.currentNluModel.put(message.getChannel(), "0");
 								System.out.println(intent.getKeyword() + " detected with " + intent.getConfidence()
 										+ " confidence.");
@@ -517,15 +523,19 @@ public class Messenger {
 								if (message.getFileBody() != null) {
 									if (state.getFollowingMessages().get(intent.getKeyword()).expectsFile()) {
 										state = state.getFollowingMessages().get(intent.getKeyword());
+										state.setConversationId(conversationId);
 										this.updateConversationState(message.getChannel(), state, conversationId);
 										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 									} else {
 										state = checkDefault(state, message);
+										state.setConversationId(conversationId);
 									}
 								} else if (state.getFollowingMessages().get(intent.getKeyword()).expectsFile()) {
 									state = checkDefault(state, message);
+									state.setConversationId(conversationId);
 								} else {
 									state = state.getFollowingMessages().get(intent.getKeyword());
+									state.setConversationId(conversationId);
 									this.updateConversationState(message.getChannel(), state, conversationId);
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 								}
@@ -538,16 +548,20 @@ public class Messenger {
 									if (state.getFollowingMessages().get(intent.getEntitieValues().get(0))
 											.expectsFile()) {
 										state = state.getFollowingMessages().get(intent.getEntitieValues().get(0));
+										state.setConversationId(conversationId);
 										this.updateConversationState(message.getChannel(), state, conversationId);
 										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 									} else {
 										state = checkDefault(state, message);
+										state.setConversationId(conversationId);
 									}
 								} else if (state.getFollowingMessages().get(intent.getEntitieValues().get(0))
 										.expectsFile()) {
 									state = checkDefault(state, message);
+									state.setConversationId(conversationId);
 								} else {
 									state = state.getFollowingMessages().get(intent.getEntitieValues().get(0));
+									state.setConversationId(conversationId);
 									this.updateConversationState(message.getChannel(), state, conversationId);
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 								}
@@ -564,6 +578,7 @@ public class Messenger {
 
 								if (state.getFollowingMessages().get("any") != null) {
 									state = state.getFollowingMessages().get("any");
+									state.setConversationId(conversationId);
 									this.updateConversationState(message.getChannel(), state, conversationId);
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 									// In a conversation state, if no fitting intent was found and an empty leadsTo
@@ -573,19 +588,23 @@ public class Messenger {
 									if (message.getFileBody() != null) {
 										if (state.getFollowingMessages().get("anyFile") != null) {
 											state = state.getFollowingMessages().get("anyFile");
+											state.setConversationId(conversationId);
 											this.updateConversationState(message.getChannel(), state, conversationId);
 											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 										} else {
 											state = this.rootChildren.get("default");
+											state.setConversationId(conversationId);
 										}
 
 									} else {
 										if (state.getFollowingMessages().get("") != null) {
 											state = state.getFollowingMessages().get("");
+											state.setConversationId(conversationId);
 											this.updateConversationState(message.getChannel(), state, conversationId);
 											addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 										} else {
 											state = checkDefault(state, message);
+											state.setConversationId(conversationId);
 										}
 									}
 								} else if (intent.getEntities().size() > 0
@@ -593,6 +612,7 @@ public class Messenger {
 									Collection<Entity> entities = intent.getEntities();
 									for (Entity e : entities) {
 										state = this.rootChildren.get(e.getEntityName());
+										state.setConversationId(conversationId);
 										// Dont fully understand the point of this, maybe I added it and forgot...
 										// Added return for a quick fix, will need to check more in detail
 										if (state != null) {
@@ -603,6 +623,7 @@ public class Messenger {
 
 								} else {
 									state = checkDefault(state, message);
+									state.setConversationId(conversationId);
 								}
 							}
 						}
@@ -611,25 +632,31 @@ public class Messenger {
 							if (message.getFileBody() != null) {
 								if (state.getFollowingMessages().get("").expectsFile()) {
 									state = state.getFollowingMessages().get("");
+									state.setConversationId(conversationId);
 								} else {
 									state = checkDefault(state, message);
+									state.setConversationId(conversationId);
 								}
 							} else {
 								if (!state.getFollowingMessages().get("").expectsFile()) {
 									state = state.getFollowingMessages().get("");
+									state.setConversationId(conversationId);
 									this.updateConversationState(message.getChannel(), state, conversationId);
 									addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 								} else {
 									state = checkDefault(state, message);
+									state.setConversationId(conversationId);
 								}
 							}
 						} else {
 							if (state != null) {
 								state = checkDefault(state, message);
+								state.setConversationId(conversationId);
 							} else {
 								System.out.println(intent.getKeyword() + " not detected with " + intent.getConfidence()
 										+ " confidence.");
 								state = this.rootChildren.get("default");
+								state.setConversationId(conversationId);
 							}
 						}
 						// System.out.println(state.getIntentKeyword() + " set");
@@ -640,6 +667,7 @@ public class Messenger {
 				} else if (message.getFileName() != null) {
 					if (this.rootChildren.get("0").expectsFile()) {
 						state = this.rootChildren.get("0");
+						state.setConversationId(conversationId);
 						// System.out.println(state.getResponse(random));
 					} else {
 						// if no Incoming Message is fitting, return default message
@@ -661,6 +689,7 @@ public class Messenger {
 						System.out.println("Getting response for: " + state.intentKeyword);
 						if (state.getFollowingMessages().get("skip") != null) {
 							state = state.getFollowingMessages().get("skip");
+							state.setConversationId(conversationId);
 						}
 
 						String response = state.getResponse(random);
