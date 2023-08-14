@@ -2014,6 +2014,7 @@ public class SocialBotManagerService extends RESTService {
 								triggeredBody.getAsString("user"));
 					} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
 						System.out.println("Keep Context open");
+						bot.getMessenger(messengerID).restoreConversationState(triggeredBody.getAsString("channel"));
 					}
 				} catch (ParseException e) {
 					e.printStackTrace();

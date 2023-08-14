@@ -77,6 +77,7 @@ public class Messenger {
 	 * context is not closed)
 	 */
 	private HashMap<String, IncomingMessage> previousStateInConversation = new HashMap<>();
+	private HashMap<String, IncomingMessage> previousStateInConversationBackup = new HashMap<>();
 
 	/**
 	 * Used for keeping remembering entities during conversation state per channel
@@ -816,6 +817,10 @@ public class Messenger {
 						if (state.getFollowingMessages().isEmpty()) {
 							System.out.println("Conversation terminated");
 							this.stateMap.remove(message.getChannel());
+							this.previousStateInConversationBackup.put(message.getChannel(), state); // backup state in
+																										// case we have
+																										// to restore it
+																										// later on
 							this.previousStateInConversation.remove(message.getChannel());
 							if (storedSession.containsKey(message.getChannel())) {
 								System.out.println("Stored Session: " + storedSession.get(message.getChannel()));
@@ -1078,5 +1083,13 @@ public class Messenger {
 		this.previousStateInConversation.put(channelId, state);
 		this.stateMap.put(channelId, state);
 		System.out.println("Updated state for channel " + channelId + " to " + state.getIntentKeyword());
+	}
+
+	public void restoreConversationState(String channelId) {
+		IncomingMessage state = this.previousStateInConversationBackup.get(channelId);
+		if (state != null) {
+			this.previousStateInConversation.put(channelId, state);
+			System.out.println("Restored state for channel " + channelId + " to " + state.getIntentKeyword());
+		}
 	}
 }
