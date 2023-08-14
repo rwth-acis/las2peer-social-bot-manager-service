@@ -956,7 +956,8 @@ public class SocialBotManagerService extends RESTService {
 
 				// this.triggeredFunction.get(message.getChannel());
 				System.out.println(
-						"Got info: " + messageInfo.getMessage().getText() + " " + messageInfo.getTriggeredFunctionId());
+						"Got info: " + messageInfo.getMessage().getText() + ". Function Id is:"
+								+ messageInfo.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 
 				SocialBotManagerService sbf = this.sbfservice;
@@ -1081,7 +1082,6 @@ public class SocialBotManagerService extends RESTService {
 			Gson gson = new Gson();
 			MessageInfo m = gson.fromJson(body, MessageInfo.class);
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			System.out.println("Got info: " + body);
 			try {
 				JSONObject message = (JSONObject) parser.parse(body);
 				JSONObject cleanedJson = (JSONObject) message.get("message");
@@ -1097,7 +1097,8 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 
-			System.out.println("Got info: " + m.getMessage().getText() + " " + m.getTriggeredFunctionId());
+			System.out.println(
+					"Got info: " + m.getMessage().getText() + ". Function id is: " + m.getTriggeredFunctionId());
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 			// If no action should be triggered, just return
 			if (m.getTriggeredFunctionId() == null) {
@@ -1610,7 +1611,7 @@ public class SocialBotManagerService extends RESTService {
 					if (triggeredFunctionAttribute.getParameterType().equals("form")) {
 						mapWithStaticFormContent(triggeredFunctionAttribute, triggeredBody);
 					} else {
-						System.out.println("Unknown mapping" + triggeredFunctionAttribute.getContentType()
+						System.out.println("Unknown mapping " + triggeredFunctionAttribute.getContentType()
 								+ triggeredFunctionAttribute.getParameterType());
 					}
 				}
@@ -1770,7 +1771,6 @@ public class SocialBotManagerService extends RESTService {
 	private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent, String functionPath,
 			String triggerUID,
 			JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
-		System.out.println("Triggered body: " + triggeredBody.toJSONString());
 		JSONObject remarks = new JSONObject();
 		String serviceEndpoint = "";
 		remarks.put("user", encryptThisString(triggeredBody.getAsString("user")));
@@ -1962,8 +1962,12 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}
 
-			System.out.println("Connect Success");
-			System.out.println(r.getResponse());
+			if (r.getResponse().toString().length() > 30) {
+				System.out.println(r.getResponse().toString().substring(0, 30) + "...");
+			} else {
+				System.out.println(r.getResponse());
+			}
+
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
 				try {
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
@@ -2008,6 +2012,8 @@ public class SocialBotManagerService extends RESTService {
 						System.out.println("Closed Context");
 						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
 								triggeredBody.getAsString("user"));
+					} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
+						System.out.println("Keep Context open");
 					}
 				} catch (ParseException e) {
 					e.printStackTrace();

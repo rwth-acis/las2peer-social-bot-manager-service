@@ -30,7 +30,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -54,7 +53,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
-					System.out.println("Email of user is " + email);
 					cm.setEmail(email);
 					cm.setRole(role);
 					// timestamp
@@ -63,7 +61,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -76,7 +73,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
-					System.out.println("Email of user is " + email);
 					cm.setEmail(email);
 					cm.setRole(role);
 					// timestamp
@@ -85,7 +81,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Edited message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -112,7 +107,7 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(fileName);
 					ChatMessage cm = new ChatMessage(rid, user, msg, fileName, fileType, fileBody);
-					System.out.println("Email of user is " + email);
+
 					cm.setEmail(email);
 					cm.setRole(role);
 
@@ -123,7 +118,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

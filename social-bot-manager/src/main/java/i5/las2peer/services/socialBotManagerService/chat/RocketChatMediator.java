@@ -150,7 +150,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 					.bodyPart(filePart);
 			Response response = target.request().header("X-User-Id", client.getMyUserId()).header("X-Auth-Token", token)
 					.post(Entity.entity(multipart, multipart.getMediaType()));
-			System.out.println(response.getEntity().toString());
+			// System.out.println(response.getEntity().toString());
 			mp.close();
 			multipart.close();
 			try {
@@ -505,7 +505,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		textClientHeader.put("X-Auth-Token", token);
 		ClientResponse r = textClient.sendRequest("GET", "api/v1/users.info?username=" + userName, "",
 				MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, textClientHeader);
-		System.out.println("response is" + r.getResponse());
 		JSONObject userObject = new JSONObject(r.getResponse());
 		JSONArray emails = userObject.getJSONObject("user").getJSONArray("emails");
 		return emails.getJSONObject(0).getString("address");
