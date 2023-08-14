@@ -27,7 +27,13 @@ public class IncomingMessage {
 
 	ArrayList<String> responses;
 
-	// Intent keywords used as keys
+	/*
+	 * List of followup messages. Followup messages are messages that are connected
+	 * to
+	 * the current message via a leadsTo relation.
+	 * The key is the intent keyword that triggers the
+	 * followup message.
+	 */
 	HashMap<String, IncomingMessage> followupMessages;
 
 	private static String[][] UMLAUT_REPLACEMENTS = { { new String("Ä"), "Ae" }, { new String("Ü"), "Ue" },
@@ -94,6 +100,13 @@ public class IncomingMessage {
 		return NluID;
 	}
 
+	/**
+	 * Followup messages are messages that are connected
+	 * to the current message via a leadsTo relation.
+	 * 
+	 * @return A HashMap of followup messages. The key is the intent keyword that
+	 *         triggers the followup message.
+	 */
 	public HashMap<String, IncomingMessage> getFollowingMessages() {
 		return followupMessages;
 	}
