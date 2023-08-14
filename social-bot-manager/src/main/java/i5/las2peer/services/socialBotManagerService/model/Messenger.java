@@ -252,8 +252,12 @@ public class Messenger {
 	public void setContextToBasic(String channel, String userid) {
 		triggeredFunction.remove(channel);
 		IncomingMessage state = this.stateMap.get(channel);
-		if (state == null)
+		this.previousStateInConversationBackup.remove(channel);
+
+		if (state == null) {
+			this.previousStateInConversation.remove(channel);
 			return;
+		}
 
 		if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
 			// no other messages to follow
@@ -274,6 +278,7 @@ public class Messenger {
 			state = state.getFollowingMessages().get("");
 			System.out.println("Bot action needs to be triggered without user input");
 			stateMap.put(channel, state);
+			this.previousStateInConversation.put(channel, state);
 			if (!state.getResponse(random).equals("")) {
 				if (this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null
 						&& !state.getFollowingMessages().isEmpty()) {
@@ -308,6 +313,7 @@ public class Messenger {
 				// no other messages to follow
 				System.out.println("Conversation flow ended now. no other messages to follow, simple removal");
 				this.stateMap.remove(channel);
+				this.previousStateInConversation.remove(channel);
 
 			}
 		}
