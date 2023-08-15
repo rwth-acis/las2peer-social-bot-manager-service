@@ -91,6 +91,10 @@ public class IncomingMessage {
 		return intentKeyword;
 	}
 
+	public void addTriggeredFunctionIdFirst(String functionId) {
+		this.triggeredFunctionIds.add(0, functionId);
+	}
+
 	public String getEntityKeyword() {
 		return entityKeyword;
 	}

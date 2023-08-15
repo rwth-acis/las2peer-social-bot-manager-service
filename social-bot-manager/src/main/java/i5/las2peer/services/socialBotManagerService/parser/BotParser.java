@@ -389,9 +389,9 @@ public class BotParser {
 					+ " inputs and " + checkGeneratorOuts + " outputs.");
 		}
 
-		System.out.println("BEFORE SWAGGERHELPER");
+
 		JSONArray jaf = swaggerHelperFunction(bot);
-		System.out.println("AFTER SWAGGERHELPER");
+
 
 		JSONObject j = new JSONObject();
 		j.put("triggerFunctions", jaf);
@@ -808,7 +808,6 @@ public class BotParser {
 				}
 			}
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
-				System.out.println("ADDING SERVICE INFORMATION");
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
 			
