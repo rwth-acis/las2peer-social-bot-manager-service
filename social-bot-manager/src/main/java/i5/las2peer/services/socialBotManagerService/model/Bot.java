@@ -78,7 +78,14 @@ public class Bot {
 		this.botServiceFunctions.put(name, serviceFunction);
 	}
 
+	public RasaNlu getRasaServer() {
+		return this.getFirstRasaServer();
+	}
+
 	public RasaNlu getRasaServer(String id) {
+		if (this.rasaServers.get(id) == null) {
+			return this.getFirstRasaServer();
+		}
 		return this.rasaServers.get(id);
 	}
 
@@ -86,7 +93,7 @@ public class Bot {
 		return this.rasaServers;
 	}
 
-	public RasaNlu getFirstRasaServer() {
+	private RasaNlu getFirstRasaServer() {
 		return (RasaNlu) this.rasaServers.values().toArray()[0];
 	}
 
