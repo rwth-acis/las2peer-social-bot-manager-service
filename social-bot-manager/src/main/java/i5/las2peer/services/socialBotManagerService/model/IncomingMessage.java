@@ -3,9 +3,11 @@ package i5.las2peer.services.socialBotManagerService.model;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.UUID;
 
 public class IncomingMessage {
 	String intentKeyword;
+	UUID conversationId;
 	String intentLabel;
 	String followupMessageType;
 	String entityKeyword;
@@ -98,6 +100,14 @@ public class IncomingMessage {
 		return intentKeyword;
 	}
 
+	public void setConversationId(UUID conversationId) {
+		this.conversationId = conversationId;
+	}
+
+	public UUID getConversationId() {
+		return conversationId;
+	}
+
 	public String getEntityKeyword() {
 		return entityKeyword;
 	}
@@ -110,6 +120,12 @@ public class IncomingMessage {
 		return NluID;
 	}
  
+	/**
+	 * Gets the set of messages that can be reached from this message.
+	 * The key is the intent keyword
+	 * 
+	 * @return the set of messages that can be reached from this message
+	 */
 	public HashMap<String, IncomingMessage> getFollowingMessages() {
 		return followupMessages;
 	}
