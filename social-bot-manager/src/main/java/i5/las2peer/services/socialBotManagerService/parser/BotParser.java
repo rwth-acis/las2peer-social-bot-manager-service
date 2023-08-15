@@ -203,9 +203,13 @@ public class BotParser {
 					ServiceFunctionAttribute sfaParent = sfaList.get(source);
 					// ...Parameter
 					if (sfaList.get(target) != null) {
+						System.out.println("PARAMETER HAS CHILD");
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
-						sfaChild.setParent(sfaParent);
+						//sfaChild.setParent(sfaParent);
+						//System.out.println("PARENT ATTRIBUTE");
+						//System.out.println(sfaParent);
+						System.out.println("HELLO");
 					}
 					// Incoming Message has...
 				} else if (incomingMessages.get(source) != null) {
@@ -271,13 +275,20 @@ public class BotParser {
                     IncomingMessage cr = incomingMessages.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
+						
+						// toggle incoming message's openaienhance flag here
+						if (botFunction.getServiceName().equals("openai") && botFunction.getFunctionName().equals("personalize")){
+							cr.addTriggeredFunctionId(botFunction.getId());
+							cr.setOpenAIEnhance(true);
+						} else {
+							cr.addTriggeredFunctionIdFirst(botFunction.getId());
+						}
 					}
                 }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
+						cr.addTriggeredFunctionId(botFunction.getId());
 					}
                 }
 
@@ -316,12 +327,15 @@ public class BotParser {
 			}
 		}
 
+		System.out.println("AFTER EDGES");
+
+
 		for(ServiceFunction sf : bsfList.values()){
-					if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
-						bot.addBotServiceFunction(sf.getId(), sf);
-						sf.addBot(bot);
-					}
-				}
+			if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
+				bot.addBotServiceFunction(sf.getId(), sf);
+				sf.addBot(bot);
+			}
+		}
 		for(IncomingMessage m : incomingMessages.values()){
 			String nluId = m.getNluID();
 			if(bot.getRasaServer(nluId)!=null){
@@ -364,7 +378,7 @@ public class BotParser {
 					// ...Bot Action
 					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						m.setTriggeredFunction(botFunction);
+						m.addTriggeredFunction(botFunction);
 					}
 				}
 			}
@@ -375,7 +389,9 @@ public class BotParser {
 					+ " inputs and " + checkGeneratorOuts + " outputs.");
 		}
 
+		System.out.println("BEFORE SWAGGERHELPER");
 		JSONArray jaf = swaggerHelperFunction(bot);
+		System.out.println("AFTER SWAGGERHELPER");
 
 		JSONObject j = new JSONObject();
 		j.put("triggerFunctions", jaf);
@@ -714,6 +730,7 @@ public class BotParser {
 			} else if (name.equals("Name")) {
 				sfa.setName(subVal.getValue());
 			} else if (name.equals("Static")) {
+				System.out.println(Boolean.parseBoolean(subVal.getValue()));
 				sfa.setStaticContent(Boolean.parseBoolean(subVal.getValue()));
 			} else if (name.equals("Content")) {
 				sfa.setContent(subVal.getValue());
@@ -770,7 +787,6 @@ public class BotParser {
 		allFunctions.putAll(b.getBotServiceFunctions());
 		for (ServiceFunction s : allFunctions.values()) {
 			// try to get swagger information
-
 			if (b.getServiceInformation().get(s.getServiceName()) == null
 					/*&& s.getActionType().equals(ActionType.SERVICE)*/ ) {
 				try {
@@ -782,7 +798,7 @@ public class BotParser {
 						b.addServiceInformation(s.getServiceName(), j);
 					} else {
 						JSONObject j = readJsonFromUrl(
-							b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
+						b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
 						System.out.println("Information is: " + j);
 						b.addServiceInformation(s.getServiceName(), j);
 					}
@@ -792,9 +808,11 @@ public class BotParser {
 				}
 			}
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
+				System.out.println("ADDING SERVICE INFORMATION");
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
-			if(s.getOnStart().containsKey(b.getId())){
+			
+			if (s.getOnStart().containsKey(b.getId())){
 				MiniClient client = new MiniClient();
 				// client.setLogin(, password);
 				if(s.getActionType() == ActionType.SERVICE){
@@ -809,7 +827,12 @@ public class BotParser {
 				body.put("botId", b.getId());
 				body.put("botName", b.getName());
 				for(ServiceFunctionAttribute a : s.getAttributes()){
-					body.put(a.getName(), a.getContent());
+					if (a.getContent().isEmpty()){
+						JSONArray jsonArray = new JSONArray();
+						body.put(a.getName(), jsonArray);
+					} else {
+						body.put(a.getName(), a.getContent());
+					}
 				}
 				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
 						body.toString(), s.getConsumes(), s.getProduces(), headers);

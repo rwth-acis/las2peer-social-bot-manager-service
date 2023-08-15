@@ -66,6 +66,9 @@ public class Messenger {
 	 * Value: current state of the conversation (last IncomingMessage)
 	 * 
 	 */
+	private HashMap<String, Collection<ConversationMessage>> conversationMap;
+
+	// Used for keeping conversation state per channel
 	private HashMap<String, IncomingMessage> stateMap;
 
 	/**
@@ -177,6 +180,7 @@ public class Messenger {
 
 		this.name = id;
 		this.rootChildren = new HashMap<String, IncomingMessage>();
+		this.conversationMap = new HashMap<String, Collection<ConversationMessage>>();
 		this.stateMap = new HashMap<String, IncomingMessage>();
 		this.recognizedEntities = new HashMap<String, Collection<Entity>>();
 		this.random = new Random();
@@ -194,6 +198,14 @@ public class Messenger {
 
 	public ChatService getChatService() {
 		return chatService;
+	}
+
+	public HashMap<String, Collection<ConversationMessage>> getConversationMap() {
+		return conversationMap;
+	}
+
+	public void updateConversationInConversationMap(String channel, Collection<ConversationMessage> conversation) {
+		conversationMap.put(channel, conversation);
 	}
 
 	public void addMessage(IncomingMessage msg) {
@@ -250,6 +262,7 @@ public class Messenger {
 	 */
 
 	public void setContextToBasic(String channel, String userid) {
+		System.out.println("SET CONTEXT TO BASIC");
 		triggeredFunction.remove(channel);
 		IncomingMessage state = this.stateMap.get(channel);
 		this.previousStateInConversationBackup.remove(channel);
@@ -268,9 +281,10 @@ public class Messenger {
 				storedSession.remove(channel);
 				System.out.println("Restoring session");
 				String response = state.getResponse(random);
-				if (response != null && !response.equals("")) {
-					System.out.println("Found old message");
-					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
+				if( response != null && !response.equals("") && !state.getOpenAIEnhance())
+				{
+					System.out.println("SET CONTEXT TO BASIC: SEND MESSAGE TO CHANNEL");
+					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), state.getFollowingMessages(), state.getFollowupMessageType(),Optional.of(userid));
 				}
 			}
 		} else if (state.getFollowingMessages().get("") != null) {
@@ -399,6 +413,8 @@ public class Messenger {
 					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
 				Intent intent = this.determineIntent(message, bot);
+				Boolean messageSent = Boolean.FALSE;
+				String botMessage = "";
 				System.out.println("found following intent: " + intent.getKeyword());
 				try {
 					safeEntities(message, bot, intent);
@@ -487,6 +503,7 @@ public class Messenger {
 						if (state == null) {
 							System.out.println("state is null");
 							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
+							conversationMap.put(message.getChannel(), new ArrayList<ConversationMessage>());
 							if (message.getFileName() != null) {
 								// check whether incoming message with intent expects file or without intent,
 								// such that
@@ -690,8 +707,8 @@ public class Messenger {
 						}
 
 						String response = state.getResponse(random);
-						if (state.getTriggeredFunctionId() != "" && state.getTriggeredFunctionId() != null) {
-							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
+						if (state.getTriggeredFunctionIds().get(0) != "" && state.getTriggeredFunctionIds().get(0) != null) {
+							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionIds().get(0));
 							contextOn = true;
 						}
 
@@ -735,14 +752,26 @@ public class Messenger {
 										conversationId.toString(), activityName, bot.getId(), "bot", "complete",
 										System.currentTimeMillis());
 								// check if message parses buttons or is simple text
-								if (state.getType().equals("Interactive Message")) {
-									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
-											this.chatMediator.getAuthToken(), state.getFollowingMessages(),
-											java.util.Optional.empty());
-								} else {
-									this.chatMediator.sendMessageToChannel(message.getChannel(),
-											replaceVariables(message.getChannel(), split), state.getFollowingMessages(),
-											state.followupMessageType);
+								if(state.getType().equals("Interactive Message")){
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
+								} else{
+									// TODO: Block sending message to channel if the service is replacing the bot message with its own message
+									if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() == 1) {
+										System.out.println("STATE HAS OPENAIENHANCE AND ONLY HAS ONE BOT ACTION");
+										System.out.println(state.getOpenAIEnhance());
+										messageSent = true;
+									} else if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() > 1) {
+										System.out.println("STATE HAS OPENAIENHANCE AND HAS TWO BOT ACTIONS, SEND THE MESSAGE FROM FIRST BOT ACTION");
+										System.out.println(state.getOpenAIEnhance());
+										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
+									}else {
+										System.out.println("STATE DOES NOT HAS OPENAIENHANCE");
+										System.out.println(state.getOpenAIEnhance());
+										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
+									}
+									if (messageSent) {
+										botMessage = replaceVariables(message.getChannel(), split);
+									}
 								}
 								// check whether a file url is attached to the chat response and try to send it
 								// to
@@ -802,13 +831,13 @@ public class Messenger {
 												state.getErrorMessage(), state.getFollowupMessageType());
 									}
 								}
-								if (state.getTriggeredFunctionId() != null) {
-									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
+								if (state.getTriggeredFunctionIds().get(0) != null) {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionIds().get(0));
 									contextOn = true;
 								}
 							} else {
-								if (state.getTriggeredFunctionId() != "") {
-									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
+								if (state.getTriggeredFunctionIds().get(0) != "") {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionIds().get(0));
 									contextOn = true;
 								} else {
 									System.out.println("No Bot Action was given to the Response");
@@ -818,7 +847,7 @@ public class Messenger {
 						if (this.triggeredFunction.containsKey(message.getChannel())) {
 							triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
 						} else
-							triggeredFunctionId = state.getTriggeredFunctionId();
+							triggeredFunctionId = state.getTriggeredFunctionIds().get(0);
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
 							System.out.println("Conversation terminated");
@@ -849,8 +878,31 @@ public class Messenger {
 					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
-						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(), conversationId));
-
+						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName(), conversationId));
+				// Chain bot action with openai, add another message info with same message info
+				// but with the openai trigger function
+				if (state.getTriggeredFunctionIds().size() > 1) {
+					messageInfos
+							.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
+									"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(),
+									conversationId));
+				}
+				// ConversationMessage conversationMsg = new
+				// ConversationMessage(message.getConversationId(), "user", message.getText());
+				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
+				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
+				conversation.add(userConvMsg);
+				conversationMap.put(message.getChannel(), conversation);
+				System.out.println("USER MESSAGE " + userConvMsg.getContent() + "WAS ADDED TO CONVERSATION PATH");
+				// if message was sent to channel, then add to conversation path here after the
+				// user message
+				if (messageSent = Boolean.TRUE) {
+					ConversationMessage botConvMsg = new ConversationMessage("", "assistant", botMessage);
+					conversation.add(botConvMsg);
+					conversationMap.put(message.getChannel(), conversation);
+					System.out.println("BOT MESSAGE " + botConvMsg.getContent() + "WAS ADDED TO CONVERSATION PATH");
+				}
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -861,7 +913,6 @@ public class Messenger {
 	public void setUrl(String Url) throws AuthTokenException {
 		this.url = Url;
 		if (this.chatMediator instanceof TelegramChatMediator) {
-			((TelegramChatMediator) this.chatMediator).settingWebhook(Url);
 		}
 	}
 

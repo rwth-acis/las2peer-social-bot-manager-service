@@ -57,6 +57,7 @@ import com.rocketchat.core.model.TokenObject;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.model.ConversationMessage;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 
@@ -73,6 +74,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private String password;
 	private String token;
 	private RocketChatMessageCollector messageCollector = new RocketChatMessageCollector();
+	//private RocketChatMessageCollector conversationPathCollector = new RocketChatMessageCollector();
 	private HashSet<String> activeSubscriptions = null;
 	private RasaNlu rasa;
 	private SQLDatabase database;
@@ -106,6 +108,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		this.rasa = rasa;
 		messageCollector.setDomain(url);
+		//conversationPathCollector.setDomain(url);
 	}
 
 	public RocketChatMediator(String authToken, SQLDatabase database) {
@@ -121,6 +124,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.connect(this);
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		messageCollector.setDomain(url);
+		//conversationPathCollector.setDomain(url);
 	}
 
 	private void setAuthData(String authToken){
@@ -186,10 +190,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
+		Boolean messageSent = Boolean.FALSE;
 		if (sendingMessage.get(channel) != null) {
 			while (sendingMessage.get(channel) == true) {
 
@@ -263,6 +268,9 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						}
 					} else {
 						room.sendMessage(newText);
+						//messageSent = Boolean.TRUE;
+						//ChatMessage botMessage = new ChatMessage(channel, "assistant", newText);
+						//conversationPathCollector.addMessage(botMessage);
 						sendingMessage.put(channel, false);
 					}
 				} catch (Exception e) {
@@ -273,7 +281,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 
 		});
-
+		messageSent = Boolean.TRUE;
+		return messageSent;
 	}
 
 	@Override
@@ -281,6 +290,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		Vector<ChatMessage> messages = this.messageCollector.getMessages();
 		return messages;
 	}
+
+	// @Override
+	// public Vector<ChatMessage> getConversationPath() {
+	// 	Vector<ChatMessage> messages = this.conversationPathCollector.getMessages();
+	// 	return messages;
+	// }
 
 	@Override
 	public String getChannelByEmail(String email) {
@@ -543,11 +558,15 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 						String fileBody = getFileBase64(client.getMyUserId(), file);
 						messageCollector.handle(message, fileBody, fileName, fileType, 0,
 								getStudentEmail(message.getSender().getUserName()));
+						//conversationPathCollector.handle(message, fileBody, fileName, fileType, 0,
+						//		getStudentEmail(message.getSender().getUserName()));
 					} else {
 						messageCollector.handle(message, 0, getStudentEmail(message.getSender().getUserName()));
+						//conversationPathCollector.handle(message, 0, getStudentEmail(message.getSender().getUserName()));
 					}
 				} else {
 					messageCollector.handle(message, 0, getStudentEmail(message.getSender().getUserName()));
+					//conversationPathCollector.handle(message, 0, getStudentEmail(message.getSender().getUserName()));
 				}
 			}
 		}
@@ -576,6 +595,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public RocketChatMessageCollector getMessageCollector() {
 		return messageCollector;
 	}
+
+	// public RocketChatMessageCollector getConversationPathCollector() {
+	// 	return conversationPathCollector;
+	// }
 
 	@Override
 	public void close() {
