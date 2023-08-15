@@ -323,27 +323,9 @@ public class Messenger {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
-				// // If a channel/user pair still isn't assigned to a state, assign it to null
-				// if (this.stateMap.get(message.getChannel()) == null) {
-				// HashMap<String, IncomingMessage> initMap = new HashMap<String,
-				// IncomingMessage>();
-				// initMap.put(message.getUser(), null);
-				// this.stateMap.put(message.getChannel(), initMap);
-				// }
-
-				// If a channel/user pair still isn't assigned to a NLU Model, assign it to the
-				// Model 0
 				if (this.currentNluModel.get(message.getChannel()) == null) {
 					this.currentNluModel.put(message.getChannel(), "0");
 				}
-
-				// If channel/user pair is not assigned to a triggered function, assign it to
-				// null
-				// if (this.triggeredFunction.get(message.getChannel()) == null) {
-				// HashMap<String, String> initMap = new HashMap<String, String>();
-				// initMap.put(message.getUser(), null);
-				// this.triggeredFunction.put(message.getChannel(), initMap);
-				// }
 
 				if (!this.userVariables.containsKey(message.getChannel())) {
 					this.userVariables.put(message.getChannel(), new HashMap<String, String>());
@@ -352,70 +334,19 @@ public class Messenger {
 				if (this.defaultAnswered.get(message.getChannel()) == null) {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
-				Intent intent = this.determineIntent(message, bot);
 
 				Boolean messageSent = Boolean.FALSE;
 				String botMessage = "";
-				// Special case: `!` commands
-				if (message.getText().startsWith("!")) {
+				String triggeredFunctionId = null;
 
-					// Split at first occurring whitespace
-
-					String splitMessage[] = message.getText().split("\\s+", 2);
-					// First word without '!' prefix
-					String intentKeyword = splitMessage[0].substring(1);
-					IncomingMessage incMsg = this.conversationStarters.get(intentKeyword);
-					// TODO: Log this? (`!` command with unknown intent / keyword)
-					if (incMsg == null && !intentKeyword.toLowerCase().equals("exit")) {
-						if (this.currentNluModel.get(message.getChannel()) == "0") {
-							continue;
-						} else {
-							ArrayList<String> empty = new ArrayList<String>();
-							empty.add("");
-							incMsg = new IncomingMessage(intentKeyword, "", false, empty, null, "", null, "", "text");
-							if (splitMessage.length > 1) {
-								incMsg.setEntityKeyword(incMsg.getIntentKeyword());
-							} else {
-								incMsg.setEntityKeyword("newEntity");
-							}
-
-						}
-					}
-					if (splitMessage.length > 1) {
-						incMsg.setEntityKeyword(incMsg.getIntentKeyword());
-					} else {
-						incMsg.setEntityKeyword("newEntity");
-					}
-					String entityKeyword = incMsg.getEntityKeyword();
-					String entityValue = null;
-					// Entity value is the rest of the message. The whole rest
-					// is in the second element, since we only split it into two parts.
-					if (splitMessage.length > 1) {
-						entityValue = splitMessage[1];
-					}
-
-					intent = new Intent(intentKeyword, entityKeyword, entityValue);
-				} else {
-					if (bot.getRasaServer(currentNluModel.get(message.getChannel())) != null) {
-						intent = bot.getRasaServer(currentNluModel.get(message.getChannel()))
-								.getIntent(Intent.replaceUmlaute(message.getText()));
-					} else {
-						// if the given id is not fit to any server, pick the first one. (In case
-						// someone specifies only
-						// one server and does not give an ID)
-						intent = bot.getRasaServer().getIntent(Intent.replaceUmlaute(message.getText()));
-					}
-
-				}
+				Intent intent = this.determineIntent(message, bot);
 				System.out.println("found following intent: " + intent.getKeyword());
 				try {
-					safeEntities(message, bot, intent);
-
+					saveEntities(message, bot, intent);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
-				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				if (state == null) {
 					System.out.println("No current state, we will start from scratch.");
@@ -942,7 +873,7 @@ public class Messenger {
 		return bot.getRasaServer().getIntent(Intent.replaceUmlaute(message.getText()));
 	}
 
-	private void safeEntities(ChatMessage msg, Bot bot, Intent intent) {
+	private void saveEntities(ChatMessage msg, Bot bot, Intent intent) {
 		String user = msg.getUser();
 		String channel = msg.getChannel();
 		String b = bot.getId();
