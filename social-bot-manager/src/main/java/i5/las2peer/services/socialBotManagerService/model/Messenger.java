@@ -223,6 +223,7 @@ public class Messenger {
 	public void setContextToBasic(String channel, String userid) {
 		System.out.println("SET CONTEXT TO BASIC");
 		triggeredFunction.remove(channel);
+		this.conversationIdBackup.remove(channel);
 		IncomingMessage state = this.conversationStateMap.get(channel);
 		if (state != null) {
 			if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
@@ -256,15 +257,6 @@ public class Messenger {
 
 					}
 				}
-				/*
-				 * if (state.getResponse(random).triggeredFunctionId != null
-				 * && !state.getResponse(random).triggeredFunctionId.equals("")) {
-				 * ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
-				 * this.triggeredFunction.put(channel,
-				 * state.getResponse(random).triggeredFunctionId);
-				 * this.chatMediator.getMessageCollector().addMessage(chatMsg);
-				 * }
-				 */
 			} else {
 				// If only message to be sent
 				String response = state.getResponse(random);
@@ -348,6 +340,11 @@ public class Messenger {
 				String botMessage = "";
 				String triggeredFunctionId = null;
 				boolean messageIsCommand = message.getText().startsWith("!");
+				boolean communicatingWithService = this.triggeredFunction.containsKey(message.getChannel());
+				Boolean contextOn = communicatingWithService;
+				if (communicatingWithService) {
+					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
+				}
 
 				Intent intent = this.determineIntent(message, bot);
 				System.out.println("found following intent: " + intent.getKeyword());
@@ -399,8 +396,6 @@ public class Messenger {
 				// at this point we can determine whether we start a new conversation or not by
 				// checking whether the conversation state is null
 
-				boolean communicatingWithService = this.triggeredFunction.containsKey(message.getChannel());
-
 				if (!communicatingWithService) {
 					if (intent.getKeyword().equals("exit")) {
 						// exit conversation, start from scratch
@@ -410,6 +405,7 @@ public class Messenger {
 							storedSession.remove(message.getChannel());
 						}
 					} else if (intent.getConfidence() >= 0.40 || message.getFileName() != null) {
+
 						if (conversationState == null) {
 							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
 							conversationMap.put(message.getChannel(), new ArrayList<ConversationMessage>());
@@ -580,11 +576,7 @@ public class Messenger {
 					intent = new Intent("default", "", "");
 				}
 
-				Boolean contextOn = false;
-				if (this.triggeredFunction.containsKey(message.getChannel())) {
-					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
-					contextOn = true;
-				} else {
+				if (!communicatingWithService) {
 					// check if skip is wished or not
 					if (conversationState != null) {
 						System.out.println("Getting response for: " + conversationState.intentKeyword);
@@ -598,6 +590,7 @@ public class Messenger {
 							this.triggeredFunction.put(message.getChannel(),
 									conversationState.getTriggeredFunctionIds().get(0));
 							contextOn = true;
+							this.conversationIdBackup.put(message.getChannel(), conversationState.getConversationId());
 						}
 
 						if (conversationState.getNluID() != "") {
@@ -727,12 +720,16 @@ public class Messenger {
 									this.triggeredFunction.put(message.getChannel(),
 											conversationState.getTriggeredFunctionIds().get(0));
 									contextOn = true;
+									this.conversationIdBackup.put(message.getChannel(),
+											conversationState.getConversationId());
 								}
 							} else {
 								if (conversationState.getTriggeredFunctionIds().get(0) != "") {
 									this.triggeredFunction.put(message.getChannel(),
 											conversationState.getTriggeredFunctionIds().get(0));
 									contextOn = true;
+									this.conversationIdBackup.put(message.getChannel(),
+											conversationState.getConversationId());
 								} else {
 									System.out.println("No Bot Action was given to the Response");
 								}
@@ -760,15 +757,28 @@ public class Messenger {
 				}
 				UUID conversationId = null;
 				if (conversationState == null) {
-					if (contextOn && conversationIdBackup.containsKey(triggeredFunctionId)) {
+					System.out.println("Conversation State is null");
+					if (communicatingWithService) {
+						System.out.println("Context is on and conversationIdBackup contains key, restoring id	"
+								+ conversationIdBackup.get(triggeredFunctionId));
 						conversationId = conversationIdBackup.get(triggeredFunctionId);
 					} else {
 						conversationId = UUID.randomUUID();
+						System.out
+								.println("Context is off or conversationIdBackup does not contain key, creating new id:"
+										+ conversationId);
 					}
-				}
-				else {
+				} else {
 					conversationId = conversationState.getConversationId();
-				} 
+					System.out.println(
+							"Conversation State is not null, using id from conversation state:" + conversationId);
+				}
+				if (conversationState != null) {
+					conversationState.setConversationId(conversationId);
+				} else {
+					System.out.println("Conversation State is null so cannot set conversation id");
+				}
+
 				if (conversationState == null || !conversationState.getIntentKeyword().contains("defaultX")) {
 					this.defaultAnswered.put(message.getChannel(), 0);
 				}
@@ -784,7 +794,8 @@ public class Messenger {
 				}
 				// ConversationMessage conversationMsg = new
 				// ConversationMessage(message.getConversationId(), "user", message.getText());
-				ConversationMessage userConvMsg = new ConversationMessage(conversationId.toString(), "user", message.getText());
+				ConversationMessage userConvMsg = new ConversationMessage(conversationId.toString(), "user",
+						message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
 				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
@@ -792,7 +803,8 @@ public class Messenger {
 				// if message was sent to channel, then add to conversation path here after the
 				// user message
 				if (messageSent = Boolean.TRUE) {
-					ConversationMessage botConvMsg = new ConversationMessage(conversationId.toString(), "assistant", botMessage);
+					ConversationMessage botConvMsg = new ConversationMessage(conversationId.toString(), "assistant",
+							botMessage);
 					conversation.add(botConvMsg);
 					conversationMap.put(message.getChannel(), conversation);
 					System.out.println("BOT MESSAGE " + botConvMsg.getContent() + "WAS ADDED TO CONVERSATION PATH");
