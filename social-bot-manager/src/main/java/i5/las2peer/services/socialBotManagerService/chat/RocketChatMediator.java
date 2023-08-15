@@ -193,7 +193,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
-		System.out.println("Sending Message to : " + room.getRoomData().getRoomId());
 		Boolean messageSent = Boolean.FALSE;
 		if (sendingMessage.get(channel) != null) {
 			while (sendingMessage.get(channel) == true) {
@@ -540,12 +539,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		synchronized (room) {
 			if (!message.getSender().getUserId().equals(client.getMyUserId())) {
 				String email = getStudentEmail(message.getSender().getUserName());
-				System.out.println("Email: " + email);
-				System.out.println("Message: " + message.getMessage());
 
 				Type type = message.getMsgType();
 				if (type.equals(Type.ATTACHMENT)) {
-					System.out.println("Handling attachement");
+
 					JSONObject j = message.getRawJsonObject();
 					String fileType = j.getJSONObject("file").getString("type");
 					String fileName = j.getJSONObject("file").getString("name");

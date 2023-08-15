@@ -17,7 +17,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		if (type != null) {
 			if (type.equals(Type.TEXT)) {
 				try {
-					System.out.println("Handling text.");
 					JSONArray emails = message.getSender().getEmails();
 					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
@@ -46,7 +45,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		if (type != null) {
 			if (type.equals(Type.TEXT)) {
 				try {
-					System.out.println("Handling text.");
 					JSONArray emails = message.getSender().getEmails();
 					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
@@ -66,7 +64,7 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 				}
 			}else if(type.equals(Type.MESSAGE_EDITED)){
 				try {
-					System.out.println("Handling edited message.");
+
 					JSONArray emails = message.getSender().getEmails();
 					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
@@ -99,9 +97,9 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		if (type != null) {
 			if (type.equals(Type.ATTACHMENT)) {
 				try {
-					System.out.println("Handling Attachment.");
+
 					JSONArray emails = message.getSender().getEmails();
-					System.out.println("rcket message is " + message);
+
 					String rid = message.getRoomId();
 					System.out.println(rid);
 					String user = message.getSender().getUserName();

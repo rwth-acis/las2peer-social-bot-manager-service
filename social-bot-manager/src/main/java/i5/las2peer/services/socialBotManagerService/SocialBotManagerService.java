@@ -440,8 +440,6 @@ public class SocialBotManagerService extends RESTService {
 			if (restarterBot == null) {
 				try {
 					try {
-						System.out.println(
-								"Fetching restarter bot");
 						restarterBot = (BotAgent) Context.getCurrent().fetchAgent(
 								Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
 						// if bot didn't exist before, no need to try to restart the previous bots, as
@@ -458,10 +456,10 @@ public class SocialBotManagerService extends RESTService {
 								init(entry.getValue());
 							}
 
-							System.out.println("Restarting bots completed");
+
 						} catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
 								| EnvelopeOperationFailedException e) {
-							System.out.println("no bot models found in storage");
+
 						}
 
 					} catch (Exception e) {
@@ -855,7 +853,7 @@ public class SocialBotManagerService extends RESTService {
 				// json
 				result = result.substring(8);
 
-				System.out.println("Handling message...");
+
 				JSONObject bodyInput = (JSONObject) p.parse(result);
 
 				String channel = "";
@@ -956,9 +954,6 @@ public class SocialBotManagerService extends RESTService {
 						new ArrayList<>());
 
 				// this.triggeredFunction.get(message.getChannel());
-				System.out.println(
-						"Got info: " + messageInfo.getMessage().getText() + ". Function Id is:"
-								+ messageInfo.getTriggeredFunctionId());
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 
 				SocialBotManagerService sbf = this.sbfservice;
@@ -1015,7 +1010,7 @@ public class SocialBotManagerService extends RESTService {
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-						System.out.println("Intent processing finished.");
+
 					}
 				}).start();
 				return Response.ok().build();
@@ -1099,8 +1094,6 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 
-			System.out.println(
-					"Got info: " + m.getMessage().getText() + ". Function id is: " + m.getTriggeredFunctionId());
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, body);
 			// If no action should be triggered, just return
 			if (m.getTriggeredFunctionId() == null) {
@@ -1126,7 +1119,7 @@ public class SocialBotManagerService extends RESTService {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					System.out.println("Intent processing finished.");
+
 				}
 			}).start();
 			return Response.ok().build();
@@ -1179,7 +1172,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				URL url = new URL(lrsURLStatic + "/data/xAPI/statements");
-				System.out.println(url + lrsAuthTokenStatic);
+
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 				conn.setDoOutput(true);
 				conn.setDoInput(true);
@@ -1843,8 +1836,7 @@ public class SocialBotManagerService extends RESTService {
 			triggeredBody.put("messenger", bot.getMessenger(messengerID).getChatService().toString());
 			triggeredBody.put("botId", bot.getId());
 			triggeredBody.put("botName", bot.getName());
-			System.out.println(sf.getServiceName() + functionPath + " ; " + triggeredBody.toJSONString() + " "
-					+ sf.getConsumes() + " " + sf.getProduces() + " My string is" + ":" + triggeredBody.toJSONString());
+
 
 			ClientResponse r = null;
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
@@ -2048,7 +2040,7 @@ public class SocialBotManagerService extends RESTService {
 					if (response.containsKey("multiFiles")) {
 						for (Object o : (JSONArray) response.get("multiFiles")) {
 							JSONObject jsonO = (JSONObject) o;
-							System.out.println("handling multifiles");
+
 							jsonO.put("channel", triggeredBody.getAsString("channel"));
 							jsonO.put("email", triggeredBody.getAsString("email"));
 							triggerChat(chat, jsonO);
@@ -2076,7 +2068,7 @@ public class SocialBotManagerService extends RESTService {
 						// replace the last message in the conversation map which should be the normal
 						// bot response with the enhanced bot message
 						if (Boolean.parseBoolean(response.getAsString("openai"))) {
-							System.out.println("UPDATING CONVERSATION PATH WITH OPENAI GENERATED RESPONSE");
+
 
 							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
 									.getConversationMap();
@@ -2094,11 +2086,11 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
-						System.out.println("Closed Context");
+						// System.out.println("Closed Context");
 						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
 								triggeredBody.getAsString("user"));
 					} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
-						System.out.println("Keep Context open");
+						// System.out.println("Keep Context open");
 						bot.getMessenger(messengerID).restoreConversationState(triggeredBody.getAsString("channel"));
 					}
 				} catch (ParseException e) {
@@ -2166,7 +2158,6 @@ public class SocialBotManagerService extends RESTService {
 			} else {
 				// if no specific text, send the regular text
 				for (String s : emailArray) {
-					System.out.println(s);
 					channel = chat.getChannelByEmail(s);
 
 					if (text != null && channel != null) {
@@ -2644,8 +2635,6 @@ public class SocialBotManagerService extends RESTService {
 								// for (Entry<String, Boolean> entry : activeBots.entrySet()) {
 								// If bot is active
 								// if (entry.getValue()) {
-
-								System.out.println(df.format(d1) + ": " + b.getName());
 
 								JSONObject body = new JSONObject();
 								body.put("serviceAlias", ""); // TODO

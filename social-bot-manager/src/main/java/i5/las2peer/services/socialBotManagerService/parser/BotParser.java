@@ -794,12 +794,10 @@ public class BotParser {
 					System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
 					if (s.getActionType().equals(ActionType.OPENAPI)) {
 						JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
-						System.out.println("Information is: " + j);
 						b.addServiceInformation(s.getServiceName(), j);
 					} else {
 						JSONObject j = readJsonFromUrl(
-						b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
-						System.out.println("Information is: " + j);
+								b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
 						b.addServiceInformation(s.getServiceName(), j);
 					}
 					
