@@ -938,7 +938,7 @@ public class SocialBotManagerService extends RESTService {
 								for (Messenger m : messengers.values()) {
 									// System.out.println("messenger: " + m);
 									HashMap<String, i5.las2peer.services.socialBotManagerService.model.IncomingMessage> intentsHM = m
-											.getKnownIntents();
+											.getConversationStarters();
 									// System.out.println("intentsHM: " + intentsHM);
 									for (String s : intentsHM.keySet()) {
 										if (s.equals(expectedIntent)) {

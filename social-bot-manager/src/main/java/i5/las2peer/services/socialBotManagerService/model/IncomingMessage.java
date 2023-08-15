@@ -38,7 +38,39 @@ public class IncomingMessage {
 		return result;
 	}
 
+	/**
+	 * Constructor for the IncomingMessage class
+	 * creates an empty IncomingMessage object
+	 */
+	public IncomingMessage() {
+		this.intentKeyword = "";
+		this.followupMessages = new HashMap<String, IncomingMessage>();
+		this.responses = new ArrayList<String>();
+		this.responses.add("");
+		this.containsFile = false;
+		this.NluID = "";
+		this.fileURL = "";
+		this.errorMessage = "";
+		this.triggerEntity = new HashMap<IncomingMessage, String>();
+		this.type = "";
+		this.followupMessageType = "text";
+		this.intentLabel = "";
+		this.triggeredFunctionIds = new ArrayList<String>();
+	}
 
+	/**
+	 * Constructor for the IncomingMessage class
+	 * 
+	 * @param intent
+	 * @param NluID
+	 * @param containsFile
+	 * @param responses
+	 * @param fileURL
+	 * @param errorMessage
+	 * @param type
+	 * @param intentLabel
+	 * @param followupType
+	 */
 	public IncomingMessage(String intent, String NluID, Boolean containsFile,ArrayList<String> responses, String fileURL, String errorMessage, String type,String intentLabel, String followupType) {
 		if(intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
