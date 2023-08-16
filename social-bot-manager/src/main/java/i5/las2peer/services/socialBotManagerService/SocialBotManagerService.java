@@ -2017,6 +2017,8 @@ public class SocialBotManagerService extends RESTService {
 						// if the response is from the openai service, 
 						// replace the last message in the conversation map which should be the normal bot response with the enhanced bot message 
 						if (Boolean.parseBoolean(response.getAsString("openai"))) {
+							// add token count to body
+							triggeredBody.put("tokens", response.getAsNumber("tokens"));
 							System.out.println("UPDATING CONVERSATION PATH WITH OPENAI GENERATED RESPONSE");
 
 							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID).getConversationMap();
@@ -2072,6 +2074,10 @@ public class SocialBotManagerService extends RESTService {
 		JSONObject monitorEvent42 = new JSONObject();
 		final long start = System.currentTimeMillis();
 		monitorEvent42.put("task", "Send message");
+		
+		if (body.containsKey("tokens")) {
+			monitorEvent42.put("tokens", body.getAsNumber("tokens"));
+		}
 
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist
