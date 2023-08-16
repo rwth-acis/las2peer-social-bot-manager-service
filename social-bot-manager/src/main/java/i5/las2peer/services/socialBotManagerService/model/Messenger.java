@@ -617,8 +617,8 @@ public class Messenger {
 						}
 						
 						String response = state.getResponse(random);
-						if (state.getTriggeredFunctionIds().get(0) != "" && state.getTriggeredFunctionIds().get(0) != null) {
-							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionIds().get(0));
+						if (state.getTriggeredFunctionId() != "" && state.getTriggeredFunctionId() != null) {
+							this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 							contextOn = true;
 						}
 
@@ -655,15 +655,11 @@ public class Messenger {
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
 								} else{
 									// TODO: Block sending message to channel if the service is replacing the bot message with its own message
-									if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() == 1) {
-										System.out.println("STATE HAS OPENAIENHANCE AND ONLY HAS ONE BOT ACTION");
+									if (state.getOpenAIEnhance()) {
+										System.out.println("STATE HAS OPENAIENHANCE");
 										System.out.println(state.getOpenAIEnhance());
 										messageSent = true;
-									} else if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() > 1) {
-										System.out.println("STATE HAS OPENAIENHANCE AND HAS TWO BOT ACTIONS, SEND THE MESSAGE FROM FIRST BOT ACTION");
-										System.out.println(state.getOpenAIEnhance());
-										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
-									}else {
+									} else {
 										System.out.println("STATE DOES NOT HAS OPENAIENHANCE");
 										System.out.println(state.getOpenAIEnhance());
 										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
@@ -730,13 +726,13 @@ public class Messenger {
 												state.getErrorMessage(),state.getFollowupMessageType());
 									}
 								}
-								if (state.getTriggeredFunctionIds().get(0) != null) {
-									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionIds().get(0));
+								if (state.getTriggeredFunctionId() != null) {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 									contextOn = true;
 								}
 							} else {
-								if (state.getTriggeredFunctionIds().get(0) != "") {
-									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionIds().get(0));
+								if (state.getTriggeredFunctionId() != "") {
+									this.triggeredFunction.put(message.getChannel(), state.getTriggeredFunctionId());
 									contextOn = true;
 								} else {
 									System.out.println("No Bot Action was given to the Response");
@@ -746,7 +742,7 @@ public class Messenger {
 						if (this.triggeredFunction.containsKey(message.getChannel())) {
 							triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
 						} else
-							triggeredFunctionId = state.getTriggeredFunctionIds().get(0);
+							triggeredFunctionId = state.getTriggeredFunctionId();
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
 							this.stateMap.remove(message.getChannel());
@@ -769,10 +765,10 @@ public class Messenger {
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
 						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
 				// Chain bot action with openai, add another message info with same message info but with the openai trigger function
-				if (state.getTriggeredFunctionIds().size() > 1) {
-					messageInfos.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
-						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
-				}
+				// if (state.getTriggeredFunctionIds().size() > 1) {
+				// 	messageInfos.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
+				// 		"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
+				// }
 				//ConversationMessage conversationMsg = new ConversationMessage(message.getConversationId(), "user", message.getText());
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());

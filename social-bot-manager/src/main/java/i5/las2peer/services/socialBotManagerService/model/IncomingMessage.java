@@ -11,7 +11,7 @@ public class IncomingMessage {
 	String entityKeyword;
     String NluID;
     boolean containsFile;
-	ArrayList<String> triggeredFunctionIds;
+	String triggeredFunctionId;
 	HashMap<IncomingMessage,String> triggerEntity;
 	String fileURL;
 	String errorMessage;
@@ -59,7 +59,6 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
-		this.triggeredFunctionIds = new ArrayList<String>();
 	}
 
 	public String getIntentKeyword() {
@@ -111,12 +110,12 @@ public class IncomingMessage {
 		}
 	}
 
-	public void addTriggeredFunction(ServiceFunction triggeredFunction) {
-		this.triggeredFunctionIds.add(triggeredFunction.getId());
+	public void setTriggeredFunction(ServiceFunction triggeredFunction) {
+		this.triggeredFunctionId = triggeredFunction.getId();
 	}
 
-	public ArrayList<String> getTriggeredFunctionIds() {
-		return this.triggeredFunctionIds;
+	public String getTriggeredFunctionId() {
+		return this.triggeredFunctionId;
 	}
 
 	public boolean expectsFile() {
@@ -139,12 +138,8 @@ public class IncomingMessage {
 		return errorMessage;
 	}
     
-    public void addTriggeredFunctionId(String functionId){
-        this.triggeredFunctionIds.add(functionId);
-    }
-
-	public void addTriggeredFunctionIdFirst(String functionId){
-        this.triggeredFunctionIds.add(0, functionId);
+    public void setTriggeredFunctionId(String functionId){
+        this.triggeredFunctionId = functionId;
     }
     
 	public String getTriggerEntity(IncomingMessage m){

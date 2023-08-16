@@ -948,7 +948,7 @@ public class SocialBotManagerService extends RESTService {
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
 											//get first trigger function for now
-											triggerdFunctionId = chatResponses.getTriggeredFunctionIds().get(0);
+											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
 											messengerName = m.getName();
 										}
 									}
@@ -1489,7 +1489,8 @@ public class SocialBotManagerService extends RESTService {
 						// add path if the triggered function is a service function
 						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
 							functionPath = triggeredFunction.getFunctionPath();
-						JSONObject triggeredBody = new JSONObject();
+						///JSONObject triggeredBody = new JSONObject();
+						JSONObject triggeredBody = body;
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 						for (ServiceFunction bsf : bot.getBotServiceFunctions().values()) {
 							for (ServiceFunctionAttribute bsfa : bsf.getAttributes()) {
@@ -1977,8 +1978,8 @@ public class SocialBotManagerService extends RESTService {
 							triggerChat(chat, jsonO);
 						}
 					} else {
-						// if the response is the first of a chain response that should later be personalized, do not trigger chat, add the response to the conversationpath
-						if (sf.getFunctionName().equals("test")){
+						// if the service function triggers another service function, do not trigger chat, add the response to the conversationpath
+						if (!sf.getTrigger().isEmpty()){
 							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID).getConversationMap();
 							Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
 							ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
@@ -1987,6 +1988,28 @@ public class SocialBotManagerService extends RESTService {
 							ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant", triggeredBody.getAsString("text"));
 							conv.add(newConvMsg);
 							bot.getMessenger(messengerID).updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+							System.out.println("FIRST BOT ACTION CALL, UPDATE CONV WITH " + conv);
+
+							//Trigger trigger = sf.getTrigger().iterator().next();
+							//ServiceFunction triggeredSf = trigger.getTriggeredFunction();
+							Gson gson = new Gson();
+							String service = (String) sf.getServiceName();
+							triggeredBody.put("serviceAlias", service);
+							String triggerFunctionName = sf.getFunctionName();
+							triggeredBody.put("functionName", triggerFunctionName);
+							String triggerID = sf.getId();
+							triggeredBody.put("uid", triggerID);
+							JSONObject triggerAttributes = new JSONObject();
+							triggeredBody.put("attributes", triggerAttributes);
+
+
+							try {
+								ClientResponse result = client.sendRequest("POST",
+										"SBFManager/bots/" + bot.getName() + "/trigger/service", gson.toJson(triggeredBody),
+										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 						} else{
 							System.out.println("TRIGGER CHAT");
 							triggerChat(chat, triggeredBody);
