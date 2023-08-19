@@ -3062,6 +3062,10 @@ public class SocialBotManagerService extends RESTService {
 		private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent,
 				String functionPath, String triggerUID,
 				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
+			Response response = null;
+			FormDataMultiPart mp = new FormDataMultiPart();
+			String channel = null;
+
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
@@ -3091,7 +3095,7 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 
-					String channel = triggeredBody.getAsString("channel");
+					channel = triggeredBody.getAsString("channel");
 					Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 					functionPath = functionPath.replace("[channel]", channel);
 					functionPath = functionPath.replace("[email]", email);
@@ -3107,7 +3111,6 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 					JSONObject form = (JSONObject) triggeredBody.get("form");
-					FormDataMultiPart mp = new FormDataMultiPart();
 					String queryParams = "?";
 					if (form != null) {
 						for (String key : form.keySet()) {
@@ -3149,40 +3152,12 @@ public class SocialBotManagerService extends RESTService {
 						mp.bodyPart(filePart);
 					}
 
-					Response response = null;
 					if (sf.getHttpMethod().equals("get")) {
 						response = target.request().get();
 					} else {
 						response = target.request()
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
-						}
-						
-						String test = response.readEntity(String.class);
-						mp.close();
-						try {
-							java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
-									+ triggeredBody.getAsString("fileType")));
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						/* triggeredBody = new JSONObject();
-						triggeredBody.put("channel", channel);
-						triggeredBody.put("text", test);
-						 */
-						JSONObject jsonResponse = (JSONObject) parser.parse(test);
-						for (String key : jsonResponse.keySet()) {
-							bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
-						}
-						System.out.println("Finished Bot Action Call");
-					 	bot.getMessenger(messengerID).setContextToBasic(channel,
-								userId);
-					 	triggeredBody.put("resBody", jsonResponse);
-								// triggerChat(chat, triggeredBody);
-						return;
-
-					} catch (Exception e) {
-						System.out.println(e.getMessage());
+					}
 
 					String test = response.readEntity(String.class);
 					mp.close();
@@ -3202,6 +3177,7 @@ public class SocialBotManagerService extends RESTService {
 					for (String key : jsonResponse.keySet()) {
 						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 					}
+					System.out.println("Finished Bot Action Call");
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					triggeredBody.put("resBody", jsonResponse);
@@ -3210,6 +3186,36 @@ public class SocialBotManagerService extends RESTService {
 
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
+
+					String test = response.readEntity(String.class);
+					try {
+						mp.close();
+
+						java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
+								+ triggeredBody.getAsString("fileType")));
+					} catch (IOException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+					/*
+					 * triggeredBody = new JSONObject();
+					 * triggeredBody.put("channel", channel);
+					 * triggeredBody.put("text", test);
+					 */
+					try {
+						JSONObject jsonResponse = (JSONObject) parser.parse(test);
+					for (String key : jsonResponse.keySet()) {
+						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
+					}
+					bot.getMessenger(messengerID).setContextToBasic(channel,
+							userId);
+					triggeredBody.put("resBody", jsonResponse);
+					// triggerChat(chat, triggeredBody);
+					return;
+				} catch (ParseException e1) {
+					e1.printStackTrace();
+				}
+
 
 				}
 
