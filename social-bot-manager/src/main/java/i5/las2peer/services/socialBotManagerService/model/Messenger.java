@@ -472,14 +472,7 @@ public class Messenger {
 					conversationId = UUID.randomUUID();
 				}
 
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-						conversationId.toString(),
-						intent.getKeyword(),
-						bot.getId(), "bot", "start", System.currentTimeMillis());
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-						conversationId.toString(),
-						intent.getKeyword(),
-						bot.getId(), "bot", "complete", System.currentTimeMillis());
+
 				if (state == null && message.getText().startsWith("!")
 						&& this.rootChildren.get(intent.getKeyword()) == null) {
 					// in case a command is triggered which does not exist
@@ -720,6 +713,14 @@ public class Messenger {
 					intent = new Intent("default", "", "");
 				}
 
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+						conversationId.toString(),
+						intent.getKeyword(),
+						bot.getId(), "bot", "start", System.currentTimeMillis());
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+						conversationId.toString(),
+						intent.getKeyword(),
+						bot.getId(), "bot", "complete", System.currentTimeMillis());
 				Boolean contextOn = false;
 				if (this.triggeredFunction.containsKey(message.getChannel())) {
 					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
