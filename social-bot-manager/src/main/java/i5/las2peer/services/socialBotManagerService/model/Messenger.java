@@ -252,25 +252,66 @@ public class Messenger {
 	public void setContextToBasic(String channel, String userid) {
 		triggeredFunction.remove(channel);
 		IncomingMessage state = this.stateMap.get(channel);
+
 		this.previousStateInConversationBackup.remove(channel);
 
 		if (state == null) {
 			this.previousStateInConversation.remove(channel);
-			return;
 		}
 
-		if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
-			// no other messages to follow
-			System.out.println("Conversation flow ended now. no other messages to follow");
-			if (storedSession.containsKey(channel)) {
-				stateMap.put(channel, storedSession.get(channel));
-				state = storedSession.get(channel);
-				storedSession.remove(channel);
-				System.out.println("Restoring session");
+		if (state != null) {
+			if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
+				System.out.println("Conversation flow ended now");
+				if (storedSession.containsKey(channel)) {
+					stateMap.put(channel, storedSession.get(channel));
+					state = storedSession.get(channel);
+					storedSession.remove(channel);
+					System.out.println("Restoring session");
+					String response = state.getResponse(random);
+					if (response != null && !response.equals("")) {
+						System.out.println("Found old message");
+
+						this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
+					}
+				}
+			} else if (state.getFollowingMessages().get("") != null) {
+				// check whether bot action needs to be triggered without user input
+				System.out.println("Triggering next message as empty leadsTo found");
+				state = state.getFollowingMessages().get("");
+				stateMap.put(channel, state);
+				if (!state.getResponse(random).equals("")) {
+					if (this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null
+							&& !state.getFollowingMessages().isEmpty()) {
+						this.chatMediator.sendMessageToChannel(channel,
+								replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),
+								state.getFollowupMessageType());
+
+					} else {
+						this.chatMediator.sendMessageToChannel(channel,
+								replaceVariables(channel, state.getResponse(random)), "text");
+
+					}
+				}
+				/*
+				 * if (state.getResponse(random).triggeredFunctionId != null
+				 * && !state.getResponse(random).triggeredFunctionId.equals("")) {
+				 * ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
+				 * this.triggeredFunction.put(channel,
+				 * state.getResponse(random).triggeredFunctionId);
+				 * this.chatMediator.getMessageCollector().addMessage(chatMsg);
+				 * }
+				 */
+			} else {
+				// If only message to be sent
 				String response = state.getResponse(random);
-				if (response != null && !response.equals("")) {
-					System.out.println("Found old message");
-					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response), "text");
+				if (response != null && !response.equals("")) { // actually not necessary, as the message contained in
+																// the incoming message should have been sent before the
+																// service call, thus not after the call is done
+																// this.chatMediator.sendMessageToChannel(channel,
+																// replaceVariables(channel, response),
+																// state.getFollowingMessages(),
+																// state.getFollowupMessageType(),Optional.of(userid));
+
 				}
 			}
 		} else if (state.getFollowingMessages().get("") != null) {
@@ -515,6 +556,8 @@ public class Messenger {
 											if (state == null) {
 												state = this.rootChildren.get("default");
 											}
+										} else {
+											state = this.rootChildren.get("default");
 										}
 
 									}

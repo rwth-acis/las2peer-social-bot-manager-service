@@ -1959,6 +1959,7 @@ public class SocialBotManagerService extends RESTService {
 				} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
 							sf.getConsumes(), sf.getProduces(), headers);
+					System.out.println("Response Statuscode:" + r.getHttpCode());
 				}
 			}
 
@@ -3154,7 +3155,34 @@ public class SocialBotManagerService extends RESTService {
 					} else {
 						response = target.request()
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
-					}
+						}
+						
+						String test = response.readEntity(String.class);
+						mp.close();
+						try {
+							java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
+									+ triggeredBody.getAsString("fileType")));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						/* triggeredBody = new JSONObject();
+						triggeredBody.put("channel", channel);
+						triggeredBody.put("text", test);
+						 */
+						JSONObject jsonResponse = (JSONObject) parser.parse(test);
+						for (String key : jsonResponse.keySet()) {
+							bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
+						}
+						System.out.println("Finished Bot Action Call");
+					 	bot.getMessenger(messengerID).setContextToBasic(channel,
+								userId);
+					 	triggeredBody.put("resBody", jsonResponse);
+								// triggerChat(chat, triggeredBody);
+						return;
+
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
 
 					String test = response.readEntity(String.class);
 					mp.close();
