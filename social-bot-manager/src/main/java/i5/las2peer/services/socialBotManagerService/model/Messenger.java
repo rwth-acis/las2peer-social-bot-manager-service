@@ -453,6 +453,8 @@ public class Messenger {
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				JSONObject remarks = new JSONObject();
 				remarks.put("user", encryptedUser);
+				remarks.put("channel", message.getChannel());
+				remarks.put("confidence", intent.getConfidence());
 
 				IncomingMessage lastUserMessage = this.previousStateInConversation.get(message.getChannel());
 				if (lastUserMessage != null) {
@@ -770,6 +772,7 @@ public class Messenger {
 
 								}
 								String activityName = state.getIntentKeyword() + ":response";
+								remarks.put("bot_message", split);
 								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
 										remarks.toJSONString(),
 										conversationId.toString(), activityName, bot.getId(), "bot", "start",
