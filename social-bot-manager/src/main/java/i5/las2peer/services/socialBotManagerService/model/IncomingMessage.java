@@ -89,10 +89,6 @@ public class IncomingMessage {
 		return intentKeyword;
 	}
 
-	public void addTriggeredFunctionIdFirst(String functionId) {
-		this.triggeredFunctionIds.add(0, functionId);
-	}
-
 	public String getEntityKeyword() {
 		return entityKeyword;
 	}
@@ -177,14 +173,10 @@ public class IncomingMessage {
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-    
-  public void setTriggeredFunctionId(String functionId){
-      this.triggeredFunctionId = functionId;
-  }
   
 	public String getTriggerEntity(IncomingMessage m){
       return this.triggerEntity.get(m);
-  }
+  	}
 
 	public void setTriggeredFunctionId(String functionId) {
 		this.triggeredFunctionId = functionId;
