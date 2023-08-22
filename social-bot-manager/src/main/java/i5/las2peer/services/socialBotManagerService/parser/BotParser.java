@@ -275,17 +275,20 @@ public class BotParser {
                     IncomingMessage cr = incomingMessages.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
+						
 						// toggle incoming message's openaienhance flag here
 						if (botFunction.getServiceName().equals("openai") && botFunction.getFunctionName().equals("personalize")){
+							cr.addTriggeredFunctionId(botFunction.getId());
 							cr.setOpenAIEnhance(true);
+						} else {
+							cr.addTriggeredFunctionIdFirst(botFunction.getId());
 						}
 					}
                 }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
+						cr.addTriggeredFunctionId(botFunction.getId());
 					}
                 }
 
@@ -350,19 +353,8 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
-				if (bsfList.get(source) != null) {
-					ServiceFunction firstBotFunction = bsfList.get(source);
-					if (bsfList.get(target) != null) {
-						ServiceFunction secondBotFunction = bsfList.get(target);
-						Trigger t = new Trigger(firstBotFunction, secondBotFunction);
-						firstBotFunction.addTrigger(t);
-						for (Bot b : secondBotFunction.getBots()) {
-							b.addTrigger(t);
-						}
-					}
-				}
 				// Action triggers action
-				else if (usfList.get(source) != null) {
+				if (usfList.get(source) != null) {
 					ServiceFunction userFunction = usfList.get(source);
 					if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
@@ -386,7 +378,7 @@ public class BotParser {
 					// ...Bot Action
 					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						m.setTriggeredFunction(botFunction);
+						m.addTriggeredFunction(botFunction);
 					}
 				}
 			}
