@@ -986,8 +986,8 @@ public class SocialBotManagerService extends RESTService {
 											i5.las2peer.services.socialBotManagerService.model.IncomingMessage chatResponses = incomingMessage;
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
-											// get first trigger function for now
-											triggerdFunctionId = chatResponses.getTriggeredFunctionIds().get(0);
+											//get first trigger function for now
+											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
 											messengerName = m.getName();
 										}
 									}
@@ -1536,7 +1536,8 @@ public class SocialBotManagerService extends RESTService {
 						// add path if the triggered function is a service function
 						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
 							functionPath = triggeredFunction.getFunctionPath();
-						JSONObject triggeredBody = new JSONObject();
+						///JSONObject triggeredBody = new JSONObject();
+						JSONObject triggeredBody = body;
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 						for (ServiceFunction bsf : bot.getBotServiceFunctions().values()) {
 							for (ServiceFunctionAttribute bsfa : bsf.getAttributes()) {
@@ -2046,11 +2047,9 @@ public class SocialBotManagerService extends RESTService {
 							triggerChat(chat, jsonO);
 						}
 					} else {
-						// if the response is the first of a chain response that should later be
-						// personalized, do not trigger chat, add the response to the conversationpath
-						if (sf.getFunctionName().equals("test")) {
-							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
-									.getConversationMap();
+						// if the service function triggers another service function, do not trigger chat, add the response to the conversationpath
+						if (!sf.getTrigger().isEmpty()){
+							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID).getConversationMap();
 							Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
 							ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
 							ConversationMessage botMsg = convList.get(convList.size() - 1);
@@ -2058,9 +2057,30 @@ public class SocialBotManagerService extends RESTService {
 							ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant",
 									triggeredBody.getAsString("text"));
 							conv.add(newConvMsg);
-							bot.getMessenger(messengerID)
-									.updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
-						} else {
+							bot.getMessenger(messengerID).updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+							System.out.println("FIRST BOT ACTION CALL, UPDATE CONV WITH " + conv);
+
+							//Trigger trigger = sf.getTrigger().iterator().next();
+							//ServiceFunction triggeredSf = trigger.getTriggeredFunction();
+							Gson gson = new Gson();
+							String service = (String) sf.getServiceName();
+							triggeredBody.put("serviceAlias", service);
+							String triggerFunctionName = sf.getFunctionName();
+							triggeredBody.put("functionName", triggerFunctionName);
+							String triggerID = sf.getId();
+							triggeredBody.put("uid", triggerID);
+							JSONObject triggerAttributes = new JSONObject();
+							triggeredBody.put("attributes", triggerAttributes);
+
+
+							try {
+								ClientResponse result = client.sendRequest("POST",
+										"SBFManager/bots/" + bot.getName() + "/trigger/service", gson.toJson(triggeredBody),
+										MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						} else{
 							System.out.println("TRIGGER CHAT");
 							triggerChat(chat, triggeredBody);
 						}
@@ -2068,6 +2088,9 @@ public class SocialBotManagerService extends RESTService {
 						// replace the last message in the conversation map which should be the normal
 						// bot response with the enhanced bot message
 						if (Boolean.parseBoolean(response.getAsString("openai"))) {
+							// add token count to body
+							triggeredBody.put("tokens", response.getAsNumber("tokens"));
+							System.out.println("UPDATING CONVERSATION PATH WITH OPENAI GENERATED RESPONSE");
 
 
 							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
@@ -2133,6 +2156,10 @@ public class SocialBotManagerService extends RESTService {
 		JSONObject monitorEvent42 = new JSONObject();
 		final long start = System.currentTimeMillis();
 		monitorEvent42.put("task", "Send message");
+		
+		if (body.containsKey("tokens")) {
+			monitorEvent42.put("tokens", body.getAsNumber("tokens"));
+		}
 
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist

@@ -11,6 +11,11 @@ public class ConversationMessage {
         this.content = content;
     }
     
+    @Override
+    public String toString() {
+        return "ConversationMessage [role=" + role + ", content=" + content + "]";
+    }
+
     public String getConversationId() {
         return conversationId;
     }
@@ -29,4 +34,5 @@ public class ConversationMessage {
     public void setContent(String content) {
         this.content = content;
     }
+    
 }
