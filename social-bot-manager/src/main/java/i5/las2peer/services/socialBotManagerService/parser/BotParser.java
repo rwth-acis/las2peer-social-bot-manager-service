@@ -54,11 +54,19 @@ import net.minidev.json.parser.ParseException;
 public class BotParser {
 	private static BotParser instance = null;
 	private static final String botPass = "actingAgent";
+	private static Context l2pContext;
 
 	protected BotParser() {
 	}
 
 	public static BotParser getInstance() {
+		if (instance == null) {
+			instance = new BotParser();
+		}
+		return instance;
+	}
+	public static BotParser getInstance(Context context) {
+		l2pContext = context;
 		if (instance == null) {
 			instance = new BotParser();
 		}
@@ -389,9 +397,9 @@ public class BotParser {
 					+ " inputs and " + checkGeneratorOuts + " outputs.");
 		}
 
-		System.out.println("BEFORE SWAGGERHELPER");
+
 		JSONArray jaf = swaggerHelperFunction(bot);
-		System.out.println("AFTER SWAGGERHELPER");
+
 
 		JSONObject j = new JSONObject();
 		j.put("triggerFunctions", jaf);
@@ -435,7 +443,7 @@ public class BotParser {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
 		
-		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database);
+		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database, Context.get());
 		return newMessenger;
 
 	}
@@ -597,7 +605,12 @@ public class BotParser {
 					e2.printStackTrace();
 					throw new IllegalArgumentException(e2);
 				}
+				JSONObject monitoringMessage = new JSONObject();
+				monitoringMessage.put("botName", botName);
+				monitoringMessage.put("agentId", botAgent.getIdentifier());
 				// runningAt = botAgent.getRunningAtNode();
+				Context.getCurrent().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,
+						monitoringMessage.toJSONString());
 				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
@@ -789,12 +802,10 @@ public class BotParser {
 					System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
 					if (s.getActionType().equals(ActionType.OPENAPI)) {
 						JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
-						System.out.println("Information is: " + j);
 						b.addServiceInformation(s.getServiceName(), j);
 					} else {
 						JSONObject j = readJsonFromUrl(
-						b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
-						System.out.println("Information is: " + j);
+								b.getAddress() + "/" + s.getServiceName() + "/swagger.json");
 						b.addServiceInformation(s.getServiceName(), j);
 					}
 					
@@ -803,7 +814,6 @@ public class BotParser {
 				}
 			}
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
-				System.out.println("ADDING SERVICE INFORMATION");
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
 			

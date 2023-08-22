@@ -216,7 +216,6 @@ public abstract class ChatMediator {
 
 	// used to check whether given token is the real one
 	public boolean checkToken(String authToken) {
-		System.out.println(authToken + "  " + this.authToken);
 		if (authToken.equals(this.authToken)) {
 			return true;
 		} else

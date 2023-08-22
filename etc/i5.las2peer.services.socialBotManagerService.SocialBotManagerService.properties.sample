@@ -1,6 +1,6 @@
 databaseUser = root
 databasePassword = root
-databaseName = LAS2PEERMON
+databaseName = SBF
 databaseHost = host.docker.internal
 databasePort = 3306
 mongoUser = admin
@@ -8,6 +8,6 @@ mongoPassword = password
 mongoDB = sbf
 mongoHost = 127.0.0.1:27017
 mongoAuth = admin
-address = http://127.0.0.1:8080
+webconnectorUrl = http://127.0.0.1:8080
 restarterBotName =  
 restarterBotPW =

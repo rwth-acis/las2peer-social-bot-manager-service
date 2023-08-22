@@ -38,3 +38,6 @@ archiva_credentials.xml
 bin/start_network.bat
 bin/start_network.sh
 .project
+mysql
+etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+.env
