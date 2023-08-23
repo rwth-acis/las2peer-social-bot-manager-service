@@ -1,0 +1,35 @@
+name: Run tests on pull requests
+
+on:
+  pull_request:
+    branches: [ master, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DB_DATABASE: LAS2PEERMON
+      DB_USER: root
+      DB_PASSWORD: root
+      WEBCONNECTOR_URL: http://localhost:8080
+    steps:
+    - name: Set up MySQL
+      run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE  ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+    - run: mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} ${{ env.DB_DATABASE }} < ./SBF.sql
+    - run: cp etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+    - run: sed -i "s|databasePassword =|databasePassword = ${{ env.DB_PASSWORD }}|g" etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+    - run: sed -i "s|databaseUser =|databaseUser = ${{ env.DB_USER }}|g" etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+    - run: sed -i "s|databaseName =|databaseName = ${{ env.DB_DATABASE }}|g" etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+    - run: sed -i "s|webconnectorUrl =|webconnectorUrl = ${{ env.WEBCONNECTOR_URL }}|g" etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+    - name: Grant Gradle permissions
+      run: chmod +x gradlew
+    - name: Test with Gradle
+      run: ./gradlew clean test --stacktrace --info 
