@@ -174,7 +174,7 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
-	private String webconnectorUrl; // address of running webconnector
+	private String webconnectorUrl = "localhost:8080"; // address of running webconnector
 	private static String webconnectorUrlStatic; // address of running webconnector
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
