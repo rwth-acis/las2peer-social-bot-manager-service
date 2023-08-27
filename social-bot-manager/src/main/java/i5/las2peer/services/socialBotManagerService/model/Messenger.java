@@ -447,6 +447,8 @@ public class Messenger {
 				}
 				// System.out.println("conversationId: " + conversationId.toString());
 
+				remarks.put("in-service-context", this.triggeredFunction.containsKey(message.getChannel()));
+
 				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
 						conversationId.toString(),
 						intent.getKeyword(),
