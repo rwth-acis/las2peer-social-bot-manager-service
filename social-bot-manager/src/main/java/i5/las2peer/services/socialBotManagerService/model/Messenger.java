@@ -427,22 +427,29 @@ public class Messenger {
 				JSONObject remarks = new JSONObject();
 				remarks.put("user", encryptedUser);
 
-				IncomingMessage lastUserMessage = this.previousStateInConversation.get(message.getChannel());
+				boolean currentlyInServiceContext = this.triggeredFunction.containsKey(message.getChannel());
+
+				final IncomingMessage lastUserMessage = this.previousStateInConversation.get(message.getChannel());
 				if (lastUserMessage != null) {
-					// System.out.println("lastUserMessage intent: " +
-					// lastUserMessage.getIntentKeyword());
-					if (state != null) {
-						// System.out.println("state intent: " + state.getIntentKeyword());
-					} else {
-						// System.out.println("state is null");
-					}
+					System.out.println("Backup retrieved. lastUserMessage intent: " +
+							lastUserMessage.getIntentKeyword());
 					conversationId = lastUserMessage.getConversationId();
+					if (state != null) {
+						System.out.println("state intent: " + state.getIntentKeyword());
+						if (currentlyInServiceContext) {
+							System.out.println("currentlyInServiceContext: true. Thus using state");
+							conversationId = state.getConversationId();
+						}
+					} else {
+						System.out.println("state is null");
+					}
+
 					if (conversationId == null) {
-						// System.out.println("conversationId is null, generating new one");
+						System.out.println("conversationId is null, generating new one");
 						conversationId = UUID.randomUUID();
 					}
 				} else {
-					// System.out.println("lastUserMessage is null, generating new conversationId");
+					System.out.println("lastUserMessage is null, generating new conversationId");
 					conversationId = UUID.randomUUID();
 				}
 				// System.out.println("conversationId: " + conversationId.toString());
@@ -691,6 +698,7 @@ public class Messenger {
 					intent = new Intent("default", "", "");
 				}
 
+				this.updateConversationState(message.getChannel(), state, conversationId);
 				Boolean contextOn = false;
 				if (this.triggeredFunction.containsKey(message.getChannel())) {
 					triggeredFunctionId = this.triggeredFunction.get(message.getChannel());
@@ -1140,9 +1148,16 @@ public class Messenger {
 	 * @param conversationId The conversation id to set.
 	 */
 	private void updateConversationState(String channelId, IncomingMessage state, UUID conversationId) {
-		state.setConversationId(conversationId);
-		this.previousStateInConversation.put(channelId, state);
-		this.stateMap.put(channelId, state);
+		if (state == null) {
+			System.out.println("State is null. Resetting state for channel " + channelId);
+			this.stateMap.remove(channelId);
+			this.previousStateInConversationBackup.remove(channelId);
+		} else {
+			state.setConversationId(conversationId);
+			this.previousStateInConversation.put(channelId, state);
+			this.stateMap.put(channelId, state);
+		}
+
 	}
 
 	public void restoreConversationState(String channelId) {
