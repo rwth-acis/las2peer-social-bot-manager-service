@@ -11,14 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-
 import javax.websocket.DeploymentException;
-import javax.ws.rs.core.MediaType;
-
 import com.google.gson.Gson;
-
 import i5.las2peer.api.Context;
-import i5.las2peer.api.Service;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;

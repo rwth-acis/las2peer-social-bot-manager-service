@@ -18,11 +18,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Vector;
-
 import javax.websocket.DeploymentException;
-
-import com.google.gson.Gson;
-
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.services.socialBotManagerService.SocialBotManagerService;
@@ -35,7 +31,6 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import jnr.ffi.annotations.In;
 import net.minidev.json.JSONObject;
 
 import java.util.UUID;
