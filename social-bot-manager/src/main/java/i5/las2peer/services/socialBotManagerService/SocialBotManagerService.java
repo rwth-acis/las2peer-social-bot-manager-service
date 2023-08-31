@@ -2070,11 +2070,11 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
-						// System.out.println("Closed Context");
+						System.out.println("Closed Context");
 						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
 								triggeredBody.getAsString("user"));
 					} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
-						// System.out.println("Keep Context open");
+						System.out.println("Keep Context open");
 						bot.getMessenger(messengerID).restoreConversationState(triggeredBody.getAsString("channel"));
 					}
 				} catch (ParseException e) {

@@ -268,7 +268,7 @@ public class Messenger {
 
 		if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
 			// no other messages to follow
-
+			System.out.println("No following messages");
 			if (storedSession.containsKey(channel)) {
 				stateMap.put(channel, storedSession.get(channel));
 				state = storedSession.get(channel);
@@ -280,6 +280,10 @@ public class Messenger {
 					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
 							state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
 				}
+			} else {
+				System.out.println("No session state found");
+				this.stateMap.remove(channel);
+				this.previousStateInConversation.remove(channel);
 			}
 		} else if (state.getFollowingMessages().get("") != null) {
 			// check whether bot action needs to be triggered without user input
@@ -825,6 +829,7 @@ public class Messenger {
 						} else
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
+							System.out.println("No following messages");
 							this.stateMap.remove(message.getChannel());
 							this.previousStateInConversationBackup.put(message.getChannel(), state); // backup state in
 																										// case we have
