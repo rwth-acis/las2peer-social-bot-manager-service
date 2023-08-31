@@ -423,7 +423,7 @@ public class Messenger {
 				remarks.put("user", encryptedUser);
 
 				boolean currentlyInServiceContext = this.triggeredFunction.containsKey(message.getChannel());
-
+				System.out.println("currentlyInServiceContext: true.");
 				final IncomingMessage lastUserMessage = this.previousStateInConversation.get(message.getChannel());
 				if (lastUserMessage != null) {
 					System.out.println("Backup retrieved. lastUserMessage intent: " +
@@ -888,7 +888,7 @@ public class Messenger {
 						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(), conversationId));
 				// Chain bot action with openai, add another message info with same message info
 				// but with the openai trigger function
-				if (state.getTriggeredFunctionIds().size() > 1) {
+				if (state != null && state.getTriggeredFunctionIds().size() > 1) {
 					messageInfos
 							.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
 									"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(),
