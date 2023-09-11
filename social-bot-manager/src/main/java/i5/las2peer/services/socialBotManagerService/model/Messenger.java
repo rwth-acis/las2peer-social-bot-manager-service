@@ -382,6 +382,7 @@ public class Messenger {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
+				System.out.println("NEW MESSAGE");
 				// // If a channel/user pair still isn't assigned to a state, assign it to null
 				// if (this.stateMap.get(message.getChannel()) == null) {
 				// HashMap<String, IncomingMessage> initMap = new HashMap<String,

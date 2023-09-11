@@ -17,11 +17,15 @@ public class ServiceFunction extends TriggerFunction{
 	private HashSet<Trigger> trigger;
 	private HashMap<String,String> onStart;
 
+	HashMap<IncomingMessage,String> triggerEntity;
+
+
 	public ServiceFunction() {
 		setAttributes(new HashSet<ServiceFunctionAttribute>());
 		setBots(new HashSet<Bot>());
 		setTrigger(new HashSet<Trigger>());
 		this.onStart = new HashMap<String,String>();
+		this.triggerEntity = new HashMap<IncomingMessage, String>();
 	}
 
 	public String getId() {
@@ -148,6 +152,14 @@ public class ServiceFunction extends TriggerFunction{
 
 	public void addTrigger(Trigger t) {
 		this.trigger.add(t);
+	}
+	
+	public String getTriggerEntity(IncomingMessage m){
+      return this.triggerEntity.get(m);
+  	}
+
+	public void addTriggerEntity(IncomingMessage m, String triggerEntity) {
+		this.triggerEntity.put(m, triggerEntity);
 	}
 
 }
