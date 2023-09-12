@@ -18,6 +18,7 @@ public class IncomingMessage {
 	String errorMessage;
 	String type;
 	boolean openAIEnhance;
+	boolean freezeMessageSend;
 
 	/**
 	 * Conversation Id for the message
@@ -208,5 +209,9 @@ public class IncomingMessage {
 
 	public void setFollowupMessageType(String followupMessageType) {
 		this.followupMessageType = followupMessageType;
+	}
+
+	public void setFreezeMessageSend(boolean flag) {
+		this.freezeMessageSend = flag;
 	}
 }

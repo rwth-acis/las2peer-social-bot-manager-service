@@ -323,9 +323,11 @@ public class Messenger {
 
 			// If only message to be sent
 			String response = state.getResponse(random);
-			if (response != null && !response.equals("")) {
+			if (response != null && !response.equals("") && !state.freezeMessageSend) {
+				System.out.println("SETCONTEXTTOBASIC SEND MESSAGE");
 				this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
 						state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
+				state.setFreezeMessageSend(false);
 			}
 			if (state.getFollowingMessages().size() == 0) {
 				// no other messages to follow
