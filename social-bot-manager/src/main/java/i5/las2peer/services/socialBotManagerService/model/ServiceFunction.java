@@ -17,7 +17,7 @@ public class ServiceFunction extends TriggerFunction{
 	private HashSet<Trigger> trigger;
 	private HashMap<String,String> onStart;
 
-	HashMap<IncomingMessage,String> triggerEntity;
+	private HashMap<IncomingMessage,String> leadsTo;
 
 
 	public ServiceFunction() {
@@ -25,7 +25,7 @@ public class ServiceFunction extends TriggerFunction{
 		setBots(new HashSet<Bot>());
 		setTrigger(new HashSet<Trigger>());
 		this.onStart = new HashMap<String,String>();
-		this.triggerEntity = new HashMap<IncomingMessage, String>();
+		this.leadsTo = new HashMap<IncomingMessage, String>();
 	}
 
 	public String getId() {
@@ -154,12 +154,12 @@ public class ServiceFunction extends TriggerFunction{
 		this.trigger.add(t);
 	}
 	
-	public String getTriggerEntity(IncomingMessage m){
-      return this.triggerEntity.get(m);
+	public HashMap<IncomingMessage, String> getLeadsTo(){
+      return this.leadsTo;
   	}
 
-	public void addTriggerEntity(IncomingMessage m, String triggerEntity) {
-		this.triggerEntity.put(m, triggerEntity);
+	public void addLeadsTo(IncomingMessage m, String triggerEntity) {
+		this.leadsTo.put(m, triggerEntity);
 	}
 
 }

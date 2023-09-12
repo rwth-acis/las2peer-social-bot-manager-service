@@ -204,6 +204,10 @@ public class Messenger {
 		return conversationMap;
 	}
 
+	public HashMap<String, IncomingMessage> getStateMap() {
+		return stateMap;
+	}
+
 	public void updateConversationInConversationMap(String channel, Collection<ConversationMessage> conversation) {
 		conversationMap.put(channel, conversation);
 	}

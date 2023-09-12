@@ -2002,12 +2002,30 @@ public class SocialBotManagerService extends RESTService {
 				}
 			}
 
+			// if the result is successful then we also check if there is a leadsTo after the bot action:
+			if (r.getResponse() != null) {
+				if (!sf.getLeadsTo().isEmpty()) {
+					IncomingMessage msg = (IncomingMessage) sf.getLeadsTo().keySet().toArray()[0];
+					String intentKey = (String) sf.getLeadsTo().values().toArray()[0];
+					// We add the incoming message to the rootChildren of the messenger
+					//bot.getMessenger(messengerID).addMessage(null);
+					// We also add the incoming message to the followupmessage of the current conversation state
+					IncomingMessage currentState = bot.getMessenger(messengerID).getStateMap().get(channel);
+					currentState.addFollowupMessage(intentKey, msg);
+					// We update the conversation state to the new incoming message
+					//bot.getMessenger(messengerID).updateConversationState(channel, msg, triggeredBody.getAsNumber("conversationId"));
+				}
+			} else {
+				System.out.println("RESPONSE FROM REQUEST IS NULL");
+			}
+
 			if (r.getResponse().toString().length() > 30) {
 				System.out.println(r.getResponse().toString().substring(0, 30) + "...");
 			} else {
 				System.out.println(r.getResponse());
 			}
 
+			
 			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
 				try {
 					JSONObject response = (JSONObject) parser.parse(r.getResponse());
@@ -2080,6 +2098,8 @@ public class SocialBotManagerService extends RESTService {
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
+
+							// if the result is successful then we check if there is a leadsTo after the bot action
 						} else{
 							System.out.println("TRIGGER CHAT");
 							triggerChat(chat, triggeredBody);
@@ -2108,6 +2128,7 @@ public class SocialBotManagerService extends RESTService {
 									.updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
 						}
 					}
+
 					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
 						// System.out.println("Closed Context");
 						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),

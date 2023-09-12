@@ -326,7 +326,7 @@ public class BotParser {
 					ServiceFunction botFunction = bsfList.get(source);
 					if (incomingMessages.containsKey(target)) {
 						IncomingMessage targetMessage = incomingMessages.get(target);
-						botFunction.addTriggerEntity(targetMessage, value);
+						botFunction.addLeadsTo(targetMessage, value);
 						//botFunction.addFollowupMessage(value, targetMessage);
 					}
 				}
