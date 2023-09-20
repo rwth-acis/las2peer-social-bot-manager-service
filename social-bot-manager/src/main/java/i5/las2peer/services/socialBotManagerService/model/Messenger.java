@@ -514,7 +514,7 @@ public class Messenger {
 												state = this.rootChildren.get("default");
 											}
 										} else {
-											state = this.knownIntents.get("default");
+											state = this.rootChildren.get("default");
 										}
 
 									}
