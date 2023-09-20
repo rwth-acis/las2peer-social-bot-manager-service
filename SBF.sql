@@ -26,7 +26,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Table structure for attributes
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `attributes`  (
-  `id` varchar(255) NOT NULL AUTO_INCREMENT,
+`id` INT NOT NULL AUTO_INCREMENT,
   `bot` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `channel` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
