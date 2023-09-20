@@ -160,7 +160,7 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
-	private String webconnectorUrl; // address of running webconnector
+	private String webconnectorUrl = "http://localhost:8080"; // address of running webconnector
 	private static String webconnectorUrlStatic; // address of running webconnector
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
@@ -281,6 +281,8 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
 		} catch (MongoException me) {
 			System.err.println(me);
+		} catch (Exception e) {
+			System.err.println(e);
 		} finally {
 			mongoClient.close();
 		}
