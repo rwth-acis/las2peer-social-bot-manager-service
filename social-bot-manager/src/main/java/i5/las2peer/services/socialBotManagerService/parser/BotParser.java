@@ -11,14 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-
 import javax.websocket.DeploymentException;
-import javax.ws.rs.core.MediaType;
-
 import com.google.gson.Gson;
-
 import i5.las2peer.api.Context;
-import i5.las2peer.api.Service;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.AgentException;
 import i5.las2peer.api.security.AgentNotFoundException;
@@ -275,17 +270,20 @@ public class BotParser {
                     IncomingMessage cr = incomingMessages.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
+						
 						// toggle incoming message's openaienhance flag here
 						if (botFunction.getServiceName().equals("openai") && botFunction.getFunctionName().equals("personalize")){
+							cr.addTriggeredFunctionId(botFunction.getId());
 							cr.setOpenAIEnhance(true);
+						} else {
+							cr.addTriggeredFunctionIdFirst(botFunction.getId());
 						}
 					}
                 }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.setTriggeredFunctionId(botFunction.getId());
+						cr.addTriggeredFunctionId(botFunction.getId());
 					}
                 }
 
@@ -359,19 +357,8 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
-				if (bsfList.get(source) != null) {
-					ServiceFunction firstBotFunction = bsfList.get(source);
-					if (bsfList.get(target) != null) {
-						ServiceFunction secondBotFunction = bsfList.get(target);
-						Trigger t = new Trigger(firstBotFunction, secondBotFunction);
-						firstBotFunction.addTrigger(t);
-						for (Bot b : secondBotFunction.getBots()) {
-							b.addTrigger(t);
-						}
-					}
-				}
 				// Action triggers action
-				else if (usfList.get(source) != null) {
+				if (usfList.get(source) != null) {
 					ServiceFunction userFunction = usfList.get(source);
 					if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
@@ -395,7 +382,7 @@ public class BotParser {
 					// ...Bot Action
 					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						m.setTriggeredFunction(botFunction);
+						m.addTriggeredFunction(botFunction);
 					}
 				}
 			}

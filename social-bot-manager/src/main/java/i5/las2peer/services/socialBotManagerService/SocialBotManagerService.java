@@ -2,8 +2,6 @@ package i5.las2peer.services.socialBotManagerService;
 
 import java.math.BigInteger;
 import java.io.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -45,8 +43,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import com.slack.api.Slack;
-
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -55,12 +51,10 @@ import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
-import i5.las2peer.api.ServiceException;
 import i5.las2peer.api.execution.InternalServiceException;
 import i5.las2peer.api.execution.ServiceAccessDeniedException;
 import i5.las2peer.api.execution.ServiceInvocationFailedException;
@@ -73,11 +67,7 @@ import i5.las2peer.api.persistency.Envelope;
 import i5.las2peer.api.persistency.EnvelopeAccessDeniedException;
 import i5.las2peer.api.persistency.EnvelopeNotFoundException;
 import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
-import i5.las2peer.api.security.Agent;
-import i5.las2peer.api.security.AgentAccessDeniedException;
-import i5.las2peer.api.security.AgentAlreadyExistsException;
 import i5.las2peer.api.security.AgentException;
-import i5.las2peer.api.security.AgentLockedException;
 import i5.las2peer.api.security.AgentNotFoundException;
 import i5.las2peer.api.security.AgentOperationFailedException;
 import i5.las2peer.api.security.UserAgent;
@@ -102,7 +92,6 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
-import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -111,7 +100,6 @@ import i5.las2peer.services.socialBotManagerService.model.Trigger;
 import i5.las2peer.services.socialBotManagerService.model.TriggerFunction;
 import i5.las2peer.services.socialBotManagerService.model.BotRoutine;
 import i5.las2peer.services.socialBotManagerService.model.ConversationMessage;
-import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
@@ -134,8 +122,6 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
@@ -174,7 +160,7 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
-	private String webconnectorUrl = "localhost:8080"; // address of running webconnector
+	private String webconnectorUrl = "http://localhost:8080"; // address of running webconnector
 	private static String webconnectorUrlStatic; // address of running webconnector
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
@@ -295,6 +281,8 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
 		} catch (MongoException me) {
 			System.err.println(me);
+		} catch (Exception e) {
+			System.err.println(e);
 		} finally {
 			mongoClient.close();
 		}
@@ -986,8 +974,8 @@ public class SocialBotManagerService extends RESTService {
 											i5.las2peer.services.socialBotManagerService.model.IncomingMessage chatResponses = incomingMessage;
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
-											//get first trigger function for now
-											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
+											// get first trigger function for now
+											triggerdFunctionId = chatResponses.getTriggeredFunctionIds().get(0);
 											messengerName = m.getName();
 										}
 									}
@@ -1536,8 +1524,7 @@ public class SocialBotManagerService extends RESTService {
 						// add path if the triggered function is a service function
 						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
 							functionPath = triggeredFunction.getFunctionPath();
-						///JSONObject triggeredBody = new JSONObject();
-						JSONObject triggeredBody = body;
+						JSONObject triggeredBody = new JSONObject();
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 						for (ServiceFunction bsf : bot.getBotServiceFunctions().values()) {
 							for (ServiceFunctionAttribute bsfa : bsf.getAttributes()) {
@@ -1572,11 +1559,9 @@ public class SocialBotManagerService extends RESTService {
 		// Attributes of the triggered function
 		// System.out.println(triggeredFunctionAttribute.getName());
 		if (triggeredFunctionAttribute.isSameAsTrigger()) {
-			System.out.println("TRIGGERDFUNCTIONATTRIBUTES SAME AS TRIGGER");
 			mapAttributes(triggeredBody, triggeredFunctionAttribute, functionPath, attlist, triggerAttributes);
 		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { // triggeredFunctionAttribute.getName()
 																					// == "body", doesn't make sense?
-			System.out.println("TRIGGERDFUNCTIONATTRIBUTE = BODY");
 			JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
 			// sfa has child attributes
 			if (!triggeredFunctionAttribute.getChildAttributes().isEmpty()) {
@@ -2043,7 +2028,6 @@ public class SocialBotManagerService extends RESTService {
 						if (response.containsKey("multiFiles")) {
 							for (Object o : (JSONArray) response.get("multiFiles")) {
 								JSONObject jsonO = (JSONObject) o;
-
 								jsonO.put("channel", triggeredBody.getAsString("channel"));
 								jsonO.put("email", triggeredBody.getAsString("email"));
 								triggerChat(chat, jsonO);
@@ -2184,10 +2168,6 @@ public class SocialBotManagerService extends RESTService {
 		JSONObject monitorEvent42 = new JSONObject();
 		final long start = System.currentTimeMillis();
 		monitorEvent42.put("task", "Send message");
-		
-		if (body.containsKey("tokens")) {
-			monitorEvent42.put("tokens", body.getAsNumber("tokens"));
-		}
 
 		if (body.containsKey("contactList")) {
 			// Send normal message to users on contactlist

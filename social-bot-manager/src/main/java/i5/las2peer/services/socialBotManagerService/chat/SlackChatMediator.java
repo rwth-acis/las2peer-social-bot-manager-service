@@ -40,8 +40,6 @@ import com.slack.api.rtm.message.Message.MessageBuilder;
 
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 
-import com.slack.api.methods.request.bots.*;
-
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;

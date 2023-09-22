@@ -10,10 +10,11 @@ public class IncomingMessage {
 	String intentLabel;
 	String followupMessageType;
 	String entityKeyword;
-  String NluID;
-  boolean containsFile;
+	String NluID;
+	boolean containsFile;
 	String triggeredFunctionId;
-	HashMap<IncomingMessage,String> triggerEntity;
+	ArrayList<String> triggeredFunctionIds;
+	HashMap<IncomingMessage, String> triggerEntity;
 	String fileURL;
 	String errorMessage;
 	String type;
@@ -76,6 +77,7 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
+		this.triggeredFunctionIds = new ArrayList<String>();
 	}
 
 	public UUID getConversationId() {
@@ -147,12 +149,12 @@ public class IncomingMessage {
 		}
 	}
 
-	public void setTriggeredFunction(ServiceFunction triggeredFunction) {
-		this.triggeredFunctionId = triggeredFunction.getId();
+	public void addTriggeredFunction(ServiceFunction triggeredFunction) {
+		this.triggeredFunctionIds.add(triggeredFunction.getId());
 	}
 
-	public String getTriggeredFunctionId() {
-		return this.triggeredFunctionId;
+	public ArrayList<String> getTriggeredFunctionIds() {
+		return this.triggeredFunctionIds;
 	}
 
 	public boolean expectsFile() {
@@ -174,7 +176,7 @@ public class IncomingMessage {
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-  
+
 	public String getTriggerEntity(IncomingMessage m){
       return this.triggerEntity.get(m);
   	}

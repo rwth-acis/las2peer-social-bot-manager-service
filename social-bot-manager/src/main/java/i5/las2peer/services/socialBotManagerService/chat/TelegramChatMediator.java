@@ -1,11 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Vector;
@@ -14,10 +12,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
-import jnr.ffi.annotations.In;
 import net.minidev.json.JSONArray;
 import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;

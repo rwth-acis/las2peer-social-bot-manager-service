@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 
-import javax.print.attribute.standard.Media;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -57,12 +56,8 @@ import com.rocketchat.core.model.TokenObject;
 import i5.las2peer.connectors.webConnector.client.ClientResponse;
 import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
-import i5.las2peer.services.socialBotManagerService.model.ConversationMessage;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
-
-
-import javax.ws.rs.core.MediaType;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {

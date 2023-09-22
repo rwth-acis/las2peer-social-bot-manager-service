@@ -18,11 +18,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Vector;
-
 import javax.websocket.DeploymentException;
-
-import com.google.gson.Gson;
-
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.services.socialBotManagerService.SocialBotManagerService;
@@ -35,7 +31,6 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.Intent;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import jnr.ffi.annotations.In;
 import net.minidev.json.JSONObject;
 
 import java.util.UUID;
@@ -177,7 +172,6 @@ public class Messenger {
 				throw new ParseBotException("Unimplemented chat service: " + chatService);
 		}
 
-
 		this.name = id;
 		this.rootChildren = new HashMap<String, IncomingMessage>();
 		this.conversationMap = new HashMap<String, Collection<ConversationMessage>>();
@@ -278,7 +272,7 @@ public class Messenger {
 
 		if (state.getFollowingMessages() == null || state.getFollowingMessages().size() == 0) {
 			// no other messages to follow
-
+			System.out.println("No following messages");
 			if (storedSession.containsKey(channel)) {
 				stateMap.put(channel, storedSession.get(channel));
 				state = storedSession.get(channel);
@@ -290,6 +284,10 @@ public class Messenger {
 					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
 							state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
 				}
+			} else {
+				System.out.println("No session state found");
+				this.stateMap.remove(channel);
+				this.previousStateInConversation.remove(channel);
 			}
 		} else if (state.getFollowingMessages().get("") != null) {
 			// check whether bot action needs to be triggered without user input
@@ -434,25 +432,9 @@ public class Messenger {
 				JSONObject remarks = new JSONObject();
 				remarks.put("user", encryptedUser);
 
-				IncomingMessage lastUserMessage = this.previousStateInConversation.get(message.getChannel());
-				if (lastUserMessage != null) {
-					// System.out.println("lastUserMessage intent: " +
-					// lastUserMessage.getIntentKeyword());
-					if (state != null) {
-						// System.out.println("state intent: " + state.getIntentKeyword());
-					} else {
-						// System.out.println("state is null");
-					}
-					conversationId = lastUserMessage.getConversationId();
-					if (conversationId == null) {
-						// System.out.println("conversationId is null, generating new one");
-						conversationId = UUID.randomUUID();
-					}
-				} else {
-					// System.out.println("lastUserMessage is null, generating new conversationId");
-					conversationId = UUID.randomUUID();
-				}
-				// System.out.println("conversationId: " + conversationId.toString());
+				conversationId = this.determineConversationId(message.getChannel());
+
+				remarks.put("in-service-context", this.triggeredFunction.containsKey(message.getChannel()));
 
 				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
 						conversationId.toString(),
@@ -463,6 +445,8 @@ public class Messenger {
 						intent.getKeyword(),
 						bot.getId(), "bot", "complete", System.currentTimeMillis());
 
+				// ________________ start modification of state machine__________________
+
 				if (state == null && message.getText().startsWith("!")
 						&& this.rootChildren.get(intent.getKeyword()) == null) {
 					// in case a command is triggered which does not exist
@@ -470,10 +454,6 @@ public class Messenger {
 							new HashMap<String, IncomingMessage>(), "text");
 					return;
 				}
-				// if (state != null) {
-				// System.out.println(
-				// "Current state intent: " + state.getIntentKeyword());
-				// }
 
 				if (state != null && message.getText().startsWith("!")
 						&& !state.getFollowingMessages().keySet().contains(intent.getKeyword())) {
@@ -540,6 +520,8 @@ public class Messenger {
 											if (state == null) {
 												state = this.rootChildren.get("default");
 											}
+										} else {
+											state = this.rootChildren.get("default");
 										}
 
 									}
@@ -548,18 +530,14 @@ public class Messenger {
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							}
 						} else {
-							// any is a static forward
-							// TODO include entities of intents
-							// If there is no next state, stay in the same state
 							if (state.getFollowingMessages() == null || state.getFollowingMessages().isEmpty()) {
-
-								state = this.rootChildren.get(intent.getKeyword());
+								state = this.rootChildren.get(intent.getKeyword()); // set to the first matching state
+																					// from start state (might be null
+																					// // if none is found)
 								this.currentNluModel.put(message.getChannel(), "0");
-
 								this.updateConversationState(message.getChannel(), state, conversationId);
 								addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 							} else if (state.getFollowingMessages().get(intent.getKeyword()) != null) {
-
 								// check if a file was received during a conversation and search for a follow up
 								// incoming message which expects a file.
 								if (message.getFileBody() != null) {
@@ -709,9 +687,9 @@ public class Messenger {
 						}
 
 						String response = state.getResponse(random);
-						triggeredFunctionId = state.getTriggeredFunctionId() == null
-								|| state.getTriggeredFunctionId().equals("") ? null
-										: state.getTriggeredFunctionId();
+						triggeredFunctionId = state.getTriggeredFunctionIds() == null
+								|| state.getTriggeredFunctionIds().isEmpty() ? null
+										: state.getTriggeredFunctionIds().get(0);
 						if (triggeredFunctionId != null && triggeredFunctionId != "") {
 							this.triggeredFunction.put(message.getChannel(), triggeredFunctionId);
 							contextOn = true;
@@ -757,14 +735,26 @@ public class Messenger {
 										conversationId.toString(), activityName, bot.getId(), "bot", "complete",
 										System.currentTimeMillis());
 								// check if message parses buttons or is simple text
-								if(state.getType().equals("Interactive Message")){
-									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split, this.chatMediator.getAuthToken(), state.getFollowingMessages(), java.util.Optional.empty());
-								} else{
-									// TODO: Block sending message to channel if the service is replacing the bot message with its own message
-									if (state.getOpenAIEnhance()) {
+								if (state.getType().equals("Interactive Message")) {
+									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
+											this.chatMediator.getAuthToken(), state.getFollowingMessages(),
+											java.util.Optional.empty());
+								} else {
+									// TODO: Block sending message to channel if the service is replacing the bot
+									// message with its own message
+									if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() == 1) {
+
 										messageSent = true;
+									} else if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() > 1) {
+
+										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
+												replaceVariables(message.getChannel(), split),
+												state.getFollowingMessages(), state.followupMessageType);
 									} else {
-										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(), replaceVariables(message.getChannel(), split), state.getFollowingMessages(),state.followupMessageType);
+
+										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
+												replaceVariables(message.getChannel(), split),
+												state.getFollowingMessages(), state.followupMessageType);
 									}
 									if (messageSent) {
 										botMessage = replaceVariables(message.getChannel(), split);
@@ -848,6 +838,7 @@ public class Messenger {
 						} else
 						// If conversation flow is terminated, reset state
 						if (state.getFollowingMessages().isEmpty()) {
+							System.out.println("No following messages");
 							this.stateMap.remove(message.getChannel());
 							this.previousStateInConversationBackup.put(message.getChannel(), state); // backup state in
 																										// case we have
@@ -875,13 +866,17 @@ public class Messenger {
 					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
-						"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
-				// Chain bot action with openai, add another message info with same message info but with the openai trigger function
-				// if (state.getTriggeredFunctionIds().size() > 1) {
-				// 	messageInfos.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
-				// 		"", contextOn, recognizedEntities.get(message.getChannel()),this.getName()));
-				// }
-				//ConversationMessage conversationMsg = new ConversationMessage(message.getConversationId(), "user", message.getText());
+						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(), conversationId));
+				// Chain bot action with openai, add another message info with same message info
+				// but with the openai trigger function
+				if (state != null && state.getTriggeredFunctionIds().size() > 1) {
+					messageInfos
+							.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
+									"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(),
+									conversationId));
+				}
+				// ConversationMessage conversationMsg = new
+				// ConversationMessage(message.getConversationId(), "user", message.getText());
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
 				conversation.add(userConvMsg);
@@ -901,6 +896,54 @@ public class Messenger {
 			}
 		}
 
+	}
+
+	/**
+	 * Determines the conversation id for a given channel. This depends on the
+	 * current state, the last user message and whether we
+	 * are in a service context.
+	 * 
+	 * @param channelId
+	 * @return
+	 */
+	private UUID determineConversationId(String channelId) {
+		boolean currentlyInServiceContext = this.triggeredFunction.containsKey(channelId);
+		IncomingMessage lastUserMessage = this.previousStateInConversation.get(channelId);
+		IncomingMessage state = this.stateMap.get(channelId);
+		UUID conversationId = null;
+		System.out.println("currentlyInServiceContext: " + currentlyInServiceContext);
+
+		if (lastUserMessage != null)
+			System.out.println("lastUserMessage is : " + lastUserMessage.getIntentKeyword());
+		if (state != null)
+			System.out.println("state: " + state.getIntentKeyword());
+
+		if (currentlyInServiceContext) {
+			System.out.println(
+					"currentlyInServiceContext: true. Thus state takes precedence over lastUserMessage.");
+			if (state == null) {
+				state = this.previousStateInConversationBackup.get(channelId);
+			}
+			if (state != null) {
+				System.out.println(
+						". state intent is: "
+								+ state.getIntentKeyword());
+				conversationId = state.getConversationId();
+			}
+		} else if (lastUserMessage != null) {
+			System.out.println("using lastUserMessage intent: " + lastUserMessage.getIntentKeyword());
+			conversationId = lastUserMessage.getConversationId();
+		} else if (state != null) {
+			System.out.println("lastUserMessage is null. using state intent: " + state.getIntentKeyword());
+			conversationId = state.getConversationId();
+		}
+
+		if (conversationId == null) {
+			System.out.println("conversationId: null. generated new one");
+			conversationId = UUID.randomUUID();
+
+		}
+		return conversationId;
 	}
 
 	public void setUrl(String Url) throws AuthTokenException {
@@ -1129,9 +1172,17 @@ public class Messenger {
 	 * @param conversationId The conversation id to set.
 	 */
 	private void updateConversationState(String channelId, IncomingMessage state, UUID conversationId) {
-		state.setConversationId(conversationId);
-		this.previousStateInConversation.put(channelId, state);
-		this.stateMap.put(channelId, state);
+		if (state == null) {
+			System.out.println("State is null. Resetting state for channel " + channelId);
+			this.stateMap.remove(channelId);
+			this.previousStateInConversationBackup.put(channelId, state);
+			this.previousStateInConversation.remove(channelId);
+		} else {
+			state.setConversationId(conversationId);
+			this.previousStateInConversation.put(channelId, state);
+			this.stateMap.put(channelId, state);
+		}
+
 	}
 
 	public void restoreConversationState(String channelId) {
