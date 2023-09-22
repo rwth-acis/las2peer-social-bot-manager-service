@@ -1808,9 +1808,9 @@ public class SocialBotManagerService extends RESTService {
 				serviceEndpoint = sf.getServiceName() + functionPath;
 			}
 			remarks.put("serviceEndpoint", serviceEndpoint);
-			//l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-			//		triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
-			//		botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
+					triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
+					botAgent.getIdentifier().toString(), "bot", "start", System.currentTimeMillis());
 			// client.setLogin("alice", "pwalice");
 			// client.setLogin(botAgent.getLoginName(), botPass);
 			String userId = triggeredBody.getAsString("user");
@@ -1957,9 +1957,9 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					// triggerChat(chat, triggeredBody);
-					// l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-					// 		triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
-					// 		botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
+					l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
+							triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
+							botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 					return;
 
 					// FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg",
@@ -2148,9 +2148,9 @@ public class SocialBotManagerService extends RESTService {
 			} else {
 				System.out.println("RESPONSE FROM REQUEST IS NULL");
 			}
-			// l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-			// 		triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
-			// 		botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
+			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
+					triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
+					botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			// deprecated
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
