@@ -319,6 +319,15 @@ public class BotParser {
 						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
 				}
+				// Bot Action leads to...
+				else if (bsfList.get(source) != null) {
+					ServiceFunction botFunction = bsfList.get(source);
+					if (incomingMessages.containsKey(target)) {
+						IncomingMessage targetMessage = incomingMessages.get(target);
+						botFunction.addLeadsTo(targetMessage, value);
+						//botFunction.addFollowupMessage(value, targetMessage);
+					}
+				}
 			}
 		}
 

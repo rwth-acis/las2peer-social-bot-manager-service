@@ -19,6 +19,7 @@ public class IncomingMessage {
 	String errorMessage;
 	String type;
 	boolean openAIEnhance;
+	boolean freezeMessageSend;
 
 	/**
 	 * Conversation Id for the message
@@ -89,10 +90,6 @@ public class IncomingMessage {
 
 	public String getIntentKeyword() {
 		return intentKeyword;
-	}
-
-	public void addTriggeredFunctionIdFirst(String functionId) {
-		this.triggeredFunctionIds.add(0, functionId);
 	}
 
 	public String getEntityKeyword() {
@@ -179,14 +176,10 @@ public class IncomingMessage {
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-    
-    public void addTriggeredFunctionId(String functionId){
-        this.triggeredFunctionIds.add(functionId);
-    }
 
 	public String getTriggerEntity(IncomingMessage m){
-        return this.triggerEntity.get(m);
-    }
+      return this.triggerEntity.get(m);
+  	}
 
 	public void setTriggeredFunctionId(String functionId) {
 		this.triggeredFunctionId = functionId;
@@ -218,5 +211,9 @@ public class IncomingMessage {
 
 	public void setFollowupMessageType(String followupMessageType) {
 		this.followupMessageType = followupMessageType;
+	}
+
+	public void setFreezeMessageSend(boolean flag) {
+		this.freezeMessageSend = flag;
 	}
 }
