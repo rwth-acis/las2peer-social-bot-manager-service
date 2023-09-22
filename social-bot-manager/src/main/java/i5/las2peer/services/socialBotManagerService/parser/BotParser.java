@@ -270,20 +270,17 @@ public class BotParser {
                     IncomingMessage cr = incomingMessages.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						
+						cr.setTriggeredFunctionId(botFunction.getId());
 						// toggle incoming message's openaienhance flag here
 						if (botFunction.getServiceName().equals("openai") && botFunction.getFunctionName().equals("personalize")){
-							cr.addTriggeredFunctionId(botFunction.getId());
 							cr.setOpenAIEnhance(true);
-						} else {
-							cr.addTriggeredFunctionIdFirst(botFunction.getId());
 						}
 					}
                 }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.addTriggeredFunctionId(botFunction.getId());
+						cr.setTriggeredFunctionId(botFunction.getId());
 					}
                 }
 
@@ -382,7 +379,7 @@ public class BotParser {
 					// ...Bot Action
 					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						m.addTriggeredFunction(botFunction);
+						m.setTriggeredFunction(botFunction);
 					}
 				}
 			}

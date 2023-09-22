@@ -13,7 +13,6 @@ public class IncomingMessage {
 	String NluID;
 	boolean containsFile;
 	String triggeredFunctionId;
-	ArrayList<String> triggeredFunctionIds;
 	HashMap<IncomingMessage, String> triggerEntity;
 	String fileURL;
 	String errorMessage;
@@ -77,7 +76,6 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
-		this.triggeredFunctionIds = new ArrayList<String>();
 	}
 
 	public UUID getConversationId() {
@@ -149,12 +147,12 @@ public class IncomingMessage {
 		}
 	}
 
-	public void addTriggeredFunction(ServiceFunction triggeredFunction) {
-		this.triggeredFunctionIds.add(triggeredFunction.getId());
+	public void setTriggeredFunction(ServiceFunction triggeredFunction) {
+		this.triggeredFunctionId = triggeredFunction.getId();
 	}
 
-	public ArrayList<String> getTriggeredFunctionIds() {
-		return this.triggeredFunctionIds;
+	public String getTriggeredFunctionId() {
+		return this.triggeredFunctionId;
 	}
 
 	public boolean expectsFile() {
