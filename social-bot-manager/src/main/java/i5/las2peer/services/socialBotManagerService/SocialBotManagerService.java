@@ -92,6 +92,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -975,7 +976,7 @@ public class SocialBotManagerService extends RESTService {
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
 											// get first trigger function for now
-											triggerdFunctionId = chatResponses.getTriggeredFunctionIds().get(0);
+											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
 											messengerName = m.getName();
 										}
 									}
