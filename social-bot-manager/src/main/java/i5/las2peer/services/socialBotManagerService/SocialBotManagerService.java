@@ -1532,6 +1532,22 @@ public class SocialBotManagerService extends RESTService {
 								attlist.put(bsfa.getId(), bsfa);
 							}
 						}
+						String user = body.getAsString("user");
+						String channel = body.getAsString("channel");
+						String email = body.getAsString("email");
+						String convId = body.getAsString("conversationId");
+						String intent = body.getAsString("intent");
+						String contextOn = body.getAsString("contextOn");
+						triggeredBody.put("user", user);
+						triggeredBody.put("channel", channel);
+						triggeredBody.put("email", email);
+						triggeredBody.put("conversationId", convId);
+						triggeredBody.put("intent", intent);
+						triggeredBody.put("contextOn", contextOn);
+						triggeredBody.put("entities", body.get("entities"));
+						triggeredBody.put("organization", body.get("organization"));
+
+
 
 						JSONObject triggerAttributes = (JSONObject) body.get("attributes");
 						for (ServiceFunctionAttribute triggeredFunctionAttribute : triggeredFunction.getAttributes()) {
@@ -2041,6 +2057,7 @@ public class SocialBotManagerService extends RESTService {
 								ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
 								ConversationMessage botMsg = convList.get(convList.size() - 1);
 								String convId = botMsg.getConversationId();
+								triggeredBody.put("conversationId", convId);
 								ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant",
 										triggeredBody.getAsString("text"));
 								conv.add(newConvMsg);

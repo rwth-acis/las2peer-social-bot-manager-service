@@ -354,6 +354,17 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
+				if (bsfList.get(source) != null) {
+					ServiceFunction firstBotFunction = bsfList.get(source);
+					if (bsfList.get(target) != null) {
+						ServiceFunction secondBotFunction = bsfList.get(target);
+						Trigger t = new Trigger(firstBotFunction, secondBotFunction);
+						firstBotFunction.addTrigger(t);
+						for (Bot b : secondBotFunction.getBots()) {
+							b.addTrigger(t);
+						}
+					}
+				}
 				// Action triggers action
 				if (usfList.get(source) != null) {
 					ServiceFunction userFunction = usfList.get(source);
