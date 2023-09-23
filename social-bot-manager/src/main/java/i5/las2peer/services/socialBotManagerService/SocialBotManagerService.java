@@ -2116,8 +2116,6 @@ public class SocialBotManagerService extends RESTService {
 						//We check if there is a leadsTo after the bot action:
 						if (!sf.getLeadsTo().isEmpty()) {
 							System.out.println("BOT ACTION HAS LEADS TO MSG");
-							IncomingMessage msg = (IncomingMessage) sf.getLeadsTo().keySet().toArray()[0];
-							String intentKey = (String) sf.getLeadsTo().values().toArray()[0];
 							
 							/** ADD CHECKS HERE TO DETERMINE WHETHER OR NOT TO ADD THE LEADS TO INCOMING MESSAGE TO THE FOLLOW UP STATE
 							 * 
@@ -2127,7 +2125,12 @@ public class SocialBotManagerService extends RESTService {
 
 							// We add the incoming message to the followupmessage of the current conversation state
 							IncomingMessage currentState = bot.getMessenger(messengerID).getStateMap().get(channel);
-							currentState.addFollowupMessage(intentKey, msg);
+
+							for (int i = 0; i < sf.getLeadsTo().size(); i++) {
+								IncomingMessage msg = (IncomingMessage) sf.getLeadsTo().keySet().toArray()[i];
+								String intentKey = (String) sf.getLeadsTo().values().toArray()[i];
+								currentState.addFollowupMessage(intentKey, msg);
+							}
 							currentState.setFreezeMessageSend(true);
 						} else if (!sf.getTrigger().isEmpty()){
 						// 	System.out.println("BOT ACTION HAS TRIGGER");
