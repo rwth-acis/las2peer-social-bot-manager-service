@@ -289,34 +289,6 @@ public class Messenger {
 				this.stateMap.remove(channel);
 				this.previousStateInConversation.remove(channel);
 			}
-		} else if (state.getFollowingMessages().get("") != null) {
-			// check whether bot action needs to be triggered without user input
-			state = state.getFollowingMessages().get("");
-
-			stateMap.put(channel, state);
-			this.previousStateInConversation.put(channel, state);
-			if (!state.getResponse(random).equals("")) {
-				if (this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null
-						&& !state.getFollowingMessages().isEmpty()) {
-					this.chatMediator.sendMessageToChannel(channel,
-							replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),
-							"text");
-
-				} else {
-					this.chatMediator.sendMessageToChannel(channel,
-							replaceVariables(channel, state.getResponse(random)), "text");
-
-				}
-			}
-			/*
-			 * if (state.getResponse(random).triggeredFunctionId != null
-			 * && !state.getResponse(random).triggeredFunctionId.equals("")) {
-			 * ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
-			 * this.triggeredFunction.put(channel,
-			 * state.getResponse(random).triggeredFunctionId);
-			 * this.chatMediator.getMessageCollector().addMessage(chatMsg);
-			 * }
-			 */
 		} else {
 
 			// If only message to be sent

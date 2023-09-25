@@ -2062,8 +2062,7 @@ public class SocialBotManagerService extends RESTService {
 										triggeredBody.getAsString("text"));
 								conv.add(newConvMsg);
 								bot.getMessenger(messengerID).updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
-								System.out.println("FIRST BOT ACTION CALL, UPDATE CONV WITH " + conv);
-
+								
 								//Trigger trigger = sf.getTrigger().iterator().next();
 								//ServiceFunction triggeredSf = trigger.getTriggeredFunction();
 								Gson gson = new Gson();
@@ -2086,7 +2085,6 @@ public class SocialBotManagerService extends RESTService {
 								}
 
 							} else{
-								System.out.println("TRIGGER CHAT");
 								triggerChat(chat, triggeredBody);
 							}
 							// if the response is from the openai service,
@@ -2095,9 +2093,7 @@ public class SocialBotManagerService extends RESTService {
 							if (Boolean.parseBoolean(response.getAsString("openai"))) {
 								// add token count to body
 								triggeredBody.put("tokens", response.getAsNumber("tokens"));
-								System.out.println("UPDATING CONVERSATION PATH WITH OPENAI GENERATED RESPONSE");
-
-
+								
 								HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
 										.getConversationMap();
 								Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
@@ -2115,7 +2111,6 @@ public class SocialBotManagerService extends RESTService {
 						}
 						//We check if there is a leadsTo after the bot action:
 						if (!sf.getLeadsTo().isEmpty()) {
-							System.out.println("BOT ACTION HAS LEADS TO MSG");
 							
 							/** ADD CHECKS HERE TO DETERMINE WHETHER OR NOT TO ADD THE LEADS TO INCOMING MESSAGE TO THE FOLLOW UP STATE
 							 * 
@@ -2133,7 +2128,6 @@ public class SocialBotManagerService extends RESTService {
 							}
 							currentState.setFreezeMessageSend(true);
 						} else if (!sf.getTrigger().isEmpty()){
-						// 	System.out.println("BOT ACTION HAS TRIGGER");
 							IncomingMessage currentState = bot.getMessenger(messengerID).getStateMap().get(channel);
 							currentState.setFreezeMessageSend(true);
 						}
@@ -2151,7 +2145,7 @@ public class SocialBotManagerService extends RESTService {
 					}
 				}
 			} else {
-				System.out.println("RESPONSE FROM REQUEST IS NULL");
+				System.out.println("Response from request is null");
 			}
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
 					triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
