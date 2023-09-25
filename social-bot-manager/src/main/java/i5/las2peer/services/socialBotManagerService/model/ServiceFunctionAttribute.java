@@ -50,7 +50,6 @@ public class ServiceFunctionAttribute {
 
 	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
 		this.childAttributes.add(childAttribute);
-		System.out.println("My child is " + childAttribute);
 	}
 
 	public String getId() {

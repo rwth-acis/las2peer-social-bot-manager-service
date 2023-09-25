@@ -294,7 +294,6 @@ public class Messenger {
 			// If only message to be sent
 			String response = state.getResponse(random);
 			if (response != null && !response.equals("") && !state.freezeMessageSend) {
-				System.out.println("SETCONTEXTTOBASIC SEND MESSAGE");
 				this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
 						state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
 				state.setFreezeMessageSend(false);
@@ -358,7 +357,6 @@ public class Messenger {
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
-				System.out.println("NEW MESSAGE");
 				// // If a channel/user pair still isn't assigned to a state, assign it to null
 				// if (this.stateMap.get(message.getChannel()) == null) {
 				// HashMap<String, IncomingMessage> initMap = new HashMap<String,
