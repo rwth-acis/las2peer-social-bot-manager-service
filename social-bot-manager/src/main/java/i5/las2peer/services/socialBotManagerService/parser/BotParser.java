@@ -198,13 +198,9 @@ public class BotParser {
 					ServiceFunctionAttribute sfaParent = sfaList.get(source);
 					// ...Parameter
 					if (sfaList.get(target) != null) {
-						System.out.println("PARAMETER HAS CHILD");
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
 						//sfaChild.setParent(sfaParent);
-						//System.out.println("PARENT ATTRIBUTE");
-						//System.out.println(sfaParent);
-						System.out.println("HELLO");
 					}
 					// Incoming Message has...
 				} else if (incomingMessages.get(source) != null) {
@@ -327,9 +323,6 @@ public class BotParser {
 				}
 			}
 		}
-
-		System.out.println("AFTER EDGES");
-
 
 		for(ServiceFunction sf : bsfList.values()){
 			if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
@@ -599,7 +592,6 @@ public class BotParser {
 						botAgent.setLoginName(botName);
 						System.out.println(botName);
 						Context.getCurrent().storeAgent(botAgent);
-						System.out.println("Here?");
 					}
 					botAgent.unlock(botPass);
 					Context.getCurrent().registerReceiver(botAgent);
@@ -742,7 +734,6 @@ public class BotParser {
 			} else if (name.equals("Name")) {
 				sfa.setName(subVal.getValue());
 			} else if (name.equals("Static")) {
-				System.out.println(Boolean.parseBoolean(subVal.getValue()));
 				sfa.setStaticContent(Boolean.parseBoolean(subVal.getValue()));
 			} else if (name.equals("Content")) {
 				sfa.setContent(subVal.getValue());
