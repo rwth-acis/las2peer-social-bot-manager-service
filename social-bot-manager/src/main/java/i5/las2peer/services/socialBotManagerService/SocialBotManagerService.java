@@ -162,7 +162,7 @@ public class SocialBotManagerService extends RESTService {
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
 	private String webconnectorUrl = "http://localhost:8080"; // address of running webconnector
-	private static String webconnectorUrlStatic; // address of running webconnector
+	private static String webconnectorUrlStatic;
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
 	private String restarterBotPW; // PW of restarterBot
@@ -215,9 +215,6 @@ public class SocialBotManagerService extends RESTService {
 		setFieldValues(); // This sets the values of the configuration file
 		restarterBotNameStatic = restarterBotName;
 		restarterBotPWStatic = restarterBotPW;
-		if (webconnectorUrl == null || webconnectorUrl.equals("")) {
-			throw new Exception("webconnectorUrl VARIABLE NEEDS TO BE SET!!!!!");
-		}
 		webconnectorUrlStatic = webconnectorUrl;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
 			@Override
