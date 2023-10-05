@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
+import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +19,9 @@ import java.util.*;
 
 public abstract class ChatMediator {
 	private ChatMessageCollector messageCollector;
+	// Used for storing the conversation path
+	//private ChatMessageCollector conversationPathCollector;
+
 	protected String authToken;
 
 	public ChatMediator(String authToken) {
@@ -33,7 +37,7 @@ public abstract class ChatMediator {
 	 *                replies to it later on.
 	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
 	 */
-	public abstract void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id);
+	public abstract Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id);
 
 	public abstract void editMessage(String channel, String messageId, String message, Optional<String> id);
 
@@ -59,8 +63,8 @@ public abstract class ChatMediator {
 	 * @param channel A channel ID valid for interacting with the chat service's API
 	 * @param text    The content of the chat message
 	 */
-	public void sendMessageToChannel(String channel, String text, String type ) {
-		sendMessageToChannel(channel, text, null,type);
+	public Boolean sendMessageToChannel(String channel, String text, String type ) {
+		return sendMessageToChannel(channel, text, null,type);
 	}
 	/**
 	 * Sends a chat message to a channel.
@@ -70,8 +74,8 @@ public abstract class ChatMediator {
 	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
 	 *                replies to it later on.
 	 */
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type) {
-		sendMessageToChannel(channel, text, hashMap,type,null);
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type) {
+		return sendMessageToChannel(channel, text, hashMap,type,null);
 	}
 
 	/**
@@ -147,6 +151,14 @@ public abstract class ChatMediator {
 	public abstract Vector<ChatMessage> getMessages();
 
 	/**
+	 * Gets all messages the mediator has received or sent
+	 *
+	 * @return A Vector containing all ChatMessages received or sent
+	 *         
+	 */
+	//public abstract Vector<ChatMessage> getConversationPath();
+
+	/**
 	 * Gets the IM channel ID for the user registered under the given E-Mail
 	 * address.
 	 *
@@ -204,7 +216,6 @@ public abstract class ChatMediator {
 
 	// used to check whether given token is the real one
 	public boolean checkToken(String authToken) {
-		System.out.println(authToken + "  " + this.authToken);
 		if (authToken.equals(this.authToken)) {
 			return true;
 		} else
@@ -214,6 +225,10 @@ public abstract class ChatMediator {
 	public ChatMessageCollector getMessageCollector() {
 		return messageCollector;
 	}
+
+	// public ChatMessageCollector getConversationPathCollector() {
+	// 	return conversationPathCollector;
+	// }
 
 	public abstract void close();
 }

@@ -25,7 +25,6 @@ public class RESTfulChatMessageCollector extends ChatMessageCollector{
             //cm.setDomain(this.getDomain());
 
             this.addMessage(cm);
-            System.out.println("Message added.");
         } catch (Exception e) {
             e.printStackTrace();
         }

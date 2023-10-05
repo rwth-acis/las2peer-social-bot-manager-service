@@ -56,7 +56,6 @@ public class RasaNlu {
 			HashMap<String, String> headers = new HashMap<String, String>();
 			ClientResponse response = client.sendRequest("POST", "model/parse", inputJSON.toString(),
 					MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
-			System.out.println("Result: " + response.getResponse());
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			return (JSONObject) p.parse(response.getResponse());
 		} catch (Exception e) {

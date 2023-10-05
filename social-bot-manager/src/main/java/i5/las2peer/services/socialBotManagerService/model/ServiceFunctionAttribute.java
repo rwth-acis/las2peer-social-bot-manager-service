@@ -50,7 +50,6 @@ public class ServiceFunctionAttribute {
 
 	public void addChildAttribute(ServiceFunctionAttribute childAttribute) {
 		this.childAttributes.add(childAttribute);
-		System.out.println("My child is" + childAttribute);
 	}
 
 	public String getId() {
@@ -122,8 +121,8 @@ public class ServiceFunctionAttribute {
 	}
 
 	public void setParent(ServiceFunctionAttribute parent) {
-		System.out.println("My parent is" +parent);
 		this.parent = parent;
+		System.out.println("My parent is " + parent);
 	}
 
 	public IfThenBlock getItb() {

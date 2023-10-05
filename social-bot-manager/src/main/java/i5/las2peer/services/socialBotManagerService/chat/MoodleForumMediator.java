@@ -40,7 +40,8 @@ public class MoodleForumMediator extends ChatMediator {
 	}
 	
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+		Boolean messageSent = Boolean.FALSE;
 		try {
 			// Get sequence IDs and find origin post
 			HashMap<String,String> args = new HashMap<String,String>();
@@ -79,11 +80,13 @@ public class MoodleForumMediator extends ChatMediator {
 				JSONObject authorObj = (JSONObject) postObj.get("author");
 				String botid = Integer.toString(authorObj.getInt("id"));
 				MessageTree.setIgnoreId(botid);
+				messageSent = Boolean.TRUE;
 			}
 				
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return messageSent;
 	}
 
 	public void handle(ArrayList<String> statements) {

@@ -101,7 +101,7 @@ See [database](#Database) for a description of the settings.
 | DATABASE_PASSWORD | *mandatory* ||
 | DATABASE_HOST | mysql | |
 | DATABASE_PORT | 3306 | |
-| ADDRESS | / |Webconnector address. Needed for auto-restart functionality |
+| WEBCONNECTOR_URL | / |Webconnector address. Needed for auto-restart functionality |
 | RESTARTERBOTNAME | / | Name of restarterBot agent. Needed for auto-restart functionality |
 | RESTARTERBOTPW | / | Password for restarterBot agent. Needed for auto-restart functionality |
 
