@@ -201,6 +201,8 @@ public class BotParser {
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
 						//sfaChild.setParent(sfaParent);
+						//System.out.println("PARENT ATTRIBUTE");
+						//System.out.println(sfaParent);
 					}
 					// Incoming Message has...
 				} else if (incomingMessages.get(source) != null) {
@@ -796,7 +798,7 @@ public class BotParser {
 
 					System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
 					if (s.getActionType().equals(ActionType.OPENAPI)) {
-						JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
+						JSONObject j = readJsonFromUrl(s.getServiceName() + "/swagger.json");
 						b.addServiceInformation(s.getServiceName(), j);
 					} else {
 						JSONObject j = readJsonFromUrl(
@@ -811,6 +813,7 @@ public class BotParser {
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
+
 			
 			if (s.getOnStart().containsKey(b.getId())){
 				MiniClient client = new MiniClient();
@@ -818,7 +821,7 @@ public class BotParser {
 				if(s.getActionType() == ActionType.SERVICE){
 					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
 				} else {
-					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+					client.setConnectorEndpoint(s.getServiceName());
 				}
 				HashMap<String, String> headers = new HashMap<String, String>();
 				client.setLogin("alice", "pwalice");
