@@ -201,6 +201,8 @@ public class BotParser {
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
 						//sfaChild.setParent(sfaParent);
+						//System.out.println("PARENT ATTRIBUTE");
+						//System.out.println(sfaParent);
 					}
 					// Incoming Message has...
 				} else if (incomingMessages.get(source) != null) {
@@ -811,6 +813,7 @@ public class BotParser {
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
+
 			
 			if (s.getOnStart().containsKey(b.getId())){
 				MiniClient client = new MiniClient();

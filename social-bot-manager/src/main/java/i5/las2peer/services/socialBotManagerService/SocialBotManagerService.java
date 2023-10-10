@@ -1343,7 +1343,7 @@ public class SocialBotManagerService extends RESTService {
 			if (botFunction.getActionType().equals(ActionType.SERVICE)) {
 				functionPath = botFunction.getFunctionPath();
 			} else if (botFunction.getActionType().equals(ActionType.OPENAPI)) {
-				functionPath = botFunction.getFunctionPath();
+				functionPath = botFunction.getFunctionPath();				
 			}
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -1520,8 +1520,9 @@ public class SocialBotManagerService extends RESTService {
 
 						String functionPath = "";
 						// add path if the triggered function is a service function
-						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
+						if (triggeredFunction.getActionType().equals(ActionType.SERVICE) || triggeredFunction.getActionType().equals(ActionType.OPENAPI)){
 							functionPath = triggeredFunction.getFunctionPath();
+						}
 						JSONObject triggeredBody = new JSONObject();
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 						for (ServiceFunction bsf : bot.getBotServiceFunctions().values()) {
@@ -2072,6 +2073,10 @@ public class SocialBotManagerService extends RESTService {
 								JSONObject triggerAttributes = new JSONObject();
 								triggeredBody.put("attributes", triggerAttributes);
 
+								//Set the endpoint to the base url for the SBFManager
+								if (sf.getActionType().equals(ActionType.OPENAPI)){
+									client.setConnectorEndpoint(webconnectorUrl);
+								}
 
 								try {
 									ClientResponse result = client.sendRequest("POST",
