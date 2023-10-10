@@ -798,7 +798,7 @@ public class BotParser {
 
 					System.out.println("Service name is:" + s.getServiceName() + "\nBot is : " + b.getName());
 					if (s.getActionType().equals(ActionType.OPENAPI)) {
-						JSONObject j = readJsonFromUrl(s.getServiceName() + "/swagger.json");
+						JSONObject j = readJsonFromUrl(s.getFunctionPath() + "/swagger.json");
 						b.addServiceInformation(s.getServiceName(), j);
 					} else {
 						JSONObject j = readJsonFromUrl(
@@ -821,7 +821,7 @@ public class BotParser {
 				if(s.getActionType() == ActionType.SERVICE){
 					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
 				} else {
-					client.setConnectorEndpoint(s.getServiceName());
+					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
 				}
 				HashMap<String, String> headers = new HashMap<String, String>();
 				client.setLogin("alice", "pwalice");
