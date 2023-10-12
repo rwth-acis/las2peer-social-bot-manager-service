@@ -554,7 +554,7 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Type");
 		}
 		
-		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType);
+		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType, isRateable);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
