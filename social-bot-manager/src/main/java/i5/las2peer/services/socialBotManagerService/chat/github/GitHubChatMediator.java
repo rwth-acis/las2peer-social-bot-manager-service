@@ -158,19 +158,22 @@ public abstract class GitHubChatMediator extends EventChatMediator {
      * @param id
      */
     @Override
-    public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+    public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
         String repositoryFullName = channel.split("#")[0];
         int number = Integer.parseInt(channel.split("#")[1]);
+        Boolean messageSent = Boolean.FALSE;
 
         try {
             GitHub instance = this.gitHubAppHelper.getGitHubInstance(repositoryFullName);
             if (instance != null) {
                 // post comment (in GitHub a pull request also seems to be an issue)
                 instance.getRepository(repositoryFullName).getIssue(number).comment(text);
+                messageSent = Boolean.TRUE;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return messageSent;
     }
 
     @Override

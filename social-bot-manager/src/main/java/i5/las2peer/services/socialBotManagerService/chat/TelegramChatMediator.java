@@ -1,11 +1,9 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Vector;
@@ -14,10 +12,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
-import jnr.ffi.annotations.In;
 import net.minidev.json.JSONArray;
 import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
@@ -52,6 +48,7 @@ public class TelegramChatMediator extends EventChatMediator {
 
 	TelegramBot bot;
 	private TelegramMessageCollector messageCollector;
+	//private TelegramMessageCollector conversationPathCollector;
 
 	/**
 	 * URL address of the SBF manager service
@@ -202,7 +199,7 @@ public class TelegramChatMediator extends EventChatMediator {
 	 * Sends a plain text message to telegram messenger channel
 	 */
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 
 		System.out.println("send plain message to telegram channel " + channel + ", size: " + text.length());
 		assert channel != null;
@@ -210,7 +207,8 @@ public class TelegramChatMediator extends EventChatMediator {
 
 		SendMessage request = new SendMessage(channel, text);
 		BaseResponse res = bot.execute(request);
-
+		// Need to check response to confirm message was sent successfully
+		return Boolean.TRUE;
 	}
 
 	@Override

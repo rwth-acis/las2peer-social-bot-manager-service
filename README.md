@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/rwth-acis/Social-Bot-Framework/master/Logos/sbf-logo.svg" width=400px/>
+  <img src="https://raw.githubusercontent.com/rwth-acis/Social-Bot-Framework/master/assets/sbf-logo.svg" width=400px/>
 </p>
 
 <p align="center">
@@ -101,7 +101,7 @@ See [database](#Database) for a description of the settings.
 | DATABASE_PASSWORD | *mandatory* ||
 | DATABASE_HOST | mysql | |
 | DATABASE_PORT | 3306 | |
-| ADDRESS | / |Webconnector address. Needed for auto-restart functionality |
+| WEBCONNECTOR_URL | / |Webconnector address. Needed for auto-restart functionality |
 | RESTARTERBOTNAME | / | Name of restarterBot agent. Needed for auto-restart functionality |
 | RESTARTERBOTPW | / | Password for restarterBot agent. Needed for auto-restart functionality |
 

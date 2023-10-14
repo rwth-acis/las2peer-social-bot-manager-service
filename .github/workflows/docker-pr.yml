@@ -1,10 +1,8 @@
-name: Docker Build and Push
+name: Run tests on pull requests
 
 on:
-  push:
-
-    branches: [ master, develop, ma-lakhoune]
-
+  pull_request:
+    branches: [ master, develop]
 
 jobs:
   test:
@@ -26,7 +24,6 @@ jobs:
         java-version: '17'
         distribution: 'adopt'
     - run: mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} ${{ env.DB_DATABASE }} < ./SBF.sql
-    # copy etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample to etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
     - run: cp etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
     - run: sed -i "s|databasePassword =|databasePassword = ${{ env.DB_PASSWORD }}|g" etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
     - run: sed -i "s|databaseUser =|databaseUser = ${{ env.DB_USER }}|g" etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
@@ -36,22 +33,3 @@ jobs:
       run: chmod +x gradlew
     - name: Test with Gradle
       run: ./gradlew clean test --stacktrace --info 
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-    - uses: actions/checkout@v3
-    - name: Extract branch name
-      shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-    - name: Build the Docker image
-      run: | 
-        docker build -t registry.tech4comp.dbis.rwth-aachen.de/rwthacis/social-bot-manager:${{ steps.extract_branch.outputs.branch }} .
-    - name: Push to registry
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  
-        DOCKER_PW: ${{ secrets.DOCKER_PW }}
-      run: |
-        docker login -u $DOCKER_USERNAME -p $DOCKER_PW registry.tech4comp.dbis.rwth-aachen.de
-        docker push registry.tech4comp.dbis.rwth-aachen.de/rwthacis/social-bot-manager:${{ steps.extract_branch.outputs.branch }}

@@ -27,7 +27,8 @@ public class ChatMessageCollector {
 	}
 
 	public void addMessage(ChatMessage message) {
-		System.out.println("Message added: Channel: " + message.getChannel() + ", User: " + message.getUser());
+		// System.out.println("Message added: Channel: " + message.getChannel() + ",
+		// User: " + message.getUser());
 		this.messages.add(message);
 	}
 

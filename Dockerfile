@@ -42,7 +42,7 @@ RUN dos2unix /app/gradle.properties
 RUN dos2unix /app/docker-entrypoint.sh
 
 RUN dos2unix /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample
-RUN dos2unix /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
+RUN mv /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
 
 EXPOSE $LAS2PEER_PORT
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

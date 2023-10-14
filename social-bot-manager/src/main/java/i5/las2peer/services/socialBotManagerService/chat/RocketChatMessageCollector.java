@@ -1,10 +1,5 @@
 package i5.las2peer.services.socialBotManagerService.chat;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.TimeZone;
-
 import org.json.JSONArray;
 
 import com.rocketchat.core.model.RocketChatMessage;
@@ -17,7 +12,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		if (type != null) {
 			if (type.equals(Type.TEXT)) {
 				try {
-					System.out.println("Handling text.");
 					JSONArray emails = message.getSender().getEmails();
 					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
@@ -30,7 +24,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -47,14 +40,12 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		if (type != null) {
 			if (type.equals(Type.TEXT)) {
 				try {
-					System.out.println("Handling text.");
 					JSONArray emails = message.getSender().getEmails();
 					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
-					System.out.println("Email of user is " + email);
 					cm.setEmail(email);
 					cm.setRole(role);
 					// timestamp
@@ -63,20 +54,18 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}else if(type.equals(Type.MESSAGE_EDITED)){
 				try {
-					System.out.println("Handling edited message.");
+
 					JSONArray emails = message.getSender().getEmails();
 					// System.out.println(emails.toString());
 					String rid = message.getRoomId();
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(message.getMessage());
 					ChatMessage cm = new ChatMessage(rid, user, msg);
-					System.out.println("Email of user is " + email);
 					cm.setEmail(email);
 					cm.setRole(role);
 					// timestamp
@@ -85,7 +74,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Edited message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -104,15 +92,15 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 		if (type != null) {
 			if (type.equals(Type.ATTACHMENT)) {
 				try {
-					System.out.println("Handling Attachment.");
+
 					JSONArray emails = message.getSender().getEmails();
-					System.out.println("rcket message is " + message);
+
 					String rid = message.getRoomId();
 					System.out.println(rid);
 					String user = message.getSender().getUserName();
 					String msg = replaceUmlaute(fileName);
 					ChatMessage cm = new ChatMessage(rid, user, msg, fileName, fileType, fileBody);
-					System.out.println("Email of user is " + email);
+
 					cm.setEmail(email);
 					cm.setRole(role);
 
@@ -123,7 +111,6 @@ public class RocketChatMessageCollector extends ChatMessageCollector {
 					cm.setDomain(this.getDomain());
 
 					this.addMessage(cm);
-					System.out.println("Message added.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

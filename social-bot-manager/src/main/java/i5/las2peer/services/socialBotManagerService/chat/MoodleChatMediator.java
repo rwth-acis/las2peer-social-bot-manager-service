@@ -47,15 +47,18 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public void sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		HashMap<String,String> args = new HashMap<String,String>();
 		args.put("messages[0][touserid]", channel);
 		args.put("messages[0][text]", text);
+		Boolean messageSent = Boolean.FALSE;
 		try {
 			sendRequest(domainName, "core_message_send_instant_messages", args);
+			messageSent = Boolean.TRUE;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return messageSent;
 	}
 
 	@Override
