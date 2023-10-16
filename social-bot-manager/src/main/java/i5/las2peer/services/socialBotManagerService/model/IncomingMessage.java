@@ -19,6 +19,7 @@ public class IncomingMessage {
 	String type;
 	boolean openAIEnhance;
 	boolean freezeMessageSend;
+	boolean isRateable;
 
 	/**
 	 * Conversation Id for the message
@@ -54,7 +55,7 @@ public class IncomingMessage {
 
 
 	public IncomingMessage(String intent, String NluID, Boolean containsFile, ArrayList<String> responses,
-			String fileURL, String errorMessage, String type, String intentLabel, String followupType) {
+			String fileURL, String errorMessage, String type, String intentLabel, String followupType, Boolean isRateable) {
 		if (intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else
@@ -76,6 +77,7 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
+		this.isRateable = isRateable;
 	}
 
 	public UUID getConversationId() {
@@ -213,5 +215,14 @@ public class IncomingMessage {
 
 	public void setFreezeMessageSend(boolean flag) {
 		this.freezeMessageSend = flag;
+	}
+
+	public boolean isRateable() {
+		return isRateable;
+	}
+
+
+	public void setRateable(boolean isRateable) {
+		this.isRateable = isRateable;
 	}
 }

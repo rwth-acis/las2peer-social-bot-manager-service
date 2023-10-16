@@ -16,6 +16,7 @@ public class RESTfulChatResponse {
     private InteractiveChatElementType type;
     private JSONObject reqBody;
     private boolean isFile;
+    private boolean rateable; 
 
 
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
@@ -33,6 +34,9 @@ public class RESTfulChatResponse {
                 InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
                 if(value.expectsFile()){
                     isFile = true;
+                }
+                if(value.isRateable()){
+                    rateable = true; 
                 }
                 icel.add(ice);
             }
@@ -91,5 +95,13 @@ public class RESTfulChatResponse {
 
     public void setFile(boolean isFile) {
         this.isFile = isFile;
+    }
+
+    public boolean isRateable() {
+        return rateable;
+    }
+
+    public void setRateable(boolean rateable) {
+        this.rateable = rateable;
     }
 }

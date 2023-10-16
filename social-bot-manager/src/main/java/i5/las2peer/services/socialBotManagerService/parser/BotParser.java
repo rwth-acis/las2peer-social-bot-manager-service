@@ -486,6 +486,7 @@ public class BotParser {
 		String type = null;
 		String intentLabel = null;
 		String followupMessageType = null; 
+		Boolean isRateable = null;
 
 		// TODO: Reduce code duplication
 		try{
@@ -521,7 +522,9 @@ public class BotParser {
 				intentLabel = subVal.getValue();
 			} else if (name.contentEquals("Followup Message Type")) {
 				followupMessageType = subVal.getValue();
-			}
+			} else if (name.contentEquals("Rateable")){
+                isRateable = Boolean.valueOf(subVal.getValue());
+            }
 		}
 		} catch(Exception e){
 			System.out.println("Error: " + e.getMessage());
@@ -551,7 +554,7 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Type");
 		}
 		
-		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType);
+		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType, isRateable);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
