@@ -216,4 +216,13 @@ public class IncomingMessage {
 	public void setFreezeMessageSend(boolean flag) {
 		this.freezeMessageSend = flag;
 	}
+
+	public boolean isRateable() {
+		return isRateable;
+	}
+
+
+	public void setRateable(boolean isRateable) {
+		this.isRateable = isRateable;
+	}
 }
