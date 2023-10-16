@@ -1999,6 +1999,7 @@ public class SocialBotManagerService extends RESTService {
 				} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
 							sf.getConsumes(), sf.getProduces(), headers);
+					System.out.println("Response Statuscode:" + r.getHttpCode());
 				}
 			}
 

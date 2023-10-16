@@ -1088,7 +1088,7 @@ public class Messenger {
 				} else {
 					ArrayList<String> empty = new ArrayList<String>();
 					empty.add("");
-					incMsg = new IncomingMessage(intentKeyword, "", false, empty, null, "", null, "", "text");
+					incMsg = new IncomingMessage(intentKeyword, "", false, empty, null, "", null, "", "text", false);
 					if (splitMessage.length > 1) {
 						incMsg.setEntityKeyword(incMsg.getIntentKeyword());
 					} else {
