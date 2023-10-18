@@ -391,6 +391,8 @@ public class Messenger {
 					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
 				Intent intent = this.determineIntent(message, bot);
+				
+				System.out.println("determined intent:" + intent.getKeyword());
 				try {
 					safeEntities(message, bot, intent);
 
@@ -488,11 +490,12 @@ public class Messenger {
 								recognizedEntities.put(message.getChannel(), intent.getEntities());
 							} else {
 								
-								System.out.println("Incoming Message which expects file should not be chosen when no file");
+								System.out.println("Incoming Message which expects file should not be chosen when no file: " + intent.getKeyword());
 								state = this.rootChildren.get(intent.getKeyword());
 								// Incoming Message which expects file should not be chosen when no file was
 								// sent
 								if (state == null || state.expectsFile()) {
+									System.out.println("state still null");
 									if (this.rootChildren.get("0") != null) {
 										state = this.rootChildren.get("0");
 									} else {
@@ -867,7 +870,7 @@ public class Messenger {
 				if (state == null || !state.getIntentKeyword().contains("defaultX")) {
 					this.defaultAnswerCount.put(message.getChannel(), 0);
 				}
-				
+
 				messageInfos.add(new MessageInfo(message, intent, triggeredFunctionId, bot.getName(),
 						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(), conversationId));
 				// Chain bot action with openai, add another message info with same message info
