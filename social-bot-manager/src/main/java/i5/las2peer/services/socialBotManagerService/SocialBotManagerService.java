@@ -3191,6 +3191,7 @@ public class SocialBotManagerService extends RESTService {
 				String functionPath, String triggerUID,
 				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+				System.out.println(triggeredBody);
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();

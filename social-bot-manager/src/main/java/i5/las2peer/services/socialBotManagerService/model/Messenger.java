@@ -940,6 +940,7 @@ public class Messenger {
 			}
 		} else if (lastUserMessage != null) {
 			System.out.println("using lastUserMessage intent: " + lastUserMessage.getIntentKeyword());
+			System.out.println("LastUserMessage:" + lastUserMessage);
 			conversationId = lastUserMessage.getConversationId();
 		} else if (state != null) {
 			System.out.println("lastUserMessage is null. using state intent: " + state.getIntentKeyword());
