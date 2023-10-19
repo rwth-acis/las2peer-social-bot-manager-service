@@ -19,7 +19,7 @@ public class RESTfulChatResponse {
     private boolean rateable; 
 
 
-    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
+    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage) {
         this(text);
         reqBody = new JSONObject();
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
@@ -32,13 +32,15 @@ public class RESTfulChatResponse {
                 String intent = key;
                 if(intent==null||intent=="") intent = value.getIntentKeyword();
                 InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
-                if(value.expectsFile()){
-                    isFile = true;
-                }
-                if(value.isRateable()){
-                    rateable = true; 
-                }
                 icel.add(ice);
+            }
+        }
+        if (currentMessage != null) {
+            if(currentMessage.expectsFile()){
+                isFile = true;
+            }
+            if(currentMessage.isRateable()){
+                rateable = true; 
             }
         }
 

@@ -3116,8 +3116,10 @@ public class SocialBotManagerService extends RESTService {
 							if (msgtext == null || msgtext.equals("")) {
 								return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
 							}
+							//Adds the user message to the message collector
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
+							//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
 							for (MessageInfo messageInfo : messageInfos) {

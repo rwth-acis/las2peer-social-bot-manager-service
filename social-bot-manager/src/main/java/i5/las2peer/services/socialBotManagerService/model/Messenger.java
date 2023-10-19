@@ -282,7 +282,7 @@ public class Messenger {
 				if (response != null && !response.equals("") && !state.getOpenAIEnhance()) {
 
 					this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
-							state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
+							state.getFollowingMessages(), state.getFollowupMessageType(), state, Optional.of(userid));
 				}
 			} else {
 				System.out.println("No session state found");
@@ -295,7 +295,7 @@ public class Messenger {
 			String response = state.getResponse(random);
 			if (response != null && !response.equals("") && !state.freezeMessageSend) {
 				this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
-						state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
+						state.getFollowingMessages(), state.getFollowupMessageType(), state, Optional.of(userid));
 				state.setFreezeMessageSend(false);
 			}
 			if (state.getFollowingMessages().size() == 0) {
@@ -427,7 +427,7 @@ public class Messenger {
 					
 					System.out.println("command triggered, but does not exist " + intent.getKeyword());
 					this.chatMediator.sendMessageToChannel(message.getChannel(), "",
-							new HashMap<String, IncomingMessage>(), "text");
+							new HashMap<String, IncomingMessage>(), "text", state);
 					return;
 				}
 
@@ -437,7 +437,7 @@ public class Messenger {
 						// in case a command is triggered which does not exist
 						System.out.println("command triggered, but does not exist " + intent.getKeyword());
 						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
-								new HashMap<String, IncomingMessage>(), "text");
+								new HashMap<String, IncomingMessage>(), "text", state);
 						return;
 					}
 					if (!intent.getKeyword().equals("exit")) {
@@ -759,7 +759,7 @@ public class Messenger {
 										System.out.println("send msg.");
 										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
 												replaceVariables(message.getChannel(), split),
-												state.getFollowingMessages(), state.followupMessageType);
+												state.getFollowingMessages(), state.followupMessageType, state);
 									}
 									if (messageSent) {
 										botMessage = replaceVariables(message.getChannel(), split);

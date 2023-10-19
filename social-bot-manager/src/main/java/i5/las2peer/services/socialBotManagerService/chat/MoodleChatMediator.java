@@ -47,7 +47,7 @@ public class MoodleChatMediator extends ChatMediator {
 	}
 
 	@Override
-	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
 		HashMap<String,String> args = new HashMap<String,String>();
 		args.put("messages[0][touserid]", channel);
 		args.put("messages[0][text]", text);
