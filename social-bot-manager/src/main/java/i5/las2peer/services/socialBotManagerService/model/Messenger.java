@@ -757,7 +757,8 @@ public class Messenger {
 									} else {
 										
 										System.out.println("send msg.");
-										System.out.println("Current state: " + state);
+										System.out.println("Current state: " + state.getIntentKeyword());
+										System.err.println("Current state's rateable: " + state.isRateable());
 										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
 												replaceVariables(message.getChannel(), split),
 												state.getFollowingMessages(), state.followupMessageType, state);

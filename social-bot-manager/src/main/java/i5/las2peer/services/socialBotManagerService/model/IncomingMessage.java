@@ -77,11 +77,7 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
-		if(isRateable!=null){
-			this.isRateable = isRateable;
-		}else{
-			this.isRateable = false;
-		}
+		this.isRateable = isRateable;
 	}
 
 	public UUID getConversationId() {
