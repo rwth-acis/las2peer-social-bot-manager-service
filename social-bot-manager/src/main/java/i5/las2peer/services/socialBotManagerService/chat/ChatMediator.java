@@ -64,7 +64,7 @@ public abstract class ChatMediator {
 	 * @param text    The content of the chat message
 	 */
 	public Boolean sendMessageToChannel(String channel, String text, String type ) {
-		return sendMessageToChannel(channel, text, null, type, null);
+		return sendMessageToChannel(channel, text, null, type, null, null);
 	}
 	/**
 	 * Sends a chat message to a channel.
@@ -75,7 +75,8 @@ public abstract class ChatMediator {
 	 *                replies to it later on.
 	 */
 	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage) {
-		return sendMessageToChannel(channel, text, hashMap, type, currentMessage);
+		System.out.println("SEND MESSAGE TO CHANNEL");
+		return sendMessageToChannel(channel, text, hashMap, type, currentMessage, null);
 	}
 
 	/**

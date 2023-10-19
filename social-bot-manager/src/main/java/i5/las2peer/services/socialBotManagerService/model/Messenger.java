@@ -427,7 +427,7 @@ public class Messenger {
 					
 					System.out.println("command triggered, but does not exist " + intent.getKeyword());
 					this.chatMediator.sendMessageToChannel(message.getChannel(), "",
-							new HashMap<String, IncomingMessage>(), "text", state);
+							new HashMap<String, IncomingMessage>(), "text", null);
 					return;
 				}
 
@@ -437,7 +437,7 @@ public class Messenger {
 						// in case a command is triggered which does not exist
 						System.out.println("command triggered, but does not exist " + intent.getKeyword());
 						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
-								new HashMap<String, IncomingMessage>(), "text", state);
+								new HashMap<String, IncomingMessage>(), "text", null);
 						return;
 					}
 					if (!intent.getKeyword().equals("exit")) {
@@ -757,6 +757,7 @@ public class Messenger {
 									} else {
 										
 										System.out.println("send msg.");
+										System.out.println("Current state: " + state);
 										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
 												replaceVariables(message.getChannel(), split),
 												state.getFollowingMessages(), state.followupMessageType, state);
