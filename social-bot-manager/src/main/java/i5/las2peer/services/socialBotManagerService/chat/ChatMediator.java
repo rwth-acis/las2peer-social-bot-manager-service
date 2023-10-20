@@ -75,7 +75,8 @@ public abstract class ChatMediator {
 	 *                replies to it later on.
 	 */
 	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage) {
-		System.out.println("SEND MESSAGE TO CHANNEL");
+		System.out.println("SEND MESSAGE TO CHANNEL:" + text);
+		
 		return sendMessageToChannel(channel, text, hashMap, type, currentMessage, null);
 	}
 

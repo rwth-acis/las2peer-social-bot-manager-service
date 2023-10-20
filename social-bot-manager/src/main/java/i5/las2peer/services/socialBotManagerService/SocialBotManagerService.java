@@ -3286,8 +3286,9 @@ public class SocialBotManagerService extends RESTService {
 					} else {
 						response = target.request()
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
-						System.out.println(response.getStatus());
-						System.out.println(response.getEntity());
+						System.out.println("Response Code:" + response.getStatus());
+						System.out.println("Response Entitiy:" + response.getEntity());
+						System.out.println("Response Text:" + response.readEntity(String.class));
 					}
 
 					String test = response.readEntity(String.class);
@@ -3307,6 +3308,7 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject jsonResponse = (JSONObject) parser.parse(test);
 					for (String key : jsonResponse.keySet()) {
 						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
+						System.out.println(key);
 					}
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);

@@ -329,15 +329,19 @@ public class Messenger {
 		HashMap<String, String> variables = this.getUserVariables().get(channel);
 		variables.put(key, value);
 		this.userVariables.put(channel, variables);
+		System.out.println("Variable set." + key + ":" + value);
 	}
 
 	public String replaceVariables(String channel, String text) {
 		HashMap<String, String> variables = this.getUserVariables().get(channel);
 		if (variables != null) {
 			for (String key : variables.keySet()) {
+				System.out.println("Replace Variable Key:" + key);
 				String composed = "[" + key + "]";
 				text = text.replace(composed, variables.get(key));
 			}
+		} else {
+			System.out.println("Replace Variables are null.");
 		}
 		String split[] = text.split("\\[");
 		for (int i = 1; i < split.length; i++) {
