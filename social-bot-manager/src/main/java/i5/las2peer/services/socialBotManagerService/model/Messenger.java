@@ -334,14 +334,14 @@ public class Messenger {
 
 	public String replaceVariables(String channel, String text) {
 		HashMap<String, String> variables = this.getUserVariables().get(channel);
-		if (variables != null) {
+		if (variables != null || !variables.isEmpty()) {
 			for (String key : variables.keySet()) {
 				System.out.println("Replace Variable Key:" + key);
 				String composed = "[" + key + "]";
 				text = text.replace(composed, variables.get(key));
 			}
 		} else {
-			System.out.println("Replace Variables are null.");
+			System.out.println("Replace Variables are null or empty.");
 		}
 		String split[] = text.split("\\[");
 		for (int i = 1; i < split.length; i++) {

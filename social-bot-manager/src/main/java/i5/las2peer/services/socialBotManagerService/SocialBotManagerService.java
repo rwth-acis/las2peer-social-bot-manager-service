@@ -3147,6 +3147,7 @@ public class SocialBotManagerService extends RESTService {
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										System.out.println("Set msg to: "+answerMsg.getMessage);
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
 											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
@@ -3288,10 +3289,10 @@ public class SocialBotManagerService extends RESTService {
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
 						System.out.println("Response Code:" + response.getStatus());
 						System.out.println("Response Entitiy:" + response.getEntity());
-						System.out.println("Response Text:" + response.readEntity(String.class));
 					}
 
 					String test = response.readEntity(String.class);
+					System.out.println("Response Text:" + test);
 					mp.close();
 					try {
 						java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
@@ -3308,7 +3309,6 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject jsonResponse = (JSONObject) parser.parse(test);
 					for (String key : jsonResponse.keySet()) {
 						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
-						System.out.println(key);
 					}
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
