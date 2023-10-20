@@ -3312,11 +3312,11 @@ public class SocialBotManagerService extends RESTService {
 					}
 					
 					triggeredBody.put("resBody", jsonResponse);
-					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
+					if (jsonResponse.get("closeContext") == null || Boolean.valueOf(jsonResponse.getAsString("closeContext"))) {
 						System.out.println("Closed Context");
 						bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
-					} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
+					} else if (Boolean.valueOf(jsonResponse.getAsString("closeContext")) == false) {
 						System.out.println("Keep Context open");
 						bot.getMessenger(messengerID).restoreConversationState(channel);
 					}
