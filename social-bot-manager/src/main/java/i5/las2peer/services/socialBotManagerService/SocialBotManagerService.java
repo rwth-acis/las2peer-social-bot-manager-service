@@ -3147,7 +3147,7 @@ public class SocialBotManagerService extends RESTService {
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
-										System.out.println("Set msg to: "+answerMsg.getMessage);
+										System.out.println("Set msg to: "+answerMsg.getMessage());
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
 											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
