@@ -537,9 +537,11 @@ public class Messenger {
 										addEntityToRecognizedList(message.getChannel(), intent.getEntities());
 									} else {
 										state = checkDefault(state, message);
+										System.out.println("FileMessage:" + message.getCurrMessage());
 									}
 								} else if (state.getFollowingMessages().get(intent.getKeyword()).expectsFile()) {
 									state = checkDefault(state, message);
+									System.out.println("FileBody null but expects File true:" + message.getCurrMessage());
 								} else {
 									state = state.getFollowingMessages().get(intent.getKeyword());
 									this.updateConversationState(message.getChannel(), state, conversationId);
@@ -938,12 +940,12 @@ public class Messenger {
 								+ state.getIntentKeyword());
 				conversationId = state.getConversationId();
 			}
-		} else if (lastUserMessage != null) {
+		} else if (lastUserMessage != null && state == null) {
 			System.out.println("using lastUserMessage intent: " + lastUserMessage.getIntentKeyword());
 			System.out.println("LastUserMessage:" + lastUserMessage);
 			conversationId = lastUserMessage.getConversationId();
 		} else if (state != null) {
-			System.out.println("lastUserMessage is null. using state intent: " + state.getIntentKeyword());
+			System.out.println("lastUserMessage is not null. using state intent: " + state.getIntentKeyword());
 			conversationId = state.getConversationId();
 		}
 

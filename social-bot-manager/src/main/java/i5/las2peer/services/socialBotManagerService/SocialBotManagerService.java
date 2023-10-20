@@ -3239,7 +3239,6 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject form = (JSONObject) triggeredBody.get("form");
 					FormDataMultiPart mp = new FormDataMultiPart();
 					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
-					System.out.println(mp);
 					String queryParams = "?";
 					if (form != null) {
 						for (String key : form.keySet()) {
@@ -3285,9 +3284,10 @@ public class SocialBotManagerService extends RESTService {
 					if (sf.getHttpMethod().equals("get")) {
 						response = target.request().get();
 					} else {
-						System.out.println(mp);
 						response = target.request()
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+						System.out.println(response.getStatus());
+						System.out.println(response.getEntity());
 					}
 
 					String test = response.readEntity(String.class);
