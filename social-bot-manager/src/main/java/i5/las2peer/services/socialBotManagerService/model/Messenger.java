@@ -74,8 +74,8 @@ public class Messenger {
 	 * (Note that the bot might stay infinitely long in the same state if the
 	 * context is not closed)
 	 */
-	private HashMap<String, IncomingMessage> previousStateInConversation = new HashMap<>();
-	private HashMap<String, IncomingMessage> previousStateInConversationBackup = new HashMap<>();
+	private HashMap<String, IncomingMessage> previousStateInConversation;
+	private HashMap<String, IncomingMessage> previousStateInConversationBackup;
 
 	/**
 	 * Used for keeping remembering entities during conversation state per channel
@@ -184,6 +184,8 @@ public class Messenger {
 		this.defaultAnswerCount = new HashMap<String, Integer>();
 		this.storedSession = new HashMap<String, IncomingMessage>();
 		this.userVariables = new HashMap<String, HashMap<String, String>>();
+		this.previousStateInConversation = new HashMap<>();
+		this.previousStateInConversationBackup = new HashMap<>();
 	}
 
 	public String getName() {
@@ -403,6 +405,11 @@ public class Messenger {
 				String encryptedUser = SocialBotManagerService.encryptThisString(message.getUser());
 				String triggeredFunctionId = null;
 				IncomingMessage state = this.stateMap.get(message.getChannel());
+				if(state!=null){
+					System.out.println("State: "+state.getIntentKeyword());
+				}else{
+					System.out.println("State: null");
+				}
 				JSONObject remarks = new JSONObject();
 				remarks.put("user", encryptedUser);
 
