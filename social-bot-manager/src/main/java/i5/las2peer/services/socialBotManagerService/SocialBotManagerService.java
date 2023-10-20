@@ -3145,8 +3145,8 @@ public class SocialBotManagerService extends RESTService {
 										sf.setMessengerName(messageInfo.getMessengerName());
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
-
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										answerMsg.setMessage(m.replaceVariables(orgchannel,answerMsg.getMessage()));
 										System.out.println("Set msg to: "+answerMsg.getMessage());
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
@@ -3313,7 +3313,7 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					triggeredBody.put("resBody", jsonResponse);
-					this.service.triggerChat(chat, triggeredBody);
+					// this.service.triggerChat(chat, triggeredBody);
 					return;
 
 				} catch (Exception e) {
