@@ -3313,7 +3313,7 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					triggeredBody.put("resBody", jsonResponse);
-					// triggerChat(chat, triggeredBody);
+					triggerChat(chat, triggeredBody);
 					return;
 
 				} catch (Exception e) {
