@@ -951,7 +951,7 @@ public class Messenger {
 								+ state.getIntentKeyword());
 				conversationId = state.getConversationId();
 			}
-		} else if (lastUserMessage != null && state == null) {
+		} else if (lastUserMessage != null) {
 			System.out.println("using lastUserMessage intent: " + lastUserMessage.getIntentKeyword());
 			System.out.println("LastUserMessage:" + lastUserMessage);
 			conversationId = lastUserMessage.getConversationId();
