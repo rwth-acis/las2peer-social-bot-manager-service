@@ -77,6 +77,7 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
+		if(isRateable==null) isRateable = false; 
 		this.isRateable = isRateable;
 	}
 
