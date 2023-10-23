@@ -900,6 +900,7 @@ public class Messenger {
 				// ConversationMessage(message.getConversationId(), "user", message.getText());
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
+				if (conversation==null) conversation = new ArrayList<ConversationMessage>();
 				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
 
