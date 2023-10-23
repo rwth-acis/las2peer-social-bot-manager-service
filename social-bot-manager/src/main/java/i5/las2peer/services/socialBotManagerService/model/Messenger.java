@@ -853,7 +853,14 @@ public class Messenger {
 					conversationMap.put(message.getChannel(), conversation);
 
 				}
-
+				remarks.put("stateLabel", state != null ? state.getIntentLabel() : "null");
+				remarks.put("intent", intent != null ? intent.getKeyword() : "null");
+				String activityName = state == null ? intent.getKeyword() : state.getIntentLabel();
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1,
+						remarks.toJSONString(),
+						conversationId.toString(),
+						activityName,
+						bot.getId(), "bot", "complete", System.currentTimeMillis());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
