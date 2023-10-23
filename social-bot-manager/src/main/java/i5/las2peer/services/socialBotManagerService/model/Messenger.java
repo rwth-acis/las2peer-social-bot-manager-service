@@ -1212,8 +1212,7 @@ public class Messenger {
 		IncomingMessage state = this.previousStateInConversationBackup.get(channelId);
 		if (state != null) {
 			this.previousStateInConversation.put(channelId, state);
-			// System.out.println("Restored state for channel " + channelId + " to " +
-			// state.getIntentKeyword());
+			System.out.println("Restored state for channel " + channelId + " to " + state.getIntentKeyword());
 		}
 	}
 }

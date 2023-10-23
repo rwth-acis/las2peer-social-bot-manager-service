@@ -3150,6 +3150,8 @@ public class SocialBotManagerService extends RESTService {
 										System.out.println("Set msg to: "+answerMsg.getMessage());
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
+													System.out.println("old: "+ oldAnswerMsg.getMessage());
+													System.out.println("new: " + answerMsg.getMessage());
 											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
 											// answerMsg.getMessage());
 										}
