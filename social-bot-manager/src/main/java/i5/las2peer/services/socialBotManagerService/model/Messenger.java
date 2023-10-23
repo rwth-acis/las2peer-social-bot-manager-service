@@ -336,7 +336,7 @@ public class Messenger {
 		HashMap<String, String> variables = this.getUserVariables().get(channel);
 		if (variables != null || !variables.isEmpty()) {
 			for (String key : variables.keySet()) {
-				System.out.println("Replace Variable for "+channel+", Key:" + key + ", value"+text);
+				System.out.println("Replace Variable for "+channel+", Key:" + key + ", value:"+text);
 				String composed = "[" + key + "]";
 				text = text.replace(composed, variables.get(key));
 			}

@@ -3145,6 +3145,7 @@ public class SocialBotManagerService extends RESTService {
 										sf.setMessengerName(messageInfo.getMessengerName());
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
+										m.handleMessages(messageInfos, b);
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										answerMsg.setMessage(m.replaceVariables(orgChannel,answerMsg.getMessage()));
 										System.out.println("Set msg to: "+answerMsg.getMessage());
