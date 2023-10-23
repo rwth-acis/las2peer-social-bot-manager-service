@@ -902,7 +902,10 @@ public class Messenger {
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
 
-				if (conversation==null) conversation = new ArrayList<ConversationMessage>();
+				if (conversation==null) {
+					System.out.println("Conversation is null when trying to add message, start new conversation");
+					conversation = new ArrayList<ConversationMessage>();
+				}
 
 				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
