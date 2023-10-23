@@ -901,14 +901,9 @@ public class Messenger {
 				// ConversationMessage(message.getConversationId(), "user", message.getText());
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
-<<<<<<< HEAD
+
 				if (conversation==null) conversation = new ArrayList<ConversationMessage>();
-=======
-				if (conversation == null) {
-					conversationMap.put(message.getChannel(), new ArrayList<ConversationMessage>());
-					conversation = conversationMap.get(message.getChannel());
-				}
->>>>>>> 585ffac (conversation hotfix)
+
 				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
 
