@@ -481,6 +481,7 @@ public class Messenger {
 
 							System.out.println("State is null");
 							recognizedEntities.put(message.getChannel(), new ArrayList<Entity>());
+							System.out.println("START OF NEW CONVERSATION");
 							conversationMap.put(message.getChannel(), new ArrayList<ConversationMessage>());
 							if (message.getFileName() != null) {
 								
@@ -900,7 +901,14 @@ public class Messenger {
 				// ConversationMessage(message.getConversationId(), "user", message.getText());
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
 				Collection<ConversationMessage> conversation = conversationMap.get(message.getChannel());
+<<<<<<< HEAD
 				if (conversation==null) conversation = new ArrayList<ConversationMessage>();
+=======
+				if (conversation == null) {
+					conversationMap.put(message.getChannel(), new ArrayList<ConversationMessage>());
+					conversation = conversationMap.get(message.getChannel());
+				}
+>>>>>>> 585ffac (conversation hotfix)
 				conversation.add(userConvMsg);
 				conversationMap.put(message.getChannel(), conversation);
 
