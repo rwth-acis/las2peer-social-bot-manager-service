@@ -345,7 +345,6 @@ public class Messenger {
 		}
 		String split[] = text.split("\\[");
 		for (int i = 1; i < split.length; i++) {
-
 			String name = split[i].split("\\]")[0];
 			String val = getEntityValue(channel, name);
 			if (!val.equals("")) {
@@ -354,6 +353,7 @@ public class Messenger {
 
 			}
 		}
+		System.out.println("Replaced Text: " + text);
 		return text;
 	}
 
