@@ -198,6 +198,10 @@ public class Messenger {
 		return conversationMap;
 	}
 
+	public HashMap<String, IncomingMessage> getStateMap() {
+		return stateMap;
+	}
+
 	public void updateConversationInConversationMap(String channel, Collection<ConversationMessage> conversation) {
 		conversationMap.put(channel, conversation);
 	}
@@ -285,41 +289,14 @@ public class Messenger {
 				this.stateMap.remove(channel);
 				this.previousStateInConversation.remove(channel);
 			}
-		} else if (state.getFollowingMessages().get("") != null) {
-			// check whether bot action needs to be triggered without user input
-			state = state.getFollowingMessages().get("");
-
-			stateMap.put(channel, state);
-			this.previousStateInConversation.put(channel, state);
-			if (!state.getResponse(random).equals("")) {
-				if (this.chatService == ChatService.RESTful_Chat && state.getFollowingMessages() != null
-						&& !state.getFollowingMessages().isEmpty()) {
-					this.chatMediator.sendMessageToChannel(channel,
-							replaceVariables(channel, state.getResponse(random)), state.getFollowingMessages(),
-							"text");
-
-				} else {
-					this.chatMediator.sendMessageToChannel(channel,
-							replaceVariables(channel, state.getResponse(random)), "text");
-
-				}
-			}
-			/*
-			 * if (state.getResponse(random).triggeredFunctionId != null
-			 * && !state.getResponse(random).triggeredFunctionId.equals("")) {
-			 * ChatMessage chatMsg = new ChatMessage(channel, userid, "Empty Message");
-			 * this.triggeredFunction.put(channel,
-			 * state.getResponse(random).triggeredFunctionId);
-			 * this.chatMediator.getMessageCollector().addMessage(chatMsg);
-			 * }
-			 */
 		} else {
 
 			// If only message to be sent
 			String response = state.getResponse(random);
-			if (response != null && !response.equals("")) {
+			if (response != null && !response.equals("") && !state.freezeMessageSend) {
 				this.chatMediator.sendMessageToChannel(channel, replaceVariables(channel, response),
 						state.getFollowingMessages(), state.getFollowupMessageType(), Optional.of(userid));
+				state.setFreezeMessageSend(false);
 			}
 			if (state.getFollowingMessages().size() == 0) {
 				// no other messages to follow
@@ -426,17 +403,7 @@ public class Messenger {
 				remarks.put("user", encryptedUser);
 
 				conversationId = this.determineConversationId(message.getChannel());
-
 				remarks.put("in-service-context", this.triggeredFunction.containsKey(message.getChannel()));
-
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-						conversationId.toString(),
-						intent.getKeyword(),
-						bot.getId(), "bot", "start", System.currentTimeMillis());
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-						conversationId.toString(),
-						intent.getKeyword(),
-						bot.getId(), "bot", "complete", System.currentTimeMillis());
 
 				// ________________ start modification of state machine__________________
 
@@ -513,6 +480,8 @@ public class Messenger {
 											if (state == null) {
 												state = this.rootChildren.get("default");
 											}
+										} else {
+											state = this.rootChildren.get("default");
 										}
 
 									}
@@ -678,9 +647,9 @@ public class Messenger {
 						}
 
 						String response = state.getResponse(random);
-						triggeredFunctionId = state.getTriggeredFunctionIds() == null
-								|| state.getTriggeredFunctionIds().isEmpty() ? null
-										: state.getTriggeredFunctionIds().get(0);
+						triggeredFunctionId = state.getTriggeredFunctionId() == null
+									|| state.getTriggeredFunctionId().equals("") ? null
+										: state.getTriggeredFunctionId();
 						if (triggeredFunctionId != null && triggeredFunctionId != "") {
 							this.triggeredFunction.put(message.getChannel(), triggeredFunctionId);
 							contextOn = true;
@@ -716,15 +685,6 @@ public class Messenger {
 									}
 
 								}
-								String activityName = state.getIntentKeyword() + ":response";
-								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
-										remarks.toJSONString(),
-										conversationId.toString(), activityName, bot.getId(), "bot", "start",
-										System.currentTimeMillis());
-								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
-										remarks.toJSONString(),
-										conversationId.toString(), activityName, bot.getId(), "bot", "complete",
-										System.currentTimeMillis());
 								// check if message parses buttons or is simple text
 								if (state.getType().equals("Interactive Message")) {
 									this.chatMediator.sendBlocksMessageToChannel(message.getChannel(), split,
@@ -733,16 +693,9 @@ public class Messenger {
 								} else {
 									// TODO: Block sending message to channel if the service is replacing the bot
 									// message with its own message
-									if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() == 1) {
-
+									if (state.getOpenAIEnhance()) {
 										messageSent = true;
-									} else if (state.getOpenAIEnhance() && state.getTriggeredFunctionIds().size() > 1) {
-
-										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
-												replaceVariables(message.getChannel(), split),
-												state.getFollowingMessages(), state.followupMessageType);
 									} else {
-
 										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
 												replaceVariables(message.getChannel(), split),
 												state.getFollowingMessages(), state.followupMessageType);
@@ -860,12 +813,12 @@ public class Messenger {
 						"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(), conversationId));
 				// Chain bot action with openai, add another message info with same message info
 				// but with the openai trigger function
-				if (state != null && state.getTriggeredFunctionIds().size() > 1) {
-					messageInfos
-							.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
-									"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(),
-									conversationId));
-				}
+				// if (state != null && state.getTriggeredFunctionIds().size() > 1) {
+				// 	messageInfos
+				// 			.add(new MessageInfo(message, intent, state.getTriggeredFunctionIds().get(1), bot.getName(),
+				// 					"", contextOn, recognizedEntities.get(message.getChannel()), this.getName(),
+				// 					conversationId));
+				// }
 				// ConversationMessage conversationMsg = new
 				// ConversationMessage(message.getConversationId(), "user", message.getText());
 				ConversationMessage userConvMsg = new ConversationMessage("", "user", message.getText());
@@ -881,7 +834,14 @@ public class Messenger {
 					conversationMap.put(message.getChannel(), conversation);
 
 				}
-
+				remarks.put("stateLabel", state != null ? state.getIntentLabel() : "null");
+				remarks.put("intent", intent != null ? intent.getKeyword() : "null");
+				String activityName = state == null ? intent.getKeyword() : state.getIntentLabel();
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1,
+						remarks.toJSONString(),
+						conversationId.toString(),
+						activityName,
+						bot.getId(), "bot", "complete", System.currentTimeMillis());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1116,7 +1076,7 @@ public class Messenger {
 				} else {
 					ArrayList<String> empty = new ArrayList<String>();
 					empty.add("");
-					incMsg = new IncomingMessage(intentKeyword, "", false, empty, null, "", null, "", "text");
+					incMsg = new IncomingMessage(intentKeyword, "", false, empty, null, "", null, "", "text", false);
 					if (splitMessage.length > 1) {
 						incMsg.setEntityKeyword(incMsg.getIntentKeyword());
 					} else {

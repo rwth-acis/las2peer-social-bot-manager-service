@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/rwth-acis/Social-Bot-Framework/master/Logos/sbf-logo.svg" width=400px/>
+  <img src="https://raw.githubusercontent.com/rwth-acis/Social-Bot-Framework/master/assets/sbf-logo.svg" width=400px/>
 </p>
 
 <p align="center">

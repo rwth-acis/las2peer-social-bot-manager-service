@@ -1,7 +1,7 @@
 databaseUser = root
 databasePassword = root
 databaseName = SBF
-databaseHost = host.docker.internal
+databaseHost = localhost:3306
 databasePort = 3306
 mongoUser = admin
 mongoPassword = password

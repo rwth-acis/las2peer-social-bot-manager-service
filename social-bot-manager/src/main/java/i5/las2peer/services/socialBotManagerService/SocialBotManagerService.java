@@ -92,6 +92,7 @@ import i5.las2peer.services.socialBotManagerService.model.BotModelNode;
 import i5.las2peer.services.socialBotManagerService.model.BotModelNodeAttribute;
 import i5.las2peer.services.socialBotManagerService.model.BotModelValue;
 import i5.las2peer.services.socialBotManagerService.model.IfThenBlock;
+import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.model.MessageInfo;
 import i5.las2peer.services.socialBotManagerService.model.Messenger;
 import i5.las2peer.services.socialBotManagerService.model.ServiceFunction;
@@ -160,8 +161,8 @@ public class SocialBotManagerService extends RESTService {
 	private String databaseUser;
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
-	private String webconnectorUrl; // address of running webconnector
-	private static String webconnectorUrlStatic; // address of running webconnector
+	private String webconnectorUrl = "http://localhost:8080"; // address of running webconnector
+	private static String webconnectorUrlStatic;
 	private String restarterBotName; // name of restarterBot
 	private static String restarterBotNameStatic;
 	private String restarterBotPW; // PW of restarterBot
@@ -214,9 +215,6 @@ public class SocialBotManagerService extends RESTService {
 		setFieldValues(); // This sets the values of the configuration file
 		restarterBotNameStatic = restarterBotName;
 		restarterBotPWStatic = restarterBotPW;
-		if (webconnectorUrl == null || webconnectorUrl.equals("")) {
-			throw new Exception("webconnectorUrl VARIABLE NEEDS TO BE SET!!!!!");
-		}
 		webconnectorUrlStatic = webconnectorUrl;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
 			@Override
@@ -281,6 +279,8 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
 		} catch (MongoException me) {
 			System.err.println(me);
+		} catch (Exception e) {
+			System.err.println(e);
 		} finally {
 			mongoClient.close();
 		}
@@ -973,7 +973,7 @@ public class SocialBotManagerService extends RESTService {
 											// System.out.println(chatResponses);
 											// System.out.println(chatResponses.getTriggeredFunctionId());
 											// get first trigger function for now
-											triggerdFunctionId = chatResponses.getTriggeredFunctionIds().get(0);
+											triggerdFunctionId = chatResponses.getTriggeredFunctionId();
 											messengerName = m.getName();
 										}
 									}
@@ -1343,7 +1343,7 @@ public class SocialBotManagerService extends RESTService {
 			if (botFunction.getActionType().equals(ActionType.SERVICE)) {
 				functionPath = botFunction.getFunctionPath();
 			} else if (botFunction.getActionType().equals(ActionType.OPENAPI)) {
-				functionPath = botFunction.getFunctionPath();
+				functionPath = botFunction.getFunctionPath();				
 			}
 			JSONObject body = new JSONObject();
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
@@ -1520,8 +1520,9 @@ public class SocialBotManagerService extends RESTService {
 
 						String functionPath = "";
 						// add path if the triggered function is a service function
-						if (triggeredFunction.getActionType().equals(ActionType.SERVICE))
+						if (triggeredFunction.getActionType().equals(ActionType.SERVICE) || triggeredFunction.getActionType().equals(ActionType.OPENAPI)){
 							functionPath = triggeredFunction.getFunctionPath();
+						}
 						JSONObject triggeredBody = new JSONObject();
 						HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 						for (ServiceFunction bsf : bot.getBotServiceFunctions().values()) {
@@ -1529,6 +1530,22 @@ public class SocialBotManagerService extends RESTService {
 								attlist.put(bsfa.getId(), bsfa);
 							}
 						}
+						String user = body.getAsString("user");
+						String channel = body.getAsString("channel");
+						String email = body.getAsString("email");
+						String convId = body.getAsString("conversationId");
+						String intent = body.getAsString("intent");
+						String contextOn = body.getAsString("contextOn");
+						triggeredBody.put("user", user);
+						triggeredBody.put("channel", channel);
+						triggeredBody.put("email", email);
+						triggeredBody.put("conversationId", convId);
+						triggeredBody.put("intent", intent);
+						triggeredBody.put("contextOn", contextOn);
+						triggeredBody.put("entities", body.get("entities"));
+						triggeredBody.put("organization", body.get("organization"));
+
+
 
 						JSONObject triggerAttributes = (JSONObject) body.get("attributes");
 						for (ServiceFunctionAttribute triggeredFunctionAttribute : triggeredFunction.getAttributes()) {
@@ -1982,104 +1999,156 @@ public class SocialBotManagerService extends RESTService {
 				} else if (sf.getActionType().equals(ActionType.OPENAPI)) {
 					r = client.sendRequest(sf.getHttpMethod().toUpperCase(), "", triggeredBody.toJSONString(),
 							sf.getConsumes(), sf.getProduces(), headers);
+					System.out.println("Response Statuscode:" + r.getHttpCode());
 				}
 			}
 
-			if (r.getResponse().toString().length() > 30) {
-				System.out.println(r.getResponse().toString().substring(0, 30) + "...");
-			} else {
-				System.out.println(r.getResponse());
-			}
+			// if the result is successful
+			if (r.getResponse() != null) {
+				if (r.getResponse().toString().length() > 30) {
+					System.out.println(r.getResponse().toString().substring(0, 30) + "...");
+				} else {
+					System.out.println(r.getResponse());
+				}
 
-			if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
-				try {
-					JSONObject response = (JSONObject) parser.parse(r.getResponse());
-					for (String key : response.keySet()) {
-						bot.getMessenger(messengerID).addVariable(channel, key, response.getAsString(key));
-					}
-					triggeredBody.put("text", response.getAsString("text"));
+				if (Boolean.parseBoolean(triggeredBody.getAsString("contextOn"))) {
+					try {
+						JSONObject response = (JSONObject) parser.parse(r.getResponse());
+						for (String key : response.keySet()) {
+							bot.getMessenger(messengerID).addVariable(channel, key, response.getAsString(key));
+						}
+						triggeredBody.put("text", response.getAsString("text"));
 
-					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
-					if (response.containsKey("fileBody")) {
-						triggeredBody.put("fileBody", response.getAsString("fileBody"));
-						triggeredBody.put("fileName", response.getAsString("fileName"));
-						triggeredBody.put("fileType", response.getAsString("fileType"));
-					} else
-						triggeredBody.remove("fileBody");
-					if (response.containsKey("contactList")) {
-						triggeredBody.put("contactList", response.getAsString("contactList"));
-					}
-					if (response.containsKey("contactText")) {
-						triggeredBody.put("contactText", response.getAsString("contactText"));
-					}
-					if (response.containsKey("blocks")) {
-						triggeredBody.put("blocks", response.getAsString("blocks"));
-						if (response.containsKey("updateBlock")) {
-							triggeredBody.put("updateBlock", response.getAsString("updateBlock"));
-							if (response.containsKey("ts")) {
-								triggeredBody.put("ts", response.getAsString("ts"));
+						ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+						if (response.containsKey("fileBody")) {
+							triggeredBody.put("fileBody", response.getAsString("fileBody"));
+							triggeredBody.put("fileName", response.getAsString("fileName"));
+							triggeredBody.put("fileType", response.getAsString("fileType"));
+						} else
+							triggeredBody.remove("fileBody");
+						if (response.containsKey("contactList")) {
+							triggeredBody.put("contactList", response.getAsString("contactList"));
+						}
+						if (response.containsKey("contactText")) {
+							triggeredBody.put("contactText", response.getAsString("contactText"));
+						}
+						if (response.containsKey("blocks")) {
+							triggeredBody.put("blocks", response.getAsString("blocks"));
+							if (response.containsKey("updateBlock")) {
+								triggeredBody.put("updateBlock", response.getAsString("updateBlock"));
+								if (response.containsKey("ts")) {
+									triggeredBody.put("ts", response.getAsString("ts"));
+								}
 							}
 						}
-					}
-					if (response.containsKey("multiFiles")) {
-						for (Object o : (JSONArray) response.get("multiFiles")) {
-							JSONObject jsonO = (JSONObject) o;
-
-							jsonO.put("channel", triggeredBody.getAsString("channel"));
-							jsonO.put("email", triggeredBody.getAsString("email"));
-							triggerChat(chat, jsonO);
-						}
-					} else {
-						// if the response is the first of a chain response that should later be
-						// personalized, do not trigger chat, add the response to the conversationpath
-						if (sf.getFunctionName().equals("test")) {
-							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
-									.getConversationMap();
-							Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
-							ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
-							ConversationMessage botMsg = convList.get(convList.size() - 1);
-							String convId = botMsg.getConversationId();
-							ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant",
-									triggeredBody.getAsString("text"));
-							conv.add(newConvMsg);
-							bot.getMessenger(messengerID)
-									.updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+						if (response.containsKey("multiFiles")) {
+							for (Object o : (JSONArray) response.get("multiFiles")) {
+								JSONObject jsonO = (JSONObject) o;
+								jsonO.put("channel", triggeredBody.getAsString("channel"));
+								jsonO.put("email", triggeredBody.getAsString("email"));
+								triggerChat(chat, jsonO);
+							}
 						} else {
-							System.out.println("TRIGGER CHAT");
-							triggerChat(chat, triggeredBody);
-						}
-						// if the response is from the openai service,
-						// replace the last message in the conversation map which should be the normal
-						// bot response with the enhanced bot message
-						if (Boolean.parseBoolean(response.getAsString("openai"))) {
+							// if the service function triggers another service function, do not trigger chat, add the response to the conversationpath
+							if (!sf.getTrigger().isEmpty()){
+								HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID).getConversationMap();
+								Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
+								ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
+								ConversationMessage botMsg = convList.get(convList.size() - 1);
+								String convId = botMsg.getConversationId();
+								triggeredBody.put("conversationId", convId);
+								ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant",
+										triggeredBody.getAsString("text"));
+								conv.add(newConvMsg);
+								bot.getMessenger(messengerID).updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+								
+								//Trigger trigger = sf.getTrigger().iterator().next();
+								//ServiceFunction triggeredSf = trigger.getTriggeredFunction();
+								Gson gson = new Gson();
+								String service = (String) sf.getServiceName();
+								triggeredBody.put("serviceAlias", service);
+								String triggerFunctionName = sf.getFunctionName();
+								triggeredBody.put("functionName", triggerFunctionName);
+								String triggerID = sf.getId();
+								triggeredBody.put("uid", triggerID);
+								JSONObject triggerAttributes = new JSONObject();
+								triggeredBody.put("attributes", triggerAttributes);
 
+								//Set the endpoint to the base url for the SBFManager
+								if (sf.getActionType().equals(ActionType.OPENAPI)){
+									client.setConnectorEndpoint(webconnectorUrl);
+								}
 
-							HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
-									.getConversationMap();
-							Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
-							ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
-							ConversationMessage botMsg = convList.get(convList.size() - 1);
-							String convId = botMsg.getConversationId();
-							convList.remove(botMsg);
-							ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant",
-									triggeredBody.getAsString("text"));
-							convList.add(newConvMsg);
-							conv = convList;
-							bot.getMessenger(messengerID)
-									.updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+								try {
+									ClientResponse result = client.sendRequest("POST",
+											"SBFManager/bots/" + bot.getName() + "/trigger/service", gson.toJson(triggeredBody),
+											MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+
+							} else{
+								triggerChat(chat, triggeredBody);
+							}
+							// if the response is from the openai service,
+							// replace the last message in the conversation map which should be the normal
+							// bot response with the enhanced bot message
+							if (Boolean.parseBoolean(response.getAsString("openai"))) {
+								// add token count to body
+								triggeredBody.put("tokens", response.getAsNumber("tokens"));
+								
+								HashMap<String, Collection<ConversationMessage>> convMap = bot.getMessenger(messengerID)
+										.getConversationMap();
+								Collection<ConversationMessage> conv = convMap.get(triggeredBody.getAsString("channel"));
+								ArrayList<ConversationMessage> convList = new ArrayList<>(conv);
+								ConversationMessage botMsg = convList.get(convList.size() - 1);
+								String convId = botMsg.getConversationId();
+								convList.remove(botMsg);
+								ConversationMessage newConvMsg = new ConversationMessage(convId, "assistant",
+										triggeredBody.getAsString("text"));
+								convList.add(newConvMsg);
+								conv = convList;
+								bot.getMessenger(messengerID)
+										.updateConversationInConversationMap(triggeredBody.getAsString("channel"), conv);
+							}
 						}
-					}
-					if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
-						System.out.println("Closed Context");
-						bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
+						//We check if there is a leadsTo after the bot action:
+						if (!sf.getLeadsTo().isEmpty()) {
+							
+							/** ADD CHECKS HERE TO DETERMINE WHETHER OR NOT TO ADD THE LEADS TO INCOMING MESSAGE TO THE FOLLOW UP STATE
+							 * 
+							 * Example: Check the response code and flags returned by the service call
+							 *
+							 *  */ 
+
+							// We add the incoming message to the followupmessage of the current conversation state
+							IncomingMessage currentState = bot.getMessenger(messengerID).getStateMap().get(channel);
+
+							for (int i = 0; i < sf.getLeadsTo().size(); i++) {
+								IncomingMessage msg = (IncomingMessage) sf.getLeadsTo().keySet().toArray()[i];
+								String intentKey = (String) sf.getLeadsTo().values().toArray()[i];
+								currentState.addFollowupMessage(intentKey, msg);
+							}
+							currentState.setFreezeMessageSend(true);
+						} else if (!sf.getTrigger().isEmpty()){
+							IncomingMessage currentState = bot.getMessenger(messengerID).getStateMap().get(channel);
+							currentState.setFreezeMessageSend(true);
+						}
+						if (response.get("closeContext") == null || Boolean.valueOf(response.getAsString("closeContext"))) {
+							System.out.println("Closed Context");
+							bot.getMessenger(messengerID).setContextToBasic(triggeredBody.getAsString("channel"),
 								triggeredBody.getAsString("user"));
-					} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
-						System.out.println("Keep Context open");
-						bot.getMessenger(messengerID).restoreConversationState(triggeredBody.getAsString("channel"));
+						} else if (Boolean.valueOf(response.getAsString("closeContext")) == false) {
+							System.out.println("Keep Context open");
+							bot.getMessenger(messengerID).restoreConversationState(triggeredBody.getAsString("channel"));
+						}
+						
+					} catch (ParseException e) {
+						e.printStackTrace();
 					}
-				} catch (ParseException e) {
-					e.printStackTrace();
 				}
+			} else {
+				System.out.println("Response from request is null");
 			}
 			l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
 					triggeredBody.get("conversationId").toString(), sf.getFunctionName(),

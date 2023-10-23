@@ -13,12 +13,13 @@ public class IncomingMessage {
 	String NluID;
 	boolean containsFile;
 	String triggeredFunctionId;
-	ArrayList<String> triggeredFunctionIds;
 	HashMap<IncomingMessage, String> triggerEntity;
 	String fileURL;
 	String errorMessage;
 	String type;
 	boolean openAIEnhance;
+	boolean freezeMessageSend;
+	boolean isRateable;
 
 	/**
 	 * Conversation Id for the message
@@ -54,7 +55,7 @@ public class IncomingMessage {
 
 
 	public IncomingMessage(String intent, String NluID, Boolean containsFile, ArrayList<String> responses,
-			String fileURL, String errorMessage, String type, String intentLabel, String followupType) {
+			String fileURL, String errorMessage, String type, String intentLabel, String followupType, Boolean isRateable) {
 		if (intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else
@@ -76,7 +77,11 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
-		this.triggeredFunctionIds = new ArrayList<String>();
+		if(isRateable!=null){
+			this.isRateable = isRateable;
+		}else{
+			this.isRateable = false;
+		}
 	}
 
 	public UUID getConversationId() {
@@ -89,10 +94,6 @@ public class IncomingMessage {
 
 	public String getIntentKeyword() {
 		return intentKeyword;
-	}
-
-	public void addTriggeredFunctionIdFirst(String functionId) {
-		this.triggeredFunctionIds.add(0, functionId);
 	}
 
 	public String getEntityKeyword() {
@@ -152,12 +153,12 @@ public class IncomingMessage {
 		}
 	}
 
-	public void addTriggeredFunction(ServiceFunction triggeredFunction) {
-		this.triggeredFunctionIds.add(triggeredFunction.getId());
+	public void setTriggeredFunction(ServiceFunction triggeredFunction) {
+		this.triggeredFunctionId = triggeredFunction.getId();
 	}
 
-	public ArrayList<String> getTriggeredFunctionIds() {
-		return this.triggeredFunctionIds;
+	public String getTriggeredFunctionId() {
+		return this.triggeredFunctionId;
 	}
 
 	public boolean expectsFile() {
@@ -179,14 +180,10 @@ public class IncomingMessage {
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-    
-    public void addTriggeredFunctionId(String functionId){
-        this.triggeredFunctionIds.add(functionId);
-    }
 
 	public String getTriggerEntity(IncomingMessage m){
-        return this.triggerEntity.get(m);
-    }
+      return this.triggerEntity.get(m);
+  	}
 
 	public void setTriggeredFunctionId(String functionId) {
 		this.triggeredFunctionId = functionId;
@@ -218,5 +215,18 @@ public class IncomingMessage {
 
 	public void setFollowupMessageType(String followupMessageType) {
 		this.followupMessageType = followupMessageType;
+	}
+
+	public void setFreezeMessageSend(boolean flag) {
+		this.freezeMessageSend = flag;
+	}
+
+	public boolean isRateable() {
+		return isRateable;
+	}
+
+
+	public void setRateable(boolean isRateable) {
+		this.isRateable = isRateable;
 	}
 }

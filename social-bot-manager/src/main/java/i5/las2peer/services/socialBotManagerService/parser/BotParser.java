@@ -198,13 +198,11 @@ public class BotParser {
 					ServiceFunctionAttribute sfaParent = sfaList.get(source);
 					// ...Parameter
 					if (sfaList.get(target) != null) {
-						System.out.println("PARAMETER HAS CHILD");
 						ServiceFunctionAttribute sfaChild = sfaList.get(target);
 						sfaParent.addChildAttribute(sfaChild);
 						//sfaChild.setParent(sfaParent);
 						//System.out.println("PARENT ATTRIBUTE");
 						//System.out.println(sfaParent);
-						System.out.println("HELLO");
 					}
 					// Incoming Message has...
 				} else if (incomingMessages.get(source) != null) {
@@ -270,20 +268,17 @@ public class BotParser {
                     IncomingMessage cr = incomingMessages.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						
+						cr.setTriggeredFunctionId(botFunction.getId());
 						// toggle incoming message's openaienhance flag here
 						if (botFunction.getServiceName().equals("openai") && botFunction.getFunctionName().equals("personalize")){
-							cr.addTriggeredFunctionId(botFunction.getId());
 							cr.setOpenAIEnhance(true);
-						} else {
-							cr.addTriggeredFunctionIdFirst(botFunction.getId());
 						}
 					}
                 }	 else if (responses.containsKey(source)){
                     IncomingMessage cr = responses.get(source);
                     if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						cr.addTriggeredFunctionId(botFunction.getId());
+						cr.setTriggeredFunctionId(botFunction.getId());
 					}
                 }
 
@@ -319,11 +314,17 @@ public class BotParser {
 						sourceMessage.addFollowupMessage(value, targetMessage);
 					}
 				}
+				// Bot Action leads to...
+				else if (bsfList.get(source) != null) {
+					ServiceFunction botFunction = bsfList.get(source);
+					if (incomingMessages.containsKey(target)) {
+						IncomingMessage targetMessage = incomingMessages.get(target);
+						botFunction.addLeadsTo(targetMessage, value);
+						//botFunction.addFollowupMessage(value, targetMessage);
+					}
+				}
 			}
 		}
-
-		System.out.println("AFTER EDGES");
-
 
 		for(ServiceFunction sf : bsfList.values()){
 			if (sf != null && !sf.getOnStart().containsKey(bot.getId())) {
@@ -348,6 +349,17 @@ public class BotParser {
 			String target = elem.getTarget();
 			String value = elem.getLabel().getValue().getValue();
 			if (type.equals("triggers")) {
+				if (bsfList.get(source) != null) {
+					ServiceFunction firstBotFunction = bsfList.get(source);
+					if (bsfList.get(target) != null) {
+						ServiceFunction secondBotFunction = bsfList.get(target);
+						Trigger t = new Trigger(firstBotFunction, secondBotFunction);
+						firstBotFunction.addTrigger(t);
+						for (Bot b : secondBotFunction.getBots()) {
+							b.addTrigger(t);
+						}
+					}
+				}
 				// Action triggers action
 				if (usfList.get(source) != null) {
 					ServiceFunction userFunction = usfList.get(source);
@@ -373,7 +385,7 @@ public class BotParser {
 					// ...Bot Action
 					 if (bsfList.get(target) != null) {
 						ServiceFunction botFunction = bsfList.get(target);
-						m.addTriggeredFunction(botFunction);
+						m.setTriggeredFunction(botFunction);
 					}
 				}
 			}
@@ -474,6 +486,7 @@ public class BotParser {
 		String type = null;
 		String intentLabel = null;
 		String followupMessageType = null; 
+		Boolean isRateable = null;
 
 		// TODO: Reduce code duplication
 		try{
@@ -509,7 +522,9 @@ public class BotParser {
 				intentLabel = subVal.getValue();
 			} else if (name.contentEquals("Followup Message Type")) {
 				followupMessageType = subVal.getValue();
-			}
+			} else if (name.contentEquals("Rateable")){
+                isRateable = Boolean.valueOf(subVal.getValue());
+            }
 		}
 		} catch(Exception e){
 			System.out.println("Error: " + e.getMessage());
@@ -539,7 +554,7 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Type");
 		}
 		
-		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType);
+		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType, isRateable);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
@@ -582,7 +597,6 @@ public class BotParser {
 						botAgent.setLoginName(botName);
 						System.out.println(botName);
 						Context.getCurrent().storeAgent(botAgent);
-						System.out.println("Here?");
 					}
 					botAgent.unlock(botPass);
 					Context.getCurrent().registerReceiver(botAgent);
@@ -725,7 +739,6 @@ public class BotParser {
 			} else if (name.equals("Name")) {
 				sfa.setName(subVal.getValue());
 			} else if (name.equals("Static")) {
-				System.out.println(Boolean.parseBoolean(subVal.getValue()));
 				sfa.setStaticContent(Boolean.parseBoolean(subVal.getValue()));
 			} else if (name.equals("Content")) {
 				sfa.setContent(subVal.getValue());
@@ -803,6 +816,7 @@ public class BotParser {
 			if (b.getServiceInformation().get(s.getServiceName()) != null && s.getFunctionName() != null) {
 				addServiceInformation(s, b.getServiceInformation().get(s.getServiceName()));
 			}
+
 			
 			if (s.getOnStart().containsKey(b.getId())){
 				MiniClient client = new MiniClient();
