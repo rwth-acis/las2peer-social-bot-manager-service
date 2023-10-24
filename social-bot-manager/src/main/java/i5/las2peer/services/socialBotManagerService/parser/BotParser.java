@@ -263,6 +263,7 @@ public class BotParser {
 						throw new ParseBotException("Bot Action uses Messenger, but is not connected to Messenger");
 					}
 					sf.setMessengerName(m.getName());
+					System.out.println("BotParser: Service function's messenger is set to: " + sf.getMessengerName());
 					// Incoming Message uses Bot Action
 				} else if (incomingMessages.containsKey(source)){
                     IncomingMessage cr = incomingMessages.get(source);

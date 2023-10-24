@@ -1412,6 +1412,7 @@ public class SocialBotManagerService extends RESTService {
 			body.put("contextOn", messageInfo.contextActive());
 			body.put("conversationId", messageInfo.getConversationId());
 			botFunction.setMessengerName(messageInfo.getMessengerName());
+			System.out.println("Correct messenger name set here? : " + botFunction.getMessengerName());
 			performTrigger(botConfig, botFunction, botAgent, functionPath, "", body);
 		}
 	}
@@ -1816,6 +1817,7 @@ public class SocialBotManagerService extends RESTService {
 			String userId = triggeredBody.getAsString("user");
 			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 			String messengerID = sf.getMessengerName();
+			System.out.println("MessengerID of service function is: " + messengerID);
 			String channel = triggeredBody.getAsString("channel");
 			HashMap<String, String> headers = new HashMap<String, String>();
 			// HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String,
