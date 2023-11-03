@@ -188,6 +188,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
+		System.out.println("Room:" + room.toString());
 		Boolean messageSent = Boolean.FALSE;
 		if (sendingMessage.get(channel) != null) {
 			while (sendingMessage.get(channel) == true) {
@@ -294,6 +295,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	@Override
 	public String getChannelByEmail(String email) {
 		List<UserDocument> users = client.getDbManager().getUserCollection().getData();
+		System.out.println(users.toString());
 		for (UserDocument u : users) {
 			// TODO Email Matching
 			System.out.println(u);
