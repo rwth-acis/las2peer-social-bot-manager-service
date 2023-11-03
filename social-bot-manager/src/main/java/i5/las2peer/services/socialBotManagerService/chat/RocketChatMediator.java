@@ -202,8 +202,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	@Override
 	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
 		System.out.println(text);
-		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
-		System.out.println("Room:" + room.toString());
+		// ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
+		
 		Boolean messageSent = Boolean.FALSE;
 		if (sendingMessage.get(channel) != null) {
 			while (sendingMessage.get(channel) == true) {
@@ -212,85 +212,102 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		}
 		sendingMessage.put(channel, true);
 
-		room.getMembers(new GetMembersListener() {
+		// room.getMembers(new GetMembersListener() {
 
-			@Override
-			public void onGetRoomMembers(Integer arg0, List<UserObject> arg1, ErrorObject arg2) {
-				// TODO Auto-generated method stub
-				try {
-					String userName = "";
-					String newText = text;
-					for (UserObject u : (ArrayList<UserObject>) arg1) {
-						if (!u.getUserId().equals(client.getMyUserId())) {
-							userName += u.getUserName() + ", ";
-						}
-					}
+		// 	@Override
+		// 	public void onGetRoomMembers(Integer arg0, List<UserObject> arg1, ErrorObject arg2) {
+		// 		// TODO Auto-generated method stub
+		// 		try {
+		// 			String userName = "";
+		// 			String newText = text;
+		// 			for (UserObject u : (ArrayList<UserObject>) arg1) {
+		// 				if (!u.getUserId().equals(client.getMyUserId())) {
+		// 					userName += u.getUserName() + ", ";
+		// 				}
+		// 			}
 
-					if (userName.length() > 2) {
-						userName = userName.substring(0, userName.length() - 2);
-					}
-					System.out.println(username + newText);
-					newText = newText.replace("menteeName", userName);
-					newText = newText.replace("\\n", "\n");
-					if (newText.length() > 5000) {
-						sendingMessage.put(channel, false);
-						try {
-							File tempFile = new File("message.txt");
-							FileWriter writer = new FileWriter(tempFile);
-							writer.write(newText);
-							writer.close();
-							room.uploadFile(tempFile, "message.txt", "", new FileListener() {
+		// 			if (userName.length() > 2) {
+		// 				userName = userName.substring(0, userName.length() - 2);
+		// 			}
+		// 			System.out.println(username + newText);
+		// 			newText = newText.replace("menteeName", userName);
+		// 			newText = newText.replace("\\n", "\n");
+		// 			if (newText.length() > 5000) {
+		// 				sendingMessage.put(channel, false);
+		// 				try {
+		// 					File tempFile = new File("message.txt");
+		// 					FileWriter writer = new FileWriter(tempFile);
+		// 					writer.write(newText);
+		// 					writer.close();
+		// 					room.uploadFile(tempFile, "message.txt", "", new FileListener() {
 
-								@Override
-								public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
-									// TODO Auto-generated method stub
-								}
+		// 						@Override
+		// 						public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
+		// 							// TODO Auto-generated method stub
+		// 						}
 
-								@Override
-								public void onUploadError(ErrorObject arg0, IOException arg1) {
-									room.sendMessage(arg0.getMessage());
-									room.sendMessage(arg0.getReason());
-									tempFile.delete();
-								}
+		// 						@Override
+		// 						public void onUploadError(ErrorObject arg0, IOException arg1) {
+		// 							room.sendMessage(arg0.getMessage());
+		// 							room.sendMessage(arg0.getReason());
+		// 							tempFile.delete();
+		// 						}
 
-								@Override
-								public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
-									// TODO Auto-generated method stub
+		// 						@Override
+		// 						public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
+		// 							// TODO Auto-generated method stub
 
-								}
+		// 						}
 
-								@Override
-								public void onUploadStarted(String arg0, String arg1, String arg2) {
-									// TODO Auto-generated method stub
+		// 						@Override
+		// 						public void onUploadStarted(String arg0, String arg1, String arg2) {
+		// 							// TODO Auto-generated method stub
 
-								}
+		// 						}
 
-								@Override
-								public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1,
-										String arg2, String arg3, String arg4) {
-									tempFile.delete();
-								}
-							});
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							sendingMessage.put(channel, false);
-							e.printStackTrace();
-						}
-					} else {
-						room.sendMessage(newText);
-						//messageSent = Boolean.TRUE;
-						//ChatMessage botMessage = new ChatMessage(channel, "assistant", newText);
-						//conversationPathCollector.addMessage(botMessage);
-						sendingMessage.put(channel, false);
-					}
-				} catch (Exception e) {
-					sendingMessage.put(channel, false);
-					e.printStackTrace();
-				}
-				sendingMessage.put(channel, false);
-			}
+		// 						@Override
+		// 						public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1,
+		// 								String arg2, String arg3, String arg4) {
+		// 							tempFile.delete();
+		// 						}
+		// 					});
+		// 				} catch (IOException e) {
+		// 					// TODO Auto-generated catch block
+		// 					sendingMessage.put(channel, false);
+		// 					e.printStackTrace();
+		// 				}
+		// 			} else {
+		// 				room.sendMessage(newText);
+		// 				//messageSent = Boolean.TRUE;
+		// 				//ChatMessage botMessage = new ChatMessage(channel, "assistant", newText);
+		// 				//conversationPathCollector.addMessage(botMessage);
+		// 				sendingMessage.put(channel, false);
+		// 			}
+		// 		} catch (Exception e) {
+		// 			sendingMessage.put(channel, false);
+		// 			e.printStackTrace();
+		// 		}
+		// 		sendingMessage.put(channel, false);
+		// 	}
 
-		});
+		// });
+			
+		JSONObject request = new JSONObject();
+		request.put("rid", channel);
+		request.put("msg", text);
+		MiniClient clientLogin = new MiniClient();
+		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
+		HashMap<String, String> headers = new HashMap<String, String>();
+		ClientResponse r = null;
+		JSONObject reqBody = new JSONObject(); 
+		reqBody.put("message", request);
+		r = clientLogin.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+		if(r.getHttpCode() != 200){
+			System.out.println("Authentication Token is faulty!");
+		} else if (r.getHttpCode() == 200) {
+			System.out.println("Message sent.");
+		}
+
 		messageSent = Boolean.TRUE;
 		return messageSent;
 	}
