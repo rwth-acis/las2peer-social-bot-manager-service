@@ -296,20 +296,32 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		request.put("rid", channel);
 		request.put("msg", text);
 		MiniClient clientLogin = new MiniClient();
-		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
+
+		clientLogin.setConnectorEndpoint(url + "/api/v1/login");
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("X-User-Id", client.getMyUserId());
-		headers.put("X-Auth-Token", token);
-		System.out.println(token);
-		System.out.println(client.getMyUserId());
 		ClientResponse r = null;
 		JSONObject reqBody = new JSONObject(); 
-		reqBody.put("message", request);		
+		reqBody.put("username", username);
+		reqBody.put("password", password);
 		r = clientLogin.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
 		if(r.getHttpCode() != 200){
-			System.out.println(r.getHttpCode());
-			System.out.println("Authentication Token is faulty!");
+			headers.put("X-User-Id", client.getMyUserId());
+			headers.put("X-Auth-Token", token);
+			System.out.println(token);
+			System.out.println(client.getMyUserId());
 		} else if (r.getHttpCode() == 200) {
+			System.out.println("Login successful");
+		}
+
+		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
+		ClientResponse r1 = null;
+		JSONObject reqBodyMessage = new JSONObject(); 
+		reqBodyMessage.put("message", request);		
+		r1 = clientLogin.sendRequest("POST", "", reqBodyMessage.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+		if(r1.getHttpCode() != 200){
+			System.out.println(r1.getHttpCode());
+			System.out.println("Authentication Token is faulty!");
+		} else if (r1.getHttpCode() == 200) {
 			System.out.println("Message sent.");
 		}
 
