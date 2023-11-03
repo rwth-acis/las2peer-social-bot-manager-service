@@ -2992,6 +2992,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
 				String channel = chatMediator.getChannelByEmail(email);
+				System.out.println("Rocket Chat Channel: " + channel);
 				chatMediator.sendMessageToChannel(channel, msgtext, "text");
 
 			} catch (Exception e) {
