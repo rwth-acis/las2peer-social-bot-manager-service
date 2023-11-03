@@ -300,9 +300,12 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		HashMap<String, String> headers = new HashMap<String, String>();
 		ClientResponse r = null;
 		JSONObject reqBody = new JSONObject(); 
-		reqBody.put("message", request);
+		reqBody.put("username", username);
+		reqBody.put("password", password);
+		reqBody.put("message", request);		
 		r = clientLogin.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
 		if(r.getHttpCode() != 200){
+			System.out.println(r.getHttpCode());
 			System.out.println("Authentication Token is faulty!");
 		} else if (r.getHttpCode() == 200) {
 			System.out.println("Message sent.");
