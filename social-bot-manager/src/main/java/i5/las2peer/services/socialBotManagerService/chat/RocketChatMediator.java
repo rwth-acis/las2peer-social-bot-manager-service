@@ -119,19 +119,19 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
 		client.setPingInterval(15000);
 		client.connect(this);
-			MiniClient clientLoginTest = new MiniClient();
-			clientLoginTest.setConnectorEndpoint(url + "/api/v1/login");
-			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse r = null;
-			JSONObject reqBody = new JSONObject(); 
-			reqBody.put("username", username);
-			reqBody.put("password", password);
-			r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
-			if(r.getHttpCode() != 200){
-				System.out.println("Authentication Token is faulty!");
-			} else if (r.getHttpCode() == 200) {
-				System.out.println("Login successful");
-			}
+			// MiniClient clientLoginTest = new MiniClient();
+			// clientLoginTest.setConnectorEndpoint(url + "/api/v1/login");
+			// HashMap<String, String> headers = new HashMap<String, String>();
+			// ClientResponse r = null;
+			// JSONObject reqBody = new JSONObject(); 
+			// reqBody.put("username", username);
+			// reqBody.put("password", password);
+			// r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			// if(r.getHttpCode() != 200){
+			// 	System.out.println("Authentication Token is faulty!");
+			// } else if (r.getHttpCode() == 200) {
+			// 	System.out.println("Login successful");
+			// }
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		messageCollector.setDomain(url);
 		//conversationPathCollector.setDomain(url);
@@ -298,8 +298,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		MiniClient clientLogin = new MiniClient();
 		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("X-Auth-Token", token);
 		headers.put("X-User-Id", client.getMyUserId());
+		headers.put("X-Auth-Token", token);
+		System.out.println(token);
+		System.out.println(client.getMyUserId());
 		ClientResponse r = null;
 		JSONObject reqBody = new JSONObject(); 
 		reqBody.put("message", request);		
