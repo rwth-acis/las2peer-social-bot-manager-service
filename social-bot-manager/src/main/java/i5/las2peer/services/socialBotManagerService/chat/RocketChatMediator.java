@@ -298,10 +298,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		MiniClient clientLogin = new MiniClient();
 		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
 		HashMap<String, String> headers = new HashMap<String, String>();
+		headers.put("X-Auth-Token", token);
+		headers.put("X-User-Id", client.getMyUserId());
 		ClientResponse r = null;
 		JSONObject reqBody = new JSONObject(); 
-		reqBody.put("username", username);
-		reqBody.put("password", password);
 		reqBody.put("message", request);		
 		r = clientLogin.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
 		if(r.getHttpCode() != 200){
