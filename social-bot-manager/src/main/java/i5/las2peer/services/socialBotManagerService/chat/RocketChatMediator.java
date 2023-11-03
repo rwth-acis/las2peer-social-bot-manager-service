@@ -77,7 +77,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	private boolean shouldCheckRooms = false;
 	private HashMap<String, Boolean> sendingMessage = new HashMap<String, Boolean>();
 
-	public RocketChatMediator(String authToken, SQLDatabase database) throws AuthTokenException{
+	public RocketChatMediator(String authToken, SQLDatabase database, RasaNlu rasa) throws AuthTokenException{
 		super(authToken);
 		this.database = database;
 		setAuthData(authToken);
@@ -103,26 +103,39 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			}
 
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
-		// this.rasa = rasa;
+		this.rasa = rasa;
 		messageCollector.setDomain(url);
 		//conversationPathCollector.setDomain(url);
 	}
 
-	// public RocketChatMediator(String authToken, SQLDatabase database) {
-	// 	super(authToken);
-	// 	this.database = database;
-	// 	setAuthData(authToken);
-	// 	if (activeSubscriptions == null) {
-	// 		activeSubscriptions = new HashSet<String>();
-	// 	}
-	// 	client = new RocketChatAPI(url);
-	// 	client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
-	// 	client.setPingInterval(15000);
-	// 	client.connect(this);
-	// 	RocketChatAPI.LOGGER.setLevel(Level.OFF);
-	// 	messageCollector.setDomain(url);
-	// 	//conversationPathCollector.setDomain(url);
-	// }
+	public RocketChatMediator(String authToken, SQLDatabase database) {
+		super(authToken);
+		this.database = database;
+		setAuthData(authToken);
+		if (activeSubscriptions == null) {
+			activeSubscriptions = new HashSet<String>();
+		}
+		client = new RocketChatAPI(url);
+		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
+		client.setPingInterval(15000);
+		client.connect(this);
+			MiniClient clientLoginTest = new MiniClient();
+			clientLoginTest.setConnectorEndpoint(url + "/api/v1/login");
+			HashMap<String, String> headers = new HashMap<String, String>();
+			ClientResponse r = null;
+			JSONObject reqBody = new JSONObject(); 
+			reqBody.put("username", username);
+			reqBody.put("password", password);
+			r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			if(r.getHttpCode() != 200){
+				System.out.println("Authentication Token is faulty!");
+			} else if (r.getHttpCode() == 200) {
+				System.out.println("Login successful");
+			}
+		RocketChatAPI.LOGGER.setLevel(Level.OFF);
+		messageCollector.setDomain(url);
+		//conversationPathCollector.setDomain(url);
+	}
 
 	private void setAuthData(String authToken){
 		// TODO some error handling? 
@@ -189,7 +202,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	@Override
 	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
 		System.out.println(text);
-		
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		System.out.println("Room:" + room.toString());
 		Boolean messageSent = Boolean.FALSE;
