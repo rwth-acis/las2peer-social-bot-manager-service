@@ -305,11 +305,13 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		reqBody.put("password", password);
 		r = clientLogin.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
 		if(r.getHttpCode() != 200){
+			System.out.println(r1.getHttpCode());
+			System.out.println("Authentication Token is faulty!");
+		} else if (r.getHttpCode() == 200) {
 			headers.put("X-User-Id", client.getMyUserId());
 			headers.put("X-Auth-Token", token);
 			System.out.println(token);
 			System.out.println(client.getMyUserId());
-		} else if (r.getHttpCode() == 200) {
 			System.out.println("Login successful");
 		}
 
