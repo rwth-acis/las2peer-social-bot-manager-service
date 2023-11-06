@@ -300,7 +300,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		request.put("rid", channel);
 		request.put("msg", text);
 		String test = null;
-		JsonObject answer = new JsonObject();
 		MiniClient clientLogin = new MiniClient();
 
 		clientLogin.setConnectorEndpoint(url + "/api/v1/login");
@@ -316,8 +315,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			System.out.println("Authentication Token R is faulty!");
 		} else if (r.getHttpCode() == 200) {
 			test = r.getResponse();
-			answer = (JsonObject) p.parse(test);
-			System.out.println(answer);
 			System.out.println(test);
 			System.out.println("Login successful");
 		}
