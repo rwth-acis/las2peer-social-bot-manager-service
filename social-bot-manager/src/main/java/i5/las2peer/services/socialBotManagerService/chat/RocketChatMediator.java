@@ -59,6 +59,7 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import io.swagger.util.Json;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
@@ -296,7 +297,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		// });
 			
 		JSONObject request = new JSONObject();
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject response = new JSONObject();
 		request.put("rid", channel);
 		request.put("msg", text);
 		String test = null;
@@ -314,18 +315,19 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			System.out.println(r.getHttpCode());
 			System.out.println("Authentication Token R is faulty!");
 		} else if (r.getHttpCode() == 200) {
-			test = r.getResponse();
-			System.out.println(test);
+			response = new JSONObject(r.getResponse());
+			System.out.println(response);
 			System.out.println("Login successful");
 		}
 
 		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
 		ClientResponse r1 = null;
 		JSONObject reqBodyMessage = new JSONObject(); 
-		headers.put("X-User-Id", client.getMyUserId());
-		headers.put("X-Auth-Token", token);
-		System.out.println(token);
-		System.out.println(client.getMyUserId());
+		JSONObject data = response.getJSONObject("data");
+		headers.put("X-User-Id", data.getString("userId"));
+		headers.put("X-Auth-Token", data.getString("authToken"));
+		System.out.println(data.getString("userId"));
+		System.out.println(data.getString("authToken"));
 		reqBodyMessage.put("message", request);		
 		r1 = clientLogin.sendRequest("POST", "", reqBodyMessage.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
 		if(r1.getHttpCode() != 200){
