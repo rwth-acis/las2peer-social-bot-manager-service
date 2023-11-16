@@ -209,11 +209,11 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		// ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		
 		Boolean messageSent = Boolean.FALSE;
-		if (sendingMessage.get(channel) != null) {
-			while (sendingMessage.get(channel) == true) {
+		// if (sendingMessage.get(channel) != null) {
+		// 	while (sendingMessage.get(channel) == true) {
 
-			}
-		}
+		// 	}
+		// }
 		sendingMessage.put(channel, true);
 
 		// room.getMembers(new GetMembersListener() {
@@ -300,7 +300,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		JSONObject response = new JSONObject();
 		request.put("rid", channel);
 		request.put("msg", text);
-		String test = null;
 		MiniClient clientLogin = new MiniClient();
 
 		clientLogin.setConnectorEndpoint(url + "/api/v1/login");
