@@ -298,13 +298,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return messageSent;
 	}
 
-	@Override
-	public Boolean sendMessageToChannelCallback(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
+	public void sendMessageToChannelCallback(String channel, String text, String type) {
 		System.out.println(text);
-
-		Boolean messageSent = Boolean.FALSE;
-		sendingMessage.put(channel, true);
-
 
 		JSONObject request = new JSONObject();
 		JSONObject response = new JSONObject();
@@ -345,9 +340,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		} else if (r1.getHttpCode() == 200) {
 			System.out.println("Message sent.");
 		}
-		
-		messageSent = Boolean.TRUE;
-		return messageSent;
 	}
 
 	@Override

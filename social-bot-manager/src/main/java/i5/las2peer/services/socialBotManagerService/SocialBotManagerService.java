@@ -105,6 +105,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.tools.CryptoException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
