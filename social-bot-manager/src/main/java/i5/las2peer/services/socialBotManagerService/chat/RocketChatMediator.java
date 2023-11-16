@@ -298,6 +298,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return messageSent;
 	}
 
+	@Override
 	public Boolean sendMessageToChannelCallback(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
 		System.out.println(text);
 

@@ -38,7 +38,7 @@ public abstract class ChatMediator {
 	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
 	 */
 	public abstract Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id);
-
+	public abstract Boolean sendMessageToChannelCallback(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id);
 	public abstract void editMessage(String channel, String messageId, String message, Optional<String> id);
 
 	public void editMessage(String channel, String messageId, String message) {
@@ -78,6 +78,16 @@ public abstract class ChatMediator {
 		System.out.println("SEND MESSAGE TO CHANNEL:" + text);
 		
 		return sendMessageToChannel(channel, text, hashMap, type, currentMessage, null);
+	}
+
+	/**
+	 * Sends a chat message to a channel using callback. (For RocketChat)
+	 *
+	 * @param channel A channel ID valid for interacting with the chat service's API
+	 * @param text    The content of the chat message
+	 */
+	public Boolean sendMessageToChannelCallback(String channel, String text, String type ) {
+		return sendMessageToChannelCallback(channel, text, null, type, null, null);
 	}
 
 	/**

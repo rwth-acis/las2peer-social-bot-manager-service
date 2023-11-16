@@ -2991,8 +2991,6 @@ public class SocialBotManagerService extends RESTService {
 				JSONParser p = new JSONParser();
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
-				// String channel2 = chatMediator.getChannelByEmail(email);
-				// System.out.println("Rocket Chat Channel: " + channel2);
 				chatMediator.sendMessageToChannel(channel, msgtext, "text");
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -3007,6 +3005,35 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
+	@POST
+	@Path("/sendMessageToRocketChatCallback/{token}/{email}/{channel}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response sendMessageToRocketChatCallback(@PathParam("token") String token, @PathParam("email") String email, @PathParam("channel") String channel,
+			String input) {
+		try {
+			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
+			System.out.println("rocket chat mediator initialized");
+
+			try {
+				JSONParser p = new JSONParser();
+				JSONObject bodyInput = (JSONObject) p.parse(input);
+				String msgtext = bodyInput.getAsString("msg");
+				chatMediator.sendMessageToChannelCallback(channel, msgtext, "text");
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok("Sending message failed.").build();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().build();
+
+	}
 	@POST
 	@Path("/editMessage/{token}/{email}")
 	@Consumes(MediaType.APPLICATION_JSON)
