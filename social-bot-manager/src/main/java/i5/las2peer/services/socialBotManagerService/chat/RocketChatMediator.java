@@ -204,98 +204,107 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
 		System.out.println(text);
-		// ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
-		
+		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		Boolean messageSent = Boolean.FALSE;
-		// if (sendingMessage.get(channel) != null) {
-		// 	while (sendingMessage.get(channel) == true) {
+		if (sendingMessage.get(channel) != null) {
+			while (sendingMessage.get(channel) == true) {
 
-		// 	}
-		// }
+			}
+		}
 		sendingMessage.put(channel, true);
 
-		// room.getMembers(new GetMembersListener() {
+		room.getMembers(new GetMembersListener() {
 
-		// 	@Override
-		// 	public void onGetRoomMembers(Integer arg0, List<UserObject> arg1, ErrorObject arg2) {
-		// 		// TODO Auto-generated method stub
-		// 		try {
-		// 			String userName = "";
-		// 			String newText = text;
-		// 			for (UserObject u : (ArrayList<UserObject>) arg1) {
-		// 				if (!u.getUserId().equals(client.getMyUserId())) {
-		// 					userName += u.getUserName() + ", ";
-		// 				}
-		// 			}
+			@Override
+			public void onGetRoomMembers(Integer arg0, List<UserObject> arg1, ErrorObject arg2) {
+				// TODO Auto-generated method stub
+				try {
+					String userName = "";
+					String newText = text;
+					for (UserObject u : (ArrayList<UserObject>) arg1) {
+						if (!u.getUserId().equals(client.getMyUserId())) {
+							userName += u.getUserName() + ", ";
+						}
+					}
 
-		// 			if (userName.length() > 2) {
-		// 				userName = userName.substring(0, userName.length() - 2);
-		// 			}
-		// 			System.out.println(username + newText);
-		// 			newText = newText.replace("menteeName", userName);
-		// 			newText = newText.replace("\\n", "\n");
-		// 			if (newText.length() > 5000) {
-		// 				sendingMessage.put(channel, false);
-		// 				try {
-		// 					File tempFile = new File("message.txt");
-		// 					FileWriter writer = new FileWriter(tempFile);
-		// 					writer.write(newText);
-		// 					writer.close();
-		// 					room.uploadFile(tempFile, "message.txt", "", new FileListener() {
+					if (userName.length() > 2) {
+						userName = userName.substring(0, userName.length() - 2);
+					}
+					System.out.println(username + newText);
+					newText = newText.replace("menteeName", userName);
+					newText = newText.replace("\\n", "\n");
+					if (newText.length() > 5000) {
+						sendingMessage.put(channel, false);
+						try {
+							File tempFile = new File("message.txt");
+							FileWriter writer = new FileWriter(tempFile);
+							writer.write(newText);
+							writer.close();
+							room.uploadFile(tempFile, "message.txt", "", new FileListener() {
 
-		// 						@Override
-		// 						public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
-		// 							// TODO Auto-generated method stub
-		// 						}
+								@Override
+								public void onSendFile(RocketChatMessage arg0, ErrorObject arg1) {
+									// TODO Auto-generated method stub
+								}
 
-		// 						@Override
-		// 						public void onUploadError(ErrorObject arg0, IOException arg1) {
-		// 							room.sendMessage(arg0.getMessage());
-		// 							room.sendMessage(arg0.getReason());
-		// 							tempFile.delete();
-		// 						}
+								@Override
+								public void onUploadError(ErrorObject arg0, IOException arg1) {
+									room.sendMessage(arg0.getMessage());
+									room.sendMessage(arg0.getReason());
+									tempFile.delete();
+								}
 
-		// 						@Override
-		// 						public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
-		// 							// TODO Auto-generated method stub
+								@Override
+								public void onUploadProgress(int arg0, String arg1, String arg2, String arg3) {
+									// TODO Auto-generated method stub
 
-		// 						}
+								}
 
-		// 						@Override
-		// 						public void onUploadStarted(String arg0, String arg1, String arg2) {
-		// 							// TODO Auto-generated method stub
+								@Override
+								public void onUploadStarted(String arg0, String arg1, String arg2) {
+									// TODO Auto-generated method stub
 
-		// 						}
+								}
 
-		// 						@Override
-		// 						public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1,
-		// 								String arg2, String arg3, String arg4) {
-		// 							tempFile.delete();
-		// 						}
-		// 					});
-		// 				} catch (IOException e) {
-		// 					// TODO Auto-generated catch block
-		// 					sendingMessage.put(channel, false);
-		// 					e.printStackTrace();
-		// 				}
-		// 			} else {
-		// 				room.sendMessage(newText);
-		// 				//messageSent = Boolean.TRUE;
-		// 				//ChatMessage botMessage = new ChatMessage(channel, "assistant", newText);
-		// 				//conversationPathCollector.addMessage(botMessage);
-		// 				sendingMessage.put(channel, false);
-		// 			}
-		// 		} catch (Exception e) {
-		// 			sendingMessage.put(channel, false);
-		// 			e.printStackTrace();
-		// 		}
-		// 		sendingMessage.put(channel, false);
-		// 	}
+								@Override
+								public void onUploadComplete(int arg0, com.rocketchat.core.model.FileObject arg1,
+										String arg2, String arg3, String arg4) {
+									tempFile.delete();
+								}
+							});
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							sendingMessage.put(channel, false);
+							e.printStackTrace();
+						}
+					} else {
+						room.sendMessage(newText);
+						//messageSent = Boolean.TRUE;
+						//ChatMessage botMessage = new ChatMessage(channel, "assistant", newText);
+						//conversationPathCollector.addMessage(botMessage);
+						sendingMessage.put(channel, false);
+					}
+				} catch (Exception e) {
+					sendingMessage.put(channel, false);
+					e.printStackTrace();
+				}
+				sendingMessage.put(channel, false);
+			}
 
-		// });
-			
+		});
+		messageSent = Boolean.TRUE;
+		return messageSent;
+	}
+
+	public Boolean sendMessageToChannelCallback(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
+		System.out.println(text);
+
+		Boolean messageSent = Boolean.FALSE;
+		sendingMessage.put(channel, true);
+
+
 		JSONObject request = new JSONObject();
 		JSONObject response = new JSONObject();
 		request.put("rid", channel);
