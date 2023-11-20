@@ -41,8 +41,8 @@ public class RESTfulChatResponse {
         // if (currentMessage != null) {
         //     if(currentMessage.isRateable()){
         //         rateable = true; 
-        //     }
-        // }
+            }
+        }
 
         interactiveElements = Arrays.asList(icel.toArray());
     }
