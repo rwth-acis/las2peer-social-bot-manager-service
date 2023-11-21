@@ -33,14 +33,14 @@ public class RESTfulChatResponse {
                 if(intent==null||intent=="") intent = value.getIntentKeyword();
                 InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
                 icel.add(ice);    
-        //         if(entry.getValue().expectsFile()){
-        //             isFile = true;
-        //         }
-        //     }
-        // }
-        // if (currentMessage != null) {
-        //     if(currentMessage.isRateable()){
-        //         rateable = true; 
+                if(entry.getValue().expectsFile()){
+                    isFile = true;
+                }
+            }
+        }
+        if (currentMessage != null) {
+            if(currentMessage.isRateable()){
+                rateable = true; 
             }
         }
 
