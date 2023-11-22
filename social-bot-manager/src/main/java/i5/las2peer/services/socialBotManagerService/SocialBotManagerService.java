@@ -20,7 +20,10 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -3062,6 +3065,8 @@ public class SocialBotManagerService extends RESTService {
 
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, Messenger> channelToMessenger = new HashMap<String, Messenger>();
+		private final static ExecutorService executor = Executors.newSingleThreadExecutor();
+		private static Future<?> taskFuture = null;
 
 		/**
 		 * Handles RESTful chat requests.
@@ -3141,7 +3146,25 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
-										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+										final ServiceFunction sfCopy = sf;
+										final String fPathCopy = functionPath;
+										if (taskFuture == null || taskFuture.isDone()) {
+											// Start the asynchronous task
+											Runnable task = new Runnable() {
+												@Override
+												public void run() {
+													try{
+														performTrigger(config, sfCopy, botAgent, fPathCopy, fPathCopy, body);
+													} catch( Exception e){
+														e.printStackTrace();
+													}
+												}
+											};											
+											taskFuture = executor.submit(task);
+										} else {
+											System.out.println("Busy Task");
+											performBusy(sfCopy, body);
+										}
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
@@ -3181,13 +3204,15 @@ public class SocialBotManagerService extends RESTService {
 				e.printStackTrace();
 			}
 			Gson gson = new Gson();
+			System.out.println(gson.toJson(answerMsg));
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
 		}
 
 		private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, BotAgent botAgent,
 				String functionPath, String triggerUID,
-				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
+				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException, InterruptedException {
+			Thread.sleep(10000);
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
@@ -3304,13 +3329,22 @@ public class SocialBotManagerService extends RESTService {
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
 					triggeredBody.put("resBody", jsonResponse);
-					// triggerChat(chat, triggeredBody);
+					// triggerChat(chat, triggeredxBody);
 					return;
 
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
 
 				}
+			}
+		}
+
+		private void performBusy(ServiceFunction sf, JSONObject triggeredBody){
+			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+				// Simulate the result to be a JSON object with a property "status" set to "busy"
+				JSONObject stillBusyResult = new JSONObject();
+				stillBusyResult.put("status", "busy");
+				triggeredBody.put("resBody", stillBusyResult);
 			}
 		}
 
