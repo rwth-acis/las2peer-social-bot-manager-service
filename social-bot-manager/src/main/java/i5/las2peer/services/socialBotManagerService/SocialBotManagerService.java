@@ -52,6 +52,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -3057,6 +3058,7 @@ public class SocialBotManagerService extends RESTService {
 	public static class RESTfulChatResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
+		static HashMap<String, JSONObject> userMessage = new HashMap<String, JSONObject>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 
@@ -3555,7 +3557,6 @@ public class SocialBotManagerService extends RESTService {
 
 			return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 		}
-
 		@GET
 		@Path("/{bot}/{organization}/{channel}/{label1}/{label2}/files")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -3641,5 +3642,84 @@ public class SocialBotManagerService extends RESTService {
 			byte[] bytes = outputStream.toByteArray();
 			return bytes;
 		}
+
+		@GET
+		@Path("/{bot}/{organization}/{channel}/AsyncMessage")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "Response successful"),
+				@ApiResponse(code = 404, message = "Response not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response getRESTfulChatBiwibot(@PathParam("bot") String bot,
+					@PathParam("organization") String organization,
+					@PathParam("channel") String channel) {
+					
+			JSONObject response = new JSONObject();
+			if (userMessage.containsKey(organization + "-" + channel)) {
+				JSONObject ch = userMessage.get(organization + "-" + channel);
+				userMessage.remove(organization + "-" + channel);
+				if (ch.containsKey("error")) {
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+				}
+				JSONObject input = new JSONObject();
+				input.put("message", "!default");
+				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
+				JSONParser p = new JSONParser(0);
+				try {
+					JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
+					System.out.println(answer);
+					return Response.status(Status.OK).entity(answer.toString()).build();
+				} catch (Exception e) {
+					e.printStackTrace();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+				}
+
+			} else {
+				//Set variable AI Response with "Sorry, I am still thinking..."
+
+				response.appendField("AIResponse", "Sorry, I am still thinking");
+				response.appendField("closeContext", false);
+
+				Messenger messenger = channelToMessenger.get(channel);
+				if (messenger == null) {
+					messenger = channelToMessenger.get(channel.split("-")[1]);
+				}
+				for (String key : response.keySet()) {
+					messenger.addVariable(channel, key, response.getAsString(key));
+				}
+
+				return Response.status(Status.NOT_FOUND).entity(response).build();
+			}
+		}
+
+		@POST
+		@Path("/{channel}/AsyncMessage")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "Response successful"),
+				@ApiResponse(code = 404, message = "Response not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response updateRESTfulChatResponse(
+				@PathParam("channel") String channel, String response) {
+			if (response.equals(null)) {
+				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
+			}
+			try {
+				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
+				userMessage.put(channel, o);
+				Messenger messenger = channelToMessenger.get(channel);
+				if (messenger == null) {
+					messenger = channelToMessenger.get(channel.split("-")[1]);
+				}
+				for (String key : o.keySet()) {
+					messenger.addVariable(channel, key, o.getAsString(key));
+				}
+				return Response.status(Status.BAD_REQUEST).entity("ack").build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
+			}
+		}
 	}
+
 }
