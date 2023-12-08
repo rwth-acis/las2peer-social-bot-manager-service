@@ -3655,6 +3655,7 @@ public class SocialBotManagerService extends RESTService {
 					@PathParam("channel") String channel) {
 					
 			JSONObject response = new JSONObject();
+			System.out.println("channel" + channel);
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
 				userMessage.remove(organization + "-" + channel);
@@ -3683,6 +3684,7 @@ public class SocialBotManagerService extends RESTService {
 				Messenger messenger = channelToMessenger.get(channel);
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel.split("-")[1]);
+					System.out.println(messenger);
 				}
 				for (String key : response.keySet()) {
 					messenger.addVariable(channel, key, response.getAsString(key));
@@ -3701,12 +3703,15 @@ public class SocialBotManagerService extends RESTService {
 				@ApiResponse(code = 500, message = "Internal server error") })
 		public Response updateRESTfulChatResponse(
 				@PathParam("channel") String channel, String response) {
+
+			System.out.println("channel" + channel);
 			if (response.equals(null)) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
 			try {
 				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 				userMessage.put(channel, o);
+				System.out.println("usermessage" + userMessage);
 				Messenger messenger = channelToMessenger.get(channel);
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel.split("-")[1]);
