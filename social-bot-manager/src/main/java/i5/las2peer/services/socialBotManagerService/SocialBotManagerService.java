@@ -3705,7 +3705,7 @@ public class SocialBotManagerService extends RESTService {
 				try {
 					JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
 					System.out.println(answer);
-					return Response.status(Status.OK).entity(answer.toString()).build();
+					return Response.status(Status.NOT_FOUND).entity(answer.toString()).build();
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.out.println("Error after handle input.");
