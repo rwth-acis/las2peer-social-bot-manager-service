@@ -3683,10 +3683,10 @@ public class SocialBotManagerService extends RESTService {
 
 				response.appendField("AIResponse", "Sorry, I am still thinking");
 				response.appendField("closeContext", false);
-
-				Messenger messenger = channelToMessenger.get(channel);
+				System.out.println(response)
+				Messenger messenger = channelToMessenger.get(organization + "-" + channel);
 				if (messenger == null) {
-					messenger = channelToMessenger.get(channel.split("-")[1]);
+					messenger = channelToMessenger.get(channel);
 					System.out.println(messenger);
 				}
 				for (String key : response.keySet()) {
