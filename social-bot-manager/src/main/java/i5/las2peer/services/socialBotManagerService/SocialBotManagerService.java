@@ -3661,12 +3661,14 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
 
 				userMessage.remove(organization + "-" + channel);
+
 				if (ch.containsKey("error")) {
+					System.out.println("Error occurred");
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!callback");
+				input.put("message", "!default");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
@@ -3675,12 +3677,13 @@ public class SocialBotManagerService extends RESTService {
 					return Response.status(Status.OK).entity(answer.toString()).build();
 				} catch (Exception e) {
 					e.printStackTrace();
+					System.out.println("Error after handle input.");
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
 				}
 			} else {
 				//Set variable AI Response with "Sorry, I am still thinking..."
 				String orgaChannel = organization + "-" + channel;
-				response.appendField("AIResponse", "Sorry, I am still thinking");
+				response.appendField("AIResponse", "Bitte warte, ich denke noch nach.");
 				response.appendField("closeContext", false);
 				System.out.println(response);
 				Messenger messenger = channelToMessenger.get(organization + "-" + channel);
