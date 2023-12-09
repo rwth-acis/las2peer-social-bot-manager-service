@@ -3161,6 +3161,7 @@ public class SocialBotManagerService extends RESTService {
 											;
 										}
 									}
+									System.out.println("Functionpath do not exist.");
 								} catch (Exception e) {
 
 								}
@@ -3658,10 +3659,12 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("channel" + channel);
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
+
 				userMessage.remove(organization + "-" + channel);
 				if (ch.containsKey("error")) {
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
 				}
+
 				JSONObject input = new JSONObject();
 				input.put("message", "!default");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
@@ -3688,6 +3691,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 				for (String key : response.keySet()) {
 					messenger.addVariable(channel, key, response.getAsString(key));
+					System.out.println("Variables set for response");
 				}
 
 				return Response.status(Status.NOT_FOUND).entity(response).build();
@@ -3704,7 +3708,7 @@ public class SocialBotManagerService extends RESTService {
 		public Response updateRESTfulChatResponse(
 				@PathParam("channel") String channel, String response) {
 
-			System.out.println("channel" + channel);
+			System.out.println("channel: " + channel);
 			if (response.equals(null)) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
@@ -3713,11 +3717,13 @@ public class SocialBotManagerService extends RESTService {
 				userMessage.put(channel, o);
 				System.out.println("usermessage" + userMessage);
 				Messenger messenger = channelToMessenger.get(channel);
+				
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel.split("-")[1]);
 				}
 				for (String key : o.keySet()) {
 					messenger.addVariable(channel, key, o.getAsString(key));
+					System.out.println("Variables added");
 				}
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			} catch (Exception e) {
