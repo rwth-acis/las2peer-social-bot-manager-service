@@ -3666,7 +3666,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!AITutor");
+				input.put("message", "!callback");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
