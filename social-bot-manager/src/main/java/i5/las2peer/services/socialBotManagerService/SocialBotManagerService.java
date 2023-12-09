@@ -3656,7 +3656,7 @@ public class SocialBotManagerService extends RESTService {
 					@PathParam("channel") String channel) {
 					
 			JSONObject response = new JSONObject();
-			System.out.println("channel" + channel);
+			System.out.println("channel: " + channel);
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
 
@@ -3666,7 +3666,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!default");
+				input.put("message", "!AITutor");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
