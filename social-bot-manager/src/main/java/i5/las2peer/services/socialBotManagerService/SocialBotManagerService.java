@@ -3690,13 +3690,27 @@ public class SocialBotManagerService extends RESTService {
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
 					System.out.println(messenger);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
 				}
+
 				for (String key : response.keySet()) {
 					messenger.addVariable(orgaChannel, key, response.getAsString(key));
 					System.out.println("Variables set for response");
 				}
 
-				return Response.status(Status.NOT_FOUND).entity(response).build();
+				JSONObject input = new JSONObject();
+				input.put("message", "!default");
+				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
+				JSONParser p = new JSONParser(0);
+				try {
+					JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
+					System.out.println(answer);
+					return Response.status(Status.OK).entity(answer.toString()).build();
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("Error after handle input.");
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
+				}
 			}
 		}
 
