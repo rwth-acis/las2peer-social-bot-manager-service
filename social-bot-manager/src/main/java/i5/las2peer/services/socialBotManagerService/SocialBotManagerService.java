@@ -3680,7 +3680,7 @@ public class SocialBotManagerService extends RESTService {
 
 			} else {
 				//Set variable AI Response with "Sorry, I am still thinking..."
-
+				String orgaChannel = organization + "-" + channel;
 				response.appendField("AIResponse", "Sorry, I am still thinking");
 				response.appendField("closeContext", false);
 				System.out.println(response)
@@ -3690,7 +3690,7 @@ public class SocialBotManagerService extends RESTService {
 					System.out.println(messenger);
 				}
 				for (String key : response.keySet()) {
-					messenger.addVariable(channel, key, response.getAsString(key));
+					messenger.addVariable(orgaChannel, key, response.getAsString(key));
 					System.out.println("Variables set for response");
 				}
 
