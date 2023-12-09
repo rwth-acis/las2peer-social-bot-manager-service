@@ -3677,13 +3677,12 @@ public class SocialBotManagerService extends RESTService {
 					e.printStackTrace();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
 				}
-
 			} else {
 				//Set variable AI Response with "Sorry, I am still thinking..."
 				String orgaChannel = organization + "-" + channel;
 				response.appendField("AIResponse", "Sorry, I am still thinking");
 				response.appendField("closeContext", false);
-				System.out.println(response)
+				System.out.println(response);
 				Messenger messenger = channelToMessenger.get(organization + "-" + channel);
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
