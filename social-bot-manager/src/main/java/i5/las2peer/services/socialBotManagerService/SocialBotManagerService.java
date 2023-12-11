@@ -3668,7 +3668,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!default");
+				input.put("message", "!AITutor");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
@@ -3699,7 +3699,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!default");
+				input.put("message", "!AITutor");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
@@ -3732,6 +3732,14 @@ public class SocialBotManagerService extends RESTService {
 			if (response.equals(null)) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
+
+			if (response.contains("!exit")) {
+				JSONObject input = new JSONObject();
+				input.put("message", "!exit");
+				Response responseService = handleRESTfulChat("TestBot", organization, channel, input.toString());
+				return Response.status(Status.BAD_REQUEST).entity("ack").build();
+			}
+			
 			try {
 				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 				userMessage.put(orgaChannel, o);
