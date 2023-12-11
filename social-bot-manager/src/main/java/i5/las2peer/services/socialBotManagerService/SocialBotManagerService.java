@@ -3715,30 +3715,34 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		@POST
-		@Path("/{channel}/AsyncMessage")
+		@Path("/{organization}/{channel}/AsyncMessage")
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = {
 				@ApiResponse(code = 200, message = "Response successful"),
 				@ApiResponse(code = 404, message = "Response not found"),
 				@ApiResponse(code = 500, message = "Internal server error") })
 		public Response updateRESTfulChatResponse(
-				@PathParam("channel") String channel, String response) {
+				@PathParam("organization") String organization, 
+				@PathParam("channel") String channel, 
+				String response) {
 
-			System.out.println("channel: " + channel);
+			String orgaChannel = organization + "-" + channel;
+
+			System.out.println("organChannel: " + orgaChannel);
 			if (response.equals(null)) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
 			try {
 				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
-				userMessage.put(channel, o);
+				userMessage.put(orgaChannel, o);
 				System.out.println("usermessage" + userMessage);
-				Messenger messenger = channelToMessenger.get(channel);
+				Messenger messenger = channelToMessenger.get(orgaChannel);
 				
 				if (messenger == null) {
-					messenger = channelToMessenger.get(channel.split("-")[1]);
+					messenger = channelToMessenger.get(channel);
 				}
 				for (String key : o.keySet()) {
-					messenger.addVariable(channel, key, o.getAsString(key));
+					messenger.addVariable(orgaChannel, key, o.getAsString(key));
 					System.out.println("Variables added");
 				}
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
