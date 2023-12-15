@@ -20,6 +20,7 @@ public class IncomingMessage {
 	boolean openAIEnhance;
 	boolean freezeMessageSend;
 	boolean isRateable;
+	boolean asynchron;
 
 	/**
 	 * Conversation Id for the message
@@ -55,7 +56,7 @@ public class IncomingMessage {
 
 
 	public IncomingMessage(String intent, String NluID, Boolean containsFile, ArrayList<String> responses,
-			String fileURL, String errorMessage, String type, String intentLabel, String followupType, Boolean isRateable) {
+			String fileURL, String errorMessage, String type, String intentLabel, String followupType, Boolean isRateable, Boolean asynchron) {
 		if (intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else
@@ -81,6 +82,11 @@ public class IncomingMessage {
 			this.isRateable = isRateable;
 		}else{
 			this.isRateable = false;
+		}
+		if(asynchron!=null) {
+			this.asynchron = asynchron;
+		} else {
+			this.asynchron = false;
 		}
 	}
 
@@ -228,5 +234,13 @@ public class IncomingMessage {
 
 	public void setRateable(boolean isRateable) {
 		this.isRateable = isRateable;
+	}
+
+	public boolean asynchron() {
+		return asynchron;
+	}
+
+	public void setAsynchron(boolean asynchron) {
+		this.asynchron = asynchron;
 	}
 }

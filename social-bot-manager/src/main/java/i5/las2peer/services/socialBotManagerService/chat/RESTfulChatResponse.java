@@ -17,6 +17,7 @@ public class RESTfulChatResponse {
     private JSONObject reqBody;
     private boolean isFile;
     private boolean rateable; 
+    private boolean asynchron;
 
 
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
@@ -37,6 +38,9 @@ public class RESTfulChatResponse {
                 }
                 if(value.isRateable()){
                     rateable = true; 
+                }
+                if(value.asynchron()) {
+                    asynchron = true;
                 }
                 icel.add(ice);
             }
@@ -101,7 +105,15 @@ public class RESTfulChatResponse {
         return rateable;
     }
 
-    public void setRateable(boolean rateable) {
+    public void setRateable(boolean asynchron) {
         this.rateable = rateable;
+    }
+
+    public boolean asynchron() {
+        return asynchron;
+    }
+
+    public void setAsynchron(boolean asynchron) {
+        this.asynchron = asynchron;
     }
 }
