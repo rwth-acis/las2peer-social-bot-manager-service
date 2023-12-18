@@ -220,15 +220,11 @@ public class IncomingMessage {
 	}
 
 	public boolean isRateable() {
-		return isRateable;
+		return this.isRateable;
 	}
 
 	public void setRateable(boolean isRateable) {
 		this.isRateable = isRateable;
-	}
-
-	public boolean asynchron() {
-		return asynchron;
 	}
 
 	public void setAsynchron(boolean asynchron) {
@@ -236,6 +232,6 @@ public class IncomingMessage {
 	}
 
 	public boolean getAsynchron() {
-		return asynchron;
+		return this.asynchron;
 	}
 }

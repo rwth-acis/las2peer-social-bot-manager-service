@@ -40,7 +40,7 @@ public class RESTfulChatResponse {
                 if(value.isRateable()){
                     rateable = true; 
                 }
-                if(value.asynchron()) {
+                if(value.getAsynchron()) {
                     asynchron = true;
                     getURL = getCallbackURL();
                 }
