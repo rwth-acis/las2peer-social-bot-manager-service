@@ -18,14 +18,15 @@ public class RESTfulChatResponse {
     private boolean isFile;
     private boolean rateable; 
     private boolean asynchron;
-
-
+    private String getURL;
+    
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
         this(text);
         reqBody = new JSONObject();
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
         setType(type);
         isFile = false;
+        asynchron = false;
         if(hashMap != null){
             for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
                 String key = entry.getKey();
@@ -41,6 +42,7 @@ public class RESTfulChatResponse {
                 }
                 if(value.asynchron()) {
                     asynchron = true;
+                    getURL = getCallbackURL();
                 }
                 icel.add(ice);
             }
@@ -115,5 +117,13 @@ public class RESTfulChatResponse {
 
     public void setAsynchron(boolean asynchron) {
         this.asynchron = asynchron;
+    }
+
+    public String getCallbackURL() {
+        return getURL;
+    }
+
+    public void setGetURL(String callbackURL) {
+        this.getURL = callbackURL;
     }
 }

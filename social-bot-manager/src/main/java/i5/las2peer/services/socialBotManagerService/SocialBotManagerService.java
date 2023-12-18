@@ -3136,34 +3136,63 @@ public class SocialBotManagerService extends RESTService {
 									 */
 
 									String functionPath = "";
+									Boolean async = false;
 									JSONObject body = new JSONObject();
 									BotAgent botAgent = getBotAgents().get(b.getName());
 									ServiceFunction sf = new ServiceFunction();
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
 											sf);
 									if (body.containsKey("functionPath")) {
+										async = m.getAsync(channel);
+										System.out.println("Get asnychronous value: " + async.toString());
+
 										functionPath = body.getAsString("functionPath");
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 										body.put("email", email);
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
-										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
-										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
-										answerMsg = chatMediator.getMessageForChannel(orgChannel);
-										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
-												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
-											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
-											// answerMsg.getMessage());
-										}
-										answerMsg.setReqBody(body);
-										if (body.containsKey("resBody") && ((JSONObject) body.get("resBody"))
-												.containsKey("interactiveElements")) {
-											List<Object> ils = (List<Object>) ((JSONObject) body.get("resBody"))
-													.get("interactiveElements");
-											answerMsg.setInteractiveElements(ils);
-											;
-										}
+										if(async) {
+											String functionPathAsync = functionPath + "/Async";
+											String callbackURL = "https://git.tech4comp.dbis.rwth-aahen.de/" + bot + "/" + organization + "/" + channel + "/AsyncMessage";
+											answerMsg.setGetURL(callbackURL);
+											performTrigger(config, sf, botAgent, functionPathAsync, functionPathAsync, body);
+											RESTfulChatResponse oldAnswerMsg = answerMsg;
+
+											answerMsg = chatMediator.getMessageForChannel(orgChannel);
+											if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
+													|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
+												// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
+												// answerMsg.getMessage());
+											}
+											answerMsg.setReqBody(body);
+											if (body.containsKey("resBody") && ((JSONObject) body.get("resBody"))
+													.containsKey("interactiveElements")) {
+												List<Object> ils = (List<Object>) ((JSONObject) body.get("resBody"))
+														.get("interactiveElements");
+												answerMsg.setInteractiveElements(ils);
+												;
+											}
+
+										} else {
+											performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+											RESTfulChatResponse oldAnswerMsg = answerMsg;
+
+											answerMsg = chatMediator.getMessageForChannel(orgChannel);
+											if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
+													|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
+												// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
+												// answerMsg.getMessage());
+											}
+											answerMsg.setReqBody(body);
+											if (body.containsKey("resBody") && ((JSONObject) body.get("resBody"))
+													.containsKey("interactiveElements")) {
+												List<Object> ils = (List<Object>) ((JSONObject) body.get("resBody"))
+														.get("interactiveElements");
+												answerMsg.setInteractiveElements(ils);
+												;
+											}
+										}	
 									}
 									System.out.println("Functionpath do not exist.");
 								} catch (Exception e) {
@@ -3187,6 +3216,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			System.out.println("Answer Message:" + answerMsg.toString());
 			Gson gson = new Gson();
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
@@ -3196,6 +3226,7 @@ public class SocialBotManagerService extends RESTService {
 				String functionPath, String triggerUID,
 				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+				System.out.println(triggeredBody);
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
@@ -3718,6 +3749,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 		}
 
+		// not needed anymore after adding flag to handle messages
 		@POST
 		@Path("/{organization}/{channel}/AsyncMessage")
 		@Produces(MediaType.TEXT_PLAIN)
