@@ -78,16 +78,8 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
-		if(isRateable!=null){
-			this.isRateable = isRateable;
-		}else{
-			this.isRateable = false;
-		}
-		if(asynchron!=null) {
-			this.asynchron = asynchron;
-		} else {
-			this.asynchron = false;
-		}
+		this.isRateable = isRateable;
+		this.asynchron = asynchron;
 	}
 
 	public UUID getConversationId() {
