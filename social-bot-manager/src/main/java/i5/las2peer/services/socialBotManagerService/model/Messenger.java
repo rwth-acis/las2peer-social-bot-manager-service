@@ -351,10 +351,6 @@ public class Messenger {
 		return text;
 	}
 
-	public boolean getAsync(String channel) {
-		IncomingMessage state = this.stateMap.get("channel");
-		return state.getAsynchron();
-	}
 
 	// Handles simple responses ("Chat Response") directly, logs all messages and
 	// extracted intents into `messageInfos` for further processing later on.
@@ -1149,4 +1145,14 @@ public class Messenger {
 			// state.getIntentKeyword());
 		}
 	}
+	public boolean getAsync(String channel) {
+		IncomingMessage state = this.stateMap.get("channel");
+		return state.getAsynchron();
+	}
+
+	public String getCallbackURL(String channel) {
+		IncomingMessage state = this.stateMap.get("channel");
+		return state.getCallbackURL();
+	}
+
 }

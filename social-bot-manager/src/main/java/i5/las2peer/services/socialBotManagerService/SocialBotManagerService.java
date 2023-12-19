@@ -3153,6 +3153,7 @@ public class SocialBotManagerService extends RESTService {
 										sf.setMessengerName(messageInfo.getMessengerName());
 
 										if(async) {
+											
 											String functionPathAsync = functionPath + "/Async";
 											String callbackURL = "https://git.tech4comp.dbis.rwth-aahen.de/" + bot + "/" + organization + "/" + channel + "/AsyncMessage";
 											answerMsg.setGetURL(callbackURL);
@@ -3171,7 +3172,6 @@ public class SocialBotManagerService extends RESTService {
 												List<Object> ils = (List<Object>) ((JSONObject) body.get("resBody"))
 														.get("interactiveElements");
 												answerMsg.setInteractiveElements(ils);
-												;
 											}
 
 										} else {
@@ -3216,7 +3216,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println("Answer Message:" + answerMsg.toString());
+			
 			Gson gson = new Gson();
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
