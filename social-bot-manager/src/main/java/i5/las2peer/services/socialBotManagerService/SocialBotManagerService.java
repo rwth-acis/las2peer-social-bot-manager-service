@@ -2989,7 +2989,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println("rocket chat mediator initialized");
 
 			try {
-				JSONParser p = new JSONParser();
+				JSONParser p = new JSONParser(0);
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
 				String channel = chatMediator.getChannelByEmail(email);
@@ -3030,7 +3030,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			try {
-				JSONParser p = new JSONParser();
+				JSONParser p = new JSONParser(0);
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String ts = bodyInput.getAsString("ts");
 				String blocks = bodyInput.getAsString("blocks");
@@ -3114,7 +3114,7 @@ public class SocialBotManagerService extends RESTService {
 						if (m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator) {
 
 							RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
-							JSONParser p = new JSONParser();
+							JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 							JSONObject bodyInput = (JSONObject) p.parse(input);
 							String orgChannel = organization + "-" + channel;
 							channelToMessenger.put(orgChannel, m);
