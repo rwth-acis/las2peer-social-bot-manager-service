@@ -3155,7 +3155,7 @@ public class SocialBotManagerService extends RESTService {
 										if(async) {
 											
 											String functionPathAsync = functionPath + "/Async";
-											String callbackURL = "https://git.tech4comp.dbis.rwth-aahen.de/" + bot + "/" + organization + "/" + channel + "/AsyncMessage";
+											String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel + "/AsyncMessage";
 											answerMsg.setGetURL(callbackURL);
 											performTrigger(config, sf, botAgent, functionPathAsync, functionPathAsync, body);
 											RESTfulChatResponse oldAnswerMsg = answerMsg;
