@@ -1212,7 +1212,7 @@ public class Messenger {
 			System.out.println("Restored state for channel " + channelId + " to " + state.getIntentKeyword());
 		}
 	}
-	public boolean getAsync(String channel) {
+	public boolean getAsync() {
 		IncomingMessage state = this.stateMap.get("channel");
 		return state.getAsynchron();
 	}
