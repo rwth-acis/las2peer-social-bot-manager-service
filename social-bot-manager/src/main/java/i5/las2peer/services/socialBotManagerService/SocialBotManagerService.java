@@ -106,6 +106,7 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
+import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.tools.CryptoException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -2978,12 +2979,12 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	@POST
-	@Path("/sendMessageToRocketChat/{token}/{email}")
+	@Path("/sendMessageToRocketChat/{token}/{email}/{channel}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
-	public Response sendMessageToRocketChat(@PathParam("token") String token, @PathParam("email") String email,
+	public Response sendMessageToRocketChat(@PathParam("token") String token, @PathParam("email") String email, @PathParam("channel") String channel,
 			String input) {
 		try {
 			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
@@ -2993,9 +2994,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONParser p = new JSONParser(0);
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
-				String channel = chatMediator.getChannelByEmail(email);
 				chatMediator.sendMessageToChannel(channel, msgtext, "text");
-
 			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.ok("Sending message failed.").build();
@@ -3009,6 +3008,35 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
+	@POST
+	@Path("/sendMessageToRocketChatCallback/{token}/{email}/{channel}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response sendMessageToRocketChatCallback(@PathParam("token") String token, @PathParam("email") String email, @PathParam("channel") String channel,
+			String input) {
+		try {
+			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
+			System.out.println("rocket chat mediator initialized");
+
+			try {
+				JSONParser p = new JSONParser();
+				JSONObject bodyInput = (JSONObject) p.parse(input);
+				String msgtext = bodyInput.getAsString("msg");
+				chatMediator.sendMessageToChannelCallback(channel, msgtext, "text");
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok("Sending message failed.").build();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().build();
+
+	}
 	@POST
 	@Path("/editMessage/{token}/{email}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -3123,8 +3151,10 @@ public class SocialBotManagerService extends RESTService {
 							if (msgtext == null || msgtext.equals("")) {
 								return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
 							}
+							//Adds the user message to the message collector
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
+							//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
 							for (MessageInfo messageInfo : messageInfos) {
@@ -3322,9 +3352,12 @@ public class SocialBotManagerService extends RESTService {
 					} else {
 						response = target.request()
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+						System.out.println("Response Code:" + response.getStatus());
+						System.out.println("Response Entitiy:" + response.getEntity());
 					}
 
 					String test = response.readEntity(String.class);
+					System.out.println("Response Text:" + test);
 					mp.close();
 					try {
 						java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
@@ -3342,17 +3375,17 @@ public class SocialBotManagerService extends RESTService {
 					for (String key : jsonResponse.keySet()) {
 						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 					}
+					
 					triggeredBody.put("resBody", jsonResponse);
 					if (jsonResponse.get("closeContext") == null || Boolean.valueOf(jsonResponse.getAsString("closeContext"))) {
-							System.out.println("Closed Context");
-							bot.getMessenger(messengerID).setContextToBasic(channel, 
-								userId);
+						System.out.println("Closed Context");
+						bot.getMessenger(messengerID).setContextToBasic(channel,
+							userId);
 					} else if (Boolean.valueOf(jsonResponse.getAsString("closeContext")) == false) {
 						System.out.println("Keep Context open");
-							bot.getMessenger(messengerID).restoreConversationState(channel);
+						bot.getMessenger(messengerID).restoreConversationState(channel);
 					}
 					// this.service.triggerChat(chat, triggeredBody);
-					
 					return;
 
 				} catch (Exception e) {

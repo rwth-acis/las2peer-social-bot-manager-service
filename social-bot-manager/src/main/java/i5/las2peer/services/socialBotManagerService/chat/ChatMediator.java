@@ -37,8 +37,8 @@ public abstract class ChatMediator {
 	 *                replies to it later on.
 	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
 	 */
-	public abstract Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, IncomingMessage currentMessage, String type, Optional<String> id);
-
+	public abstract Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id);
+	
 	public abstract void editMessage(String channel, String messageId, String message, Optional<String> id);
 
 	public void editMessage(String channel, String messageId, String message) {
@@ -64,7 +64,7 @@ public abstract class ChatMediator {
 	 * @param text    The content of the chat message
 	 */
 	public Boolean sendMessageToChannel(String channel, String text, String type ) {
-		return sendMessageToChannel(channel, text, null, null, type, null);
+		return sendMessageToChannel(channel, text, null, type, null, null);
 	}
 	/**
 	 * Sends a chat message to a channel.
@@ -74,10 +74,12 @@ public abstract class ChatMediator {
 	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
 	 *                replies to it later on.
 	 */
-	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap,IncomingMessage currentMessage ,String type) {
-		return sendMessageToChannel(channel, text, hashMap, currentMessage ,type, null);
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage) {
+		System.out.println("SEND MESSAGE TO CHANNEL:" + text);
+		
+		return sendMessageToChannel(channel, text, hashMap, type, currentMessage, null);
 	}
-
+	
 	/**
 	 * Sends a file message to a channel as well as an optional text message.
 	 *

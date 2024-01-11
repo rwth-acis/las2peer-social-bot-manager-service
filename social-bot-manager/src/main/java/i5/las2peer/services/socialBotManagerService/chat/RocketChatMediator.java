@@ -31,6 +31,7 @@ import org.java_websocket.util.Base64;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.google.gson.JsonObject;
 import com.rocketchat.common.data.lightdb.document.UserDocument;
 import com.rocketchat.common.data.model.ErrorObject;
 import com.rocketchat.common.data.model.UserObject;
@@ -58,6 +59,9 @@ import i5.las2peer.connectors.webConnector.client.MiniClient;
 import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
 import i5.las2peer.services.socialBotManagerService.model.IncomingMessage;
 import i5.las2peer.services.socialBotManagerService.nlu.RasaNlu;
+import io.swagger.util.Json;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 
 public class RocketChatMediator extends ChatMediator implements ConnectListener, LoginListener,
 		RoomListener.GetRoomListener, SubscribeListener, GetSubscriptionListener, SubscriptionListener {
@@ -98,6 +102,8 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 			r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
 			if(r.getHttpCode() != 200){
 				throw new AuthTokenException("Authentication Token is faulty!");
+			} else if (r.getHttpCode() == 200) {
+				System.out.println("Login successful");
 			}
 
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
@@ -117,6 +123,19 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		client.setReconnectionStrategy(new ReconnectionStrategy(4, 2000));
 		client.setPingInterval(15000);
 		client.connect(this);
+			// MiniClient clientLoginTest = new MiniClient();
+			// clientLoginTest.setConnectorEndpoint(url + "/api/v1/login");
+			// HashMap<String, String> headers = new HashMap<String, String>();
+			// ClientResponse r = null;
+			// JSONObject reqBody = new JSONObject(); 
+			// reqBody.put("username", username);
+			// reqBody.put("password", password);
+			// r = clientLoginTest.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			// if(r.getHttpCode() != 200){
+			// 	System.out.println("Authentication Token is faulty!");
+			// } else if (r.getHttpCode() == 200) {
+			// 	System.out.println("Login successful");
+			// }
 		RocketChatAPI.LOGGER.setLevel(Level.OFF);
 		messageCollector.setDomain(url);
 		//conversationPathCollector.setDomain(url);
@@ -185,7 +204,7 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	}
 
 	@Override
-	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage, Optional<String> id) {
 		System.out.println(text);
 		ChatRoom room = client.getChatRoomFactory().getChatRoomById(channel);
 		Boolean messageSent = Boolean.FALSE;
@@ -279,6 +298,50 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		return messageSent;
 	}
 
+	public void sendMessageToChannelCallback(String channel, String text, String type) {
+		System.out.println(text);
+
+		JSONObject request = new JSONObject();
+		JSONObject response = new JSONObject();
+		request.put("rid", channel);
+		request.put("msg", text);
+		MiniClient clientLogin = new MiniClient();
+
+		clientLogin.setConnectorEndpoint(url + "/api/v1/login");
+		HashMap<String, String> headers = new HashMap<String, String>();
+		ClientResponse r = null;
+		JSONObject reqBody = new JSONObject(); 
+		reqBody.put("username", username);
+		reqBody.put("password", password);
+		System.out.println("Log into rocketchat to get auth token.");
+		r = clientLogin.sendRequest("POST", "", reqBody.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+		if(r.getHttpCode() != 200){
+			System.out.println(r.getHttpCode());
+			System.out.println("Authentication Token R is faulty!");
+		} else if (r.getHttpCode() == 200) {
+			response = new JSONObject(r.getResponse());
+			System.out.println(response);
+			System.out.println("Login successful");
+		}
+
+		clientLogin.setConnectorEndpoint(url + "/api/v1/chat.sendMessage");
+		ClientResponse r1 = null;
+		JSONObject reqBodyMessage = new JSONObject(); 
+		JSONObject data = response.getJSONObject("data");
+		headers.put("X-User-Id", data.getString("userId"));
+		headers.put("X-Auth-Token", data.getString("authToken"));
+		System.out.println(data.getString("userId"));
+		System.out.println(data.getString("authToken"));
+		reqBodyMessage.put("message", request);		
+		r1 = clientLogin.sendRequest("POST", "", reqBodyMessage.toString(), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+		if(r1.getHttpCode() != 200){
+			System.out.println(r1.getHttpCode());
+			System.out.println("Authentication Token R1 is faulty!");
+		} else if (r1.getHttpCode() == 200) {
+			System.out.println("Message sent.");
+		}
+	}
+
 	@Override
 	public Vector<ChatMessage> getMessages() {
 		Vector<ChatMessage> messages = this.messageCollector.getMessages();
@@ -294,8 +357,10 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 	@Override
 	public String getChannelByEmail(String email) {
 		List<UserDocument> users = client.getDbManager().getUserCollection().getData();
+		System.out.println(users.toString());
 		for (UserDocument u : users) {
 			// TODO Email Matching
+			System.out.println(u);
 			return u.getName();
 		}
 		return null;
