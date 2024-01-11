@@ -755,6 +755,7 @@ public class Messenger {
 										System.out.println("send msg.");
 										System.out.println("Current state: " + state.getIntentKeyword());
 										System.err.println("Current state's rateable: " + state.isRateable());
+										System.err.println("Current state's asynch:" +  state.getAsynchron());
 										messageSent = this.chatMediator.sendMessageToChannel(message.getChannel(),
 												replaceVariables(message.getChannel(), split),
 												state.getFollowingMessages(), state.followupMessageType, state);

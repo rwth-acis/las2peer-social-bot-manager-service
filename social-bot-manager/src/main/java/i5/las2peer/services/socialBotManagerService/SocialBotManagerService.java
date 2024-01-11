@@ -3176,8 +3176,9 @@ public class SocialBotManagerService extends RESTService {
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
 											sf);
 									if (body.containsKey("functionPath")) {
+										System.out.println("?");
 										async = m.getAsync(channel);
-										System.out.println("Get asnychronous value: " + async.toString());
+										System.out.println("Get asnychronous value: " + async);
 
 										functionPath = body.getAsString("functionPath");
 										sf = b.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
@@ -3187,7 +3188,7 @@ public class SocialBotManagerService extends RESTService {
 
 										if(async) {
 											
-											String functionPathAsync = functionPath + "/Async";
+											String functionPathAsync = functionPath + "Async";
 											String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
 											answerMsg.setGetURL(callbackURL);
 											performTrigger(config, sf, botAgent, functionPathAsync, functionPathAsync, body);
