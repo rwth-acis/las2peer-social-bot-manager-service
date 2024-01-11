@@ -109,7 +109,7 @@ public class RESTfulChatResponse {
         return rateable;
     }
 
-    public void setRateable(boolean asynchron) {
+    public void setRateable(boolean rateable) {
         this.rateable = rateable;
     }
 
