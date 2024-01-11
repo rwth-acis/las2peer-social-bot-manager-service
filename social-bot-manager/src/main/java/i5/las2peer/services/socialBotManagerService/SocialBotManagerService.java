@@ -3275,8 +3275,7 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject form = (JSONObject) triggeredBody.get("form");
 					FormDataMultiPart mp = new FormDataMultiPart();
 					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
-					String queryParmp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
-ams = "?";
+					String queryParams = "?";
 					if (form != null) {
 						for (String key : form.keySet()) {
 							if (sf.getHttpMethod().equals("get")) {
