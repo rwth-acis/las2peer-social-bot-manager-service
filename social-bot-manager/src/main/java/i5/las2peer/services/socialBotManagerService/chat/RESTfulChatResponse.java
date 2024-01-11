@@ -20,7 +20,7 @@ public class RESTfulChatResponse {
     private boolean asynchron;
     private String getURL;
     
-    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String typ, IncomingMessage currentMessage) {
+    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, IncomingMessage currentMessage, String type) {
         this(text);
         reqBody = new JSONObject();
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
