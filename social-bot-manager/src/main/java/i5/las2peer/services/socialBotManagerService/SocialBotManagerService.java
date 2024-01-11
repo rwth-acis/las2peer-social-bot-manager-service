@@ -1432,6 +1432,7 @@ public class SocialBotManagerService extends RESTService {
 				functionPath = botFunction.getFunctionPath();
 			} else if (botFunction.getActionType().equals(ActionType.OPENAPI)) {
 				functionPath = botFunction.getFunctionPath();
+				System.out.println(functionPath);
 			}
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
@@ -3168,6 +3169,7 @@ public class SocialBotManagerService extends RESTService {
 
 									String functionPath = "";
 									Boolean async = false;
+									System.out.println("Async value: " + m.getAsync(channel));
 									JSONObject body = new JSONObject();
 									BotAgent botAgent = getBotAgents().get(b.getName());
 									ServiceFunction sf = new ServiceFunction();
