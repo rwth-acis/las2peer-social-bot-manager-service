@@ -37,7 +37,7 @@ public abstract class ChatMediator {
 	 *                replies to it later on.
 	 * @param id      An ID for the sent chat message, e.g. to be able to recognize
 	 */
-	public abstract Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id);
+	public abstract Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, IncomingMessage currentMessage, String type, Optional<String> id);
 
 	public abstract void editMessage(String channel, String messageId, String message, Optional<String> id);
 
@@ -74,8 +74,8 @@ public abstract class ChatMediator {
 	 * @param hashMap      An ID for the sent chat message, e.g. to be able to recognize
 	 *                replies to it later on.
 	 */
-	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type) {
-		return sendMessageToChannel(channel, text, hashMap,type,null);
+	public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap,IncomingMessage currentMessage ,String type) {
+		return sendMessageToChannel(channel, text, hashMap, currentMessage ,type, null);
 	}
 
 	/**

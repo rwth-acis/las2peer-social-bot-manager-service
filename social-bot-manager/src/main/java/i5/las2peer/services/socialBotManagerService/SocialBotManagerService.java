@@ -3232,6 +3232,7 @@ public class SocialBotManagerService extends RESTService {
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
 				String email = triggeredBody.getAsString("email");
+				String msg = triggeredBody.getAsString("msg");
 				ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
 				HashMap<String, String> headers = new HashMap<String, String>();
@@ -3273,7 +3274,9 @@ public class SocialBotManagerService extends RESTService {
 					}
 					JSONObject form = (JSONObject) triggeredBody.get("form");
 					FormDataMultiPart mp = new FormDataMultiPart();
-					String queryParams = "?";
+					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
+					String queryParmp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
+ams = "?";
 					if (form != null) {
 						for (String key : form.keySet()) {
 							if (sf.getHttpMethod().equals("get")) {
@@ -3340,10 +3343,17 @@ public class SocialBotManagerService extends RESTService {
 					for (String key : jsonResponse.keySet()) {
 						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 					}
-					bot.getMessenger(messengerID).setContextToBasic(channel,
-							userId);
 					triggeredBody.put("resBody", jsonResponse);
-					// triggerChat(chat, triggeredBody);
+					if (jsonResponse.get("closeContext") == null || Boolean.valueOf(jsonResponse.getAsString("closeContext"))) {
+							System.out.println("Closed Context");
+							bot.getMessenger(messengerID).setContextToBasic(channel, 
+								userId);
+					} else if (Boolean.valueOf(jsonResponse.getAsString("closeContext")) == false) {
+						System.out.println("Keep Context open");
+							bot.getMessenger(messengerID).restoreConversationState(channel);
+					}
+					// this.service.triggerChat(chat, triggeredBody);
+					
 					return;
 
 				} catch (Exception e) {
