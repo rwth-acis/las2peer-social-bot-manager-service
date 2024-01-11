@@ -1435,6 +1435,7 @@ public class SocialBotManagerService extends RESTService {
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
+				System.out.println("Functionattributes:" + sfa);
 				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
 			// Patch attributes so that if a chat message is sent, it is sent
@@ -1573,7 +1574,7 @@ public class SocialBotManagerService extends RESTService {
 			InternalServiceException, ServiceMethodNotFoundException, ServiceInvocationFailedException,
 			ServiceAccessDeniedException, ServiceNotAuthorizedException, ParseBotException {
 		// Attributes of the triggered function
-		// System.out.println(triggeredFunctionAttribute.getName());
+		System.out.println(triggeredFunctionAttribute.getName());
 		if (triggeredFunctionAttribute.isSameAsTrigger()) {
 			mapAttributes(triggeredBody, triggeredFunctionAttribute, functionPath, attlist, triggerAttributes);
 		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { // triggeredFunctionAttribute.getName()
@@ -3155,7 +3156,7 @@ public class SocialBotManagerService extends RESTService {
 										if(async) {
 											
 											String functionPathAsync = functionPath + "/Async";
-											String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel + "/AsyncMessage";
+											String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
 											answerMsg.setGetURL(callbackURL);
 											performTrigger(config, sf, botAgent, functionPathAsync, functionPathAsync, body);
 											RESTfulChatResponse oldAnswerMsg = answerMsg;
