@@ -19,6 +19,9 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Vector;
 import javax.websocket.DeploymentException;
+
+import org.jvnet.hk2.internal.SystemDescriptor;
+
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.services.socialBotManagerService.SocialBotManagerService;
@@ -1230,13 +1233,15 @@ public class Messenger {
 			System.out.println("Restored state for channel " + channelId + " to " + state.getIntentKeyword());
 		}
 	}
-	public boolean getAsync() {
-		IncomingMessage state = this.stateMap.get("channel");
+	public boolean getAsync(String channel) {
+		System.out.println(this.stateMap);
+		System.out.println("3");
+		IncomingMessage state = this.stateMap.get(channel);
 		return state.getAsynchron();
 	}
 
 	public String getCallbackURL(String channel) {
-		IncomingMessage state = this.stateMap.get("channel");
+		IncomingMessage state = this.stateMap.get(channel);
 		return state.getCallbackURL();
 	}
 
