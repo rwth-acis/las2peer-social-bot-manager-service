@@ -419,7 +419,15 @@ public class Messenger {
 				remarks.put("user", encryptedUser);
 
 				conversationId = this.determineConversationId(message.getChannel());
-				remarks.put("in-service-context", this.triggeredFunction.containsKey(message.getChannel()));
+				remarks.put("in-service-context", this.triggeredFunction.containsKey(message.getChannel()));			
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+								conversationId.toString(),
+								intent.getKeyword(),
+								bot.getId(), "bot", "start", System.currentTimeMillis());
+				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+								conversationId.toString(),
+								intent.getKeyword(),
+								bot.getId(), "bot", "complete", System.currentTimeMillis());
 
 				// ________________ start modification of state machine__________________
 
@@ -736,6 +744,16 @@ public class Messenger {
 									}
 
 								}
+								String activityName = state.getIntentKeyword() + ":response";
+								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
+												remarks.toJSONString(),
+												conversationId.toString(), activityName, bot.getId(), "bot", "start",
+												System.currentTimeMillis());
+								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
+												remarks.toJSONString(),
+												conversationId.toString(), activityName, bot.getId(), "bot", "complete",
+												System.currentTimeMillis());
+
 								// check if message parses buttons or is simple text
 								if (state.getType().equals("Interactive Message")) {
 									System.out.println("Interactive msg");

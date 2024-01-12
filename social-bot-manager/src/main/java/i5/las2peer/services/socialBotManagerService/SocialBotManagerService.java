@@ -106,7 +106,6 @@ import i5.las2peer.services.socialBotManagerService.nlu.Entity;
 import i5.las2peer.services.socialBotManagerService.nlu.TrainingHelper;
 import i5.las2peer.services.socialBotManagerService.parser.BotParser;
 import i5.las2peer.services.socialBotManagerService.parser.ParseBotException;
-import i5.las2peer.services.socialBotManagerService.chat.RocketChatMediator;
 import i5.las2peer.tools.CryptoException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -1432,12 +1431,10 @@ public class SocialBotManagerService extends RESTService {
 				functionPath = botFunction.getFunctionPath();
 			} else if (botFunction.getActionType().equals(ActionType.OPENAPI)) {
 				functionPath = botFunction.getFunctionPath();
-				System.out.println(functionPath);
 			}
 			HashMap<String, ServiceFunctionAttribute> attlist = new HashMap<String, ServiceFunctionAttribute>();
 			JSONObject triggerAttributes = new JSONObject();
 			for (ServiceFunctionAttribute sfa : botFunction.getAttributes()) {
-				System.out.println("Functionattributes:" + sfa);
 				formAttributes(botConfig, sfa, bot, body, functionPath, attlist, triggerAttributes);
 			}
 			// Patch attributes so that if a chat message is sent, it is sent
@@ -3206,7 +3203,13 @@ public class SocialBotManagerService extends RESTService {
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
+										IncomingMessage userState = m.getStateMap().get(orgChannel);
+										System.out.println("user in state: "+userState.getIntentKeyword());
+										String newResponse2 = userState.getResponse(new Random());
+										System.out.println("new response2: "+newResponse2);
+
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										answerMsg.setMessage(m.replaceVariables(orgChannel,newResponse2));
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
 											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
