@@ -3179,8 +3179,6 @@ public class SocialBotManagerService extends RESTService {
 										sf.setMessengerName(messageInfo.getMessengerName());
 
 										if(async) {
-											String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
-											answerMsg.setGetURL(callbackURL);
 											performTrigger(config, sf, botAgent, functionPath, email, body);
 											System.out.println("Trigger performed");
 											getRESTfulChatBiwibot(bot, organization, channel);
