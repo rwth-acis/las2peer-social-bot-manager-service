@@ -3166,6 +3166,7 @@ public class SocialBotManagerService extends RESTService {
 
 									String functionPath = "";
 									JSONObject body = new JSONObject();
+									Boolean async = m.getAsync(channel);
 									BotAgent botAgent = getBotAgents().get(b.getName());
 									ServiceFunction sf = new ServiceFunction();
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
@@ -3177,8 +3178,14 @@ public class SocialBotManagerService extends RESTService {
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
 
-										// if(async) {
-											
+										if(async) {
+											String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
+											answerMsg.setGetURL(callbackURL);
+											performTrigger(config, sf, botAgent, functionPath, email, body);
+											System.out.println("Trigger performed");
+											getRESTfulChatBiwibot(bot, organization, channel);
+											System.out.println("get response");
+										}	
 										// 	String functionPathAsync = functionPath + "Async";
 										// 	String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
 										// 	answerMsg.setGetURL(callbackURL);
@@ -3266,7 +3273,6 @@ public class SocialBotManagerService extends RESTService {
 				ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
 				Boolean async = m.getAsync(triggeredBody.getAsString("channel"));
-				System.out.println(async);
 				HashMap<String, String> headers = new HashMap<String, String>();
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				try {
@@ -3296,6 +3302,7 @@ public class SocialBotManagerService extends RESTService {
 					functionPath = functionPath.replace("[organization]", triggeredBody.getAsString("organization"));
 					functionPath = functionPath.replace("[intent]", triggeredBody.getAsString("intent"));
 					functionPath = m.replaceVariables(channel, functionPath);
+					System.out.println(functionPath);
 					JSONObject entities = (JSONObject) triggeredBody.get("entities");
 					for (String eName : entities.keySet()) {
 						;
@@ -3304,6 +3311,11 @@ public class SocialBotManagerService extends RESTService {
 									((JSONObject) entities.get(eName)).get("value").toString());
 						}
 					}
+
+					if(async) {
+						functionPath = functionPath+"Async";
+					}
+
 					JSONObject form = (JSONObject) triggeredBody.get("form");
 					FormDataMultiPart mp = new FormDataMultiPart();
 					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
