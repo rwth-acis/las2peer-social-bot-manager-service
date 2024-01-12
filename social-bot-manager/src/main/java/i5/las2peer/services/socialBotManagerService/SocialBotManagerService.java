@@ -3178,12 +3178,12 @@ public class SocialBotManagerService extends RESTService {
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
 
-										if(async) {
-											performTrigger(config, sf, botAgent, functionPath, email, body);
-											System.out.println("Trigger performed");
-											getRESTfulChatBiwibot(bot, organization, channel);
-											System.out.println("get response");
-										}	
+										// if(async) {
+										// 	performTrigger(config, sf, botAgent, functionPath, email, body);
+										// 	System.out.println("Trigger performed");
+										// 	getRESTfulChatBiwibot(bot, organization, channel);
+										// 	System.out.println("get response");
+										// }	
 										// 	String functionPathAsync = functionPath + "Async";
 										// 	String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
 										// 	answerMsg.setGetURL(callbackURL);
@@ -3206,6 +3206,10 @@ public class SocialBotManagerService extends RESTService {
 
 										// } else {
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+										if(async){
+											getRESTfulChatBiwibot(bot, organization, channel);
+										}
+
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										IncomingMessage userState = m.getStateMap().get(orgChannel);
@@ -3310,11 +3314,8 @@ public class SocialBotManagerService extends RESTService {
 						}
 					}
 
-					if(async) {
-						functionPath = functionPath+"Async";
-					}
-
 					JSONObject form = (JSONObject) triggeredBody.get("form");
+					System.out.println(form);
 					FormDataMultiPart mp = new FormDataMultiPart();
 					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
 					String queryParams = "?";

@@ -40,7 +40,6 @@ public class RESTfulChatResponse {
                 }
                 if(value.getAsynchron()) {
                     asynchron = true;
-                    getURL = getCallbackURL();
                 }
             }
         }
@@ -121,11 +120,4 @@ public class RESTfulChatResponse {
         this.asynchron = asynchron;
     }
 
-    public String getCallbackURL() {
-        return getURL;
-    }
-
-    public void setGetURL(String callbackURL) {
-        this.getURL = callbackURL;
-    }
 }

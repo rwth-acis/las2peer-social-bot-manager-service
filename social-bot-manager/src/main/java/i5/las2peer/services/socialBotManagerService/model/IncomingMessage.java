@@ -236,12 +236,4 @@ public class IncomingMessage {
 	public boolean getAsynchron() {
 		return this.asynchron;
 	}
-
-	public String getCallbackURL() {
-		if (this.asynchron) { 
-			return this.callbackURL;
-		} else {
-			return null;
-		}
-	}
 }

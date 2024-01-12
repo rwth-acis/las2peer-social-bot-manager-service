@@ -1238,9 +1238,4 @@ public class Messenger {
 		return state.getAsynchron();
 	}
 
-	public String getCallbackURL(String channel) {
-		IncomingMessage state = this.stateMap.get(channel);
-		return state.getCallbackURL();
-	}
-
 }
