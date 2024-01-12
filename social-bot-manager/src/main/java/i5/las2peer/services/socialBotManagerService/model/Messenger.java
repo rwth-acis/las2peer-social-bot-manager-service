@@ -1237,6 +1237,7 @@ public class Messenger {
 	public boolean getAsync(String channel) {
 		System.out.println("Get Async value");
 		IncomingMessage state = this.stateMap.get(channel);
+		System.out.println(state);
 		return state.getAsynchron();
 	}
 

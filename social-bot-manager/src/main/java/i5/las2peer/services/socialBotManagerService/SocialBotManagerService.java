@@ -3167,6 +3167,7 @@ public class SocialBotManagerService extends RESTService {
 									String functionPath = "";
 									JSONObject body = new JSONObject();
 									Boolean async = m.getAsync(channel);
+									System.out.println("Async value:"+async);
 									BotAgent botAgent = getBotAgents().get(b.getName());
 									ServiceFunction sf = new ServiceFunction();
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
@@ -3177,35 +3178,9 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
-
-										// if(async) {
-										// 	performTrigger(config, sf, botAgent, functionPath, email, body);
-										// 	System.out.println("Trigger performed");
-										// 	getRESTfulChatBiwibot(bot, organization, channel);
-										// 	System.out.println("get response");
-										// }	
-										// 	String functionPathAsync = functionPath + "Async";
-										// 	String callbackURL = "https://git.tech4comp.dbis.rwth-aachen.de/" + bot + "/" + organization + "/" + channel;
-										// 	answerMsg.setGetURL(callbackURL);
-										// 	performTrigger(config, sf, botAgent, functionPathAsync, functionPathAsync, body);
-										// 	RESTfulChatResponse oldAnswerMsg = answerMsg;
-
-										// 	answerMsg = chatMediator.getMessageForChannel(orgChannel);
-										// 	if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
-										// 			|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
-										// 		// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
-										// 		// answerMsg.getMessage());
-										// 	}
-										// 	answerMsg.setReqBody(body);
-										// 	if (body.containsKey("resBody") && ((JSONObject) body.get("resBody"))
-										// 			.containsKey("interactiveElements")) {
-										// 		List<Object> ils = (List<Object>) ((JSONObject) body.get("resBody"))
-										// 				.get("interactiveElements");
-										// 		answerMsg.setInteractiveElements(ils);
-										// 	}
-
-										// } else {
+										
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+
 										if(async){
 											getRESTfulChatBiwibot(bot, organization, channel);
 										}
@@ -3315,6 +3290,16 @@ public class SocialBotManagerService extends RESTService {
 
 					JSONObject form = (JSONObject) triggeredBody.get("form");
 					System.out.println(form);
+
+					// if asynchronous is true, add callback url to the formdata for the botaction
+					if(m.getAsync(channel)){
+						System.out.println(m.getAsync(channel));
+						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
+						String addr = sbfservice.webconnectorUrl;
+						triggeredBody.put("form", addr+ "/" + bot + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel"));
+						System.out.println(triggeredBody.getAsString("form"));
+					}
+
 					FormDataMultiPart mp = new FormDataMultiPart();
 					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
 					String queryParams = "?";
