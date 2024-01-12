@@ -3263,10 +3263,12 @@ public class SocialBotManagerService extends RESTService {
 				String messengerID = sf.getMessengerName();
 				String email = triggeredBody.getAsString("email");
 				String msg = triggeredBody.getAsString("msg");
+				System.out.println("1");
 				ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
+				System.out.println("2");
 				Boolean async = m.getAsync();
-				System.out.println("Get asnychronous value: " + async);
+				System.out.println(async);
 				HashMap<String, String> headers = new HashMap<String, String>();
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				try {
