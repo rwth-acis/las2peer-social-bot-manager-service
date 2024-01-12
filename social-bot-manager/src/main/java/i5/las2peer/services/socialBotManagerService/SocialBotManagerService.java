@@ -3274,7 +3274,6 @@ public class SocialBotManagerService extends RESTService {
 				String msg = triggeredBody.getAsString("msg");
 				ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
-				Boolean async = m.getAsync(triggeredBody.getAsString("channel"));
 				HashMap<String, String> headers = new HashMap<String, String>();
 				JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 				try {

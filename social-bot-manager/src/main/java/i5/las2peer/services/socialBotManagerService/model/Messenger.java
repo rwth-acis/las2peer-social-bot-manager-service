@@ -1233,7 +1233,9 @@ public class Messenger {
 			System.out.println("Restored state for channel " + channelId + " to " + state.getIntentKeyword());
 		}
 	}
+
 	public boolean getAsync(String channel) {
+		System.out.println("Get Async value");
 		IncomingMessage state = this.stateMap.get(channel);
 		return state.getAsynchron();
 	}
