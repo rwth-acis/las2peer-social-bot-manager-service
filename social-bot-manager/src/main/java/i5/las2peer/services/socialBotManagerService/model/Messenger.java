@@ -1234,6 +1234,7 @@ public class Messenger {
 		}
 	}
 
+	//channel in the form of organization - channel is needed
 	public boolean getAsync(String channel) {
 		System.out.println("Get Async value");
 		IncomingMessage state = this.stateMap.get(channel);

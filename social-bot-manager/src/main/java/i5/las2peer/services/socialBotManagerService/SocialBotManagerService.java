@@ -3166,7 +3166,7 @@ public class SocialBotManagerService extends RESTService {
 
 									String functionPath = "";
 									JSONObject body = new JSONObject();
-									Boolean async = m.getAsync(channel);
+									Boolean async = m.getAsync(orgChannel);
 									System.out.println("Async value:"+async);
 									BotAgent botAgent = getBotAgents().get(b.getName());
 									ServiceFunction sf = new ServiceFunction();
@@ -3178,7 +3178,7 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
-										
+
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 
 										if(async){
@@ -3292,8 +3292,7 @@ public class SocialBotManagerService extends RESTService {
 					System.out.println(form);
 
 					// if asynchronous is true, add callback url to the formdata for the botaction
-					if(m.getAsync(channel)){
-						System.out.println(m.getAsync(channel));
+					if(m.getAsync(triggeredBody.getAsString("organization") + "-" + channel)){
 						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
 						String addr = sbfservice.webconnectorUrl;
 						triggeredBody.put("form", addr+ "/" + bot + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel"));
