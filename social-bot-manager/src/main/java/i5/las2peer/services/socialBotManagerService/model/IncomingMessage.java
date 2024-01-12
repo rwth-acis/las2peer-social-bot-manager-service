@@ -141,6 +141,7 @@ public class IncomingMessage {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
+			System.out.println(responses);
 			return responses.get(random.nextInt(responses.size()));
 		}
 	}

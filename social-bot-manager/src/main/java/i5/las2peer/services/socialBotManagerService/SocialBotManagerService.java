@@ -3190,7 +3190,7 @@ public class SocialBotManagerService extends RESTService {
 										IncomingMessage userState = m.getStateMap().get(orgChannel);
 										System.out.println("user in state: "+userState.getIntentKeyword());
 										String newResponse2 = userState.getResponse(new Random());
-										System.out.println("new response2: "+newResponse2);
+										System.out.println("new response2: " + newResponse2);
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										answerMsg.setMessage(m.replaceVariables(orgChannel,newResponse2));
@@ -3295,7 +3295,7 @@ public class SocialBotManagerService extends RESTService {
 					if(m.getAsync(channel)){
 						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
 						String addr = sbfservice.webconnectorUrl;
-						triggeredBody.put("form", addr+ "/" + bot + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel"));
+						triggeredBody.put("form", addr+ "/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1]);
 						System.out.println(triggeredBody.getAsString("form"));
 					}
 
@@ -3742,7 +3742,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!AITutor");
+				input.put("message", "!default");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
