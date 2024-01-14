@@ -3297,6 +3297,7 @@ public class SocialBotManagerService extends RESTService {
 						String addr = sbfservice.webconnectorUrl;
 						triggeredBody.put("form", addr+ "/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1]);
 						System.out.println(triggeredBody.getAsString("form"));
+						userMessage.put(channel, triggeredBody);
 					}
 
 					FormDataMultiPart mp = new FormDataMultiPart();
@@ -3730,7 +3731,8 @@ public class SocialBotManagerService extends RESTService {
 					@PathParam("channel") String channel) {
 					
 			JSONObject response = new JSONObject();
-			System.out.println("channel: " + channel);
+			System.out.println("Called GET AsyncMessage function");
+			System.out.println(userMessage.containsKey(organization+"-"+channel));
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
 
@@ -3768,12 +3770,13 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				for (String key : response.keySet()) {
-					messenger.addVariable(orgaChannel, key, response.getAsString(key));
+					System.out.println("key:" + key);
+					messenger.replaceVariables(orgaChannel, response.getAsString(key));
 					System.out.println("Variables set for response");
 				}
 
 				JSONObject input = new JSONObject();
-				input.put("message", "!AITutor");
+				input.put("message", "!default");
 				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 				JSONParser p = new JSONParser(0);
 				try {
