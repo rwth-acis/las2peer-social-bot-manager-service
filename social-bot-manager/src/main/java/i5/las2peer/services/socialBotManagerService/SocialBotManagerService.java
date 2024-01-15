@@ -3806,11 +3806,15 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 			JSONObject input = new JSONObject();
 			input.put("channel", orgaChannel);
-			if (response.equals(null)) {
+			String key = o.keySet().toArray()[0].toString();
+			System.out.println("key: " + key);
+
+			if (o.getAsString(key).isEmpty()) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
+			
 
-			if (o.getAsString("message").equals("!exit")) {
+			if (o.getAsString(key).equals("!exit")) {
 				input.put("message", "!exit");
 				messenger.addVariable(orgaChannel, "closeContext", "true");
 				handleRESTfulChat(bot, organization, channel, input.toString());
@@ -3824,8 +3828,8 @@ public class SocialBotManagerService extends RESTService {
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
 				}
-				for (String key : o.keySet()) {
-					messenger.addVariable(orgaChannel, key, o.getAsString(key));
+				for (String keys : o.keySet()) {
+					messenger.addVariable(orgaChannel, keys, o.getAsString(key));
 					System.out.println("Variables added");
 				}
 				
