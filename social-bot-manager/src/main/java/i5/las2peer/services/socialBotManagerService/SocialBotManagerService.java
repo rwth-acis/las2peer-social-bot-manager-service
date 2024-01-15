@@ -3294,7 +3294,7 @@ public class SocialBotManagerService extends RESTService {
 					// if asynchronous is true, add callback url to the formdata for the botaction
 					if(m.getAsync(channel)){
 						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
-						String addr = sbfservice.webconnectorUrl + "/" +  bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
+						String addr = sbfservice.webconnectorUrl + "/sbfmanager/RESTfulChat/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
 						System.out.println(addr);
 						form.put("sbfmUrl", addr);
 						triggeredBody.put("form", form);
