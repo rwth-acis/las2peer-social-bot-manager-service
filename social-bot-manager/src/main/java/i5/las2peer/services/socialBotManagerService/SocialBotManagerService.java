@@ -3798,31 +3798,29 @@ public class SocialBotManagerService extends RESTService {
 		public Response updateRESTfulChatResponse(@PathParam("bot") String bot,
 				@PathParam("organization") String organization, 
 				@PathParam("channel") String channel, 
-				String response) {
+				String response) throws ParseException {
 
 			String orgaChannel = organization + "-" + channel;
 			Messenger messenger = channelToMessenger.get(orgaChannel);
 			System.out.println("organChannel: " + orgaChannel);
-
+			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
+			JSONObject input = new JSONObject();
+			input.put("channel", orgaChannel);
 			if (response.equals(null)) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
 
-			if (response.contains("!exit")) {
-				JSONObject input = new JSONObject();
+			if (o.getAsString("message").equals("!exit")) {
 				input.put("message", "!exit");
 				messenger.addVariable(orgaChannel, "closeContext", "true");
 				handleRESTfulChat(bot, organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			}
-			
-			try {
-				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
+
+			try {	
 				userMessage.put(orgaChannel, o);
 				System.out.println("usermessage" + userMessage);
 				
-				JSONObject input = new JSONObject();
-
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
 				}
@@ -3832,7 +3830,7 @@ public class SocialBotManagerService extends RESTService {
 				}
 				
 				input.put("message", "!default");
-				handleRESTfulChat("TestBot", organization, channel, input.toString());
+				handleRESTfulChat(bot, organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			} catch (Exception e) {
 				e.printStackTrace();
