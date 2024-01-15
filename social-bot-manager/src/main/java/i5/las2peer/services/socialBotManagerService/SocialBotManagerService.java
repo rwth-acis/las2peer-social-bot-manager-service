@@ -3181,10 +3181,6 @@ public class SocialBotManagerService extends RESTService {
 
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 
-										if(async && userMessage.containsKey(orgChannel)){
-											getRESTfulChatBiwibot(bot, organization, channel);
-										}
-
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										IncomingMessage userState = m.getStateMap().get(orgChannel);
@@ -3196,8 +3192,6 @@ public class SocialBotManagerService extends RESTService {
 										answerMsg.setMessage(m.replaceVariables(orgChannel,newResponse2));
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
-											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
-											// answerMsg.getMessage());
 										}
 										answerMsg.setReqBody(body);
 										if (body.containsKey("resBody") && ((JSONObject) body.get("resBody"))
@@ -3207,7 +3201,7 @@ public class SocialBotManagerService extends RESTService {
 											answerMsg.setInteractiveElements(ils);
 											;
 										}
-										// }	
+																			
 									}
 									System.out.println("Functionpath do not exist.");
 								} catch (Exception e) {
@@ -3295,10 +3289,8 @@ public class SocialBotManagerService extends RESTService {
 					if(m.getAsync(channel)){
 						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
 						String addr = sbfservice.webconnectorUrl + "/sbfmanager/RESTfulChat/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
-						System.out.println(addr);
 						form.put("sbfmUrl", addr);
 						triggeredBody.put("form", form);
-						System.out.println(triggeredBody.getAsString("form"));
 						userMessage.put(channel, triggeredBody);
 					}
 
@@ -3796,9 +3788,8 @@ public class SocialBotManagerService extends RESTService {
 			}
 		}
 
-		// not needed anymore after adding flag to handle messages
 		@POST
-		@Path("/{organization}/{channel}/AsyncMessage")
+		@Path("/{bot}/{organization}/{channel}/AsyncMessage")
 		@Produces(MediaType.TEXT_PLAIN)
 		@ApiResponses(value = {
 				@ApiResponse(code = 200, message = "Response successful"),
@@ -3819,6 +3810,7 @@ public class SocialBotManagerService extends RESTService {
 			if (response.contains("!exit")) {
 				JSONObject input = new JSONObject();
 				input.put("message", "!exit");
+				input.put("closeContext", true);
 				Response responseService = handleRESTfulChat("TestBot", organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			}
@@ -3828,6 +3820,7 @@ public class SocialBotManagerService extends RESTService {
 				userMessage.put(orgaChannel, o);
 				System.out.println("usermessage" + userMessage);
 				Messenger messenger = channelToMessenger.get(orgaChannel);
+				JSONObject input = new JSONObject();
 				
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
@@ -3836,6 +3829,9 @@ public class SocialBotManagerService extends RESTService {
 					messenger.addVariable(orgaChannel, key, o.getAsString(key));
 					System.out.println("Variables added");
 				}
+				
+				input.put("message", "!default");
+				handleRESTfulChat("TestBot", organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			} catch (Exception e) {
 				e.printStackTrace();
