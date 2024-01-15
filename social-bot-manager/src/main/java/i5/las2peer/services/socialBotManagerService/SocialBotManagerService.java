@@ -3807,7 +3807,6 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject input = new JSONObject();
 			input.put("channel", orgaChannel);
 			String key = o.keySet().toArray()[0].toString();
-			System.out.println("key: " + key);
 
 			if (o.getAsString(key).isEmpty()) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
@@ -3829,7 +3828,7 @@ public class SocialBotManagerService extends RESTService {
 					messenger = channelToMessenger.get(channel);
 				}
 				for (String keys : o.keySet()) {
-					messenger.addVariable(orgaChannel, keys, o.getAsString(key));
+					messenger.addVariable(orgaChannel, keys, o.getAsString(keys));
 					System.out.println("Variables added");
 				}
 				
