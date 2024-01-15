@@ -439,8 +439,15 @@ public class Messenger {
 					// in case a command is triggered which does not exist
 					
 					System.out.println("command triggered, but does not exist " + intent.getKeyword());
-					this.chatMediator.sendMessageToChannel(message.getChannel(), "",
+					
+					if(intent.getKeyword().equals("default")){
+						System.out.println("Intent is default and last set message will be sent.");
+						this.chatMediator.sendMessageToChannel(message.getChannel(), message.getCurrMessage(), 
 							new HashMap<String, IncomingMessage>(), "text", null);
+					} else { 
+						this.chatMediator.sendMessageToChannel(message.getChannel(), "",
+							new HashMap<String, IncomingMessage>(), "text", null);
+					}
 					return;
 				}
 
@@ -453,6 +460,7 @@ public class Messenger {
 								new HashMap<String, IncomingMessage>(), "text", null);
 						return;
 					}
+					
 					if (!intent.getKeyword().equals("exit")) {
 						storedSession.put(message.getChannel(), state);
 						state = null;
