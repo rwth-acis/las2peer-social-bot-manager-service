@@ -3181,7 +3181,7 @@ public class SocialBotManagerService extends RESTService {
 
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
 
-										if(async){
+										if(async && userMessage.containsKey(orgChannel)){
 											getRESTfulChatBiwibot(bot, organization, channel);
 										}
 
@@ -3294,8 +3294,10 @@ public class SocialBotManagerService extends RESTService {
 					// if asynchronous is true, add callback url to the formdata for the botaction
 					if(m.getAsync(channel)){
 						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
-						String addr = sbfservice.webconnectorUrl;
-						triggeredBody.put("form", addr+ "/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1]);
+						String addr = sbfservice.webconnectorUrl + "/" +  bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
+						System.out.println(addr);
+						form.put("sbfmUrl", addr);
+						triggeredBody.put("form", form);
 						System.out.println(triggeredBody.getAsString("form"));
 						userMessage.put(channel, triggeredBody);
 					}
@@ -3335,6 +3337,7 @@ public class SocialBotManagerService extends RESTService {
 							}
 						}
 					}
+
 					System.out.println("Calling following URL: " + sf.getServiceName() + functionPath + queryParams);
 					WebTarget target = textClient
 							.target(sf.getServiceName() + functionPath + queryParams);
@@ -3736,11 +3739,13 @@ public class SocialBotManagerService extends RESTService {
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
 
-				userMessage.remove(organization + "-" + channel);
-
 				if (ch.containsKey("error")) {
 					System.out.println("Error occurred");
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+				}
+
+				if (ch.containsKey("AIResponse") && !ch.getAsString("AIResponse").startsWith("Bitte warte")) {
+					userMessage.remove(organization + "-" + channel);
 				}
 
 				JSONObject input = new JSONObject();
