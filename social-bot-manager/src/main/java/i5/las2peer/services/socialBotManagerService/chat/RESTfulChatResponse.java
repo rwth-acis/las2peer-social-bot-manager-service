@@ -18,7 +18,6 @@ public class RESTfulChatResponse {
     private boolean isFile;
     private boolean rateable; 
     private boolean asynchron;
-    private String getURL;
 
     public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage) {
         this(text);

@@ -3795,14 +3795,15 @@ public class SocialBotManagerService extends RESTService {
 				@ApiResponse(code = 200, message = "Response successful"),
 				@ApiResponse(code = 404, message = "Response not found"),
 				@ApiResponse(code = 500, message = "Internal server error") })
-		public Response updateRESTfulChatResponse(
+		public Response updateRESTfulChatResponse(@PathParam("bot") String bot,
 				@PathParam("organization") String organization, 
 				@PathParam("channel") String channel, 
 				String response) {
 
 			String orgaChannel = organization + "-" + channel;
-
+			Messenger messenger = channelToMessenger.get(orgaChannel);
 			System.out.println("organChannel: " + orgaChannel);
+
 			if (response.equals(null)) {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
@@ -3810,8 +3811,8 @@ public class SocialBotManagerService extends RESTService {
 			if (response.contains("!exit")) {
 				JSONObject input = new JSONObject();
 				input.put("message", "!exit");
-				input.put("closeContext", true);
-				Response responseService = handleRESTfulChat("TestBot", organization, channel, input.toString());
+				messenger.addVariable(orgaChannel, "closeContext", "true");
+				handleRESTfulChat(bot, organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			}
 			
@@ -3819,9 +3820,9 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 				userMessage.put(orgaChannel, o);
 				System.out.println("usermessage" + userMessage);
-				Messenger messenger = channelToMessenger.get(orgaChannel);
-				JSONObject input = new JSONObject();
 				
+				JSONObject input = new JSONObject();
+
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
 				}
