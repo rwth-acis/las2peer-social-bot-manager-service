@@ -3804,8 +3804,10 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("channel") String channel, 
 				String response) throws ParseException {
 
+			
 			String orgaChannel = organization + "-" + channel;
 			Messenger messenger = channelToMessenger.get(orgaChannel);
+			ChatMessage msg = new ChatMessage(channel, channel, "text");
 			System.out.println("organChannel: " + orgaChannel);
 			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 			JSONObject input = new JSONObject();
@@ -3833,9 +3835,12 @@ public class SocialBotManagerService extends RESTService {
 				}
 				for (String keys : o.keySet()) {
 					messenger.addVariable(orgaChannel, keys, o.getAsString(keys));
-					System.out.println("Variables added");
+					if (keys.equals("AIResponse") || keys.equals("errorMessage") || keys.equals("message")) {
+						msg.setCurrMessage(o.getAsString(keys));
+					}
 				}
-				
+
+				System.out.println("Variables added");
 				input.put("message", "!default");
 				handleRESTfulChat(bot, organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
