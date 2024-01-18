@@ -3813,7 +3813,15 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("channel") String channel, 
 				String response) throws ParseException {
 
-			
+			String email = "";
+			try {
+				UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
+				email = userAgent.getEmail();
+				emailToChannel.put(email, organization + "-" + channel);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
 			String orgaChannel = organization + "-" + channel;
 			Messenger messenger = channelToMessenger.get(orgaChannel);
 			ChatMessage msg = new ChatMessage(channel, channel, "text");
@@ -3827,7 +3835,6 @@ public class SocialBotManagerService extends RESTService {
 				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 			}
 			
-
 			if (o.getAsString(key).equals("!exit")) {
 				input.put("message", "!exit");
 				messenger.addVariable(orgaChannel, "closeContext", "true");
