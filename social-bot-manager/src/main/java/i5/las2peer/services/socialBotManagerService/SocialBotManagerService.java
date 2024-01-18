@@ -3155,6 +3155,15 @@ public class SocialBotManagerService extends RESTService {
 							//Adds the user message to the message collector
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
+
+							if (m.getAsync(orgChannel)){
+								String currMsg = userMessage.get(orgChannel).getAsString("AIResponse");
+								msg.setCurrMessage(currMsg);
+								System.out.println("Current Message set to AI Response");
+							}
+
+							System.out.println(msg);
+							
 							//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
@@ -3835,9 +3844,6 @@ public class SocialBotManagerService extends RESTService {
 				}
 				for (String keys : o.keySet()) {
 					messenger.addVariable(orgaChannel, keys, o.getAsString(keys));
-					if (keys.equals("AIResponse") || keys.equals("errorMessage") || keys.equals("message")) {
-						msg.setCurrMessage(o.getAsString(keys));
-					}
 				}
 
 				System.out.println("Variables added");
