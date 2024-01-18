@@ -129,6 +129,8 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.model.Filters;
+import com.pengrad.telegrambot.model.User;
+
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -3086,6 +3088,7 @@ public class SocialBotManagerService extends RESTService {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
 		static HashMap<String, JSONObject> userMessage = new HashMap<String, JSONObject>();
+		static HashMap<String, JSONObject> curUserAgent = new HashMap<String, JSONObject>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 
@@ -3119,12 +3122,21 @@ public class SocialBotManagerService extends RESTService {
 			RESTfulChatResponse answerMsg = null;
 			String email = "";
 			try {
+				JSONParser p = new JSONParser();
+				if (((JSONObject) p.parse(input)).containsKey("userAgent")) {
+					String agent = ((JSONObject) p.parse(input)).getAsString("userAgent");
+					System.out.println("Agent send back from callbakc" + agent);
+				}
+				
 				UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
+				curUserAgent.put(organization + "-" + channel, (JSONObject) userAgent);
+				System.out.println(curUserAgent);
 				email = userAgent.getEmail();
 				emailToChannel.put(email, organization + "-" + channel);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 			try {
 				Bot b = null;
 				for (Bot botIterator : getConfig().getBots().values()) {
@@ -3291,6 +3303,8 @@ public class SocialBotManagerService extends RESTService {
 						String addr = sbfservice.webconnectorUrl + "/sbfmanager/RESTfulChat/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
 						form.put("sbfmUrl", addr);
 						triggeredBody.put("form", form);
+						triggeredBody.put("userAgent", curUserAgent.get(triggeredBody.getAsString("channel")));
+						System.out.println("Async triggeredbody:" + triggeredBody.toJSONString());
 						userMessage.put(channel, triggeredBody);
 					}
 
@@ -3806,6 +3820,7 @@ public class SocialBotManagerService extends RESTService {
 			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 			JSONObject input = new JSONObject();
 			input.put("channel", orgaChannel);
+			input.put("userAgent", curUserAgent.get(orgaChannel));
 			String key = o.keySet().toArray()[0].toString();
 
 			if (o.getAsString(key).isEmpty()) {
