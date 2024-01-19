@@ -3755,7 +3755,7 @@ public class SocialBotManagerService extends RESTService {
 			System.out.println(userMessage.containsKey(organization+"-"+channel));
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
-
+				
 				if (ch.containsKey("error")) {
 					System.out.println("Error occurred");
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
@@ -3763,23 +3763,24 @@ public class SocialBotManagerService extends RESTService {
 
 				if (ch.containsKey("AIResponse") && !ch.getAsString("AIResponse").startsWith("Bitte warte")) {
 					userMessage.remove(organization + "-" + channel);
-				} else if (ch.containsKey("AIResponse") && ch.getAsString("AIResponse").startsWith("Bitte warte")) {
-					Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch.getAsString("AIResponse")).build();
-				}
-
-				JSONObject input = new JSONObject();
-				input.put("message", "!default");
-				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
-				JSONParser p = new JSONParser(0);
-				try {
-					JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
-					System.out.println(answer);
-					return Response.status(Status.OK).entity(answer.toString()).build();
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("Error after handle input.");
+					JSONObject input = new JSONObject();
+					input.put("message", "!default");
+					Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
+					JSONParser p = new JSONParser(0);
+					try {
+						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
+						answer.put("AIResponse", answer.getAsString("message"));
+						System.out.println(answer);
+						return Response.status(Status.OK).entity(answer.toString()).build();
+					} catch (Exception e) {
+						e.printStackTrace();
+						System.out.println("Error after handle input.");
+						return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+					}
+				} else {
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
-				}
+				} 
+				
 			} else {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
 				//Set variable AI Response with "Sorry, I am still thinking..."
