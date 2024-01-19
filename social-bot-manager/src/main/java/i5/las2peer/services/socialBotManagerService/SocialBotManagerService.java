@@ -3763,6 +3763,8 @@ public class SocialBotManagerService extends RESTService {
 
 				if (ch.containsKey("AIResponse") && !ch.getAsString("AIResponse").startsWith("Bitte warte")) {
 					userMessage.remove(organization + "-" + channel);
+				} else if (ch.containsKey("AIResponse") && ch.getAsString("AIResponse").startsWith("Bitte warte")) {
+					Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch.getAsString("AIResponse")).build();
 				}
 
 				JSONObject input = new JSONObject();
@@ -3779,37 +3781,38 @@ public class SocialBotManagerService extends RESTService {
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
 				}
 			} else {
+				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
 				//Set variable AI Response with "Sorry, I am still thinking..."
-				String orgaChannel = organization + "-" + channel;
-				response.appendField("AIResponse", "Bitte warte, ich denke noch nach.");
-				response.appendField("closeContext", false);
-				System.out.println(response);
-				Messenger messenger = channelToMessenger.get(organization + "-" + channel);
-				if (messenger == null) {
-					messenger = channelToMessenger.get(channel);
-					System.out.println(messenger);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
-				}
+				// String orgaChannel = organization + "-" + channel;
+				// response.appendField("AIResponse", "Bitte warte, ich denke noch nach.");
+				// response.appendField("closeContext", false);
+				// System.out.println(response);
+				// Messenger messenger = channelToMessenger.get(organization + "-" + channel);
+				// if (messenger == null) {
+				// 	messenger = channelToMessenger.get(channel);
+				// 	System.out.println(messenger);
+				// 	return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
+				// }
 
-				for (String key : response.keySet()) {
-					System.out.println("key:" + key);
-					messenger.replaceVariables(orgaChannel, response.getAsString(key));
-					System.out.println("Variables set for response");
-				}
+				// for (String key : response.keySet()) {
+				// 	System.out.println("key:" + key);
+				// 	messenger.replaceVariables(orgaChannel, response.getAsString(key));
+				// 	System.out.println("Variables set for response");
+				// }
 
-				JSONObject input = new JSONObject();
-				input.put("message", "!default");
-				Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
-				JSONParser p = new JSONParser(0);
-				try {
-					JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
-					System.out.println(answer);
-					return Response.status(Status.NOT_FOUND).entity(answer.toString()).build();
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("Error after handle input.");
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
-				}
+				// JSONObject input = new JSONObject();
+				// input.put("message", "!default");
+				// Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
+				// JSONParser p = new JSONParser(0);
+				// try {
+				// 	JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
+				// 	System.out.println(answer);
+				// 	return Response.status(Status.NOT_FOUND).entity(answer.toString()).build();
+				// } catch (Exception e) {
+				// 	e.printStackTrace();
+				// 	System.out.println("Error after handle input.");
+				// 	return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
+				// }
 			}
 		}
 
@@ -3824,21 +3827,6 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("organization") String organization, 
 				@PathParam("channel") String channel, 
 				String response) throws ParseException {
-
-			// String email = "";
-			// try {
-			// 	UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-			// 	email = userAgent.getEmail();
-			// 	emailToChannel.put(email, organization + "-" + channel);
-			// } catch (Exception e) {
-			// 	e.printStackTrace();
-			// 	for (String mail : emailToChannel.keySet()) {
-			// 		if (emailToChannel.get(mail).equals(organization + "-" + channel)) {
-			// 			email = mail;
-			// 			break;
-			// 		}
-			// 	}
-			// }
 		
 			String orgaChannel = organization + "-" + channel;
 			Messenger messenger = channelToMessenger.get(orgaChannel);
@@ -3871,8 +3859,6 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				System.out.println("Variables added");
-				input.put("message", "!default");
-				handleRESTfulChat(bot, organization, channel, input.toString());
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			} catch (Exception e) {
 				e.printStackTrace();
