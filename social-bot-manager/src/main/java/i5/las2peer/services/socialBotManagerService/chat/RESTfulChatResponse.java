@@ -37,14 +37,14 @@ public class RESTfulChatResponse {
                 if(entry.getValue().expectsFile()){
                     isFile = true;
                 }
-                if(value.getAsynchron()) {
-                    asynchron = true;
-                }
             }
         }
         if (currentMessage != null) {
             if(currentMessage.isRateable()){
                 rateable = true; 
+            }
+            if(currentMessage.getAsynchron()) {
+                asynchron = true;
             }
         }
 
