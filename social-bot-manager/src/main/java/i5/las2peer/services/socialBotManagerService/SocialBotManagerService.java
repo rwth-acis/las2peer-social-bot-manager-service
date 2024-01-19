@@ -3134,6 +3134,10 @@ public class SocialBotManagerService extends RESTService {
 						break;
 					}
 				}
+
+				if (email.isBlank()){
+					e.printStackTrace();
+				}
 			}
 
 			try {
@@ -3164,11 +3168,11 @@ public class SocialBotManagerService extends RESTService {
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
 
-							if (m.getAsync(orgChannel)){
-								String currMsg = userMessage.get(orgChannel).getAsString("AIResponse");
-								msg.setCurrMessage(currMsg);
-								System.out.println("Current Message set to AI Response");
-							}
+							// if (m.getAsync(orgChannel)){
+							// 	String currMsg = userMessage.get(orgChannel).getAsString("AIResponse");
+							// 	msg.setCurrMessage(currMsg);
+							// 	System.out.println("Current Message set to AI Response");
+							// }
 
 							System.out.println(msg);
 							
