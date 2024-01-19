@@ -3088,6 +3088,7 @@ public class SocialBotManagerService extends RESTService {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
 		static HashMap<String, JSONObject> userMessage = new HashMap<String, JSONObject>();
+		static HashMap<String, UserAgent> currentAgent = new HashMap<String, UserAgent>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 
@@ -3126,6 +3127,13 @@ public class SocialBotManagerService extends RESTService {
 				emailToChannel.put(email, organization + "-" + channel);
 			} catch (Exception e) {
 				e.printStackTrace();
+				for (String mail : emailToChannel.keySet()) {
+					if (emailToChannel.get(mail).equals(organization + "-" + channel)) {
+						email = mail;
+						System.out.println("Get the email from channel:" + email);
+						break;
+					}
+				}
 			}
 
 			try {
@@ -3813,18 +3821,23 @@ public class SocialBotManagerService extends RESTService {
 				@PathParam("channel") String channel, 
 				String response) throws ParseException {
 
-			String email = "";
-			try {
-				UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-				email = userAgent.getEmail();
-				emailToChannel.put(email, organization + "-" + channel);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			// String email = "";
+			// try {
+			// 	UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
+			// 	email = userAgent.getEmail();
+			// 	emailToChannel.put(email, organization + "-" + channel);
+			// } catch (Exception e) {
+			// 	e.printStackTrace();
+			// 	for (String mail : emailToChannel.keySet()) {
+			// 		if (emailToChannel.get(mail).equals(organization + "-" + channel)) {
+			// 			email = mail;
+			// 			break;
+			// 		}
+			// 	}
+			// }
 		
 			String orgaChannel = organization + "-" + channel;
 			Messenger messenger = channelToMessenger.get(orgaChannel);
-			ChatMessage msg = new ChatMessage(channel, channel, "text");
 			System.out.println("organChannel: " + orgaChannel);
 			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 			JSONObject input = new JSONObject();
