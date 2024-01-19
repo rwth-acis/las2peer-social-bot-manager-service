@@ -3762,7 +3762,6 @@ public class SocialBotManagerService extends RESTService {
 				}
 
 				if (ch.containsKey("AIResponse") && !ch.getAsString("AIResponse").startsWith("Bitte warte")) {
-					userMessage.remove(organization + "-" + channel);
 					JSONObject input = new JSONObject();
 					input.put("message", "!default");
 					Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
@@ -3771,6 +3770,7 @@ public class SocialBotManagerService extends RESTService {
 						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
 						answer.put("AIResponse", answer.getAsString("message"));
 						System.out.println(answer);
+						userMessage.remove(organization + "-" + channel);
 						return Response.status(Status.OK).entity(answer.toString()).build();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -3783,37 +3783,6 @@ public class SocialBotManagerService extends RESTService {
 				
 			} else {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
-				//Set variable AI Response with "Sorry, I am still thinking..."
-				// String orgaChannel = organization + "-" + channel;
-				// response.appendField("AIResponse", "Bitte warte, ich denke noch nach.");
-				// response.appendField("closeContext", false);
-				// System.out.println(response);
-				// Messenger messenger = channelToMessenger.get(organization + "-" + channel);
-				// if (messenger == null) {
-				// 	messenger = channelToMessenger.get(channel);
-				// 	System.out.println(messenger);
-				// 	return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
-				// }
-
-				// for (String key : response.keySet()) {
-				// 	System.out.println("key:" + key);
-				// 	messenger.replaceVariables(orgaChannel, response.getAsString(key));
-				// 	System.out.println("Variables set for response");
-				// }
-
-				// JSONObject input = new JSONObject();
-				// input.put("message", "!default");
-				// Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
-				// JSONParser p = new JSONParser(0);
-				// try {
-				// 	JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
-				// 	System.out.println(answer);
-				// 	return Response.status(Status.NOT_FOUND).entity(answer.toString()).build();
-				// } catch (Exception e) {
-				// 	e.printStackTrace();
-				// 	System.out.println("Error after handle input.");
-				// 	return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
-				// }
 			}
 		}
 
