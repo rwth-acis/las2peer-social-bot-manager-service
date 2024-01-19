@@ -3168,7 +3168,7 @@ public class SocialBotManagerService extends RESTService {
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
 
-							if (m.getAsync(orgChannel)){
+							if (m.getAsync(orgChannel) && !userMessage.isEmpty()){
 								String currMsg = userMessage.get(orgChannel).getAsString("AIResponse");
 								msg.setCurrMessage(currMsg);
 								System.out.println("Current Message set to AI Response");
