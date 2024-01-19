@@ -415,6 +415,7 @@ public class Messenger {
 				IncomingMessage state = this.stateMap.get(message.getChannel());
 				if(state!=null){
 					System.out.println("State: "+state.getIntentKeyword());
+					System.out.println("Asynchronous value of current state:" + state.getAsynchron());
 				}else{
 					System.out.println("State: null");
 				}
@@ -457,6 +458,7 @@ public class Messenger {
 						// in case a command is triggered which does not exist
 						System.out.println("command triggered, but does not exist 2 " + intent.getKeyword());
 						if (state.getAsynchron()){
+							state.setAsynchron(true);
 							System.out.println("Asynchronous state and last set message will be sent.");
 							this.chatMediator.sendMessageToChannel(message.getChannel(), message.getCurrMessage(),
 								new HashMap<String, IncomingMessage>(), "text", null);
