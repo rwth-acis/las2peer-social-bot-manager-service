@@ -3088,7 +3088,6 @@ public class SocialBotManagerService extends RESTService {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
 		static HashMap<String, JSONObject> userMessage = new HashMap<String, JSONObject>();
-		static HashMap<String, UserAgent> currentAgent = new HashMap<String, UserAgent>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 
@@ -3758,7 +3757,7 @@ public class SocialBotManagerService extends RESTService {
 				
 				if (ch.containsKey("error")) {
 					System.out.println("Error occurred");
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+					return Response.status(Status.NOT_FOUND).entity(ch).build();
 				}
 
 				if (ch.containsKey("AIResponse") && !ch.getAsString("AIResponse").startsWith("Bitte warte")) {
@@ -3775,14 +3774,14 @@ public class SocialBotManagerService extends RESTService {
 					} catch (Exception e) {
 						e.printStackTrace();
 						System.out.println("Error after handle input.");
-						return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+						return Response.status(Status.NOT_FOUND).entity(ch).build();
 					}
 				} else {
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ch).build();
+					return Response.status(Status.NOT_FOUND).entity(ch).build();
 				} 
 				
 			} else {
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new JSONObject()).build();
+				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
 			}
 		}
 
