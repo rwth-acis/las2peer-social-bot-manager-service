@@ -3178,6 +3178,7 @@ public class SocialBotManagerService extends RESTService {
 							//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
+							System.out.println("Answer from handle messages:"+ answerMsg);
 							for (MessageInfo messageInfo : messageInfos) {
 								try {
 									/*
@@ -3818,7 +3819,6 @@ public class SocialBotManagerService extends RESTService {
 
 			try {	
 				userMessage.put(orgaChannel, o);
-				System.out.println("usermessage" + userMessage);
 				
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
@@ -3827,7 +3827,6 @@ public class SocialBotManagerService extends RESTService {
 					messenger.addVariable(orgaChannel, keys, o.getAsString(keys));
 				}
 
-				System.out.println("Variables added");
 				return Response.status(Status.BAD_REQUEST).entity("ack").build();
 			} catch (Exception e) {
 				e.printStackTrace();

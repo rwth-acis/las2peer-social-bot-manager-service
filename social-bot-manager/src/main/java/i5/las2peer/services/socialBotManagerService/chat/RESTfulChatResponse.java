@@ -32,10 +32,16 @@ public class RESTfulChatResponse {
                 IncomingMessage value = entry.getValue();
                 String intent = key;
                 if(intent==null||intent=="") intent = value.getIntentKeyword();
-                InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
+                InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile(), value.isRateable() ,value.getAsynchron());
                 icel.add(ice);    
                 if(entry.getValue().expectsFile()){
                     isFile = true;
+                }
+                if(entry.getValue().isRateable()){
+                    rateable = true;
+                }
+                if(entry.getValue().getAsynchron()){
+                    asynchron = true;
                 }
             }
         }
@@ -47,7 +53,7 @@ public class RESTfulChatResponse {
                 asynchron = true;
             }
         }
-
+        System.out.println("Current Message is null.");
         interactiveElements = Arrays.asList(icel.toArray());
     }
 
