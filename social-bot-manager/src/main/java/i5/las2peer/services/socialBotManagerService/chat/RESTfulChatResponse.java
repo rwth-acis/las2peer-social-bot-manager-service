@@ -53,7 +53,6 @@ public class RESTfulChatResponse {
                 asynchron = true;
             }
         }
-        System.out.println("Current Message is null.");
         interactiveElements = Arrays.asList(icel.toArray());
     }
 

@@ -3178,7 +3178,6 @@ public class SocialBotManagerService extends RESTService {
 							//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
-							System.out.println("Answer from handle messages:"+ answerMsg);
 							for (MessageInfo messageInfo : messageInfos) {
 								try {
 									/*
@@ -3208,9 +3207,7 @@ public class SocialBotManagerService extends RESTService {
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
 										IncomingMessage userState = m.getStateMap().get(orgChannel);
-										System.out.println("user in state: "+userState.getIntentKeyword());
 										String newResponse2 = userState.getResponse(new Random());
-										System.out.println("new response2: " + newResponse2);
 
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
 										answerMsg.setMessage(m.replaceVariables(orgChannel,newResponse2));
@@ -3315,7 +3312,6 @@ public class SocialBotManagerService extends RESTService {
 						String addr = sbfservice.webconnectorUrl + "/sbfmanager/RESTfulChat/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
 						form.put("sbfmUrl", addr);
 						triggeredBody.put("form", form);
-						System.out.println("Async triggeredbody:" + triggeredBody.toJSONString());
 						userMessage.put(channel, triggeredBody);
 					}
 
@@ -3752,7 +3748,6 @@ public class SocialBotManagerService extends RESTService {
 					
 			JSONObject response = new JSONObject();
 			System.out.println("Called GET AsyncMessage function");
-			System.out.println(userMessage.containsKey(organization+"-"+channel));
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
 				
@@ -3769,7 +3764,6 @@ public class SocialBotManagerService extends RESTService {
 					try {
 						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
 						answer.put("AIResponse", answer.getAsString("message"));
-						System.out.println(answer);
 						userMessage.remove(organization + "-" + channel);
 						return Response.status(Status.OK).entity(answer.toString()).build();
 					} catch (Exception e) {
