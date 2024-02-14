@@ -54,7 +54,7 @@ public class ChatStatement {
 		chatStatement.getActor().setObjectType("Agent");
 		// verb
 		chatStatement.getVerb().getDisplay().setEnEN("messaged");
-		chatStatement.getVerb().setId("https://tech4comp.de/xapi/verb/messaged");
+		chatStatement.getVerb().setId("https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/verbs/sent");
 		// object
 		chatStatement.getObject().setName(to);
 		chatStatement.getObject().getAccount().setName(to);

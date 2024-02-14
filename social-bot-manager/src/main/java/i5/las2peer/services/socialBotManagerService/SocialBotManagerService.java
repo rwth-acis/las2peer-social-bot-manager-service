@@ -2479,7 +2479,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject context = (JSONObject) statement.get("context");
 				JSONObject extensions = (JSONObject) context.get("extensions");
 				JSONObject courseInfo = (JSONObject) extensions
-						.get("https://tech4comp.de/xapi/context/extensions/courseInfo");
+						.get("https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/lms/activities/course");
 				String courseid = Integer.toString(courseInfo.getAsNumber("courseid").intValue());
 
 				if (!statementsPerCourse.containsKey(courseid)) {
