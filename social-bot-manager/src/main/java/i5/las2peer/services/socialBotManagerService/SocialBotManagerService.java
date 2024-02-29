@@ -1071,8 +1071,15 @@ public class SocialBotManagerService extends RESTService {
 				cleanedJson.put("user", encryptThisString(cleanedJson.getAsString("user")));
 				if (cleanedJson.containsKey("email")) {
 					cleanedJson.put("email", encryptThisString(cleanedJson.getAsString("email")));
+					String channel = m.getMessage().getChannel();
+
+					if (channel.contains("-")){
+						channel = channel.split("-")[0];
+					} 
+
 					JSONObject xAPI = createXAPIStatement(cleanedJson.getAsString("email"), name,
-							m.getIntent().getKeyword(), m.getMessage().getText());
+							m.getIntent().getKeyword(), m.getMessage().getText(), channel);
+					System.out.println(xAPI);
 					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
@@ -1112,32 +1119,41 @@ public class SocialBotManagerService extends RESTService {
 		}
 
 		public JSONObject createXAPIStatement(String userMail, String botName,
-				String intent, String text)
+				String intent, String text, String channel)
 				throws ParseException {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			JSONObject actor = new JSONObject();
+			Bot b = getConfig().getBot(botName);
 			actor.put("objectType", "Agent");
 			JSONObject account = new JSONObject();
 
 			account.put("name", userMail);
-			account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
+			//für Restfulchat eher workbench homepage 
+			//vom messenger abhängig die Homepage 
+			if (b.getMessenger(ChatService.RESTful_Chat) != null) {
+				account.put("homePage", "https://workbench.tech4comp.dbis.rwth-aachen.de");
+			} else if (b.getMessenger(ChatService.ROCKET_CHAT) != null){
+				account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
+			} else {
+				account.put("homePage", "https://tech4comp.dbis.rwth-aachen.de");
+			}
+
 			actor.put("account", account);
 
 			JSONObject verb = (JSONObject) p
 					.parse(new String(
-							"{'display':{'en-US':'sent_chat_message'},'id':'https://tech4comp.de/xapi/verb/sent_chat_message'}"));
+							"{'display':{'en-US':'sent_chat_message'},'id':'https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/verbs/sent'}"));
 			JSONObject object = (JSONObject) p
 					.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
 							+ "'}, 'description':{'en-US':'" + intent
-							+ "'}, 'type':'https://tech4comp.de/xapi/activitytype/bot'},'id':'https://tech4comp.de/bot/"
-							+ botName + "', 'objectType':'Activity'}"));
+							+ "'}, 'id':'https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/activities/message'},'type':'/chat/activities/message/'"
+							+ intent + "', 'objectType':'Activity', 'text':'"
+							+ text + "'}"));
 			JSONObject context = (JSONObject) p.parse(new String(
-					"{'extensions':{'https://tech4comp.de/xapi/context/extensions/intent':{'botName':'"
-							+ botName + "','text':'"
-							+ text
+					"{'extensions':{'https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/lms/activities/course': {courseID + '"
+							+ channel
 							+ "'}}}"));
 			JSONObject xAPI = new JSONObject();
-
 			xAPI.put("authority", p.parse(
 					new String(
 							"{'objectType': 'Agent','name': 'New Client', 'mbox': 'mailto:hello@learninglocker.net'}")));
