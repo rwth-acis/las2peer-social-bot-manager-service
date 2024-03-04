@@ -20,6 +20,8 @@ public class IncomingMessage {
 	boolean openAIEnhance;
 	boolean freezeMessageSend;
 	boolean isRateable;
+	boolean asynchron;
+	String callbackURL;
 
 	/**
 	 * Conversation Id for the message
@@ -55,7 +57,7 @@ public class IncomingMessage {
 
 
 	public IncomingMessage(String intent, String NluID, Boolean containsFile, ArrayList<String> responses,
-			String fileURL, String errorMessage, String type, String intentLabel, String followupType, Boolean isRateable) {
+			String fileURL, String errorMessage, String type, String intentLabel, String followupType, Boolean isRateable, Boolean asynchron) {
 		if (intent != "") {
 			this.intentKeyword = replaceUmlaute(intent);
 		} else
@@ -77,7 +79,9 @@ public class IncomingMessage {
 		this.type = type;
 		this.followupMessageType = followupType;
 		this.intentLabel = intentLabel;
+		if(isRateable==null) isRateable = false; 
 		this.isRateable = isRateable;
+		this.asynchron = asynchron;
 	}
 
 	public UUID getConversationId() {
@@ -137,6 +141,7 @@ public class IncomingMessage {
 		if (responses.isEmpty()) {
 			return null;
 		} else {
+			System.out.println(responses);
 			return responses.get(random.nextInt(responses.size()));
 		}
 	}
@@ -218,11 +223,18 @@ public class IncomingMessage {
 	}
 
 	public boolean isRateable() {
-		return isRateable;
+		return this.isRateable;
 	}
-
 
 	public void setRateable(boolean isRateable) {
 		this.isRateable = isRateable;
+	}
+
+	public void setAsynchron(boolean asynchron) {
+		this.asynchron = asynchron;
+	}
+
+	public boolean getAsynchron() {
+		return this.asynchron;
 	}
 }
