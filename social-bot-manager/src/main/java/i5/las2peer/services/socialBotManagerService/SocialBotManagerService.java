@@ -3256,7 +3256,6 @@ public class SocialBotManagerService extends RESTService {
 				String functionPath, String triggerUID,
 				JSONObject triggeredBody) throws AgentNotFoundException, AgentOperationFailedException {
 			if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
-				System.out.println(triggeredBody);
 				String userId = triggeredBody.getAsString("user");
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
@@ -3293,7 +3292,6 @@ public class SocialBotManagerService extends RESTService {
 					functionPath = functionPath.replace("[organization]", triggeredBody.getAsString("organization"));
 					functionPath = functionPath.replace("[intent]", triggeredBody.getAsString("intent"));
 					functionPath = m.replaceVariables(channel, functionPath);
-					System.out.println(functionPath);
 					JSONObject entities = (JSONObject) triggeredBody.get("entities");
 					for (String eName : entities.keySet()) {
 						;
@@ -3304,8 +3302,6 @@ public class SocialBotManagerService extends RESTService {
 					}
 
 					JSONObject form = (JSONObject) triggeredBody.get("form");
-					System.out.println(form);
-
 					// if asynchronous is true, add callback url to the formdata for the botaction
 					if(m.getAsync(channel)){
 						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
@@ -3746,7 +3742,6 @@ public class SocialBotManagerService extends RESTService {
 					@PathParam("organization") String organization,
 					@PathParam("channel") String channel) {
 					
-			JSONObject response = new JSONObject();
 			System.out.println("Called GET AsyncMessage function");
 			if (userMessage.containsKey(organization + "-" + channel)) {
 				JSONObject ch = userMessage.get(organization + "-" + channel);
@@ -3760,7 +3755,7 @@ public class SocialBotManagerService extends RESTService {
 					JSONObject input = new JSONObject();
 					input.put("message", "!default");
 					Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
-					JSONParser p = new JSONParser(0);
+					JSONParser p = new JSONParser();
 					try {
 						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
 						answer.put("AIResponse", answer.getAsString("message"));
