@@ -3088,6 +3088,7 @@ public class SocialBotManagerService extends RESTService {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
 		static HashMap<String, JSONObject> userMessage = new HashMap<String, JSONObject>();
+		static HashMap<String, String> userKey = new HashMap<String, String>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 
@@ -3741,25 +3742,28 @@ public class SocialBotManagerService extends RESTService {
 		public Response getRESTfulChatBiwibot(@PathParam("bot") String bot,
 					@PathParam("organization") String organization,
 					@PathParam("channel") String channel) {
-					
+
 			System.out.println("Called GET AsyncMessage function");
-			if (userMessage.containsKey(organization + "-" + channel)) {
-				JSONObject ch = userMessage.get(organization + "-" + channel);
+			String orgaChannel = organization + "-" + channel;
+			if (userMessage.containsKey(orgaChannel)) {
+				JSONObject ch = userMessage.get(orgaChannel);
 				
 				if (ch.containsKey("error")) {
 					System.out.println("Error occurred");
 					return Response.status(Status.NOT_FOUND).entity(ch).build();
 				}
 
-				if (ch.containsKey("AIResponse") && !ch.getAsString("AIResponse").startsWith("Bitte warte")) {
+				String key = userKey.get(orgaChannel);
+				if (ch.containsKey(key) && !ch.getAsString(key).startsWith("Bitte warte")) {
 					JSONObject input = new JSONObject();
 					input.put("message", "!default");
 					Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
 					JSONParser p = new JSONParser();
 					try {
 						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
-						answer.put("AIResponse", answer.getAsString("message"));
-						userMessage.remove(organization + "-" + channel);
+						answer.put(key, answer.getAsString("message"));
+						userMessage.remove(orgaChannel);
+						userKey.remove(orgaChannel);
 						return Response.status(Status.OK).entity(answer.toString()).build();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -3789,7 +3793,7 @@ public class SocialBotManagerService extends RESTService {
 		
 			String orgaChannel = organization + "-" + channel;
 			Messenger messenger = channelToMessenger.get(orgaChannel);
-			System.out.println("organChannel: " + orgaChannel);
+			System.out.println("orgaChannel: " + orgaChannel);
 			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
 			JSONObject input = new JSONObject();
 			input.put("channel", orgaChannel);
@@ -3808,7 +3812,7 @@ public class SocialBotManagerService extends RESTService {
 
 			try {	
 				userMessage.put(orgaChannel, o);
-				
+				userKey.put(orgaChannel, key);
 				if (messenger == null) {
 					messenger = channelToMessenger.get(channel);
 				}
