@@ -360,7 +360,6 @@ public class RocketChatMediator extends ChatMediator implements ConnectListener,
 		System.out.println(users.toString());
 		for (UserDocument u : users) {
 			// TODO Email Matching
-			System.out.println(u);
 			return u.getName();
 		}
 		return null;
