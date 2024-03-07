@@ -3095,10 +3095,6 @@ public class SocialBotManagerService extends RESTService {
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, Messenger> channelToMessenger = new HashMap<String, Messenger>();
 
-		// adding new Hashmap with true if asynchron messages (with callback) should be used. 
-		// based on the value if-else case which functionPath should be used whether the one with synchron messages or the one with asynchron messages. The service must be able to do both. 
-		// 
-
 		/**
 		 * Handles RESTful chat requests.
 		 *
@@ -3223,7 +3219,7 @@ public class SocialBotManagerService extends RESTService {
 											answerMsg.setInteractiveElements(ils);
 											;
 										}
-																			
+										System.out.println("Print answer: " + answerMsg);								
 									}
 									System.out.println("Functionpath do not exist.");
 								} catch (Exception e) {
