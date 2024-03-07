@@ -3758,6 +3758,7 @@ public class SocialBotManagerService extends RESTService {
 					try {
 						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
 						answer.put(key, answer.getAsString("message"));
+						answer.put("asynchron", false);
 						userMessage.remove(orgaChannel);
 						userKey.remove(orgaChannel);
 						return Response.status(Status.OK).entity(answer.toString()).build();
