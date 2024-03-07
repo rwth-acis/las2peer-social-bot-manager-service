@@ -5,18 +5,17 @@ public class InteractiveChatElement {
     private String label;
     private boolean isFile;
     private boolean rateable; 
-    private boolean async;
+    // private boolean async;
 
     public InteractiveChatElement(String intent, String label) {
-        this(intent, label, false, false, false);
+        this(intent, label, false, false);
     }
 
-    public InteractiveChatElement(String intent, String label, boolean isFile, boolean rateable, boolean async){
+    public InteractiveChatElement(String intent, String label, boolean isFile, boolean rateable){
         this.intent = intent;
         this.label = label;
         this.isFile = isFile;
         this.rateable = rateable;
-        this.async = async;
     }
 
     public String getIntent() {
@@ -48,11 +47,11 @@ public class InteractiveChatElement {
         this.rateable = rateable;
     }
 
-    public boolean isAsync(){
-        return async;
-    }
+    // public boolean isAsync(){
+    //     return async;
+    // }
 
-    public void setAsync(boolean async){
-        this.async = async;
-    }
+    // public void setAsync(boolean async){
+    //     this.async = async;
+    // }
 }
