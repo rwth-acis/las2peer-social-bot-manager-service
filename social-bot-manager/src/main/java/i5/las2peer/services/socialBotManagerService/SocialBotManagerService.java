@@ -3741,12 +3741,16 @@ public class SocialBotManagerService extends RESTService {
 					@PathParam("organization") String organization,
 					@PathParam("channel") String channel) {
 			System.out.println("Called GET AsyncMessage function");
+			JSONObject errRes = new JSONObject();
 			String s = "Leider konnte deine Nachricht nicht verarbeitet werden. Bitte versuche es erneut.";
+			errRes.put("message", s);
+			errRes.put("asynchron", false);
 			if (counter.containsKey(channel)) {
 				int currentValue = counter.get(channel);
 				if (currentValue > 7) {
 					System.out.println("Count reached 7.");
-					return Response.status(Status.OK).entity(s).build();
+					counter.remove(channel);
+					return Response.status(Status.OK).entity(errRes.toString()).build();
 				} else {
 					counter.put(channel, currentValue + 1);
 				}
