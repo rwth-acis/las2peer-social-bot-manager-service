@@ -3728,6 +3728,8 @@ public class SocialBotManagerService extends RESTService {
 			return bytes;
 		}
 
+		private static HashMap <String, Integer> counter = new HashMap<String, Integer>();
+
 		@GET
 		@Path("/{bot}/{organization}/{channel}/AsyncMessage")
 		@Produces(MediaType.TEXT_PLAIN)
@@ -3738,8 +3740,20 @@ public class SocialBotManagerService extends RESTService {
 		public Response getRESTfulChatBiwibot(@PathParam("bot") String bot,
 					@PathParam("organization") String organization,
 					@PathParam("channel") String channel) {
-
 			System.out.println("Called GET AsyncMessage function");
+			String s = "Leider konnte deine Nachricht nicht verarbeitet werden. Bitte versuche es erneut.";
+			if (counter.containsKey(channel)) {
+				int currentValue = counter.get(channel);
+				if (currentValue > 7) {
+					System.out.println("Count reached 7.");
+					return Response.status(Status.OK).entity(s).build();
+				} else {
+					counter.put(channel, currentValue + 1);
+				}
+			} else {
+				counter.put(channel, 1);
+			}
+
 			String orgaChannel = organization + "-" + channel;
 			if (userMessage.containsKey(orgaChannel)) {
 				JSONObject ch = userMessage.get(orgaChannel);
