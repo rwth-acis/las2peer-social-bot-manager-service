@@ -45,7 +45,7 @@ public class ChatStatement {
 		context = new xAPIContext();
 	}
 
-	public static ChatStatement generate(String from, String to, String text, String time, String platform) {
+	public static ChatStatement generate(String from, String to, String text, String time, String platform, String xapiUrl) {
 		ChatStatement chatStatement = new ChatStatement();
 		// actor
 		chatStatement.getActor().setName(from);
@@ -54,7 +54,7 @@ public class ChatStatement {
 		chatStatement.getActor().setObjectType("Agent");
 		// verb
 		chatStatement.getVerb().getDisplay().setEnEN("messaged");
-		chatStatement.getVerb().setId("https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/verbs/sent");
+		chatStatement.getVerb().setId(xapiUrl + "/definitions/chat/verbs/sent");
 		// object
 		chatStatement.getObject().setName(to);
 		chatStatement.getObject().getAccount().setName(to);

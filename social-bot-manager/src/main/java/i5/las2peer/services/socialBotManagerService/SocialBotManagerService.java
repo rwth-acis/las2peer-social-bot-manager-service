@@ -184,6 +184,9 @@ public class SocialBotManagerService extends RESTService {
 	private String mongoUri;
 	private String mongoAuth = "admin";
 
+	private String xapiUrl;
+	private String xapiHomepage;
+
 	private static final String ENVELOPE_MODEL = "SBF_MODELLIST";
 
 	private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
@@ -1082,7 +1085,7 @@ public class SocialBotManagerService extends RESTService {
 
 					JSONObject xAPI = createXAPIStatement(cleanedJson.getAsString("email"), name,
 							m.getIntent().getKeyword(), m.getMessage().getText(), channel);
-					System.out.println(xAPI);
+					System.out.println("XAPI is: " + xAPI.toString());
 					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
@@ -1134,7 +1137,7 @@ public class SocialBotManagerService extends RESTService {
 			//für Restfulchat eher workbench homepage 
 			//vom messenger abhängig die Homepage 
 			if (b.getMessenger(ChatService.RESTful_Chat) != null) {
-				account.put("homePage", "https://workbench.tech4comp.dbis.rwth-aachen.de");
+				account.put("homePage", sbfservice.xapiHomepage);
 			} else if (b.getMessenger(ChatService.ROCKET_CHAT) != null){
 				account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
 			} else {
@@ -1145,15 +1148,15 @@ public class SocialBotManagerService extends RESTService {
 
 			JSONObject verb = (JSONObject) p
 					.parse(new String(
-							"{'display':{'en-US':'sent_chat_message'},'id':'https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/verbs/sent'}"));
+							"{'display':{'en-US':'sent_chat_message'},'id':'" + sbfservice.xapiUrl + "/definitions/chat/verbs/sent'}"));
 			JSONObject object = (JSONObject) p
 					.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
 							+ "'}, 'description':{'en-US':'" + intent
-							+ "'}, 'id':'https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/activities/message'},'type':'/chat/activities/message/'"
+							+ "'}, 'id':'" + sbfservice.xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/'"
 							+ intent + "', 'objectType':'Activity', 'text':'"
 							+ text + "'}"));
 			JSONObject context = (JSONObject) p.parse(new String(
-					"{'extensions':{'https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/lms/activities/course': {courseID + '"
+					"{'extensions':{'" + sbfservice.xapiUrl + "/definitions/lms/activities/course': {courseID + '"
 							+ channel
 							+ "'}}}"));
 			JSONObject xAPI = new JSONObject();
@@ -2498,7 +2501,7 @@ public class SocialBotManagerService extends RESTService {
 				JSONObject context = (JSONObject) statement.get("context");
 				JSONObject extensions = (JSONObject) context.get("extensions");
 				JSONObject courseInfo = (JSONObject) extensions
-						.get("https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/lms/activities/course");
+						.get(xapiUrl + "/definitions/lms/activities/course");
 				String courseid = Integer.toString(courseInfo.getAsNumber("courseid").intValue());
 
 				if (!statementsPerCourse.containsKey(courseid)) {
@@ -2617,7 +2620,7 @@ public class SocialBotManagerService extends RESTService {
 				ArrayList<MessageInfo> messageInfos = new ArrayList<MessageInfo>();
 				for (MessageInfo m : messageInfos) {
 					ChatStatement chatStatement = ChatStatement.generate(m.getMessage().getUser(), m.getBotName(),
-							m.getMessage().getText(), m.getMessage().getTime(), m.getMessage().getDomain());
+							m.getMessage().getText(), m.getMessage().getTime(), m.getMessage().getDomain(), xapiUrl);
 					String chatStatementJSON = gson.toJson(chatStatement);
 					// l2pcontext.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
 					// chatStatementJSON);
