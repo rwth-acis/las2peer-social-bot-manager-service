@@ -52,6 +52,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import i5.las2peer.api.Context;
 import i5.las2peer.api.ManualDeployment;
@@ -128,6 +129,8 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.model.Filters;
+import com.pengrad.telegrambot.model.User;
+
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -1588,7 +1591,7 @@ public class SocialBotManagerService extends RESTService {
 			InternalServiceException, ServiceMethodNotFoundException, ServiceInvocationFailedException,
 			ServiceAccessDeniedException, ServiceNotAuthorizedException, ParseBotException {
 		// Attributes of the triggered function
-		// System.out.println(triggeredFunctionAttribute.getName());
+		System.out.println(triggeredFunctionAttribute.getName());
 		if (triggeredFunctionAttribute.isSameAsTrigger()) {
 			mapAttributes(triggeredBody, triggeredFunctionAttribute, functionPath, attlist, triggerAttributes);
 		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { // triggeredFunctionAttribute.getName()
@@ -2992,24 +2995,22 @@ public class SocialBotManagerService extends RESTService {
 	}
 
 	@POST
-	@Path("/sendMessageToRocketChat/{token}/{email}")
+	@Path("/sendMessageToRocketChat/{token}/{email}/{channel}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
 	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
-	public Response sendMessageToRocketChat(@PathParam("token") String token, @PathParam("email") String email,
+	public Response sendMessageToRocketChat(@PathParam("token") String token, @PathParam("email") String email, @PathParam("channel") String channel,
 			String input) {
 		try {
 			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
 			System.out.println("rocket chat mediator initialized");
 
 			try {
-				JSONParser p = new JSONParser();
+				JSONParser p = new JSONParser(0);
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String msgtext = bodyInput.getAsString("msg");
-				String channel = chatMediator.getChannelByEmail(email);
 				chatMediator.sendMessageToChannel(channel, msgtext, "text");
-
 			} catch (Exception e) {
 				e.printStackTrace();
 				return Response.ok("Sending message failed.").build();
@@ -3023,6 +3024,35 @@ public class SocialBotManagerService extends RESTService {
 
 	}
 
+	@POST
+	@Path("/sendMessageToRocketChatCallback/{token}/{email}/{channel}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Trigger rocket chat message to given rocket chat channel")
+	@ApiResponses(value = { @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "triggered chat message") })
+	public Response sendMessageToRocketChatCallback(@PathParam("token") String token, @PathParam("email") String email, @PathParam("channel") String channel,
+			String input) {
+		try {
+			RocketChatMediator chatMediator = new RocketChatMediator(token, database);
+			System.out.println("rocket chat mediator initialized");
+
+			try {
+				JSONParser p = new JSONParser();
+				JSONObject bodyInput = (JSONObject) p.parse(input);
+				String msgtext = bodyInput.getAsString("msg");
+				chatMediator.sendMessageToChannelCallback(channel, msgtext, "text");
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.ok("Sending message failed.").build();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().build();
+
+	}
 	@POST
 	@Path("/editMessage/{token}/{email}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -3045,7 +3075,7 @@ public class SocialBotManagerService extends RESTService {
 			}
 
 			try {
-				JSONParser p = new JSONParser();
+				JSONParser p = new JSONParser(0);
 				JSONObject bodyInput = (JSONObject) p.parse(input);
 				String ts = bodyInput.getAsString("ts");
 				String blocks = bodyInput.getAsString("blocks");
@@ -3073,6 +3103,8 @@ public class SocialBotManagerService extends RESTService {
 	public static class RESTfulChatResource {
 		SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
 		static HashMap<String, JSONObject> userFileIds = new HashMap<String, JSONObject>();
+		static HashMap<String, JSONObject> userMessage = new HashMap<String, JSONObject>();
+		static HashMap<String, String> userKey = new HashMap<String, String>();
 		// adding this temporarily to avoid needing to add stuff elsewhere
 		static HashMap<String, String> emailToChannel = new HashMap<String, String>();
 
@@ -3107,7 +3139,19 @@ public class SocialBotManagerService extends RESTService {
 				emailToChannel.put(email, organization + "-" + channel);
 			} catch (Exception e) {
 				e.printStackTrace();
+				for (String mail : emailToChannel.keySet()) {
+					if (emailToChannel.get(mail).equals(organization + "-" + channel)) {
+						email = mail;
+						System.out.println("Get the email from channel:" + email);
+						break;
+					}
+				}
+
+				if (email.isBlank()){
+					e.printStackTrace();
+				}
 			}
+
 			try {
 				Bot b = null;
 				for (Bot botIterator : getConfig().getBots().values()) {
@@ -3132,8 +3176,19 @@ public class SocialBotManagerService extends RESTService {
 							if (msgtext == null || msgtext.equals("")) {
 								return Response.status(Status.BAD_REQUEST).entity("No message provided.").build();
 							}
+							//Adds the user message to the message collector
 							ChatMessage msg = new ChatMessage(orgChannel, orgChannel, msgtext);
 							chatMediator.getMessageCollector().addMessage(msg);
+
+							if (m.getAsync(orgChannel) && !userMessage.isEmpty()){
+								String currMsg = userMessage.get(orgChannel).getAsString("AIResponse");
+								msg.setCurrMessage(currMsg);
+								System.out.println("Current Message set to AI Response");
+							}
+
+							System.out.println(msg);
+							
+							//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
 							m.handleMessages(messageInfos, b);
 							answerMsg = chatMediator.getMessageForChannel(orgChannel);
 							for (MessageInfo messageInfo : messageInfos) {
@@ -3147,6 +3202,8 @@ public class SocialBotManagerService extends RESTService {
 
 									String functionPath = "";
 									JSONObject body = new JSONObject();
+									Boolean async = m.getAsync(orgChannel);
+									System.out.println("Async value:"+async);
 									BotAgent botAgent = getBotAgents().get(b.getName());
 									ServiceFunction sf = new ServiceFunction();
 									service.prepareRequestParameters(config, botAgent, messageInfo, functionPath, body,
@@ -3157,14 +3214,18 @@ public class SocialBotManagerService extends RESTService {
 										body.put("email", email);
 										body.put("organization", organization);
 										sf.setMessengerName(messageInfo.getMessengerName());
+
 										performTrigger(config, sf, botAgent, functionPath, functionPath, body);
+
 										RESTfulChatResponse oldAnswerMsg = answerMsg;
 
+										IncomingMessage userState = m.getStateMap().get(orgChannel);
+										String newResponse2 = userState.getResponse(new Random());
+
 										answerMsg = chatMediator.getMessageForChannel(orgChannel);
+										answerMsg.setMessage(m.replaceVariables(orgChannel,newResponse2));
 										if ((oldAnswerMsg.getMessage() != answerMsg.getMessage())
 												|| (answerMsg.getMessage().contains(oldAnswerMsg.getMessage()))) {
-											// answerMsg.setMessage(oldAnswerMsg.getMessage() + "\n" +
-											// answerMsg.getMessage());
 										}
 										answerMsg.setReqBody(body);
 										if (body.containsKey("resBody") && ((JSONObject) body.get("resBody"))
@@ -3174,7 +3235,9 @@ public class SocialBotManagerService extends RESTService {
 											answerMsg.setInteractiveElements(ils);
 											;
 										}
+										System.out.println("Print answer: " + answerMsg);								
 									}
+									System.out.println("Functionpath do not exist.");
 								} catch (Exception e) {
 
 								}
@@ -3196,6 +3259,7 @@ public class SocialBotManagerService extends RESTService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
 			Gson gson = new Gson();
 			return Response.ok().entity(gson.toJson(answerMsg)).build();
 
@@ -3209,6 +3273,7 @@ public class SocialBotManagerService extends RESTService {
 				Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
 				String messengerID = sf.getMessengerName();
 				String email = triggeredBody.getAsString("email");
+				String msg = triggeredBody.getAsString("msg");
 				ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
 				HashMap<String, String> headers = new HashMap<String, String>();
@@ -3248,8 +3313,19 @@ public class SocialBotManagerService extends RESTService {
 									((JSONObject) entities.get(eName)).get("value").toString());
 						}
 					}
+
 					JSONObject form = (JSONObject) triggeredBody.get("form");
+					// if asynchronous is true, add callback url to the formdata for the botaction
+					if(m.getAsync(channel)){
+						SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
+						String addr = sbfservice.webconnectorUrl + "/sbfmanager/RESTfulChat/" + bot.getName() + "/" + triggeredBody.getAsString("organization") + "/" + triggeredBody.getAsString("channel").split("-")[1];
+						form.put("sbfmUrl", addr);
+						triggeredBody.put("form", form);
+						userMessage.put(channel, triggeredBody);
+					}
+
 					FormDataMultiPart mp = new FormDataMultiPart();
+					mp.field("msg", msg, MediaType.APPLICATION_JSON_TYPE);
 					String queryParams = "?";
 					if (form != null) {
 						for (String key : form.keySet()) {
@@ -3283,6 +3359,7 @@ public class SocialBotManagerService extends RESTService {
 							}
 						}
 					}
+
 					System.out.println("Calling following URL: " + sf.getServiceName() + functionPath + queryParams);
 					WebTarget target = textClient
 							.target(sf.getServiceName() + functionPath + queryParams);
@@ -3297,9 +3374,12 @@ public class SocialBotManagerService extends RESTService {
 					} else {
 						response = target.request()
 								.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+						System.out.println("Response Code:" + response.getStatus());
+						System.out.println("Response Entitiy:" + response.getEntity());
 					}
 
 					String test = response.readEntity(String.class);
+					System.out.println("Response Text:" + test);
 					mp.close();
 					try {
 						java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.getAsString("fileName") + "."
@@ -3317,10 +3397,17 @@ public class SocialBotManagerService extends RESTService {
 					for (String key : jsonResponse.keySet()) {
 						bot.getMessenger(messengerID).addVariable(channel, key, jsonResponse.getAsString(key));
 					}
-					bot.getMessenger(messengerID).setContextToBasic(channel,
-							userId);
+					
 					triggeredBody.put("resBody", jsonResponse);
-					// triggerChat(chat, triggeredBody);
+					if (jsonResponse.get("closeContext") == null || Boolean.valueOf(jsonResponse.getAsString("closeContext"))) {
+						System.out.println("Closed Context");
+						bot.getMessenger(messengerID).setContextToBasic(channel,
+							userId);
+					} else if (Boolean.valueOf(jsonResponse.getAsString("closeContext")) == false) {
+						System.out.println("Keep Context open");
+						bot.getMessenger(messengerID).restoreConversationState(channel);
+					}
+					// this.service.triggerChat(chat, triggeredBody);
 					return;
 
 				} catch (Exception e) {
@@ -3571,7 +3658,6 @@ public class SocialBotManagerService extends RESTService {
 
 			return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
 		}
-
 		@GET
 		@Path("/{bot}/{organization}/{channel}/{label1}/{label2}/files")
 		@Produces(MediaType.APPLICATION_JSON)
@@ -3657,5 +3743,120 @@ public class SocialBotManagerService extends RESTService {
 			byte[] bytes = outputStream.toByteArray();
 			return bytes;
 		}
+
+		private static HashMap <String, Integer> counter = new HashMap<String, Integer>();
+
+		@GET
+		@Path("/{bot}/{organization}/{channel}/AsyncMessage")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "Response successful"),
+				@ApiResponse(code = 404, message = "Response not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response getRESTfulChatBiwibot(@PathParam("bot") String bot,
+					@PathParam("organization") String organization,
+					@PathParam("channel") String channel) {
+			System.out.println("Called GET AsyncMessage function");
+			JSONObject errRes = new JSONObject();
+			String s = "Leider konnte deine Nachricht nicht verarbeitet werden. Bitte versuche es erneut.";
+			errRes.put("message", s);
+			errRes.put("asynchron", false);
+			if (counter.containsKey(channel)) {
+				int currentValue = counter.get(channel);
+				if (currentValue > 7) {
+					System.out.println("Count reached 7.");
+					counter.remove(channel);
+					return Response.status(Status.OK).entity(errRes.toString()).build();
+				} else {
+					counter.put(channel, currentValue + 1);
+				}
+			} else {
+				counter.put(channel, 1);
+			}
+
+			String orgaChannel = organization + "-" + channel;
+			if (userMessage.containsKey(orgaChannel)) {
+				JSONObject ch = userMessage.get(orgaChannel);
+				
+				if (ch.containsKey("error")) {
+					System.out.println("Error occurred");
+					return Response.status(Status.NOT_FOUND).entity(ch).build();
+				}
+
+				String key = userKey.get(orgaChannel);
+				if (ch.containsKey(key) && !ch.getAsString(key).startsWith("Bitte warte")) {
+					JSONObject input = new JSONObject();
+					input.put("message", "!default");
+					Response responseService = handleRESTfulChat(bot, organization, channel, input.toString());
+					JSONParser p = new JSONParser();
+					try {
+						JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
+						answer.put(key, answer.getAsString("message"));
+						answer.put("asynchron", false);
+						userMessage.remove(orgaChannel);
+						userKey.remove(orgaChannel);
+						return Response.status(Status.OK).entity(answer.toString()).build();
+					} catch (Exception e) {
+						e.printStackTrace();
+						System.out.println("Error after handle input.");
+						return Response.status(Status.NOT_FOUND).entity(ch).build();
+					}
+				} else {
+					return Response.status(Status.NOT_FOUND).entity(ch).build();
+				} 
+				
+			} else {
+				return Response.status(Status.NOT_FOUND).entity(new JSONObject()).build();
+			}
+		}
+
+		@POST
+		@Path("/{bot}/{organization}/{channel}/AsyncMessage")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "Response successful"),
+				@ApiResponse(code = 404, message = "Response not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response updateRESTfulChatResponse(@PathParam("bot") String bot,
+				@PathParam("organization") String organization, 
+				@PathParam("channel") String channel, 
+				String response) throws ParseException {
+		
+			String orgaChannel = organization + "-" + channel;
+			Messenger messenger = channelToMessenger.get(orgaChannel);
+			System.out.println("orgaChannel: " + orgaChannel);
+			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
+			JSONObject input = new JSONObject();
+			input.put("channel", orgaChannel);
+			String key = o.keySet().toArray()[0].toString();
+
+			if (o.getAsString(key).isEmpty()) {
+				return Response.status(Status.BAD_REQUEST).entity("Something went wrong.").build();
+			}
+			
+			if (o.getAsString(key).equals("!exit")) {
+				input.put("message", "!exit");
+				messenger.addVariable(orgaChannel, "closeContext", "true");
+				handleRESTfulChat(bot, organization, channel, input.toString());
+				return Response.status(Status.BAD_REQUEST).entity("ack").build();
+			}
+
+			try {	
+				userMessage.put(orgaChannel, o);
+				userKey.put(orgaChannel, key);
+				if (messenger == null) {
+					messenger = channelToMessenger.get(channel);
+				}
+				for (String keys : o.keySet()) {
+					messenger.addVariable(orgaChannel, keys, o.getAsString(keys));
+				}
+
+				return Response.status(Status.BAD_REQUEST).entity("ack").build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
+			}
+		}
 	}
+
 }

@@ -17,31 +17,42 @@ public class RESTfulChatResponse {
     private JSONObject reqBody;
     private boolean isFile;
     private boolean rateable; 
+    private boolean asynchron;
 
-
-    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type) {
+    public RESTfulChatResponse(String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage) {
         this(text);
         reqBody = new JSONObject();
         HashSet<InteractiveChatElement> icel = new HashSet<InteractiveChatElement>();
         setType(type);
         isFile = false;
+        asynchron = false;
         if(hashMap != null){
             for (Entry<String, IncomingMessage> entry : hashMap.entrySet()) {
                 String key = entry.getKey();
                 IncomingMessage value = entry.getValue();
                 String intent = key;
                 if(intent==null||intent=="") intent = value.getIntentKeyword();
-                InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile());
-                if(value.expectsFile()){
+                InteractiveChatElement ice = new InteractiveChatElement(intent, value.getIntentLabel(), value.expectsFile(), value.isRateable());
+                icel.add(ice);    
+                if(entry.getValue().expectsFile()){
                     isFile = true;
                 }
-                if(value.isRateable()){
-                    rateable = true; 
-                }
-                icel.add(ice);
+                // if(entry.getValue().isRateable()){
+                //     rateable = true;
+                // }
+                // if(entry.getValue().getAsynchron()){
+                //     asynchron = true;
+                // }
             }
         }
-
+        if (currentMessage != null) {
+            if(currentMessage.isRateable()){
+                rateable = true; 
+            }
+            if(currentMessage.getAsynchron()) {
+                asynchron = true;
+            }
+        }
         interactiveElements = Arrays.asList(icel.toArray());
     }
 
@@ -104,4 +115,13 @@ public class RESTfulChatResponse {
     public void setRateable(boolean rateable) {
         this.rateable = rateable;
     }
+
+    public boolean asynchron() {
+        return asynchron;
+    }
+
+    public void setAsynchron(boolean asynchron) {
+        this.asynchron = asynchron;
+    }
+
 }

@@ -487,6 +487,7 @@ public class BotParser {
 		String intentLabel = null;
 		String followupMessageType = null; 
 		Boolean isRateable = null;
+		Boolean asynchron = null;
 
 		// TODO: Reduce code duplication
 		try{
@@ -524,7 +525,9 @@ public class BotParser {
 				followupMessageType = subVal.getValue();
 			} else if (name.contentEquals("Rateable")){
                 isRateable = Boolean.valueOf(subVal.getValue());
-            }
+            } else if (name.contentEquals("Asynchronous")) {
+				asynchron = Boolean.valueOf(subVal.getValue());
+			}
 		}
 		} catch(Exception e){
 			System.out.println("Error: " + e.getMessage());
@@ -554,7 +557,7 @@ public class BotParser {
 			throw new ParseBotException("Response is missing Type");
 		}
 		
-		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType, isRateable);
+		return new IncomingMessage(intentKeyword, NluID, containsFile, messages, fileURL, errorMessage, type, intentLabel, followupMessageType, isRateable, asynchron);
 	}
 
 	private IntentEntity addIntentEntity(String key, BotModelNode elem, BotConfiguration config)
