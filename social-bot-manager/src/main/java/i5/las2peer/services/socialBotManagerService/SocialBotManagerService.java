@@ -1085,7 +1085,6 @@ public class SocialBotManagerService extends RESTService {
 
 					JSONObject xAPI = createXAPIStatement(cleanedJson.getAsString("email"), name,
 							m.getIntent().getKeyword(), m.getMessage().getText(), channel);
-					System.out.println("XAPI is: " + xAPI.toString());
 					sendXAPIStatement(xAPI, lrsAuthTokenStatic);
 				}
 				Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_80, cleanedJson.toString());
@@ -1129,6 +1128,10 @@ public class SocialBotManagerService extends RESTService {
 				throws ParseException {
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			JSONObject actor = new JSONObject();
+			JSONObject verb = new JSONObject();
+			JSONObject object = new JSONObject();
+			JSONObject context = new JSONObject();
+
 			Bot b = getConfig().getBot(botName);
 			actor.put("objectType", "Agent");
 			JSONObject account = new JSONObject();
@@ -1138,27 +1141,53 @@ public class SocialBotManagerService extends RESTService {
 			//vom messenger abhängig die Homepage 
 			if (b.getMessenger(ChatService.RESTful_Chat) != null) {
 				account.put("homePage", sbfservice.xapiHomepage);
+				verb = (JSONObject) p
+				.parse(new String(
+						"{'display':{'en-US':'sent_chat_message'},'id':'" + sbfservice.xapiUrl + "/definitions/mwb/verbs/sent_message'}"));
+				object = (JSONObject) p
+						.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
+								+ "'}, 'extensions': {'" + sbfservice.xapiUrl + "/definitions/mwb/object/course': {'id':"+ channel + "}}}, 'description':{'en-US':'" + intent
+								+ "'}, 'id':'" + sbfservice.xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/"
+								+ intent + "', 'objectType':'Activity', 'text':'"
+								+ text + "'}"));
+				context = (JSONObject) p.parse(new String(
+						"{'extensions':{'" + sbfservice.xapiUrl + "/definitions/mwb/extensions/context/activity_data': {courseID + "
+								+ channel
+								+ ", 'intent':'" + intent +"'}}}"));
 			} else if (b.getMessenger(ChatService.ROCKET_CHAT) != null){
 				account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
+				verb = (JSONObject) p
+				.parse(new String(
+						"{'display':{'en-US':'sent_chat_message'},'id':'" + sbfservice.xapiUrl + "/definitions/chat/verbs/sent'}"));
+				object = (JSONObject) p
+						.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
+								+ "'}, 'description':{'en-US':'" + intent
+								+ "'}, 'id':'" + sbfservice.xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/"
+								+ intent + "', 'objectType':'Activity', 'text':'"
+								+ text + "'}"));
+				context = (JSONObject) p.parse(new String(
+						"{'extensions':{'" + sbfservice.xapiUrl + "/definitions/lms/activities/course': {courseID + '"
+								+ channel
+								+ "'}}}"));
 			} else {
 				account.put("homePage", "https://tech4comp.dbis.rwth-aachen.de");
+				verb = (JSONObject) p
+				.parse(new String(
+						"{'display':{'en-US':'sent_chat_message'},'id':'" + sbfservice.xapiUrl + "/definitions/chat/verbs/sent'}"));
+				object = (JSONObject) p
+						.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
+								+ "'}, 'description':{'en-US':'" + intent
+								+ "'}, 'id':'" + sbfservice.xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/"
+								+ intent + "', 'objectType':'Activity', 'text':'"
+								+ text + "'}"));
+				context = (JSONObject) p.parse(new String(
+						"{'extensions':{'" + sbfservice.xapiUrl + "/definitions/lms/activities/course': {courseID + '"
+								+ channel
+								+ "'}}}"));
 			}
 
 			actor.put("account", account);
-
-			JSONObject verb = (JSONObject) p
-					.parse(new String(
-							"{'display':{'en-US':'sent_chat_message'},'id':'" + sbfservice.xapiUrl + "/definitions/chat/verbs/sent'}"));
-			JSONObject object = (JSONObject) p
-					.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
-							+ "'}, 'description':{'en-US':'" + intent
-							+ "'}, 'id':'" + sbfservice.xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/'"
-							+ intent + "', 'objectType':'Activity', 'text':'"
-							+ text + "'}"));
-			JSONObject context = (JSONObject) p.parse(new String(
-					"{'extensions':{'" + sbfservice.xapiUrl + "/definitions/lms/activities/course': {courseID + '"
-							+ channel
-							+ "'}}}"));
+			
 			JSONObject xAPI = new JSONObject();
 			xAPI.put("authority", p.parse(
 					new String(
