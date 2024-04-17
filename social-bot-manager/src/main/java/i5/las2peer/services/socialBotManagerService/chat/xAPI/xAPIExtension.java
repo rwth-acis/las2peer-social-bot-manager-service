@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class xAPIExtension {
 
-	@SerializedName("https://tech4comp.de/xapi/context/extensions/messageInfo")
+	@SerializedName("https://xapi.tech4comp.dbis.rwth-aachen.de/definitions/chat/activities/message")
 	private xAPIMessageInfo messageInfo;
 
 	public xAPIExtension() {

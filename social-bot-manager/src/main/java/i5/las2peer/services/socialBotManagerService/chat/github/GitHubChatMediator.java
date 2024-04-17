@@ -158,7 +158,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
      * @param id
      */
     @Override
-    public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, Optional<String> id) {
+    public Boolean sendMessageToChannel(String channel, String text, HashMap<String, IncomingMessage> hashMap, String type, IncomingMessage currentMessage,Optional<String> id) {
         String repositoryFullName = channel.split("#")[0];
         int number = Integer.parseInt(channel.split("#")[1]);
         Boolean messageSent = Boolean.FALSE;

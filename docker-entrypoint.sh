@@ -41,6 +41,8 @@ set_in_service_config mongoAuth ${MONGO_AUTH}
 set_in_service_config lrsURL ${LRS_URL}
 set_in_service_config lrsURLStatic ${LRS_URL}
 set_in_service_config lrsAuthToken ${LRS_AUTH_TOKEN} 
+set_in_service_config xapiUrl ${XAPI_URL}
+set_in_service_config xapiHomepage ${XAPI_HOMEPAGE}
 
 check_if_exists "$WEBCONNECTOR_URL" "WEBCONNECTOR_URL"
 
