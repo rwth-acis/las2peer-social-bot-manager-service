@@ -3889,6 +3889,33 @@ public class SocialBotManagerService extends RESTService {
 				return Response.status(Status.BAD_REQUEST).entity(new JSONObject()).build();
 			}
 		}
+
+		@POST
+		@Path("/{bot}/MoodleAsync")
+		@Produces(MediaType.TEXT_PLAIN)
+		@ApiResponses(value = {
+				@ApiResponse(code = 200, message = "Response successful"),
+				@ApiResponse(code = 404, message = "Response not found"),
+				@ApiResponse(code = 500, message = "Internal server error") })
+		public Response sendMoodleMessage(@PathParam("bot") String botName,
+				String response) throws ParseException {
+			Bot bot = null;
+			for (String botId : getConfig().getBots().keySet()) {
+				if (getConfig().getBots().get(botId).getName().toLowerCase().equals(botName.toLowerCase())) {
+					bot = getConfig().getBot(botId);
+					break;
+				}
+			}
+			ChatMediator c = bot.getMessenger(ChatService.MOODLE_CHAT).getChatMediator();
+
+			JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
+			String channel = o.getAsString("channel");
+			String msg = o.getAsString("text");
+			System.out.println("Send message to moodle chat.");
+			c.sendMessageToChannel(channel, msg, null, null, null);
+
+			return Response.status(Status.OK).entity("cool").build();
+		}
 	}
 
 }
