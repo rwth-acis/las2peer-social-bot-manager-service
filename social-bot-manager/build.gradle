@@ -7,15 +7,6 @@ plugins {
 repositories {
     // Use JCenter for resolving dependencies.
     mavenCentral()
-
-    // DBIS Archiva
-    maven {
-        url "https://archiva.dbis.rwth-aachen.de:9911/repository/internal/"
-    }
-
-    maven {
-        url "https://archiva.dbis.rwth-aachen.de:9911/repository/snapshots/"
-    }
 }
 
 dependencies {
@@ -24,7 +15,7 @@ dependencies {
 
     // las2peer bundle which is not necessary in the runtime path
     // compileOnly will be moved into the lib dir afterwards
-    implementation "i5:las2peer-bundle:${project.property('core.version')}"
+    implementation "io.github.rwth-acis.org.las2peer:las2peer-bundle:${project.property('core.version')}"
 
     // Add service dependencies here
     // example:
