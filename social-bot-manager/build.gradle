@@ -7,6 +7,22 @@ plugins {
 repositories {
     // Use JCenter for resolving dependencies.
     mavenCentral()
+
+    maven {
+        url 'https://repo.maven.apache.org/maven2'
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
+
+    maven {
+        url 'https://jcenter.bintray.com'
+    }
+    
+    maven {
+        url 'https://jitpack.io'
+    }
 }
 
 dependencies {
