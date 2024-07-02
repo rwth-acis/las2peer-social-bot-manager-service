@@ -41,3 +41,4 @@ bin/start_network.sh
 mysql
 etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
 .env
+*.properties
