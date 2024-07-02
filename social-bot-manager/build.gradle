@@ -28,15 +28,24 @@ repositories {
 dependencies {
     // Use JUnit test framework.
     testImplementation "junit:junit:4.13.2"
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
+    implementation 'org.springdoc:springdoc-openapi-data-rest:1.6.14'
+    implementation 'org.springdoc:springdoc-openapi-javadoc:1.6.14'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    runtimeOnly 'org.postgresql:postgresql'
 
     // las2peer bundle which is not necessary in the runtime path
     // compileOnly will be moved into the lib dir afterwards
-    implementation "io.github.rwth-acis.org.las2peer:las2peer-bundle:${project.property('core.version')}"
+    // implementation "io.github.rwth-acis.org.las2peer:las2peer-bundle:${project.property('core.version')}"
 
     // Add service dependencies here
     // example:
     // implementation "net.minidev:json-smart:1.3.1"
-    implementation "junit:junit:4.12"
     implementation "javax.websocket:javax.websocket-api:1.1"
     implementation "org.glassfish.tyrus.bundles:tyrus-standalone-client:1.15"
 //   implementation "com.github.seratch:jslack:3.4.2"
@@ -63,12 +72,20 @@ dependencies {
     implementation "org.apache.tika:tika-core:2.7.0"
     
     // MongoDB Java driver GridFS
-    implementation "org.mongodb:mongodb-driver-sync:4.9.0"
+    // implementation "org.mongodb:mongodb-driver-sync:4.9.0"
     implementation "org.mongodb:bson:4.9.0"
     
     // Jackson (for JSON serialization/deserialization)
     implementation "com.fasterxml.jackson.core:jackson-databind:2.14.2"
 
+    compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+     //   javax.websocket-api;version="1.1", jslack;version="1.8.1", rocketchat-common;version="0.7.1, rocketchat-core;version="0.7.1, rocketchat-livechat;version="0.7.1"
+    testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
      //   javax.websocket-api;version="1.1", jslack;version="1.8.1", rocketchat-common;version="0.7.1, rocketchat-core;version="0.7.1, rocketchat-livechat;version="0.7.1"
 }
 
