@@ -20,10 +20,8 @@ import java.util.Random;
 import java.util.Vector;
 import javax.websocket.DeploymentException;
 
-import org.jvnet.hk2.internal.SystemDescriptor;
+// import org.jvnet.hk2.internal.SystemDescriptor;
 
-import i5.las2peer.api.Context;
-import i5.las2peer.api.logging.MonitoringEvent;
 import net.minidev.json.JSONObject;
 import services.socialBotManagerService.chat.*;
 import services.socialBotManagerService.chat.github.GitHubAppHelper;
@@ -119,15 +117,15 @@ public class Messenger {
 
 	private HashMap<String, HashMap<String, String>> userVariables;
 
-	private Context l2pContext;
+	// private Context l2pContext;
 
 	private Random random;
 
 	private SQLDatabase db;
 
-	public Messenger(String id, String chatService, String token, SQLDatabase database, Context l2pContext)
+	public Messenger(String id, String chatService, String token, SQLDatabase database)
 			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
-		this.l2pContext = l2pContext;
+		// this.l2pContext = l2pContext;
 
 		// this.rasa = new RasaNlu(rasaUrl);
 		// this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
@@ -418,14 +416,14 @@ public class Messenger {
 
 				conversationId = this.determineConversationId(message.getChannel());
 				remarks.put("in-service-context", this.triggeredFunction.containsKey(message.getChannel()));			
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-								conversationId.toString(),
-								intent.getKeyword(),
-								bot.getId(), "bot", "start", System.currentTimeMillis());
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
-								conversationId.toString(),
-								intent.getKeyword(),
-								bot.getId(), "bot", "complete", System.currentTimeMillis());
+				// this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+				// 				conversationId.toString(),
+				// 				intent.getKeyword(),
+				// 				bot.getId(), "bot", "start", System.currentTimeMillis());
+				// this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, remarks.toJSONString(),
+				// 				conversationId.toString(),
+				// 				intent.getKeyword(),
+				// 				bot.getId(), "bot", "complete", System.currentTimeMillis());
 
 				// ________________ start modification of state machine__________________
 
@@ -759,14 +757,14 @@ public class Messenger {
 
 								}
 								String activityName = state.getIntentKeyword() + ":response";
-								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
-												remarks.toJSONString(),
-												conversationId.toString(), activityName, bot.getId(), "bot", "start",
-												System.currentTimeMillis());
-								this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
-												remarks.toJSONString(),
-												conversationId.toString(), activityName, bot.getId(), "bot", "complete",
-												System.currentTimeMillis());
+								// this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
+								// 				remarks.toJSONString(),
+								// 				conversationId.toString(), activityName, bot.getId(), "bot", "start",
+								// 				System.currentTimeMillis());
+								// this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2,
+								// 				remarks.toJSONString(),
+								// 				conversationId.toString(), activityName, bot.getId(), "bot", "complete",
+								// 				System.currentTimeMillis());
 
 								// check if message parses buttons or is simple text
 								if (state.getType().equals("Interactive Message")) {
@@ -936,11 +934,11 @@ public class Messenger {
 				remarks.put("stateLabel", state != null ? state.getIntentLabel() : "null");
 				remarks.put("intent", intent != null ? intent.getKeyword() : "null");
 				String activityName = state == null ? intent.getKeyword() : state.getIntentLabel();
-				this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1,
-						remarks.toJSONString(),
-						conversationId.toString(),
-						activityName,
-						bot.getId(), "bot", "complete", System.currentTimeMillis());
+				// this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1,
+				// 		remarks.toJSONString(),
+				// 		conversationId.toString(),
+				// 		activityName,
+				// 		bot.getId(), "bot", "complete", System.currentTimeMillis());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
