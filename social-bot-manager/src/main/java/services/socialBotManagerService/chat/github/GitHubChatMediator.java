@@ -105,7 +105,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
      * @return Whether the given event is relevant for the chat mediators.
      */
     protected boolean isRelevantEvent(JSONObject parsedEvent) {
-        String event = parsedEvent.getAsString("event");
+        String event = parsedEvent.get("event").toString();
         return List.of(eventNameItemComment, eventNameItemOpened).contains(event);
     }
 
@@ -117,11 +117,11 @@ public abstract class GitHubChatMediator extends EventChatMediator {
     @Override
     public void handleEvent(JSONObject parsedEvent) {
         // extract name and payload of given event
-        String eventName = parsedEvent.getAsString("event");
+        String eventName = parsedEvent.get("event").toString();
         JSONObject payload = (JSONObject) parsedEvent.get("payload");
 
         String repositoryFullName = this.getRepositoryFullNameOfEvent(parsedEvent);
-        String action = payload.getAsString("action");
+        String action = payload.get("action").toString();
 
         boolean itemComment = eventName.equals(eventNameItemComment) && action.equals(actionNameItemComment);
         boolean itemOpened = eventName.equals(eventNameItemOpened) && action.equals(actionNameItemOpened);
@@ -129,7 +129,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
         if (itemComment || itemOpened) {
             String itemName = itemComment ? itemNameComment : itemNameOpened;
             JSONObject item = (JSONObject) payload.get(itemName);
-            String channelName = repositoryFullName + "#" + item.getAsNumber("number");
+            String channelName = repositoryFullName + "#" + item.get("number");
 
             JSONObject comment;
             if (itemComment) comment = (JSONObject) payload.get("comment");
@@ -138,8 +138,8 @@ public abstract class GitHubChatMediator extends EventChatMediator {
 
             // extract user info from comment
             JSONObject user = (JSONObject) comment.get("user");
-            String username = user.getAsString("login");
-            String message = comment.getAsString("body");
+            String username = user.get("login").toString();
+            String message = comment.get("body").toString();
 
             // dont handle bot messages
             if (this.isBotAccount(user)) return;
@@ -200,7 +200,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
     private String getRepositoryFullNameOfEvent(JSONObject parsedEvent) {
         JSONObject payload = (JSONObject) parsedEvent.get("payload");
         JSONObject repository = (JSONObject) payload.get("repository");
-        return repository.getAsString("full_name");
+        return repository.get("full_name").toString();
     }
 
     /**
@@ -210,7 +210,7 @@ public abstract class GitHubChatMediator extends EventChatMediator {
      * @return Whether the given user is a bot.
      */
     private boolean isBotAccount(JSONObject user) {
-        return user.getAsString("type").equals("Bot");
+        return user.get("type").toString().equals("Bot");
     }
 
     @Override
