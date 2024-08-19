@@ -1,16 +1,26 @@
 package services.socialBotManagerService.nlu;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
+// import i5.las2peer.connectors.webConnector.client.ClientResponse;
+// import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
@@ -49,15 +59,23 @@ public class RasaNlu {
 
 	private JSONObject getIntentJSON(String input) throws IOException, ParseException {
 		try {
-			MiniClient client = new MiniClient();
-			client.setConnectorEndpoint(this.url);
+			// MiniClient client = new MiniClient();
+			// client.setConnectorEndpoint(this.url);
 			JSONObject inputJSON = new JSONObject(
 					Collections.singletonMap("text", StringEscapeUtils.escapeJson(input)));
 			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse response = client.sendRequest("POST", "model/parse", inputJSON.toString(),
-					MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			// ClientResponse response = client.sendRequest("POST", "model/parse", inputJSON.toString(),
+			// 		MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			String url = this.url + "/model/parse";
+			HttpClient client = HttpClient.newHttpClient();
+			HttpRequest httpRequest = HttpRequest.newBuilder()
+				.uri(UriBuilder.fromUri(url).build())
+				.header("Content-Type", "application/json")
+				.POST(BodyPublishers.ofString(inputJSON.toJSONString()))
+				.build();
+			HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 			JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-			return (JSONObject) p.parse(response.getResponse());
+			return (JSONObject) p.parse(response.body());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new JSONObject();

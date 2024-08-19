@@ -3,9 +3,18 @@ package services.socialBotManagerService.nlu;
 import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
+import java.io.IOException;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+// import org.glassfish.jersey.client.ClientResponse;
+// import org.springframework.http.HttpRequest;
+
+// import i5.las2peer.connectors.webConnector.client.ClientResponse;
+// import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 
 public class TrainingHelper implements Runnable {
@@ -37,48 +46,79 @@ public class TrainingHelper implements Runnable {
 	@Override
 	// Trains and loads the model trained with the data given in the constructor.
 	public void run() {
-		MiniClient client = new MiniClient();
-		client.setConnectorEndpoint(url);
-
+		
 		JSONObject json = new JSONObject();
 		json.put("config", config);
 		if (markdownTrainingData.contains("examples: |")) {
 		//	json.put("domain", markdownTrainingData.replace("\\t", ""));
 			json.put("nlu", markdownTrainingData);
 			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse response = client.sendRequest("POST", "model/train", markdownTrainingData,
-					MediaType.TEXT_PLAIN + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-	
-			String filename = response.getHeader("filename");
-			if (filename == null) {
-				this.success = false;
-				return;
+			
+			// Send the request
+			try {
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url + "/model/train").build())
+						.headers(headers.toString())
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(markdownTrainingData))
+						.build();
+
+				HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				String filename = serviceResponse.headers().firstValue("filename").get();
+
+				if (filename == null) {
+					this.success = false;
+					return;
+				}
+
+				json = new JSONObject();
+				json.put("model_file", "models/" + filename);
+
+				httpRequest = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url + "/model").build()).headers(headers.toString())
+						.header("Content-Type", "application/json")
+						.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
+						.build();
+
+				serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				this.success = serviceResponse.statusCode() == 204;
+
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
 			}
-	
-			json = new JSONObject();
-			json.put("model_file", "models/" + filename);
-	
-			response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
-					MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-			this.success = response.getHttpCode() == 204;
+
 		} else {
 			json.put("nlu", markdownTrainingData);
 			HashMap<String, String> headers = new HashMap<String, String>();
-			ClientResponse response = client.sendRequest("POST", "model/train", json.toJSONString(),
-					MediaType.APPLICATION_JSON + ";charset=utf-8", MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-	
-			String filename = response.getHeader("filename");
-			if (filename == null) {
-				this.success = false;
-				return;
+            try {
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(UriBuilder.fromUri(url+ "/model/train").build())
+						.headers(headers.toString())
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
+						.build();
+				HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				String filename = serviceResponse.headers().firstValue("filename").get();
+				if (filename == null) {
+					this.success = false;
+					return;
+				}
+		
+				json = new JSONObject();
+				json.put("model_file", "models/" + filename);
+		
+				httpRequest = HttpRequest.newBuilder()
+				.uri(UriBuilder.fromUri(url + "/model").build()).headers(headers.toString())
+				.header("Content-Type", "application/json")
+				.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
+				.build();
+				serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				this.success = serviceResponse.statusCode() == 204;
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
 			}
-	
-			json = new JSONObject();
-			json.put("model_file", "models/" + filename);
-	
-			response = client.sendRequest("PUT", "model", json.toString(), MediaType.APPLICATION_JSON + ";charset=utf-8",
-					MediaType.APPLICATION_JSON + ";charset=utf-8", headers);
-			this.success = response.getHttpCode() == 204;
 		}
 	}
 

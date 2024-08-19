@@ -9,18 +9,18 @@ public class Entity {
 
 	// Constructor for entity extraction through Rasa NLU.
 	public Entity(JSONObject o) {
-		this.entityName = o.getAsString("entity");
-		this.value = o.getAsString("value");
-		if (o.getAsNumber("confidence") == null) {
+		this.entityName = o.get("entity").toString();
+		this.value = o.get("value").toString();
+		if (o.get("confidence") == null) {
 			// added this because there was a nullpointerexception when extracting entities,
 			// may need to further search what caused the problem
 			// System.out.println("No Confidence Available");
 			this.confidence = 1;
 		} else {
-			if (o.getAsNumber("confidence_entity") != null) {
-				this.confidence = o.getAsNumber("confidence_entity").floatValue();
+			if (o.get("confidence_entity") != null) {
+				this.confidence = (float) o.get("confidence_entity");
 			} else
-				this.confidence = o.getAsNumber("confidence").floatValue();
+				this.confidence = (float) o.get("confidence");
 		}
 		System.out.println("Entityname is" + this.entityName);
 		System.out.println("Entityvalue is" + this.value);
