@@ -1,7 +1,7 @@
 package services.socialBotManagerService.chat.github;
 
-import i5.las2peer.api.Context;
-import io.swagger.annotations.Api;
+// import i5.las2peer.api.Context;
+// import io.swagger.annotations.Api;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import services.socialBotManagerService.chat.ChatService;
@@ -14,10 +14,18 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.Collection;
 
-@Api(value = "GitHub Webhook Receiver Resource")
-@Path("/github")
+// @Api(value = "GitHub Webhook Receiver Resource")
+@Tag(name="GitHub Webhook Receiver Resource", description = "Resource for receiving GitHub webhook events.")
+@RestController
+@RequestMapping("/github")
 public class GitHubWebhookReceiver {
 
     /**
@@ -39,10 +47,10 @@ public class GitHubWebhookReceiver {
         eventObj.put("event", eventName);
         eventObj.put("payload", payload);
 
-        SocialBotManagerService service = (SocialBotManagerService) Context.get().getService();
+        SocialBotManagerService service = new SocialBotManagerService();
 
         // need to find bot(s) that use this GitHub app id
-        Collection<Bot> bots = service.getConfig().getBots().values();
+        Collection<Bot> bots = service.getBots().values();
         for (Bot bot : bots) {
             Messenger messenger = bot.getMessenger(ChatService.GITHUB_ISSUES);
             if (messenger != null) {
