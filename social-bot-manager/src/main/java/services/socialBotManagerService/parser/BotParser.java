@@ -13,14 +13,14 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import javax.websocket.DeploymentException;
 import com.google.gson.Gson;
-import i5.las2peer.api.Context;
-import i5.las2peer.api.logging.MonitoringEvent;
-import i5.las2peer.api.security.AgentException;
-import i5.las2peer.api.security.AgentNotFoundException;
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
-import i5.las2peer.security.BotAgent;
-import i5.las2peer.tools.CryptoException;
+// import i5.las2peer.api.Context;
+// import i5.las2peer.api.logging.MonitoringEvent;
+// import i5.las2peer.api.security.AgentException;
+// import i5.las2peer.api.security.AgentNotFoundException;
+// import i5.las2peer.connectors.webConnector.client.ClientResponse;
+// import i5.las2peer.connectors.webConnector.client.MiniClient;
+// import i5.las2peer.security.BotAgent;
+// import i5.las2peer.tools.CryptoException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -47,7 +47,7 @@ import services.socialBotManagerService.model.Trigger;
 public class BotParser {
 	private static BotParser instance = null;
 	private static final String botPass = "actingAgent";
-	private static Context l2pContext;
+	// private static Context l2pContext;
 
 	protected BotParser() {
 	}
@@ -58,14 +58,15 @@ public class BotParser {
 		}
 		return instance;
 	}
-	public static BotParser getInstance(Context context) {
-		l2pContext = context;
-		if (instance == null) {
-			instance = new BotParser();
-		}
-		return instance;
-	}
 
+	// public static BotParser getInstance(Context context) {
+	// 	l2pContext = context;
+	// 	if (instance == null) {
+	// 		instance = new BotParser();
+	// 	}
+	// 	return instance;
+	// }
+// 
 	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
@@ -402,12 +403,12 @@ public class BotParser {
 		j.put("triggerFunctions", jaf);
 		System.out.println(jaf.toJSONString());
 		JSONArray jarr = new JSONArray();
-		for (BotAgent b : botAgents.values()) {
-			jarr.add(b.getIdentifier());
-		}
+		// for (BotAgent b : botAgents.values()) {
+		// 	jarr.add(b.getIdentifier());
+		// }
 		j.put("botIds", jarr);
 
-		Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
+		// Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	}
 
 	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)
@@ -440,7 +441,7 @@ public class BotParser {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
 		
-		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database, Context.get());
+		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database);
 		return newMessenger;
 
 	}
@@ -505,7 +506,7 @@ public class BotParser {
 				try{
 					JSONObject o = (JSONObject) p.parse(subVal.getValue());
 					for (String tKey : o.keySet()){
-						messages.add(o.getAsString(tKey));
+						messages.add((String) o.get(tKey));
 					}
 				} catch (ParseException e ){
 					e.printStackTrace();
@@ -586,33 +587,33 @@ public class BotParser {
 			BotModelValue subVal = subElem.getValue();
 			if (subVal.getName().equals("Name")) {
 				String botName = subVal.getValue();
-				BotAgent botAgent = null;
-				try {
-					try {
-						botAgent = (BotAgent) Context.getCurrent()
-								.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName(botName));
-					} catch (AgentNotFoundException e) {
-						// AgentOperationFailedException should be handled separately
-						botAgent = BotAgent.createBotAgent(botPass);
-						botAgent.unlock(botPass);
-						botAgent.setLoginName(botName);
-						System.out.println(botName);
-						Context.getCurrent().storeAgent(botAgent);
-					}
-					botAgent.unlock(botPass);
-					Context.getCurrent().registerReceiver(botAgent);
-				} catch (AgentException | IllegalArgumentException | CryptoException e2) {
-					// TODO Errorhandling
-					System.out.println("Caught the error here");
-					e2.printStackTrace();
-					throw new IllegalArgumentException(e2);
-				}
+				// BotAgent botAgent = null;
+				// try {
+				// 	try {
+				// 		botAgent = (BotAgent) Context.getCurrent()
+				// 				.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName(botName));
+				// 	} catch (AgentNotFoundException e) {
+				// 		// AgentOperationFailedException should be handled separately
+				// 		botAgent = BotAgent.createBotAgent(botPass);
+				// 		botAgent.unlock(botPass);
+				// 		botAgent.setLoginName(botName);
+				// 		System.out.println(botName);
+				// 		Context.getCurrent().storeAgent(botAgent);
+				// 	}
+				// 	botAgent.unlock(botPass);
+				// 	Context.getCurrent().registerReceiver(botAgent);
+				// } catch (AgentException | IllegalArgumentException | CryptoException e2) {
+				// 	// TODO Errorhandling
+				// 	System.out.println("Caught the error here");
+				// 	e2.printStackTrace();
+				// 	throw new IllegalArgumentException(e2);
+				// }
 				JSONObject monitoringMessage = new JSONObject();
 				monitoringMessage.put("botName", botName);
 				monitoringMessage.put("agentId", botAgent.getIdentifier());
 				// runningAt = botAgent.getRunningAtNode();
-				Context.getCurrent().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,
-						monitoringMessage.toJSONString());
+				// Context.getCurrent().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,
+						// monitoringMessage.toJSONString());
 				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
@@ -841,8 +842,8 @@ public class BotParser {
 						body.put(a.getName(), a.getContent());
 					}
 				}
-				ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
-						body.toString(), s.getConsumes(), s.getProduces(), headers);
+				// ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
+				// 		body.toString(), s.getConsumes(), s.getProduces(), headers);
 			}
 		}
 		return jaf;
