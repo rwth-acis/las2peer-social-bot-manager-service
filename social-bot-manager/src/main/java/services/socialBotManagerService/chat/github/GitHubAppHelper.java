@@ -6,7 +6,7 @@ import org.kohsuke.github.GHAppInstallation;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
-import javax.xml.bind.DatatypeConverter;
+// import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -44,7 +44,7 @@ public class GitHubAppHelper {
     public GitHubAppHelper(int gitHubAppId, String pkcs8PrivateKey) throws GitHubAppHelperException {
         this.gitHubAppId = gitHubAppId;
 
-        byte[] pkcs8PrivateKeyBytes = DatatypeConverter.parseBase64Binary(pkcs8PrivateKey);
+        byte[] pkcs8PrivateKeyBytes = jakarta.xml.bind.DatatypeConverter.parseBase64Binary(pkcs8PrivateKey);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8PrivateKeyBytes);
         try {
             this.privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
