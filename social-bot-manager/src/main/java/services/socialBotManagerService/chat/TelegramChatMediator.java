@@ -28,8 +28,8 @@ import com.pengrad.telegrambot.response.BaseResponse;
 import com.pengrad.telegrambot.response.GetFileResponse;
 import com.pengrad.telegrambot.response.GetMeResponse;
 
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
+// import i5.las2peer.connectors.webConnector.client.ClientResponse;
+// import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 
 /**

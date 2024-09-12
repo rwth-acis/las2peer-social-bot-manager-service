@@ -54,8 +54,8 @@ import com.rocketchat.core.model.RoomObject;
 import com.rocketchat.core.model.SubscriptionObject;
 import com.rocketchat.core.model.TokenObject;
 
-import i5.las2peer.connectors.webConnector.client.ClientResponse;
-import i5.las2peer.connectors.webConnector.client.MiniClient;
+// import i5.las2peer.connectors.webConnector.client.ClientResponse;
+// import i5.las2peer.connectors.webConnector.client.MiniClient;
 import io.swagger.util.Json;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
