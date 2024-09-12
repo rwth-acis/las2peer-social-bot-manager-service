@@ -67,7 +67,7 @@ public class BotParser {
 	// 	return instance;
 	// }
 // 
-	public void parseNodesAndEdges(BotConfiguration config, HashMap<String, BotAgent> botAgents,
+	public void parseNodesAndEdges(BotConfiguration config,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
@@ -97,7 +97,7 @@ public class BotParser {
 			
 			if (nodeType.equals("Bot")) {
 				try{
-					bot = addBot(elem, botAgents);
+					bot = addBot(elem);
 					bot.setAddress(address);
 					config.addBot(bot.getId(), bot);
 					bots.put(entry.getKey(), bot);
@@ -580,7 +580,7 @@ public class BotParser {
 		return new IntentEntity(intentEntity);
 	}
 
-	private Bot addBot(BotModelNode elem, HashMap<String, BotAgent> botAgents) {
+	private Bot addBot(BotModelNode elem) {
 		Bot b = new Bot();
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
@@ -610,16 +610,16 @@ public class BotParser {
 				// }
 				JSONObject monitoringMessage = new JSONObject();
 				monitoringMessage.put("botName", botName);
-				monitoringMessage.put("agentId", botAgent.getIdentifier());
+				// monitoringMessage.put("agentId", botAgent.getIdentifier());
 				// runningAt = botAgent.getRunningAtNode();
 				// Context.getCurrent().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,
 						// monitoringMessage.toJSONString());
-				System.out.println("Bot " + botName + " registered at: " + botAgent.getRunningAtNode().getNodeId());
+				System.out.println("Bot " + botName + " registered.");
 
 				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
-				b.setId(botAgent.getIdentifier());
-				b.setName(botAgent.getLoginName());
-				botAgents.put(botName, botAgent);
+				// b.setId(botAgent.getIdentifier());
+				// b.setName(botAgent.getLoginName());
+				// botAgents.put(botName, botAgent);
 			}
 		}
 		return b;
