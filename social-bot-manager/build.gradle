@@ -7,25 +7,15 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.8.20'
 }
 
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
 repositories {
     // Use JCenter for resolving dependencies.
     mavenCentral()
-
-    // maven {
-    //     url 'https://repo.maven.apache.org/maven2'
-    //     metadataSources {
-    //         mavenPom()
-    //         artifact()
-    //     }
-    // }
-
-    // maven {
-    //     url 'https://jcenter.bintray.com'
-    // }
-    
-    // maven {
-    //     url 'https://jitpack.io'
-    // }
 }
 
 dependencies {
@@ -34,15 +24,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-tomcat'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
-    implementation 'org.springdoc:springdoc-openapi-data-rest:1.6.14'
-    implementation 'org.springdoc:springdoc-openapi-javadoc:1.6.14'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     runtimeOnly 'org.postgresql:postgresql'
-
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0'
     implementation 'org.json:json:20171018'
     implementation "org.jacoco:org.jacoco.ant:0.8.5"
     implementation "net.minidev:json-smart:1.3.1"
@@ -50,10 +38,8 @@ dependencies {
     implementation "org.apache.poi:poi-ooxml:5.2.3"
     implementation "org.apache.tika:tika-core:2.7.0"
     // implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
-    // las2peer bundle which is not necessary in the runtime path
-    // compileOnly will be moved into the lib dir afterwards
-    // implementation "io.github.rwth-acis.org.las2peer:las2peer-bundle:${project.property('core.version')}"
-    implementation 'org.web3j:core:5.0.0'
+
+    // implementation 'org.web3j:core:5.0.0'
     // Add service dependencies here
     // example:
     // implementation "net.minidev:json-smart:1.3.1"
@@ -61,18 +47,19 @@ dependencies {
     implementation 'org.glassfish.jersey.containers:jersey-container-servlet:3.0.2' 
     implementation 'org.glassfish.jersey.media:jersey-media-multipart:3.0.2' 
     implementation "org.glassfish.tyrus.bundles:tyrus-standalone-client:1.15"
+    
     // implementation "com.github.seratch:jslack:3.4.2"
-    implementation "com.slack.api:slack-api-client:1.20.2"
-    implementation "com.slack.api:slack-api-model:1.20.2"
-    implementation "com.rocketchat.common:rocketchat-common:0.7.1"
-    implementation "com.rocketchat.core:rocketchat-core:0.7.1"
-    implementation "com.rocketchat.livechat:rocketchat-livechat:0.7.1"
+    // implementation "com.slack.api:slack-api-client:1.20.2"
+    // implementation "com.slack.api:slack-api-model:1.20.2"
+    // implementation "com.rocketchat.common:rocketchat-common:0.7.1"
+    // implementation "com.rocketchat.core:rocketchat-core:0.7.1"
+    // implementation "com.rocketchat.livechat:rocketchat-livechat:0.7.1"
     implementation "com.neovisionaries:nv-websocket-client:2.9"
     implementation "org.json:json:20190722" 
-    implementation "mysql:mysql-connector-java:8.0.13"
+    // implementation "mysql:mysql-connector-java:8.0.13"
     implementation "org.apache.commons:commons-dbcp2:2.9.0"
 
-    implementation "commons-codec:commons-codec:1.13" 
+    // implementation "commons-codec:commons-codec:1.13" 
     implementation "com.github.pengrad:java-telegram-bot-api:6.9.1"
 
     // GitHub API
@@ -109,17 +96,8 @@ configurations {
     testImplementation.extendsFrom implementation
 }
 
-jar {
-    manifest {
-        attributes "Main-Class": "${project.property('service.name')}.${project.property('service.class')}"
-        attributes "Library-Version": "${project.property('service.version')}"
-        attributes "Library-SymbolicName": "${project.property('service.name')}"
-    }
-
-    from { (configurations.runtimeClasspath).collect { it.isDirectory() ? it : zipTree(it) } } {
-        // Exclude signatures to be able to natively bundle signed jars
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    }
+bootJar {
+    mainClassName = "${project.property('service.name')}.${project.property('service.class')}"
 }
 
 application {
@@ -130,59 +108,66 @@ application {
     archivesBaseName = group
 
     version = "${project.property('service.version')}"
-    mainClass.set("i5.las2peer.tools.L2pNodeLauncher")
     sourceCompatibility = "${project.property('java.version')}"
     targetCompatibility = "${project.property('java.version')}"
 }
 
-// put all .jar files into export/jars folder
-tasks.withType(Jar) {
-    duplicatesStrategy = 'include'
-    destinationDirectory = file("$projectDir/export/jars")
+springBoot {
+    mainClassName = "${project.property('service.name')}.${project.property('service.class')}"
 }
 
-javadoc {
-    destinationDir = file("$projectDir/export/doc")
+tasks.named('test') {
+  useJUnitPlatform()
 }
 
-build.dependsOn "javadoc"
+// // put all .jar files into export/jars folder
+// tasks.withType(Jar) {
+//     duplicatesStrategy = 'include'
+//     destinationDirectory = file("$projectDir/export/jars")
+// }
 
-compileJava {
-    dependsOn "copyMain"
-}
+// javadoc {
+//     destinationDir = file("$projectDir/export/doc")
+// }
 
-compileTestJava {
-    dependsOn "copyTest"
-}
+// build.dependsOn "javadoc"
 
-// Copies .xml files into build directory
-task copyMain(type: Copy) {
-    from "src/main/java"
-    include "**/*.xml"
-    into "$buildDir/classes/java/main"
-}
+// compileJava {
+//     dependsOn "copyMain"
+// }
 
-// Copies .xml files into build directory
-task copyTest(type: Copy) {
-    from "src/test/java"
-    include "**/*.xml"
-    into "$buildDir/classes/java/test"
-}
+// compileTestJava {
+//     dependsOn "copyTest"
+// }
 
-// These two tasks restore the build and runtime environment used
-// in the ant environment
-task copyJar(type: Copy) {
-    from jar // here it automatically reads jar file produced from jar task
-    into "$rootDir/service"
-}
+// // Copies .xml files into build directory
+// task copyMain(type: Copy) {
+//     from "src/main/java"
+//     include "**/*.xml"
+//     into "$buildDir/classes/java/main"
+// }
 
-task copyToLib(type: Copy) {
-    from configurations.compileClasspath
-    into "$rootDir/lib"
-}
+// // Copies .xml files into build directory
+// task copyTest(type: Copy) {
+//     from "src/test/java"
+//     include "**/*.xml"
+//     into "$buildDir/classes/java/test"
+// }
 
-build.dependsOn copyJar
-build.dependsOn copyToLib
+// // These two tasks restore the build and runtime environment used
+// // in the ant environment
+// task copyJar(type: Copy) {
+//     from jar // here it automatically reads jar file produced from jar task
+//     into "$rootDir/service"
+// }
+
+// task copyToLib(type: Copy) {
+//     from configurations.compileClasspath
+//     into "$rootDir/lib"
+// }
+
+// build.dependsOn copyJar
+// build.dependsOn copyToLib
 
 // task startscripts {
 //     new File("$rootDir/bin", "start_network.sh").text = """#!/bin/bash
@@ -208,37 +193,34 @@ build.dependsOn copyToLib
 
 // build.dependsOn "startscripts"
 
-task deleteStartup {
+// task deleteStartup {
 
-        file("$rootDir/etc/startup").deleteDir()
+//         file("$rootDir/etc/startup").deleteDir()
     
-}
+// }
 
-build.dependsOn "deleteStartup"
+// build.dependsOn "deleteStartup"
 
 
-clean.doLast {
-    file("$rootDir/tmp").deleteDir()
-    file("$rootDir/lib").deleteDir()
-    file("$rootDir/servicebundle").deleteDir()
-    file("$rootDir/service").deleteDir()
-    file("$rootDir/etc/startup").deleteDir()
-    file("$projectDir/export").deleteDir()
-}
+// clean.doLast {
+//     file("$rootDir/tmp").deleteDir()
+//     file("$rootDir/lib").deleteDir()
+//     file("$rootDir/servicebundle").deleteDir()
+//     file("$rootDir/service").deleteDir()
+//     file("$rootDir/etc/startup").deleteDir()
+//     file("$projectDir/export").deleteDir()
+// }
 
-task cleanAll {
-    dependsOn "clean"
+// task cleanAll {
+//     dependsOn "clean"
 
-    doLast {
-        file("$rootDir/log").deleteDir()
-        file("$rootDir/node-storage").deleteDir()
-    }
-}
+//     doLast {
+//         file("$rootDir/log").deleteDir()
+//         file("$rootDir/node-storage").deleteDir()
+//     }
+// }
 
-test {
-    workingDir = file("$rootDir")
-}
+// test {
+//     workingDir = file("$rootDir")
+// }
 
-// Only required when using Eclipse:
-// configuration for eclipse (this allows to import the project as a gradle project in eclipse without any problems)
-//
