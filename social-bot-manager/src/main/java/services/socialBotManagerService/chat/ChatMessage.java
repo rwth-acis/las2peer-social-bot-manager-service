@@ -1,7 +1,5 @@
 package services.socialBotManagerService.chat;
 
-import org.web3j.abi.datatypes.Bool;
-
 public class ChatMessage {
 	private String channel;
 	private String user;
