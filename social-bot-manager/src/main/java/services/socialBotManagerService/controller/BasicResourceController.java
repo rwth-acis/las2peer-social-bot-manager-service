@@ -69,6 +69,12 @@ public class BasicResourceController {
     @Autowired
     private SocialBotManagerService service;
 
+	@GetMapping("/swagger.json")
+	public ResponseEntity<JSONObject> getSwagger() {
+		JSONObject swaggerJson = service.getSwagger();
+		return ResponseEntity.ok(swaggerJson);
+	}
+	
     @Operation(tags = {"trainAndLoad"}, description = "Trains and loads an NLU model on the given Rasa NLU server instance.")
     @PostMapping(value = "/trainAndLoad", consumes = "application/json", produces = "text/plain")
 	// TODO: Just an adapter, since the Rasa server doesn't support
@@ -89,7 +95,7 @@ public class BasicResourceController {
 			String markdownTrainingData = (String) bodyJson.get("markdownTrainingData");
 			String intents = (String) bodyJson.get("intents");
 			// added to have a way to access the intents of the rasa server
-			service.rasaIntents.put(url.split("://")[1], intents);
+			SocialBotManagerService.rasaIntents.put(url.split("://")[1], intents);
 			service.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
 			service.nluTrainThread = new Thread(service.nluTrain);
 			service.nluTrainThread.start();
