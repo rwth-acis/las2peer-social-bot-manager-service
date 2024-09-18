@@ -11,7 +11,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.UUID;
 import javax.websocket.DeploymentException;
+
+import org.apache.tools.ant.util.UUEncoder;
+import org.bouncycastle.asn1.ocsp.ResponderID;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
 import com.google.gson.Gson;
 // import i5.las2peer.api.Context;
 // import i5.las2peer.api.logging.MonitoringEvent;
@@ -43,11 +54,17 @@ import services.socialBotManagerService.model.NLUKnowledge;
 import services.socialBotManagerService.model.ServiceFunction;
 import services.socialBotManagerService.model.ServiceFunctionAttribute;
 import services.socialBotManagerService.model.Trigger;
+import services.socialBotManagerService.repository.BotRepository;
+import services.socialBotManagerService.service.SocialBotManagerService;
 
 public class BotParser {
 	private static BotParser instance = null;
-	private static final String botPass = "actingAgent";
-	// private static Context l2pContext;
+
+	@Autowired
+	private SocialBotManagerService socialBotManagerService;
+	
+	@Autowired
+	private RestTemplate restTemplate;
 
 	protected BotParser() {
 	}
@@ -58,15 +75,7 @@ public class BotParser {
 		}
 		return instance;
 	}
-
-	// public static BotParser getInstance(Context context) {
-	// 	l2pContext = context;
-	// 	if (instance == null) {
-	// 		instance = new BotParser();
-	// 	}
-	// 	return instance;
-	// }
-// 
+ 
 	public void parseNodesAndEdges(BotConfiguration config,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
@@ -587,39 +596,11 @@ public class BotParser {
 			BotModelValue subVal = subElem.getValue();
 			if (subVal.getName().equals("Name")) {
 				String botName = subVal.getValue();
-				// BotAgent botAgent = null;
-				// try {
-				// 	try {
-				// 		botAgent = (BotAgent) Context.getCurrent()
-				// 				.fetchAgent(Context.getCurrent().getUserAgentIdentifierByLoginName(botName));
-				// 	} catch (AgentNotFoundException e) {
-				// 		// AgentOperationFailedException should be handled separately
-				// 		botAgent = BotAgent.createBotAgent(botPass);
-				// 		botAgent.unlock(botPass);
-				// 		botAgent.setLoginName(botName);
-				// 		System.out.println(botName);
-				// 		Context.getCurrent().storeAgent(botAgent);
-				// 	}
-				// 	botAgent.unlock(botPass);
-				// 	Context.getCurrent().registerReceiver(botAgent);
-				// } catch (AgentException | IllegalArgumentException | CryptoException e2) {
-				// 	// TODO Errorhandling
-				// 	System.out.println("Caught the error here");
-				// 	e2.printStackTrace();
-				// 	throw new IllegalArgumentException(e2);
-				// }
-				JSONObject monitoringMessage = new JSONObject();
-				monitoringMessage.put("botName", botName);
-				// monitoringMessage.put("agentId", botAgent.getIdentifier());
-				// runningAt = botAgent.getRunningAtNode();
-				// Context.getCurrent().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,
-						// monitoringMessage.toJSONString());
-				System.out.println("Bot " + botName + " registered.");
-
-				// config.addBot(botAgent.getIdentifier(), botAgent.getLoginName());
-				// b.setId(botAgent.getIdentifier());
-				// b.setName(botAgent.getLoginName());
-				// botAgents.put(botName, botAgent);
+				String botId = UUID.randomUUID().toString();
+				b.setId(botId);
+				b.setName(botName);
+				socialBotManagerService.createBot(b);
+				System.out.println("Bot " + botName + " registered with Id:" + botId + ".");
 			}
 		}
 		return b;
@@ -821,17 +802,16 @@ public class BotParser {
 
 			
 			if (s.getOnStart().containsKey(b.getId())){
-				MiniClient client = new MiniClient();
-				// client.setLogin(, password);
+				ResponseEntity<String> response = null;
+				String endpoint = "";
 				if(s.getActionType() == ActionType.SERVICE){
-					client.setConnectorEndpoint(b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath());
+					endpoint = b.getAddress()+"/" + s.getServiceName() + s.getFunctionPath();
 				} else {
-					client.setConnectorEndpoint(s.getServiceName() + s.getFunctionPath());
+					endpoint = s.getServiceName() + s.getFunctionPath();
 				}
-				HashMap<String, String> headers = new HashMap<String, String>();
-				client.setLogin("alice", "pwalice");
+				// HashMap<String, String> headers = new HashMap<String, String>();
 				JSONObject body = new JSONObject();
-				String botName = "";
+				// String botName = "";
 				body.put("botId", b.getId());
 				body.put("botName", b.getName());
 				for(ServiceFunctionAttribute a : s.getAttributes()){
@@ -842,8 +822,10 @@ public class BotParser {
 						body.put(a.getName(), a.getContent());
 					}
 				}
-				// ClientResponse result = client.sendRequest(s.getHttpMethod().toUpperCase(), "",
-				// 		body.toString(), s.getConsumes(), s.getProduces(), headers);
+
+				HttpEntity<String> entity = new HttpEntity<>(body.toString(), null);
+				response = restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+				System.out.println(response.getBody());
 			}
 		}
 		return jaf;
