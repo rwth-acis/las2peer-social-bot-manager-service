@@ -57,52 +57,6 @@ public class BotResourceController {
     @Autowired
     private SocialBotManagerService service;
 
-    // @Operation(tags = "restartBots", summary = "Restart all bots", description = "Restart all bots")
-    // @GetMapping(value = "/restart", produces = "application/json")
-    // public ResponseEntity<String> restartBots() {
-    //     // works only after service start
-    //     if (service.restarterBot == null) {
-    //         try {
-    //             try {
-    //                 // restarterBot = (BotAgent) Context.getCurrent().fetchAgent(
-    //                 //         Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
-    //                 // // if bot didn't exist before, no need to try to restart the previous bots, as
-    //                 // // the bot will have no way of accessing the envelope
-    //                 // restarterBot.unlock(restarterBotPWStatic);
-    //                 // Envelope env = null;
-    //                 HashMap<String, BotModel> models = null;
-    //                 try {
-    //                     // try to add project to project list (with service group agent)
-    //                     // env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
-
-    //                     // models = (HashMap<String, BotModel>) env.getContent();
-    //                     for (Entry<String, BotModel> entry : models.entrySet()) {
-    //                         init(entry.getValue());
-    //                     }
-
-
-    //                 } catch (Exception e) {
-    //                     e.printStackTrace();
-    //                 }
-
-    //             } catch (Exception e) {
-    //                 System.out.println("error: " + e.toString());
-    //                 // here, we assume that this is the first time the service is started
-    //                 // restarterBot = BotAgent.createBotAgent(restarterBotPWStatic);
-    //                 // restarterBot.unlock(restarterBotPWStatic);
-    //                 // restarterBot.setLoginName(restarterBotNameStatic);
-    //                 // Context.getCurrent().storeAgent(restarterBot);
-    //                 System.out.println("Restarter bot stored");
-    //             }
-    //             // restarterBot.unlock("123");
-    //             // Context.getCurrent().registerReceiver(restarterBot);
-    //         } catch (Exception e3) {
-    //             e3.printStackTrace();
-    //         }
-    //     }
-    //     return ResponseEntity.ok("Bots restarted");
-    // }
-
     @Operation(tags = "getBots", summary = "Get all bots", description = "Returns a list of all registered bots.")
     @GetMapping(value = "/getBots", produces = "application/json")
     public ResponseEntity<JSONObject> getBots() {
@@ -250,7 +204,7 @@ public class BotResourceController {
      * @return Returns an HTTP response with plain text string content derived from
      *         the path input param.
      */
-    @Operation(tags = "activateBot", summary = "Activate a bot", description = "Has the capability to join the digital space to get rights.")
+    @Operation(tags = "joinBot", summary = "Activate a bot", description = "Has the capability to join the digital space to get rights.")
 	@PostMapping(value = "/{botName}", consumes = "application/json", produces = "text/plain")
 	public ResponseEntity<String> join(String body, @PathVariable("botName") String botName) {
         String returnString = "";
