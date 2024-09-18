@@ -1,23 +1,37 @@
 package services.socialBotManagerService.model;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.websocket.DeploymentException;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import net.minidev.json.JSONObject;
 import services.socialBotManagerService.chat.AuthTokenException;
 import services.socialBotManagerService.chat.ChatService;
 import services.socialBotManagerService.nlu.RasaNlu;
 import services.socialBotManagerService.parser.ParseBotException;
 
+@Entity
+@Table(name = "bot")
 public class Bot {
 	private String name;
+	// create uuid for bot id
+	@Id
 	private String id;
 	private String version = "1.0.0";
 	private String service;
+	private Date created_at;
+	private Date updated_at;
+
+	@Field("active")
 	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
@@ -25,7 +39,7 @@ public class Bot {
 
 	private HashMap<String, Messenger> messengers;
 
-	private String botAgent;
+	// private String botAgent;
 
 	private HashMap<String, RasaNlu> rasaServers;
 
@@ -198,14 +212,6 @@ public class Bot {
 		}
 	}
 
-	public String getBotAgent() {
-		return botAgent;
-	}
-
-	public void setBotAgent(String botAgent) {
-		this.botAgent = botAgent;
-	}
-
 	public HashMap<String, JSONObject> getServiceInformation() {
 		return serviceInformation;
 	}
@@ -235,5 +241,21 @@ public class Bot {
 
 	public void addRoutine(String name, BotRoutine routine) {
 		this.routines.put(name, routine);
+	}
+
+	public void setCreated_at(Date created_at) {
+		this.created_at = created_at;
+	}
+
+	public Date getCreated_at() {
+		return created_at;
+	}
+
+	public void setUpdated_at(Date updated_at) {
+		this.updated_at = updated_at;
+	}
+
+	public Date getUpdated_at() {
+		return updated_at;
 	}
 }
