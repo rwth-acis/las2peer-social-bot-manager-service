@@ -2,19 +2,12 @@ package services.socialBotManagerService.nlu;
 
 import java.util.HashMap;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-// import org.glassfish.jersey.client.ClientResponse;
-// import org.springframework.http.HttpRequest;
-
-// import i5.las2peer.connectors.webConnector.client.ClientResponse;
-// import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 
 public class TrainingHelper implements Runnable {

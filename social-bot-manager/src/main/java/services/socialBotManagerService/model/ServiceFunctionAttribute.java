@@ -18,7 +18,7 @@ public class ServiceFunctionAttribute {
 	private String contentURL;
 	private String contentType;
     // this attribute will dissapear as everything will be done with a single content attribute
-    private String nluQuizContent;
+    // private String nluQuizContent;
 
 	public ServiceFunctionAttribute() {
 		this.childAttributes = new ArrayList<ServiceFunctionAttribute>();

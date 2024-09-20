@@ -14,30 +14,18 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import javax.websocket.DeploymentException;
 
-import org.apache.tools.ant.util.UUEncoder;
-import org.bouncycastle.asn1.ocsp.ResponderID;
-import org.hibernate.dialect.SybaseASEDialect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
-// import i5.las2peer.api.Context;
-// import i5.las2peer.api.logging.MonitoringEvent;
-// import i5.las2peer.api.security.AgentException;
-// import i5.las2peer.api.security.AgentNotFoundException;
-// import i5.las2peer.connectors.webConnector.client.ClientResponse;
-// import i5.las2peer.connectors.webConnector.client.MiniClient;
-// import i5.las2peer.security.BotAgent;
-// import i5.las2peer.tools.CryptoException;
+
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 import services.socialBotManagerService.chat.AuthTokenException;
-import services.socialBotManagerService.database.SQLDatabase;
 import services.socialBotManagerService.model.ActionType;
 import services.socialBotManagerService.model.Bot;
 import services.socialBotManagerService.model.BotConfiguration;
@@ -54,17 +42,13 @@ import services.socialBotManagerService.model.NLUKnowledge;
 import services.socialBotManagerService.model.ServiceFunction;
 import services.socialBotManagerService.model.ServiceFunctionAttribute;
 import services.socialBotManagerService.model.Trigger;
-import services.socialBotManagerService.repository.BotRepository;
 import services.socialBotManagerService.service.SocialBotManagerService;
 
 public class BotParser {
 	private static BotParser instance = null;
 
 	@Autowired
-	private SocialBotManagerService socialBotManagerService;
-	
-	@Autowired
-	private RestTemplate restTemplate;
+	private SocialBotManagerService sbfService;
 
 	protected BotParser() {
 	}
@@ -77,7 +61,7 @@ public class BotParser {
 	}
  
 	public void parseNodesAndEdges(BotConfiguration config,
-			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, SQLDatabase database, String address)
+			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
 		HashMap<String, Messenger> messengers = new HashMap<String, Messenger>();
@@ -115,7 +99,7 @@ public class BotParser {
 				}
 				// Messenger
 			}else if (nodeType.equals("Messenger")) {
-				Messenger m = addMessenger(entry.getKey(), elem, config, database);
+				Messenger m = addMessenger(entry.getKey(), elem, config);
 				messengers.put(entry.getKey(), m);
 			} else if (nodeType.equals("Incoming Message")) {
 				IncomingMessage m = addIncomingMessage(entry.getKey(), elem, config);
@@ -230,7 +214,7 @@ public class BotParser {
 					if (bsfListItem != null) {
 						bot.addBotServiceFunction(bsfListItem.getId(), bsfListItem);
 						bsfListItem.addBot(bot);
-						bsfListItem.setOnStart(bot.getId());
+						bsfListItem.setOnStart(bot.getId().toString());
 				} 
 
 					
@@ -420,7 +404,7 @@ public class BotParser {
 		// Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	}
 
-	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config, SQLDatabase database)
+	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException{
 		String messengerName = null;
 		String messengerType = null;
@@ -450,7 +434,7 @@ public class BotParser {
 			throw new ParseBotException("Messenger is missing \"Authentication Token\" attribute");
 		}
 		
-		Messenger newMessenger = new Messenger(messengerName, messengerType, token, database);
+		Messenger newMessenger = new Messenger(messengerName, messengerType, token);
 		return newMessenger;
 
 	}
@@ -599,7 +583,7 @@ public class BotParser {
 				String botId = UUID.randomUUID().toString();
 				b.setId(botId);
 				b.setName(botName);
-				socialBotManagerService.createBot(b);
+				sbfService.createBot(b);
 				System.out.println("Bot " + botName + " registered with Id:" + botId + ".");
 			}
 		}
@@ -824,7 +808,7 @@ public class BotParser {
 				}
 
 				HttpEntity<String> entity = new HttpEntity<>(body.toString(), null);
-				response = restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+				response = sbfService.restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
 				System.out.println(response.getBody());
 			}
 		}
