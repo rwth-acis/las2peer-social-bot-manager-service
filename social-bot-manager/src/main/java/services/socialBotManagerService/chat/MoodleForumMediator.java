@@ -1,22 +1,17 @@
 package services.socialBotManagerService.chat;
 
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 import services.socialBotManagerService.model.IncomingMessage;
 
 import org.json.JSONObject;
 import org.json.JSONArray;
 
 import java.io.File;
-import java.io.IOError;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MoodleForumMediator extends ChatMediator {
 	private final static String domainName = "https://moodle.tech4comp.dbis.rwth-aachen.de";
