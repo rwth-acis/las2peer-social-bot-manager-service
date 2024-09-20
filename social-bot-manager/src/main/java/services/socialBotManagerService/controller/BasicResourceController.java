@@ -1,22 +1,5 @@
 package services.socialBotManagerService.controller;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import java.util.Base64;
-import java.util.List;
-
-import javax.websocket.server.PathParam;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,42 +7,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-
-// import com.mongodb.client.gridfs.GridFSBucket;
-// import com.mongodb.client.gridfs.GridFSBuckets;
-// import com.mongodb.client.gridfs.model.GridFSFile;
-// import com.mongodb.client.model.Filters;
-
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
-import org.bson.BsonObjectId;
-import org.bson.types.ObjectId;
 
 import services.socialBotManagerService.chat.ChatMediator;
-import services.socialBotManagerService.chat.RocketChatMediator;
-import services.socialBotManagerService.chat.SlackChatMediator;
+// import services.socialBotManagerService.chat.RocketChatMediator;
+// import services.socialBotManagerService.chat.SlackChatMediator;
 import services.socialBotManagerService.nlu.TrainingHelper;
 import services.socialBotManagerService.service.SocialBotManagerService;
-import org.springframework.web.bind.annotation.RequestBody;
-
-
-// import javax.ws.rs.core.MediaType;
-
-// import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-// import org.glassfish.jersey.media.multipart.FormDataParam;
 
 
 @Tag(name="SocialBotManagerService", description = "A service for managing social bots.")
@@ -143,101 +105,102 @@ public class BasicResourceController {
 			return ResponseEntity.ok(ex.toString());
 		}
 	}
-	@Operation(summary = "Trigger slack chat message to slack user with given email", description = "Trigger slack chat message to slack user with given email")
-	@PostMapping(value = "/sendMessageToSlack/{token}/{email}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> sendMessageToSlack(@PathVariable("token") String token, @PathVariable("email") String email, String input) {
-		// This function is a proof of concept. It is not the best in terms of run time,
-		// but optimization would require bigger changes
-		// in the code structure. To make it faster, the channel could be saved in a db
-		// once at first access, so the expensive API do not have to be called
-		// everytime.
-		try {
-			SlackChatMediator chatMediator = new SlackChatMediator(token);
-			System.out.println("slack mediator initialized");
 
-			// get user id from slack
-			try {
-				// slack api call to get email for user id
-				JSONParser p = new JSONParser();
-				JSONObject bodyInput = (JSONObject) p.parse(input);
-				String msgtext = (String) bodyInput.get("msg");
-				System.out.println("Using token " + token);
-				System.out.println("Using email " + email);
+	// @Operation(summary = "Trigger slack chat message to slack user with given email", description = "Trigger slack chat message to slack user with given email")
+	// @PostMapping(value = "/sendMessageToSlack/{token}/{email}", consumes = "application/json", produces = "text/plain")
+	// public ResponseEntity<String> sendMessageToSlack(@PathVariable("token") String token, @PathVariable("email") String email, String input) {
+	// 	// This function is a proof of concept. It is not the best in terms of run time,
+	// 	// but optimization would require bigger changes
+	// 	// in the code structure. To make it faster, the channel could be saved in a db
+	// 	// once at first access, so the expensive API do not have to be called
+	// 	// everytime.
+	// 	try {
+	// 		SlackChatMediator chatMediator = new SlackChatMediator(token);
+	// 		System.out.println("slack mediator initialized");
 
-				String channel = chatMediator.getChannelByEmail(email);
-				chatMediator.sendMessageToChannel(channel, msgtext, "text");
+	// 		// get user id from slack
+	// 		try {
+	// 			// slack api call to get email for user id
+	// 			JSONParser p = new JSONParser();
+	// 			JSONObject bodyInput = (JSONObject) p.parse(input);
+	// 			String msgtext = (String) bodyInput.get("msg");
+	// 			System.out.println("Using token " + token);
+	// 			System.out.println("Using email " + email);
 
-			} catch (Exception e) {
-				e.printStackTrace();
-				return ResponseEntity.ok("Sending message failed.");
-			}
+	// 			String channel = chatMediator.getChannelByEmail(email);
+	// 			chatMediator.sendMessageToChannel(channel, msgtext, "text");
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	// 		} catch (Exception e) {
+	// 			e.printStackTrace();
+	// 			return ResponseEntity.ok("Sending message failed.");
+	// 		}
 
-		return ResponseEntity.ok("");
-	}
+	// 	} catch (Exception e) {
+	// 		e.printStackTrace();
+	// 	}
+
+	// 	return ResponseEntity.ok("");
+	// }
 	
-	@Operation(summary = "Trigger rocket chat message to given rocket chat channel", description = "Trigger rocket chat message to given rocket chat channel")
-	@PostMapping(value = "/sendMessageToRocketChat/{token}/{email}/{channel}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> sendMessageToRocketChat(@PathVariable("token") String token, @PathVariable("email") String email, @PathVariable("channel") String channel, String input) {
-		try {
-			RocketChatMediator chatMediator = new RocketChatMediator(token, service.database);
-			System.out.println("rocket chat mediator initialized");
+	// @Operation(summary = "Trigger rocket chat message to given rocket chat channel", description = "Trigger rocket chat message to given rocket chat channel")
+	// @PostMapping(value = "/sendMessageToRocketChat/{token}/{email}/{channel}", consumes = "application/json", produces = "text/plain")
+	// public ResponseEntity<String> sendMessageToRocketChat(@PathVariable("token") String token, @PathVariable("email") String email, @PathVariable("channel") String channel, String input) {
+	// 	try {
+	// 		RocketChatMediator chatMediator = new RocketChatMediator(token, service.database);
+	// 		System.out.println("rocket chat mediator initialized");
 
-			try {
-				JSONParser p = new JSONParser(0);
-				JSONObject bodyInput = (JSONObject) p.parse(input);
-				String msgtext = (String) bodyInput.get("msg");
-				chatMediator.sendMessageToChannel(channel, msgtext, "text");
-			} catch (Exception e) {
-				e.printStackTrace();
-				return ResponseEntity.ok("Sending message failed.");
-			}
+	// 		try {
+	// 			JSONParser p = new JSONParser(0);
+	// 			JSONObject bodyInput = (JSONObject) p.parse(input);
+	// 			String msgtext = (String) bodyInput.get("msg");
+	// 			chatMediator.sendMessageToChannel(channel, msgtext, "text");
+	// 		} catch (Exception e) {
+	// 			e.printStackTrace();
+	// 			return ResponseEntity.ok("Sending message failed.");
+	// 		}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	// 	} catch (Exception e) {
+	// 		e.printStackTrace();
+	// 	}
 
-		return ResponseEntity.ok("");
-	}
+	// 	return ResponseEntity.ok("");
+	// }
 
-	@Operation(summary = "edit chat message", description = "edit chat message")
-	@PostMapping(value = "/editMessage/{token}/{email}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> editMessage(@PathVariable("token") String token, @PathVariable("email") String email, String input) {
-		System.out.println("received api call to edit message");
-		try {
+	// @Operation(summary = "edit chat message", description = "edit chat message")
+	// @PostMapping(value = "/editMessage/{token}/{email}", consumes = "application/json", produces = "text/plain")
+	// public ResponseEntity<String> editMessage(@PathVariable("token") String token, @PathVariable("email") String email, String input) {
+	// 	System.out.println("received api call to edit message");
+	// 	try {
 
-			ChatMediator chatMediator = null;
-			String channel = "";
-			if (token.startsWith("xoxb")) {
-				chatMediator = (SlackChatMediator) new SlackChatMediator(token);
-				channel = chatMediator.getChannelByEmail(email);
-			} else {
-				chatMediator = (RocketChatMediator) new RocketChatMediator(token, service.database);
-				channel = email;
-			}
+	// 		ChatMediator chatMediator = null;
+	// 		String channel = "";
+	// 		if (token.startsWith("xoxb")) {
+	// 			chatMediator = (SlackChatMediator) new SlackChatMediator(token);
+	// 			channel = chatMediator.getChannelByEmail(email);
+	// 		} else {
+	// 			chatMediator = (RocketChatMediator) new RocketChatMediator(token, service.database);
+	// 			channel = email;
+	// 		}
 
-			try {
-				JSONParser p = new JSONParser(0);
-				JSONObject bodyInput = (JSONObject) p.parse(input);
-				String ts = (String) bodyInput.get("ts");
-				String blocks = (String) bodyInput.get("blocks");
-				System.out.println("Using token " + token + " ts " + ts + " blocks " + blocks);
+	// 		try {
+	// 			JSONParser p = new JSONParser(0);
+	// 			JSONObject bodyInput = (JSONObject) p.parse(input);
+	// 			String ts = (String) bodyInput.get("ts");
+	// 			String blocks = (String) bodyInput.get("blocks");
+	// 			System.out.println("Using token " + token + " ts " + ts + " blocks " + blocks);
 
-				chatMediator.editMessage(channel, ts, blocks, null);
+	// 			chatMediator.editMessage(channel, ts, blocks, null);
 
-			} catch (Exception e) {
-				e.printStackTrace();
-				return ResponseEntity.ok("Editing chat failed.");
-			}
+	// 		} catch (Exception e) {
+	// 			e.printStackTrace();
+	// 			return ResponseEntity.ok("Editing chat failed.");
+	// 		}
 
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+	// 	} catch (Exception ex) {
+	// 		ex.printStackTrace();
+	// 	}
 
-		return ResponseEntity.ok("");
-	}
+	// 	return ResponseEntity.ok("");
+	// }
 
 }

@@ -26,19 +26,16 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.types.ObjectId;
 
-// import org.apache.commons.io.FileUtils;
-// import org.apache.tika.Tika;
-// import org.bson.BsonObjectId;
-// import org.bson.UuidRepresentation;
-// import org.bson.codecs.configuration.CodecRegistry;
-// import org.bson.codecs.pojo.PojoCodecProvider;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
-import org.java_websocket.util.Base64.InputStream;
+import java.io.InputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -58,30 +55,18 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
-// import org.springframework.http.MediaType;
-// import org.springframework.http.ResponseEntity;
-// import org.springframework.web.bind.annotation.PathVariable;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.RequestMapping;
-// import org.springframework.web.bind.annotation.RestController;
-
-// import com.google.gson.Gson;
-// import com.mongodb.ConnectionString;
-// import com.mongodb.MongoClientSettings;
-// import com.mongodb.MongoException;
-// import com.mongodb.client.MongoClient;
-// import com.mongodb.client.MongoClients;
-// import com.mongodb.client.MongoDatabase;
-// import com.mongodb.client.gridfs.GridFSBucket;
-// import com.mongodb.client.gridfs.GridFSBuckets;
-// import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.model.Filters;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
+
 import services.socialBotManagerService.chat.ChatMediator;
 import services.socialBotManagerService.chat.ChatMessage;
 import services.socialBotManagerService.chat.RESTfulChatMediator;
@@ -124,27 +109,10 @@ public class RestfulChatResourceController {
 	@PostMapping(value = "/{bot}/{organization}/{channel}", consumes = "application/json", produces = "application/json")
 	public ResponseEntity<String> handleRESTfulChat(@PathVariable("bot") String bot, @PathVariable("organization") String organization,
 				@PathVariable("channel") String channel,
-				String input) {
+				String input, HttpServletRequest request) {
+		String token = request.getHeader("Authorization");
 		RESTfulChatResponse answerMsg = null;
 		String email = "";
-		// try {
-		// 	UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-		// 	email = userAgent.getEmail();
-		// 	emailToChannel.put(email, organization + "-" + channel);
-		// } catch (Exception e) {
-		// 	e.printStackTrace();
-		// 	for (String mail : emailToChannel.keySet()) {
-		// 		if (emailToChannel.get(mail).equals(organization + "-" + channel)) {
-		// 			email = mail;
-		// 			System.out.println("Get the email from channel:" + email);
-		// 			break;
-		// 		}
-		// 	}
-
-		// 	if (email.isBlank()){
-		// 		e.printStackTrace();
-		// 	}
-		// }
 
 		try {
 			Bot b = null;
@@ -200,7 +168,7 @@ public class RestfulChatResourceController {
 								System.out.println("Async value:"+async);
 								// BotAgent botAgent = getBotAgents().get(b.getName());
 								ServiceFunction sf = new ServiceFunction();
-								sbfService.prepareRequestParameters(config, messageInfo, functionPath, body,
+								sbfService.prepareRequestParameters(SocialBotManagerService.config, bot, messageInfo, functionPath, body,
 										sf);
 								if (body.containsKey("functionPath")) {
 									functionPath = body.get("functionPath").toString();
@@ -209,7 +177,7 @@ public class RestfulChatResourceController {
 									body.put("organization", organization);
 									sf.setMessengerName(messageInfo.getMessengerName());
 
-									performTrigger(config, sf, functionPath, functionPath, body);
+									performTrigger(SocialBotManagerService.config, bot, sf, functionPath, functionPath, body, token);
 
 									RESTfulChatResponse oldAnswerMsg = answerMsg;
 
@@ -258,16 +226,20 @@ public class RestfulChatResourceController {
 
 	}
 
-	private void performTrigger(BotConfiguration botConfig, ServiceFunction sf, String functionPath, String triggerUID, JSONObject triggeredBody) {
+	private void performTrigger(BotConfiguration botConfig, String botname, ServiceFunction sf, String functionPath, String triggerUID, JSONObject triggeredBody, String token) {
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", token);
+			HttpEntity<String> entity = new HttpEntity<>(headers);
+
 			String userId = triggeredBody.get("user").toString();
-			Bot bot = botConfig.getBots().get(botAgent.getIdentifier());
+			Bot bot = botConfig.getBots().get(botname);
 			String messengerID = sf.getMessengerName();
 			String email = triggeredBody.get("email").toString();
 			String msg = triggeredBody.get("msg").toString();
 			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 			Messenger m = bot.getMessenger(messengerID);
-			HashMap<String, String> headers = new HashMap<String, String>();
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			try {
 				File f = null;
@@ -308,7 +280,6 @@ public class RestfulChatResourceController {
 				JSONObject form = (JSONObject) triggeredBody.get("form");
 				// if asynchronous is true, add callback url to the formdata for the botaction
 				if(m.getAsync(channel)){
-					// SocialBotManagerService sbfservice = (SocialBotManagerService) Context.get().getService();
 					String addr = sbfService.webconnectorUrl + "/sbfmanager/RESTfulChat/" + bot.getName() + "/" + triggeredBody.get("organization") + "/" + triggeredBody.get("channel").toString().split("-")[1];
 					form.put("sbfmUrl", addr);
 					triggeredBody.put("form", form);
@@ -361,15 +332,15 @@ public class RestfulChatResourceController {
 
 				ResponseEntity<String> response = null;
 				if (sf.getHttpMethod().equals("get")) {
-					response = target.request().get();
+					response = sbfService.restTemplate.exchange(target.getUri(), HttpMethod.GET, entity, String.class);
 				} else {
-					response = target.request()
-							.post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
-					System.out.println("Response Code:" + response.getStatus());
-					System.out.println("Response Entitiy:" + response.getEntity());
+					HttpEntity<FormDataMultiPart> entityMp = new HttpEntity<FormDataMultiPart>(mp, headers);
+					response = sbfService.restTemplate.exchange(target.getUri(), HttpMethod.POST, entityMp, String.class);
+					System.out.println("Response Code:" + response.getStatusCode());
+					System.out.println("Response Entitiy:" + response.getBody().toString());
 				}
 
-				String test = response.readEntity(String.class);
+				String test = response.getBody().toString();
 				System.out.println("Response Text:" + test);
 				mp.close();
 				try {
@@ -423,7 +394,8 @@ public class RestfulChatResourceController {
 	public ResponseEntity<String> handleRESTfulChatFile(@PathVariable("bot") String bot,
 				@PathVariable("organization") String organization, @PathVariable("channel") String channel,
 				@FormDataParam("file") InputStream uploadedInputStream,
-				@FormDataParam("file") FormDataContentDisposition fileDetail) {
+				@FormDataParam("file") FormDataContentDisposition fileDetail, HttpServletRequest request) {
+		String token = request.getHeader("Authorization");
 		RESTfulChatResponse answerMsg = new RESTfulChatResponse("");
 		try {
 			Bot b = null;
@@ -456,31 +428,12 @@ public class RestfulChatResourceController {
 						String email = "";
 						for (MessageInfo messageInfo : messageInfos) {
 							try {
-							// 	try {
-							// 		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-							// 		email = userAgent.getEmail();
-							// 		emailToChannel.put(email, organization + "-" + channel);
-							// 	} catch (Exception e) {
-							// 		e.printStackTrace();
-							// 		for (String mail : emailToChannel.keySet()) {
-							// 			if (emailToChannel.get(mail).equals(organization + "-" + channel)) {
-							// 				email = mail;
-							// 				break;
-							// 			}
-							// 		}
-							// 	}
-								/*
-									* ClientResponse result = client.sendRequest("POST",
-									* "SBFManager/bots/" + b.getName() + "/trigger/intent",
-									* gson.toJson(messageInfo),
-									* MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
-									*/
 
 								String functionPath = "";
 								JSONObject body = new JSONObject();
 								// BotAgent botAgent = getBotAgents().get(b.getName());
 								ServiceFunction sf = new ServiceFunction();
-								sbfService.prepareRequestParameters(config, messageInfo, functionPath,
+								sbfService.prepareRequestParameters(SocialBotManagerService.config, bot, messageInfo, functionPath,
 										body,
 										sf);
 								if (body.containsKey("functionPath")) {
@@ -489,7 +442,7 @@ public class RestfulChatResourceController {
 									body.put("email", email);
 									body.put("organization", organization);
 									sf.setMessengerName(messageInfo.getMessengerName());
-									performTrigger(config, sf, functionPath, functionPath, body);
+									performTrigger(SocialBotManagerService.config, bot, sf, functionPath, functionPath, body, token);
 									RESTfulChatResponse oldAnswerMsg = answerMsg;
 									answerMsg = chatMediator.getMessageForChannel(orgChannel);
 									body.remove("fileBody");
@@ -514,28 +467,6 @@ public class RestfulChatResourceController {
 						}
 
 						found = true;
-
-						// start to perform bot action in case it is triggered
-
-						/*
-							* MiniClient client = new MiniClient();
-							* System.out.println("Addr: "+addr);
-							* client.setConnectorEndpoint(addr);
-							* 
-							* HashMap<String, String> headers = new HashMap<String, String>();
-							* for (MessageInfo mInfo : messageInfos) {
-							* try {
-							* Gson gson = new Gson();
-							* ClientResponse result = client.sendRequest("POST",
-							* "SBFManager/bots/" + mInfo.getBotName() + "/trigger/intent",
-							* gson.toJson(mInfo),
-							* MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
-							* System.out.println(result.getResponse());
-							* } catch (Exception e) {
-							* e.printStackTrace();
-							* }
-							* }
-							*/
 					}
 				}
 				if (!found) {
@@ -560,89 +491,67 @@ public class RestfulChatResourceController {
 		RESTfulChatResponse answerMsg = null;
 		try {
 			String path = bot + organization + channel + "-" + fileId;
-
-			CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
-			CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
-					pojoCodecRegistry);
-			MongoClientSettings settings = MongoClientSettings.builder()
-					.uuidRepresentation(UuidRepresentation.STANDARD)
-					.applyConnectionString(new ConnectionString(this.service.mongoUri))
-					.codecRegistry(codecRegistry)
-					.build();
-
-			// Create a new client and connect to the server
-			MongoClient mongoClient = MongoClients.create(settings);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			try {
-				MongoDatabase database = mongoClient.getDatabase(this.service.mongoDB);
-				GridFSBucket gridFSBucket = GridFSBuckets.create(database, "files");
+				GridFSBucket gridFSBucket = GridFSBuckets.create(sbfService.getMongoDatabase(), "files");
 				gridFSBucket.find(Filters.empty());
 				ObjectId oId = new ObjectId(fileId);
 				BsonObjectId bId = new BsonObjectId(oId);
 				GridFSFile file = gridFSBucket.find(Filters.eq(bId)).first();
 				if (file == null) {
-					return Response.status(Response.Status.NOT_FOUND)
-							.entity("File with ID " + fileId + " not found").build();
+					return ResponseEntity.notFound().build();
 				}
-				String extension = "";
-				if (file.getFilename().contains("json")) {
-					extension = ".json";
-				} else if (file.getFilename().contains("pdf")) {
-					extension = ".pdf";
-				}
-				Response.ResponseBuilder response = Response.ok(file.getFilename() + extension);
-				response.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"");
-				if (file.getFilename().contains("json")) {
-					response.header("Content-Type", "application/json");
-				} else if (file.getFilename().contains("pdf")) {
-					response.header("Content-Type", "application/pdf");
-				}
-				// Download the file to a ByteArrayOutputStream
-				String contentType = "";
-				if (file.getFilename().contains("json")) {
-					contentType = "application/json";
-				} else if (file.getFilename().contains("pdf")) {
-					contentType = "application/pdf";
-				}
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+				String contentType = determineContentType(file.getFilename());
+				String filename = file.getFilename();
+
+
 				gridFSBucket.downloadToStream(file.getObjectId(), baos);
-				return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM)
-						.header("Content-Disposition", "attachment; filename=\"" + file.getFilename() + "\"")
-						.build();
+        		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
+                	.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                	.body(baos.toByteArray());
 			} catch (MongoException me) {
 				System.err.println(me);
-			} finally {
-				// Close the MongoDB client
-				mongoClient.close();
 			}
 
 			File file = new File(path);
 			if (!file.exists()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found.");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 			}
+
 			String contentType = "";
 			if (path.contains("json")) {
 				contentType = "application/json";
 			} else if (path.contains("pdf")) {
 				contentType = "application/pdf";
 			}
-			return ResponseEntity.ok().body(file, MediaType.APPLICATION_OCTET_STREAM)
-					.header("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
-					.header("Content-Type", contentType)
-					.build();
+
+			return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+			.body(baos.toByteArray());
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Something went wrong.");
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
 
+	private String determineContentType(String filename) {
+		if (filename.toLowerCase().endsWith(".json")) {
+			return "application/json";
+		} else if (filename.toLowerCase().endsWith(".pdf")) {
+			return "application/pdf";
+		}
+		// Default to octet-stream if the type is unknown
+		return "application/octet-stream";
+	}
 	@Operation(summary = "Downloads a file from the RESTful chat bot and channel", description = "Provides a service to download a file from the specified bot and channel through a RESTful API endpoint")
 	@GetMapping(value = "/{bot}/{organization}/{channel}/{label1}/{label2}/files", produces = "application/json")
 	public ResponseEntity<JSONObject> getRESTfulChatFileIds(@PathVariable("bot") String bot,
 			@PathVariable("organization") String organization,
-			@PathVariable("channel") String channel) {
+			@PathVariable("channel") String channel, HttpServletRequest request) {
 		if (userFileIds.containsKey(organization + "-" + channel)) {
 			JSONObject r = userFileIds.get(organization + "-" + channel);
 			userFileIds.remove(organization + "-" + channel);
@@ -651,10 +560,10 @@ public class RestfulChatResourceController {
 			}
 			JSONObject input = new JSONObject();
 			input.put("message", "!files");
-			ResponseEntity<String> response = handleRESTfulChat(bot, organization, channel, input.toString());
+			ResponseEntity<String> response = handleRESTfulChat(bot, organization, channel, input.toString(), request);
 			JSONParser p = new JSONParser(0);
 			try {
-				JSONObject answer = (JSONObject) p.parse(response.getEntity().toString());
+				JSONObject answer = (JSONObject) p.parse(response.getBody());
 				answer.put("files", r);
 				return ResponseEntity.ok().body(answer);
 			} catch (Exception e) {
@@ -718,7 +627,7 @@ public class RestfulChatResourceController {
 	@GetMapping(value = "/{bot}/{organization}/{channel}/AsyncMessage", produces = "text/plain")
 	public ResponseEntity<JSONObject> getRESTfulChatBiwibot(@PathVariable("bot") String bot,
 				@PathVariable("organization") String organization,
-				@PathVariable("channel") String channel) {
+				@PathVariable("channel") String channel, HttpServletRequest request) {
 		System.out.println("Called GET AsyncMessage function");
 		JSONObject errRes = new JSONObject();
 		String s = "Leider konnte deine Nachricht nicht verarbeitet werden. Bitte versuche es erneut.";
@@ -750,10 +659,10 @@ public class RestfulChatResourceController {
 			if (ch.containsKey(key) && !ch.get(key).toString().startsWith("Bitte warte")) {
 				JSONObject input = new JSONObject();
 				input.put("message", "!default");
-				ResponseEntity<String> responseService = handleRESTfulChat(bot, organization, channel, input.toString());
+				ResponseEntity<String> responseService = handleRESTfulChat(bot, organization, channel, input.toString(), request);
 				JSONParser p = new JSONParser();
 				try {
-					JSONObject answer = (JSONObject) p.parse(responseService.getEntity().toString());
+					JSONObject answer = (JSONObject) p.parse(responseService.getBody());
 					answer.put(key, answer.get("message"));
 					answer.put("asynchron", false);
 					userMessage.remove(orgaChannel);
@@ -778,7 +687,7 @@ public class RestfulChatResourceController {
 	public ResponseEntity<String> updateRESTfulChatResponse(@PathVariable("bot") String bot,
 			@PathVariable("organization") String organization,
 			@PathVariable("channel") String channel, 
-			String response) {
+			String response, HttpServletRequest request) throws ParseException {
 		String orgaChannel = organization + "-" + channel;
 		Messenger messenger = channelToMessenger.get(orgaChannel);
 		System.out.println("orgaChannel: " + orgaChannel);
@@ -794,7 +703,7 @@ public class RestfulChatResourceController {
 		if (o.get(key).equals("!exit")) {
 			input.put("message", "!exit");
 			messenger.addVariable(orgaChannel, "closeContext", "true");
-			handleRESTfulChat(bot, organization, channel, input.toString());
+			handleRESTfulChat(bot, organization, channel, input.toString(), request);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ack");
 		}
 

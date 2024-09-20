@@ -7,10 +7,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -20,23 +16,24 @@ import java.util.Random;
 import java.util.Vector;
 import javax.websocket.DeploymentException;
 
-// import org.jvnet.hk2.internal.SystemDescriptor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import net.minidev.json.JSONObject;
 import services.socialBotManagerService.chat.*;
 import services.socialBotManagerService.chat.github.GitHubAppHelper;
 import services.socialBotManagerService.chat.github.GitHubIssueMediator;
 import services.socialBotManagerService.chat.github.GitHubPRMediator;
-import services.socialBotManagerService.database.SQLDatabase;
 import services.socialBotManagerService.nlu.Entity;
 import services.socialBotManagerService.nlu.Intent;
-import services.socialBotManagerService.nlu.RasaNlu;
 import services.socialBotManagerService.parser.ParseBotException;
 import services.socialBotManagerService.service.SocialBotManagerService;
 
 import java.util.UUID;
 
 public class Messenger {
+	@Autowired
+	private SocialBotManagerService sbfService;
+
 	private String name;
 
 	// URL of the social bot manager service (used for setting up the webhook)
@@ -121,30 +118,30 @@ public class Messenger {
 
 	private Random random;
 
-	private SQLDatabase db;
+	// private SQLDatabase db;
 
-	public Messenger(String id, String chatService, String token, SQLDatabase database)
+	public Messenger(String id, String chatService, String token)
 			throws IOException, DeploymentException, ParseBotException, AuthTokenException {
 		// this.l2pContext = l2pContext;
 
 		// this.rasa = new RasaNlu(rasaUrl);
 		// this.rasaAssessment = new RasaNlu(rasaAssessmentUrl);
-		this.db = database;
+		// this.db = database;
 		// Chat Mediator
 		this.chatService = ChatService.fromString(chatService);
 		switch (this.chatService) {
-			case SLACK:
-				this.chatMediator = new SlackChatMediator(token);
-				break;
-			case TELEGRAM:
-				this.chatMediator = new TelegramChatMediator(token);
-				String username = ((TelegramChatMediator) this.chatMediator).getBotName();
-				if (username != null)
-					this.name = username;
-				break;
-			case ROCKET_CHAT:
-				this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
-				break;
+			// case SLACK:
+			// 	this.chatMediator = new SlackChatMediator(token);
+			// 	break;
+			// case TELEGRAM:
+			// 	this.chatMediator = new TelegramChatMediator(token);
+			// 	String username = ((TelegramChatMediator) this.chatMediator).getBotName();
+			// 	if (username != null)
+			// 		this.name = username;
+			// 	break;
+			// case ROCKET_CHAT:
+			// 	this.chatMediator = new RocketChatMediator(token, database, new RasaNlu("rasaUrl"));
+			// 	break;
 			case MOODLE_CHAT:
 				this.chatMediator = new MoodleChatMediator(token);
 				break;
@@ -998,8 +995,8 @@ public class Messenger {
 
 	public void setUrl(String Url) throws AuthTokenException {
 		this.url = Url;
-		if (this.chatMediator instanceof TelegramChatMediator) {
-		}
+		// if (this.chatMediator instanceof TelegramChatMediator) {
+		// }
 	}
 
 	public void close() {
@@ -1008,44 +1005,13 @@ public class Messenger {
 
 	public String getEntityValue(String channel, String entityName) {
 		String val = "";
-		PreparedStatement stmt = null;
-		Connection conn = null;
-		ResultSet rs = null;
 		try {
 
-			conn = db.getDataSource().getConnection();
-			stmt = conn.prepareStatement("SELECT value FROM attributes WHERE `channel`=? AND `key`=? ORDER BY id DESC");
-			stmt.setString(1, channel);
-			stmt.setString(2, entityName);
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				val = rs.getString("value");
-				if (val == null) {
-					val = "";
-				}
+			val = sbfService.findValueByBot(channel, entityName);
+			if (val == null) {
+				val = "";
 			}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		try {
-			if (rs != null)
-				rs.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		;
-		try {
-			if (stmt != null)
-				stmt.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		;
-		try {
-			if (conn != null)
-				conn.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1057,7 +1023,7 @@ public class Messenger {
 	private void safeEntities(ChatMessage msg, Bot bot, Intent intent) {
 		String user = msg.getUser();
 		String channel = msg.getChannel();
-		String b = bot.getId();
+		// String b = bot.getId();
 		if (intent.getEntities() == null) {
 			return;
 		}
@@ -1070,88 +1036,37 @@ public class Messenger {
 			}
 			String k = entity.getEntityName();
 			String v = entity.getValue();
-			PreparedStatement stmt = null;
-			PreparedStatement stmt2 = null;
-			Connection conn = null;
-			ResultSet rs = null;
 			try {
-				conn = db.getDataSource().getConnection();
-				stmt = conn.prepareStatement(
-						"SELECT id FROM attributes WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
-				stmt.setString(1, b);
-				stmt.setString(2, channel);
-				stmt.setString(3, user);
-				stmt.setString(4, k);
-				rs = stmt.executeQuery();
-				boolean f = false;
-				while (rs.next())
-					f = true;
-				if (f) {
+				Attributes attribute = sbfService.findIdByBot(bot.getName(), channel, user, k);
+
+				if (attribute != null) {
 					// Update
-					stmt2 = conn.prepareStatement(
-							"UPDATE attributes SET `value`=? WHERE `bot`=? AND `channel`=? AND `user`=? AND `key`=?");
-					stmt2.setString(1, v);
-					stmt2.setString(2, b);
-					stmt2.setString(3, channel);
-					stmt2.setString(4, user);
-					stmt2.setString(5, k);
-					stmt2.executeUpdate();
+					attribute.setValue(v);
+					sbfService.createAttribute(attribute);
 				} else {
 					// Insert
-					stmt2 = conn.prepareStatement(
-							"INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
-					stmt2.setString(1, b);
-					stmt2.setString(2, channel);
-					stmt2.setString(3, user);
-					stmt2.setString(4, k);
-					stmt2.setString(5, v);
-					stmt2.executeUpdate();
+					Attributes newAttribute = new Attributes();
+					newAttribute.setBot(bot.getName());
+					newAttribute.setChannel(channel);
+					newAttribute.setUser(user);
+					newAttribute.setKey(k);
+					newAttribute.setValue(v);
+					sbfService.createAttribute(newAttribute);
 				}
-			} catch (SQLException e) {
-				e.printStackTrace();
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				try {
-					stmt2.close();
-					stmt2 = conn.prepareStatement(
-							"INSERT INTO attributes (`bot`, `channel`, `user`, `key`, `value`) VALUES (?,?,?,?,?)");
-					stmt2.setString(1, b);
-					stmt2.setString(2, channel);
-					stmt2.setString(3, user);
-					stmt2.setString(4, k);
-					stmt2.setString(5, v);
-					stmt2.executeUpdate();
-				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					Attributes newAttribute = new Attributes();
+					newAttribute.setBot(bot.getName());
+					newAttribute.setChannel(channel);
+					newAttribute.setUser(user);
+					newAttribute.setKey(k);
+					newAttribute.setValue(v);
+					sbfService.createAttribute(newAttribute);
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			} finally {
-				try {
-					if (rs != null)
-						rs.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				;
-				try {
-					if (stmt != null)
-						stmt.close();
-					if (stmt2 != null)
-						stmt2.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				;
-				try {
-					if (conn != null)
-						conn.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				;
 			}
 		});
 	}

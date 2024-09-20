@@ -1,12 +1,12 @@
 package services.socialBotManagerService.controller;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Path;
+import jakarta.servlet.http.HttpServletRequest;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-import services.socialBotManagerService.chat.AuthTokenException;
 import services.socialBotManagerService.model.Bot;
 import services.socialBotManagerService.model.BotModel;
 import services.socialBotManagerService.model.BotModelEdge;
@@ -17,26 +17,24 @@ import services.socialBotManagerService.nlu.Intent;
 import services.socialBotManagerService.model.MessageInfo;
 import services.socialBotManagerService.model.Messenger;
 import services.socialBotManagerService.parser.BotParser;
-import services.socialBotManagerService.parser.ParseBotException;
 import services.socialBotManagerService.service.SocialBotManagerService;
 import services.socialBotManagerService.chat.ChatMediator;
 import services.socialBotManagerService.chat.ChatMessage;
-import services.socialBotManagerService.chat.ChatService;
-import services.socialBotManagerService.chat.EventChatMediator;
-import services.socialBotManagerService.chat.SlackChatMediator;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import org.bouncycastle.crypto.CryptoException;
-import org.glassfish.jersey.client.ClientResponse;
+import javax.ws.rs.core.UriBuilder;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,8 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 
 @Tag(name="SocialBotManagerService", description = "A service for managing social bots.")
 @RestController
@@ -113,13 +109,7 @@ public class BotResourceController {
             String returnString = "";
             LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
             LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
-            // Set<String> list = service.getBotAgents().keySet();
-            ArrayList<String> oldArray = new ArrayList<String>();
-            // do agentid here maybe instead of loginname, as some people use the same login
-            // name
-            // for (String entry : list) {
-            //     oldArray.add(entry);
-            // }
+
             String botToken = "";
             for (Entry<String, BotModelNode> entry : nodes.entrySet()) {
                 if (entry.getValue().getType().equals("Messenger")) {
@@ -133,23 +123,9 @@ public class BotResourceController {
                     }
                 }
             }
-            // if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
-            //         && !restarterBotPWStatic.equals("")) {
-            //     try {
-            //         restarterBot = (BotAgent) Context.getCurrent()
-            //                 .fetchAgent(
-            //                         Context.getCurrent().getUserAgentIdentifierByLoginName(restarterBotNameStatic));
-            //         restarterBot.unlock(restarterBotPWStatic);
-            //     } catch (Exception e) {
-            //         e.printStackTrace();
-            //     }
-            // }
 
-            // Envelope env = null;
-            HashMap<String, BotModel> old = null;
             try {
-                bp.parseNodesAndEdges(service.getConfig(), nodes, edges, 
-                                    service.database, service.webconnectorUrlStatic);
+                bp.parseNodesAndEdges(service.getConfig(), nodes, edges, service.webconnectorUrlStatic);
             } catch (Exception e) {
                 // e.printStackTrace();
                 if (e.toString().toLowerCase().contains("login name longer")) {
@@ -161,33 +137,6 @@ public class BotResourceController {
             // initialized = true;
             JSONObject logData = new JSONObject();
             logData.put("status", "initialized");
-            // env = null;
-            old = null;
-            // if (restarterBotNameStatic != null && restarterBotPWStatic != null && !restarterBotNameStatic.equals("")
-            //         && !restarterBotPWStatic.equals("")) {
-            //     try {
-            //         // try to add project to project list (with service group agent)
-            //         // env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
-            //         old = (HashMap<String, BotModel>) env.getContent();
-            //         old.put(botToken, botModel);
-            //         // env.setContent(old);
-            //         // Context.get().storeEnvelope(env, restarterBot);
-            //     } catch (Exception e) {
-            //         System.out.println(e);
-            //         try {
-            //             // env = Context.get().createEnvelope(restarterBotNameStatic, restarterBot);
-            //             // env.setPublic();
-            //             old = new HashMap<String, BotModel>();
-            //             old.put(botToken, botModel);
-            //             // System.out.println(botToken);
-            //             // env.setContent(old);
-            //             // Context.get().storeEnvelope(env, restarterBot);
-            //         } catch (Exception e2) {
-            //             e2.printStackTrace();
-            //         }
-            //     }
-            // }
-            // Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, logData.toString());
 
             return ResponseEntity.ok(returnString);
         } catch (Exception e) {
@@ -203,10 +152,12 @@ public class BotResourceController {
      * @param botName TODO
      * @return Returns an HTTP response with plain text string content derived from
      *         the path input param.
+     * @throws InterruptedException 
+     * @throws IOException 
      */
     @Operation(tags = "joinBot", summary = "Activate a bot", description = "Has the capability to join the digital space to get rights.")
 	@PostMapping(value = "/{botName}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> join(String body, @PathVariable("botName") String botName) {
+	public ResponseEntity<String> join(String body, @PathVariable("botName") String botName) throws IOException, InterruptedException {
         String returnString = "";
         try {
             // BotAgent botAgent = service.getBotAgents().get(botName);
@@ -227,17 +178,20 @@ public class BotResourceController {
                 String joinPath = (String) j.get("joinPath");
 
                 // joinPath.replace("$botId", botAgent.getIdentifier());
-
-                MiniClient client = new MiniClient();
-                client.setConnectorEndpoint(basePath);
-                // client.setLogin(botAgent.getLoginName(), botPass);
-                // client.setLogin("alice", "pwalice");
+                HttpClient httpClient = HttpClient.newHttpClient();
+                HttpRequest httpRequest = HttpRequest.newBuilder()
+                        .uri(UriBuilder.fromUri(joinPath).build())
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(j.toJSONString()))
+                        .build();
+                // Send the request
+                HttpResponse<String> result = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+                System.out.println(result.body());
 
                 j.remove("joinPath");
                 j.remove("basePath");
                 j.remove("uid");
-                ClientResponse result = client.sendRequest("POST", joinPath, j.toJSONString(), "application/json",
-                        "text/html", new HashMap<String, String>());
+
             }
         } catch (ParseException e) {
             // TODO Auto-generated catch block
@@ -367,7 +321,7 @@ public class BotResourceController {
     @PostMapping(value = "/{botName}/appRequestURL/{instanceAlias}/{intent}/{token}", consumes = "application/json", produces = "text/plain")
     public ResponseEntity<String> triggerButton(String body, @PathVariable("botName") String name,
 				@PathVariable("instanceAlias") String instanceAlias, @PathVariable("intent") String expectedIntent,
-				@PathVariable("token") String token) {
+				@PathVariable("token") String token, HttpServletRequest request) {
         JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 
         try {
@@ -521,7 +475,7 @@ public class BotResourceController {
                         System.out.println("Got 2nd info: " + newMessageInfo.getMessage().getText() + " "
                                 + newMessageInfo.getTriggeredFunctionId());
                         try {
-                            service.performIntentTrigger(service.getConfig(), newMessageInfo);
+                            service.performIntentTrigger(service.getConfig(), name, newMessageInfo, request);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -545,52 +499,52 @@ public class BotResourceController {
         return ResponseEntity.ok("");
     }
 
-    @Operation(tags = "triggerButton", summary = "Trigger bot by button", description = "Used as an slack app request url to send button clicks")
-    @PostMapping(value = "/{botName}/appRequestURL/{instanceAlias}/{token}", consumes = "application/json", produces = "text/plain")
-    public ResponseEntity<String> triggerButton(String body, @PathVariable("botName") String name,
-            @PathVariable("instanceAlias") String instanceAlias,
-            @PathVariable("token") String token) {
+    // @Operation(tags = "triggerButton", summary = "Trigger bot by button", description = "Used as an slack app request url to send button clicks")
+    // @PostMapping(value = "/{botName}/appRequestURL/{instanceAlias}/{token}", consumes = "application/json", produces = "text/plain")
+    // public ResponseEntity<String> triggerButton(String body, @PathVariable("botName") String name,
+    //         @PathVariable("instanceAlias") String instanceAlias,
+    //         @PathVariable("token") String token) {
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+    //     new Thread(new Runnable() {
+    //         @Override
+    //         public void run() {
 
-                // Identify bot
-                Bot bot = null;
+    //             // Identify bot
+    //             Bot bot = null;
 
-                for (Bot b : service.getConfig().getBots().values()) {
-                    if (bot.getMessenger(ChatService.SLACK) != null) {
-                        ChatMediator mediator = bot.getMessenger(ChatService.SLACK)
-                                .getChatMediator();
-                        if (mediator.hasToken(token))
-                            bot = b;
-                    }
-                }
+    //             for (Bot b : service.getConfig().getBots().values()) {
+    //                 if (bot.getMessenger(ChatService.SLACK) != null) {
+    //                     ChatMediator mediator = bot.getMessenger(ChatService.SLACK)
+    //                             .getChatMediator();
+    //                     if (mediator.hasToken(token))
+    //                         bot = b;
+    //                 }
+    //             }
 
-                if (bot == null)
-                    System.out.println("cannot relate slack action to a bot with token: " + token);
-                System.out.println("slack action: bot identified: " + bot.getName());
+    //             if (bot == null)
+    //                 System.out.println("cannot relate slack action to a bot with token: " + token);
+    //             System.out.println("slack action: bot identified: " + bot.getName());
 
-                // Handle action
-                Messenger messenger = bot.getMessenger(ChatService.SLACK);
-                SlackChatMediator mediator = (SlackChatMediator) messenger.getChatMediator();
-                JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-                JSONObject parsedBody;
-                try {
-                    parsedBody = (JSONObject) jsonParser
-                            .parse(java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name()).substring(8));
-                    mediator.handleEvent(parsedBody);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-        return ResponseEntity.ok("");
-    }
+    //             // Handle action
+    //             Messenger messenger = bot.getMessenger(ChatService.SLACK);
+    //             SlackChatMediator mediator = (SlackChatMediator) messenger.getChatMediator();
+    //             JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+    //             JSONObject parsedBody;
+    //             try {
+    //                 parsedBody = (JSONObject) jsonParser
+    //                         .parse(java.net.URLDecoder.decode(body, StandardCharsets.UTF_8.name()).substring(8));
+    //                 mediator.handleEvent(parsedBody);
+    //             } catch (Exception e) {
+    //                 e.printStackTrace();
+    //             }
+    //         }
+    //     }).start();
+    //     return ResponseEntity.ok("");
+    // }
 
     @Operation(tags = "triggerIntent", summary = "Log message to MobSOS and trigger bot by intent if necessary", description = "Log message to MobSOS and trigger bot by intent if necessary")
     @PostMapping(value = "/{botName}/trigger/intent", consumes = "application/json", produces = "text/plain")
-    public ResponseEntity<String> triggerIntent(String body, @PathVariable("botName") String name) {
+    public ResponseEntity<String> triggerIntent(String body, @PathVariable("botName") String name, HttpServletRequest request) {
         Gson gson = new Gson();
         MessageInfo m = gson.fromJson(body, MessageInfo.class);
         JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
@@ -626,9 +580,8 @@ public class BotResourceController {
             @Override
             public void run() {
                 try {
-                    // BotAgent botAgent = getBotAgents().get(m.getBotName());
                     try {
-                        service.performIntentTrigger(config, m);
+                        service.performIntentTrigger(service.getConfig(), name, m, request);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -659,87 +612,63 @@ public class BotResourceController {
 
     // the body needs to contain the names of all the messenger elements which the
     // bot uses with "messengerNames" as the attribute name
-    @Operation(tags = "deactivateBotAll", summary = "Deactivate bot for unit", description = "Deactivates a bot for a unit.")
-    @DeleteMapping(value = "/{botAgentId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<String> deactivateBotAll(@PathVariable("botAgentId") String bot, JSONObject body) {
-        Bot b = service.getConfig().getBot(bot);
-        if (b != null) {
-            ArrayList messengers = (ArrayList) body.get("messengers");
-            if (b.deactivateAllWithCheck(messengers)) {
-                service.getConfig().removeBot(bot);
-                // if (restarterBot != null) {
-                    // Envelope env = null;
-                    // HashMap<String, BotModel> old = null;
-                    // if (restarterBotNameStatic != null && restarterBotPWStatic != null
-                    //         && !restarterBotNameStatic.equals("") && !restarterBotPWStatic.equals("")) {
-                    //     try {
-                    //         restarterBot = (BotAgent) Context.getCurrent().fetchAgent(Context.getCurrent()
-                    //                 .getUserAgentIdentifierByLoginName(restarterBotNameStatic));
-                    //         restarterBot.unlock(restarterBotPWStatic);
-                    //     } catch (Exception e) {
-                    //         e.printStackTrace();
-                    //     }
-                    // }
-                    // try {
-                        // try to add project to project list (with service group agent)
-                        // env = Context.get().requestEnvelope(restarterBotNameStatic, restarterBot);
-                        // old = (HashMap<String, BotModel>) env.getContent();
-                        // for (Object object : messengers) {
-                        //     HashMap<String, String> jsonObject = (HashMap<String, String>) object;
-                        //     if (old.containsKey(jsonObject.get("authToken"))) {
-                        //         old.remove(jsonObject.get("authToken"));
-                        //     }
-                        // }
-                        // env.setContent(old);
-                        // Context.get().storeEnvelope(env, restarterBot);
-                    // } catch (EnvelopeNotFoundException | EnvelopeAccessDeniedException
-                    //         | EnvelopeOperationFailedException e) {
-                    //     e.printStackTrace();
-                    // }
-                // }
-                return ResponseEntity.ok().body(bot + " deactivated.");
-            } else {
-                return ResponseEntity.status(HttpStatus.HTTP_VERSION_NOT_SUPPORTED).body(bot + " not deactivated.");
-            }
-        }
+    // @Operation(tags = "deactivateBotAll", summary = "Deactivate bot for unit", description = "Deactivates a bot for a unit.")
+    // @DeleteMapping(value = "/deactivateBots", consumes = "application/json", produces = "application/json")
+    // public ResponseEntity<String> deactivateBotAll(@PathVariable("botAgentId") String bot, JSONObject body) {
+    //     Bot b = service.getConfig().getBot(bot);
+    //     if (b != null) {
+    //         try {
+    //             service.getConfig().removeBot(bot);
+    //             return ResponseEntity.ok().body(bot + " deactivated.");
+    //         } catch (Exception e) {
+    //             return ResponseEntity.status(HttpStatus.HTTP_VERSION_NOT_SUPPORTED).body(bot + " not deactivated.");
+    //         }
+    //         // ArrayList messengers = (ArrayList) body.get("messengers");
+    //         // if (b.deactivateAllWithCheck(messengers)) {
+    //         //     service.getConfig().removeBot(bot);
+    //         //     return ResponseEntity.ok().body(bot + " deactivated.");
+    //         // } else {
+    //         //     return ResponseEntity.status(HttpStatus.HTTP_VERSION_NOT_SUPPORTED).body(bot + " not deactivated.");
+    //         // }
+    //     }
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(bot + " not found.");
-    }
+    //     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(bot + " not found.");
+    // }
 
-    @Operation(tags = "telegramEvent", summary = "Receive an Telegram event", description = "Receive an Telegram event")
-    @PostMapping(value = "/events/telegram/{token}", consumes = "application/json", produces = "text/plain")
-    public ResponseEntity<String> telegramEvent(String body, @PathVariable("token") String token) {
+    // @Operation(tags = "telegramEvent", summary = "Receive an Telegram event", description = "Receive an Telegram event")
+    // @PostMapping(value = "/events/telegram/{token}", consumes = "application/json", produces = "text/plain")
+    // public ResponseEntity<String> telegramEvent(String body, @PathVariable("token") String token) {
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+    //     new Thread(new Runnable() {
+    //         @Override
+    //         public void run() {
 
-                // Identify bot
-                Bot bot = null;
+    //             // Identify bot
+    //             Bot bot = null;
 
-                for (Bot b : service.getConfig().getBots().values()) {
-                    if (b.getMessenger(ChatService.TELEGRAM) != null) {
-                        bot = b;
-                    }
-                }
-                if (bot == null)
-                    System.out.println("cannot relate telegram event to a bot with token: " + token);
-                System.out.println("telegram event: bot identified: " + bot.getName());
+    //             // for (Bot b : service.getConfig().getBots().values()) {
+    //                 // if (b.getMessenger(ChatService.TELEGRAM) != null) {
+    //                 //     bot = b;
+    //                 // }
+    //             // }
+    //             if (bot == null)
+    //                 System.out.println("cannot relate telegram event to a bot with token: " + token);
+    //             System.out.println("telegram event: bot identified: " + bot.getName());
 
-                // Handle event
-                Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
-                EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
-                JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
-                JSONObject parsedBody;
-                try {
-                    parsedBody = (JSONObject) jsonParser.parse(body);
-                    mediator.handleEvent(parsedBody);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    //             // Handle event
+    //             Messenger messenger = bot.getMessenger(ChatService.TELEGRAM);
+    //             EventChatMediator mediator = (EventChatMediator) messenger.getChatMediator();
+    //             JSONParser jsonParser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+    //             JSONObject parsedBody;
+    //             try {
+    //                 parsedBody = (JSONObject) jsonParser.parse(body);
+    //                 mediator.handleEvent(parsedBody);
+    //             } catch (ParseException e) {
+    //                 e.printStackTrace();
+    //             }
+    //         }
+    //     }).start();
 
-        return ResponseEntity.ok("");
-    }
+    //     return ResponseEntity.ok("");
+    // }
 }

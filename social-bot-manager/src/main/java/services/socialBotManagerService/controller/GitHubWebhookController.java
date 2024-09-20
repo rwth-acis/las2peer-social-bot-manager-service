@@ -1,7 +1,5 @@
 package services.socialBotManagerService.controller;
 
-// import i5.las2peer.api.Context;
-// import io.swagger.annotations.Api;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import services.socialBotManagerService.chat.ChatService;
