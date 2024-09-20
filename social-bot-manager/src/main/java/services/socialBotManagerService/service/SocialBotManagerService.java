@@ -5,62 +5,41 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.websocket.DeploymentException;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.apache.commons.io.FileUtils;
-import org.apache.tika.Tika;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.mongodb.client.MongoDatabase;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.Response;
-
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 import services.socialBotManagerService.chat.*;
-
 import services.socialBotManagerService.model.ActionType;
+import services.socialBotManagerService.model.Attributes;
 import services.socialBotManagerService.model.Bot;
 import services.socialBotManagerService.model.BotConfiguration;
-
 import services.socialBotManagerService.model.ConversationMessage;
 import services.socialBotManagerService.model.IfThenBlock;
 import services.socialBotManagerService.model.IncomingMessage;
@@ -74,43 +53,15 @@ import services.socialBotManagerService.model.Trigger;
 import services.socialBotManagerService.model.TriggerFunction;
 import services.socialBotManagerService.nlu.Entity;
 import services.socialBotManagerService.nlu.TrainingHelper;
-
 import services.socialBotManagerService.parser.ParseBotException;
-import services.socialBotManagerService.repository.AttributeRepository;
-import services.socialBotManagerService.repository.BotRepository;
-import services.socialBotManagerService.repository.ModelRepository;
-import services.socialBotManagerService.repository.TrainingRepository;
-
-// import com.mongodb.client.MongoClient;
-// import com.mongodb.client.MongoClients;
-// import com.mongodb.ConnectionString;
-// import com.mongodb.MongoClientSettings;
-// import com.mongodb.MongoException;
-// import com.mongodb.client.MongoDatabase;
-// import com.mongodb.client.gridfs.GridFSBucket;
-// import com.mongodb.client.gridfs.GridFSBuckets;
-// import com.mongodb.client.gridfs.model.GridFSFile;
-// import com.mongodb.client.model.Filters;
-// import com.pengrad.telegrambot.model.User;
-
-import org.bson.Document;
-import org.bson.UuidRepresentation;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.BsonDocument;
-import org.bson.BsonInt64;
-import org.bson.BsonObjectId;
-import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
-import org.glassfish.jersey.client.ClientResponse;
-
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import services.socialBotManagerService.repository.jpa.AttributeRepository;
+import services.socialBotManagerService.repository.jpa.ModelRepository;
+import services.socialBotManagerService.repository.jpa.TrainingRepository;
+import services.socialBotManagerService.repository.mongo.BotRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -134,16 +85,13 @@ public class SocialBotManagerService {
 	public String lrsAuthTokenStatic;
 	private static String lrsURLStatic;
 
-	@Value("${lrs.authToken}")
-	private String lrsAuthToken;
-	@Value("${lrs.url}")
-	private String lrsURL;
+	@Value("${xapi.url}")
+	private String xapiUrl;
+	@Value("${xapi.homepage}")
+	private String xapiHomepage;
 
 	@Autowired
-	private RestTemplate restTemplate;
-
-	@Autowired
-	private GridFsTemplate gridFsTemplate;
+	public RestTemplate restTemplate;
 
 	@Autowired
 	private MongoTemplate mongoTemplate;
@@ -152,20 +100,15 @@ public class SocialBotManagerService {
 		return mongoTemplate.getDb();
 	}
 
-	@Value("${xapi.url}")
-	private String xapiUrl;
-	@Value("${xapi.homepage}")
-	private String xapiHomepage;
-
-	private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
+	// private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
 	public static HashMap<String, String> rasaIntents = new HashMap<String, String>();
 	private static HashMap<String, String> courseMap = null;
 
-	private static BotConfiguration config;
+	public static BotConfiguration config;
 
 	private static ScheduledExecutorService rt = null;
 
-	private int BOT_ROUTINE_PERIOD = 5; // 1 second
+	// private int BOT_ROUTINE_PERIOD = 5; // 1 second
 
 	public TrainingHelper nluTrain = null;
 	public Thread nluTrainThread = null;
@@ -215,7 +158,7 @@ public class SocialBotManagerService {
 	}
 
 	public Bot getBotById(String botId) {
-		return botRepository.findById(botId).orElse(null);
+		return botRepository.findBotById(botId);
 	}
 
 	public String getBotIdByName(String name) {
@@ -227,7 +170,7 @@ public class SocialBotManagerService {
 	}
 
 	public void deleteBot(String botId) {
-		botRepository.deleteById(botId);
+		botRepository.deleteBotById(botId);
 	}
 
 	@Autowired
@@ -271,6 +214,30 @@ public class SocialBotManagerService {
 	@Autowired
 	private AttributeRepository attributeRepository;
 	
+	public Attributes createAttribute(Attributes attribute) {
+		return attributeRepository.save(attribute);
+	}
+
+	public List<Attributes> getAllAttributes() {
+		return attributeRepository.findAll();
+	}
+
+	public Attributes getAttributeById(Long attributeId) {
+		return attributeRepository.findById(attributeId).orElse(null);
+	}
+
+	public Attributes findIdByBot(String bot, String channel, String user, String key) {
+		return attributeRepository.findIdByBot(bot, channel, user, key);
+	}
+
+	public String findValueByBot(String channel, String key) {
+		return attributeRepository.findValueByBot(channel, key);
+	}
+
+	public void deleteAttribute(Long attributeId) {
+		attributeRepository.deleteById(attributeId);
+	}
+	
 	public JSONObject createXAPIStatement(String userMail, String botName,
 			String intent, String text, String channel)
 			throws ParseException {
@@ -302,21 +269,21 @@ public class SocialBotManagerService {
 					"{'extensions':{'" + xapiUrl + "/definitions/mwb/extensions/context/activity_data': {courseID + "
 							+ channel
 							+ ", 'intent':'" + intent +"'}}}"));
-		} else if (b.getMessenger(ChatService.ROCKET_CHAT) != null){
-			account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
-			verb = (JSONObject) p
-			.parse(new String(
-					"{'display':{'en-US':'sent_chat_message'},'id':'" + xapiUrl + "/definitions/chat/verbs/sent'}"));
-			object = (JSONObject) p
-					.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
-							+ "'}, 'description':{'en-US':'" + intent
-							+ "'}, 'id':'" + xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/"
-							+ intent + "', 'objectType':'Activity', 'text':'"
-							+ text + "'}"));
-			context = (JSONObject) p.parse(new String(
-					"{'extensions':{'" + xapiUrl + "/definitions/lms/activities/course': {courseID + '"
-							+ channel
-							+ "'}}}"));
+		// } else if (b.getMessenger(ChatService.ROCKET_CHAT) != null){
+		// 	account.put("homePage", "https://chat.tech4comp.dbis.rwth-aachen.de");
+		// 	verb = (JSONObject) p
+		// 	.parse(new String(
+		// 			"{'display':{'en-US':'sent_chat_message'},'id':'" + xapiUrl + "/definitions/chat/verbs/sent'}"));
+		// 	object = (JSONObject) p
+		// 			.parse(new String("{'definition':{'interactionType':'other', 'name':{'en-US':'" + intent
+		// 					+ "'}, 'description':{'en-US':'" + intent
+		// 					+ "'}, 'id':'" + xapiUrl + "/definitions/chat/activities/message'},'type':'/chat/activities/message/"
+		// 					+ intent + "', 'objectType':'Activity', 'text':'"
+		// 					+ text + "'}"));
+		// 	context = (JSONObject) p.parse(new String(
+		// 			"{'extensions':{'" + xapiUrl + "/definitions/lms/activities/course': {courseID + '"
+		// 					+ channel
+		// 					+ "'}}}"));
 		} else {
 			account.put("homePage", "https://tech4comp.dbis.rwth-aachen.de");
 			verb = (JSONObject) p
@@ -419,7 +386,7 @@ public class SocialBotManagerService {
 		
 		String token = request.getHeader("Authorization");
 
-		String botId = getBotIdByName(botName);
+		String botId = getBotIdByName(botName).toString();
 		Bot bot = botConfig.getBots().get(botId);
 
 		if (bot != null) {
@@ -506,7 +473,7 @@ public class SocialBotManagerService {
 	public void prepareRequestParameters(BotConfiguration botConfig, String botName, MessageInfo messageInfo,
 			String functionPath, JSONObject body, ServiceFunction botFunction)
 			throws ParseBotException{
-		String botId = getBotIdByName(botName);
+		String botId = getBotIdByName(botName).toString();
 		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null) {
 			botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
@@ -584,7 +551,7 @@ public class SocialBotManagerService {
 
 	public void checkTriggerBot(BotConfiguration botConfig, JSONObject body, String botName, String triggerUID,
 			String triggerFunctionName, String token) throws ParseBotException {
-		String botId = getBotIdByName(botName);
+		String botId = getBotIdByName(botName).toString();
 		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null 
 		// && !(triggerUID.toLowerCase().equals(botAgent.getIdentifier().toLowerCase()))
@@ -892,7 +859,7 @@ public class SocialBotManagerService {
 
 			remarks.put("serviceEndpoint", serviceEndpoint);
 			String userId = triggeredBody.get("user").toString();
-			Bot bot = botConfig.getBots().get(getBotIdByName(botName));
+			Bot bot = botConfig.getBots().get(getBotIdByName(botName).toString());
 			String messengerID = sf.getMessengerName();
 			String channel = triggeredBody.get("channel").toString();
 			// HashMap<String, String> headers = new HashMap<String, String>();
@@ -998,23 +965,18 @@ public class SocialBotManagerService {
 						}
 
 					}
-					if (f != null && f.exists()) {
-						FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-						mp.bodyPart(filePart);
-					}
-
 					WebTarget target = textClient.target(sf.getServiceName() + functionPath + queryParams);
 					if (f != null && f.exists()) {
 						FileDataBodyPart filePart = new FileDataBodyPart("file", f);
 						mp.bodyPart(filePart);
 					}
+
 					ResponseEntity<String> response = null;
 					if (sf.getHttpMethod().equals("get")) {
-						response = restTemplate.exchange(serviceEndpoint, HttpMethod.GET, entity, String.class);
+						response = restTemplate.exchange(target.getUri(), HttpMethod.GET, entity, String.class);
 					} else {
 						HttpEntity<FormDataMultiPart> entityPost = new HttpEntity<>(mp, headers);
-						response = restTemplate.exchange(serviceEndpoint, HttpMethod.POST, entityPost, String.class);
-						// target.request().post(javax.ws.rs.client.Entity.entity(mp, mp.getMediaType()));
+						response = restTemplate.exchange(target.getUri(), HttpMethod.POST, entityPost, String.class);
 					}
 					String test = response.getBody();
 					mp.close();
@@ -1022,10 +984,8 @@ public class SocialBotManagerService {
 						java.nio.file.Files.deleteIfExists(Paths.get(
 								triggeredBody.get("fileName") + "." + triggeredBody.get("fileType")));
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 					triggeredBody = new JSONObject();
 					triggeredBody.put("channel", channel);
 					triggeredBody.put("text", test);
@@ -1035,37 +995,8 @@ public class SocialBotManagerService {
 					}
 					bot.getMessenger(messengerID).setContextToBasic(channel,
 							userId);
-					// triggerChat(chat, triggeredBody);
-					// l2pcontext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, remarks.toJSONString(),
-					// 		triggeredBody.get("conversationId").toString(), sf.getFunctionName(),
-					// 		botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 					return;
 
-					// FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg",
-					// newText).field("description", "")
-					// .bodyPart(filePart);
-					/*
-					 * FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-					 * if(f.getName().toLowerCase().contains("json")){
-					 * filePart.setMediaType(MediaType.APPLICATION_JSON_TYPE);
-					 * }
-					 * FormDataMultiPart mp = new FormDataMultiPart();
-					 * FormDataMultiPart multipart = (FormDataMultiPart) mp.field("msg",
-					 * newText).field("description", "")
-					 * .bodyPart(filePart);
-					 * Response response = target.request().header("X-User-Id",
-					 * client.getMyUserId()).header("X-Auth-Token", token)
-					 * .post(Entity.entity(multipart, multipart.getMediaType()));
-					 * System.out.println(response.getEntity().toString());
-					 * mp.close();
-					 * multipart.close();
-					 * try {
-					 * java.nio.file.Files.deleteIfExists(Paths.get(f.getName()));
-					 * } catch (IOException e) {
-					 * // TODO Auto-generated catch block
-					 * e.printStackTrace();
-					 * }
-					 */
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.out.println(e.getMessage());
@@ -1233,7 +1164,7 @@ public class SocialBotManagerService {
 					// botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			// deprecated
-			Bot bot = botConfig.getBots().get(getBotIdByName(botName));
+			Bot bot = botConfig.getBots().get(getBotIdByName(botName).toString());
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
 				// TODO Anonymous agent error
 				HttpHeaders headers = new HttpHeaders();
@@ -1493,6 +1424,53 @@ public class SocialBotManagerService {
 		} else {
 			return null;
 		}
+	}
+
+	public byte[] convertToBytes(Object obj) throws IOException {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		ObjectOutput out = null;
+		byte[] yourBytes = null;
+		try {
+			out = new ObjectOutputStream(bos);
+			out.writeObject(obj);
+			yourBytes = bos.toByteArray();
+		} finally {
+			try {
+				out.close();
+			} catch (IOException ex) {
+				// ignore close exception
+			}
+			try {
+				bos.close();
+			} catch (IOException ex) {
+				// ignore close exception
+			}
+		}
+		return yourBytes;
+	}
+
+	public Object convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
+		ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+		ObjectInput in = null;
+		Object o = null;
+		try {
+			in = new ObjectInputStream(bis);
+			o = in.readObject();
+		} finally {
+			try {
+				if (in != null) {
+					in.close();
+				}
+			} catch (IOException ex) {
+				// ignore close exception
+			}
+			try {
+				bis.close();
+			} catch (IOException ex) {
+				// ignore close exception
+			}
+		}
+		return o;
 	}
 
 	public JSONObject getSwagger(){

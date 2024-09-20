@@ -7,11 +7,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.websocket.DeploymentException;
-
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import net.minidev.json.JSONObject;
 import services.socialBotManagerService.chat.AuthTokenException;
