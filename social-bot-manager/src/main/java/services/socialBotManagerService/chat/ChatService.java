@@ -11,14 +11,14 @@ import services.socialBotManagerService.chat.github.GitHubPRMediator;
  */
 public enum ChatService {
 
-	@JsonProperty("Rocket.Chat")
-	ROCKET_CHAT("Rocket.Chat", RocketChatMediator.class),
+	// @JsonProperty("Rocket.Chat")
+	// ROCKET_CHAT("Rocket.Chat", RocketChatMediator.class),
 
-	@JsonProperty("Slack")
-	SLACK("Slack", SlackChatMediator.class),
+	// @JsonProperty("Slack")
+	// SLACK("Slack", SlackChatMediator.class),
 
-	@JsonProperty("Telegram")
-	TELEGRAM("Telegram", TelegramChatMediator.class),
+	// @JsonProperty("Telegram")
+	// TELEGRAM("Telegram", TelegramChatMediator.class),
 
 	@JsonProperty("Moodle Chat")
 	MOODLE_CHAT("Moodle Chat", MoodleChatMediator.class),
