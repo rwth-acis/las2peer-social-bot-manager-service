@@ -55,7 +55,7 @@ public class ModelResourceController {
 	}
 
 	@Operation(summary = "Retrieve BotModels", description = "Get all stored BotModels.")
-	@GetMapping(value = "/getModels", produces = "application/json")
+	@GetMapping(value = "/", produces = "application/json")
 	public ResponseEntity<String> getModels() {
 		String resp = null;
 		JSONObject json = new JSONObject();

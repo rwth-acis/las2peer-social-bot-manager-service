@@ -9,17 +9,28 @@ public class Model {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-
-    @Lob
-    @Column(name = "botModel", columnDefinition = "BLOB")
     private byte[] botModel;
 
     public Model() {
     }
 
-    public Model(String name, byte[] botModel) {
+    public Model (String name, byte[] botModel) {
         this.name = name;
         this.botModel = botModel;
+    }
+    
+    public Model(Long id, String name, byte[] botModel) {
+        this.id = id;
+        this.name = name;
+        this.botModel = botModel;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
