@@ -1,35 +1,36 @@
 package services.socialBotManagerService.model;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "models")
 public class Model {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
     private String name;
     private byte[] botModel;
 
     public Model() {
     }
 
-    public Model (String name, byte[] botModel) {
-        this.name = name;
-        this.botModel = botModel;
-    }
+    // public Model (String name, byte[] botModel) {
+    //     this.name = name;
+    //     this.botModel = botModel;
+    // }
     
-    public Model(Long id, String name, byte[] botModel) {
+    public Model(UUID id, String name, byte[] botModel) {
         this.id = id;
         this.name = name;
         this.botModel = botModel;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
