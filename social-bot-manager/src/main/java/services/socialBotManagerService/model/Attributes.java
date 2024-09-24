@@ -6,22 +6,22 @@ import jakarta.persistence.*;
 @Table(name = "attributes")
 public class Attributes {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     
     private String bot;
     private String channel;
-    private String user;
+    private String username;
     private String key;
     private String value;
 
     public Attributes() {
     }
 
-    public Attributes(String bot, String channel, String user, String key, String value) {
+    public Attributes(String bot, String channel, String username, String key, String value) {
         this.bot = bot;
         this.channel = channel;
-        this.user = user;
+        this.username = username;
         this.key = key;
         this.value = value;
     }
@@ -51,11 +51,11 @@ public class Attributes {
     }
 
     public String getUser() {
-        return user;
+        return username;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setUser(String username) {
+        this.username = username;
     }
 
     public String getKey() {
