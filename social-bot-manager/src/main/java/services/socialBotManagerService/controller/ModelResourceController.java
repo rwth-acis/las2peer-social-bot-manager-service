@@ -1,11 +1,15 @@
 package services.socialBotManagerService.controller;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,7 +29,7 @@ public class ModelResourceController {
 	
     @Autowired
     private SocialBotManagerService service;
-
+	
 	/**
 	 * Put Model function.
 	 *
@@ -37,15 +41,28 @@ public class ModelResourceController {
 	 */
 	@Operation(summary = "Save BotModel", description = "Stores the BotModel in the shared storage.")
 	@PostMapping(value = "/{name}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> putModel(String name, BotModel body) throws IOException {
+	public ResponseEntity<String> putModel(@PathVariable("name") String name, HttpEntity<JSONObject> request) throws IOException {
 		String resp = null;
-		byte[] model = service.convertToBytes(body);
-		Model m = new Model(name, model);
+		System.out.println("body: " + request.getBody());
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bOut);
+        out.writeObject(request.getBody());
+		UUID id = UUID.randomUUID();
 
+		byte[] modelBytes = bOut.toByteArray();
+		
 		try {
-			service.createModel(m);
-
-			resp = "Model stored.";
+			if (service.getModelByName(name) == null) {
+				Model m = new Model(id, name, modelBytes);
+				service.createModel(m);
+				resp = "Model " + m.getName() + " stored.";
+			} else {
+				Model m = service.getModelByName(name);
+				m.setModel(modelBytes);
+				service.updateModel(m);
+				resp = "Model " + name + " has been updated.";
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			resp = e.getMessage();
@@ -80,19 +97,20 @@ public class ModelResourceController {
 
 	@Operation(summary = "Get BotModel by name", description = "Returns the BotModel for the given name.")
 	@GetMapping(value = "/{name}", produces = "application/json")
-	public ResponseEntity<String> getModelByName(String name) {
+	public ResponseEntity<JSONObject> getModelByName(@PathVariable("name") String name) {
 
-		String resp = null;
+		JSONObject resp = null;
 
 		try {
 
 			Model model = service.getModelByName(name);
-			byte[] m = model.getModel();
-			BotModel botModel = (BotModel) service.convertFromBytes(m);
-			resp = botModel.toString();
+			byte[] modelBytes = model.getModel();
+			// BotModel botModel = (BotModel) service.convertFromBytes(modelBytes);
+			resp = (JSONObject) service.convertFromBytes(modelBytes);
 		} catch (Exception e) {
 			e.printStackTrace();
-			resp = e.getMessage();
+			resp = new JSONObject();
+			resp.put("error", e.getMessage());
 		} 
 
 		return ResponseEntity.ok().body(resp);
