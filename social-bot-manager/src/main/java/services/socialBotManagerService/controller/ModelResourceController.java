@@ -59,7 +59,7 @@ public class ModelResourceController {
 			} else {
 				Model m = service.getModelByName(name);
 				m.setModel(modelBytes);
-				service.updateModel(m);
+				service.createModel(m);
 				resp = "Model " + name + " has been updated.";
 			}
 			

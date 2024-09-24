@@ -179,10 +179,6 @@ public class SocialBotManagerService {
 	public Model createModel(Model model) {
 		return modelRepository.save(model);
 	}
-	
-	public Model updateModel(Model model) {
-		return modelRepository.save(model);
-	}
 
 	public List<Model> getAllModels() {
 		return modelRepository.findAll();
