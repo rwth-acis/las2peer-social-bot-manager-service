@@ -1,6 +1,7 @@
 package services.socialBotManagerService.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,8 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
 
 
 import services.socialBotManagerService.chat.ChatMediator;
@@ -45,13 +44,14 @@ public class BasicResourceController {
 	// use Rasa's
 	// API directly once that's fixed. The whole `TrainingHelper` class can be
 	// deleted then as well.
-	public ResponseEntity<String> trainAndLoad(String body) {
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+	public ResponseEntity<String> trainAndLoad(HttpEntity<JSONObject> request) {
+		// JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		if (service.nluTrainThread != null && service.nluTrainThread.isAlive()) {
 			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Training still in progress.");
 		}
 		try {
-			JSONObject bodyJson = (JSONObject) p.parse(body);
+			JSONObject bodyJson = request.getBody();
+			System.out.println(bodyJson);
 			String url = (String) bodyJson.get("url");
 			String config = (String) bodyJson.get("config");
 			String markdownTrainingData = (String) bodyJson.get("markdownTrainingData");
@@ -64,7 +64,7 @@ public class BasicResourceController {
 			// TODO: Create a member for this thread, make another REST method to check
 			// whether
 			// training was successful.
-		} catch (ParseException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

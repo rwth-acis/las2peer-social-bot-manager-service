@@ -41,9 +41,8 @@ public class ModelResourceController {
 	 */
 	@Operation(summary = "Save BotModel", description = "Stores the BotModel in the shared storage.")
 	@PostMapping(value = "/{name}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> putModel(@PathVariable("name") String name, HttpEntity<JSONObject> request) throws IOException {
+	public ResponseEntity<String> putModel(@PathVariable("name") String name, HttpEntity<BotModel> request) throws IOException {
 		String resp = null;
-		System.out.println("body: " + request.getBody());
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(bOut);
         out.writeObject(request.getBody());
@@ -83,7 +82,7 @@ public class ModelResourceController {
 				json.put("Name", model.getName());
 				byte[] m = model.getModel();
 				BotModel botModel = (BotModel) service.convertFromBytes(m);
-				json.put("Model", botModel);
+				json.put("Model", botModel.toJSON());
 				System.out.println(model.getName());
 			}
 			resp = json.toJSONString();
@@ -105,8 +104,8 @@ public class ModelResourceController {
 
 			Model model = service.getModelByName(name);
 			byte[] modelBytes = model.getModel();
-			// BotModel botModel = (BotModel) service.convertFromBytes(modelBytes);
-			resp = (JSONObject) service.convertFromBytes(modelBytes);
+			BotModel botModel = (BotModel) service.convertFromBytes(modelBytes);
+			resp = botModel.toJSON();
 		} catch (Exception e) {
 			e.printStackTrace();
 			resp = new JSONObject();

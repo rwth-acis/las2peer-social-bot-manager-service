@@ -19,13 +19,13 @@ import javax.websocket.DeploymentException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import net.minidev.json.JSONObject;
+import services.socialBotManagerService.botParser.ParseBotException;
 import services.socialBotManagerService.chat.*;
 import services.socialBotManagerService.chat.github.GitHubAppHelper;
 import services.socialBotManagerService.chat.github.GitHubIssueMediator;
 import services.socialBotManagerService.chat.github.GitHubPRMediator;
 import services.socialBotManagerService.nlu.Entity;
 import services.socialBotManagerService.nlu.Intent;
-import services.socialBotManagerService.parser.ParseBotException;
 import services.socialBotManagerService.service.SocialBotManagerService;
 
 import java.util.UUID;
