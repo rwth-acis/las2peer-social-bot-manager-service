@@ -1,4 +1,4 @@
-package services.socialBotManagerService.parser;
+package services.socialBotManagerService.botParser;
 
 public class ParseBotException extends Exception {
 

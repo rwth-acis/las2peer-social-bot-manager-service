@@ -16,8 +16,8 @@ import services.socialBotManagerService.model.BotModelValue;
 import services.socialBotManagerService.nlu.Intent;
 import services.socialBotManagerService.model.MessageInfo;
 import services.socialBotManagerService.model.Messenger;
-import services.socialBotManagerService.parser.BotParser;
 import services.socialBotManagerService.service.SocialBotManagerService;
+import services.socialBotManagerService.botParser.BotParser;
 import services.socialBotManagerService.chat.ChatMediator;
 import services.socialBotManagerService.chat.ChatMessage;
 
@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -101,11 +102,11 @@ public class BotResourceController {
 
     @Operation(tags = "initBot", summary = "Initialize a bot", description = "Initialize a bot.")
     @PostMapping(value = "/init", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<String> init(BotModel botModel) {
+    public ResponseEntity<String> init(HttpEntity<BotModel> request) {
         try {
-            // sbfservice.setL2pcontext(Context.getCurrent());
-            BotParser bp = BotParser.getInstance();
 
+            BotParser bp = BotParser.getInstance();
+            BotModel botModel = request.getBody();
             String returnString = "";
             LinkedHashMap<String, BotModelNode> nodes = botModel.getNodes();
             LinkedHashMap<String, BotModelEdge> edges = botModel.getEdges();
@@ -157,7 +158,7 @@ public class BotResourceController {
      */
     @Operation(tags = "joinBot", summary = "Activate a bot", description = "Has the capability to join the digital space to get rights.")
 	@PostMapping(value = "/{botName}", consumes = "application/json", produces = "text/plain")
-	public ResponseEntity<String> join(String body, @PathVariable("botName") String botName) throws IOException, InterruptedException {
+	public ResponseEntity<String> join(HttpEntity<JSONObject> request, @PathVariable("botName") String botName) throws IOException, InterruptedException {
         String returnString = "";
         try {
             // BotAgent botAgent = service.getBotAgents().get(botName);
@@ -165,8 +166,8 @@ public class BotResourceController {
             //     return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Botagent " + botName + " not found");
             // }
             // body = body.replace("$botId", botAgent.getIdentifier());
-            JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-            JSONObject j = (JSONObject) p.parse(body);
+            // JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+            JSONObject j = request.getBody();
             String basePath = (String) j.get("basePath");
             Bot bot = service.getConfig().getBot(botName);
 
@@ -193,7 +194,7 @@ public class BotResourceController {
                 j.remove("uid");
 
             }
-        } catch (ParseException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

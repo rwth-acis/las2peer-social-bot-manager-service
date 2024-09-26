@@ -1,4 +1,4 @@
-package services.socialBotManagerService.parser;
+package services.socialBotManagerService.botParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-import java.util.UUID;
 import javax.websocket.DeploymentException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 
@@ -44,6 +44,7 @@ import services.socialBotManagerService.model.ServiceFunctionAttribute;
 import services.socialBotManagerService.model.Trigger;
 import services.socialBotManagerService.service.SocialBotManagerService;
 
+@Component
 public class BotParser {
 	private static BotParser instance = null;
 
@@ -574,13 +575,16 @@ public class BotParser {
 	}
 
 	private Bot addBot(BotModelNode elem) {
+		System.out.println(sbfService);
 		Bot b = new Bot();
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
 			BotModelValue subVal = subElem.getValue();
 			if (subVal.getName().equals("Name")) {
+				System.out.println("Bot Name: " + subVal.getValue());
 				String botName = subVal.getValue();
-				String botId = UUID.randomUUID().toString();
+				String botId = sbfService.getModelIdByName(botName).toString();
+				System.out.println(botId);
 				b.setId(botId);
 				b.setName(botName);
 				sbfService.createBot(b);
