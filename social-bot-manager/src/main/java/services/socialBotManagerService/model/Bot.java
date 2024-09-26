@@ -13,10 +13,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import net.minidev.json.JSONObject;
+import services.socialBotManagerService.botParser.ParseBotException;
 import services.socialBotManagerService.chat.AuthTokenException;
 import services.socialBotManagerService.chat.ChatService;
 import services.socialBotManagerService.nlu.RasaNlu;
-import services.socialBotManagerService.parser.ParseBotException;
 
 @Entity
 @Table(name = "bot")

@@ -2,6 +2,8 @@ package services.socialBotManagerService.model;
 
 import java.io.Serializable;
 
+import net.minidev.json.JSONObject;
+
 public class BotModelValue implements Serializable{
 	/**
 	 * 
@@ -27,5 +29,12 @@ public class BotModelValue implements Serializable{
 	}
 	public void setValue(String value) {
 		this.value = value;
+	}
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("id", id);
+		json.put("name", name);
+		json.put("value", value);
+		return json;
 	}
 }

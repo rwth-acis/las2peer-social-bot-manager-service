@@ -3,6 +3,8 @@ package services.socialBotManagerService.model;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 
+import net.minidev.json.JSONObject;
+
 
 public class BotModel implements Serializable {
 
@@ -33,5 +35,17 @@ public class BotModel implements Serializable {
 	}
 	public void setEdges(LinkedHashMap<String, BotModelEdge> edges) {
 		this.edges = edges;
+	}
+
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		if (attributes != null) {
+			json.put("attributes", attributes.toJSON());
+		} else {
+			json.put("attributes", new JSONObject());
+		}
+		json.put("nodes", nodes);
+		json.put("edges", edges);
+		return json;
 	}
 }
