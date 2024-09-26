@@ -35,6 +35,7 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+import services.socialBotManagerService.botParser.ParseBotException;
 import services.socialBotManagerService.chat.*;
 import services.socialBotManagerService.model.ActionType;
 import services.socialBotManagerService.model.Attributes;
@@ -53,11 +54,10 @@ import services.socialBotManagerService.model.Trigger;
 import services.socialBotManagerService.model.TriggerFunction;
 import services.socialBotManagerService.nlu.Entity;
 import services.socialBotManagerService.nlu.TrainingHelper;
-import services.socialBotManagerService.parser.ParseBotException;
 import services.socialBotManagerService.repository.jpa.AttributeRepository;
+import services.socialBotManagerService.repository.jpa.BotRepository;
 import services.socialBotManagerService.repository.jpa.ModelRepository;
 import services.socialBotManagerService.repository.jpa.TrainingRepository;
-import services.socialBotManagerService.repository.mongo.BotRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -113,8 +113,11 @@ public class SocialBotManagerService {
 	public TrainingHelper nluTrain = null;
 	public Thread nluTrainThread = null;
 
-	public SocialBotManagerService() throws Exception {
-		super();
+	public SocialBotManagerService(AttributeRepository attributeRepository, BotRepository botRepository, ModelRepository modelRepository, TrainingRepository trainingRepository) throws Exception {
+		this.attributeRepository = attributeRepository;
+		this.botRepository = botRepository;
+		this.modelRepository = modelRepository;
+		this.trainingRepository = trainingRepository;
 		// setFieldValues(); // This sets the values of the configuration file
 		webconnectorUrlStatic = webconnectorUrl;
 		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
@@ -190,6 +193,10 @@ public class SocialBotManagerService {
 
 	public Model getModelByName(String name) {
 		return modelRepository.findModelByName(name);
+	}
+
+	public UUID getModelIdByName(String name) {
+		return modelRepository.findModelByName(name).getId();
 	}
 
 	@Autowired
