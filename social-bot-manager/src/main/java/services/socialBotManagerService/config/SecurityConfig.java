@@ -1,8 +1,12 @@
 package services.socialBotManagerService.config;
 
 import org.springframework.context.annotation.Bean;
+
+import javax.ws.rs.HttpMethod;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,18 +32,19 @@ public class SecurityConfig {
         "/v3/api-docs/**",
         "/v3/api-docs",
         "/swagger.json",
-        "/SBFManager/swagger.json"
+        "/SBFManager/swagger.json",
+        "/SBFManager/models/**",
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
         .csrf(AbstractHttpConfigurer::disable)
-        .cors(AbstractHttpConfigurer::disable)
+        .cors(Customizer.withDefaults())
         .authorizeHttpRequests(req -> req
             .requestMatchers(WHITELIST).permitAll()
-            .requestMatchers("/SBFManager")
-            .permitAll()
+            // .requestMatchers("/SBFManager")
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .anyRequest()
             .authenticated())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -48,4 +53,5 @@ public class SecurityConfig {
             .jwkSetUri(jwkSetUri)
             )).build();
     }
+
 }
