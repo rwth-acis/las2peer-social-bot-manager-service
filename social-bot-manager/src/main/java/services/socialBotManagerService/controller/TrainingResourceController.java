@@ -1,6 +1,9 @@
 package services.socialBotManagerService.controller;
 
 import java.util.List;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 import services.socialBotManagerService.model.Training;
@@ -38,16 +42,20 @@ public class TrainingResourceController {
 	 */
 	@Operation(summary = "Store Training Data", description = "Stores the current training data.")
 	@PostMapping(value = "/{dataName}", consumes = "text/plain", produces = "text/plain")
-	public ResponseEntity<String> storeData(HttpEntity<String> body, @PathVariable("dataName") String name) {
+	public ResponseEntity<String> storeData(HttpEntity<String> body, @PathVariable("dataName") String name) throws IOException {
 		String resp = null;
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bOut);
+        out.writeObject(body.getBody());
+		byte[] modelBytes = bOut.toByteArray();
 		
 		try {
 			if (service.getTrainingByName(name) != null) {
 				Training t = service.getTrainingByName(name);
-				t.setData(body.getBody());
+				t.setData(modelBytes);
 				service.createTraining(t);
 			} else {
-				Training t = new Training(name, body.getBody());
+				Training t = new Training(name, modelBytes);
 				service.createTraining(t);
 			}
 
@@ -73,7 +81,7 @@ public class TrainingResourceController {
 
 		try {
 			Training t = service.getTrainingByName(name);
-			resp = t.getData();
+			resp = service.convertFromBytes(t.getData()).toString();
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -93,14 +101,14 @@ public class TrainingResourceController {
 	@GetMapping(value = "/training/", produces = "text/plain")
 	public ResponseEntity<String> getDatasets() {
 		String resp = null;
-		JSONObject obj = new JSONObject();
+		JSONArray arr = new JSONArray();
 		try {
 			List<Training> trainings = service.getAllTrainings();
 			for (Training t : trainings) {
-				obj.put(t.getName(), t.getData());
+				arr.add(t.getName());
 			}
 
-			resp = obj.toJSONString();
+			resp = arr.toJSONString();
 		} catch (Exception e) {
 			e.printStackTrace();
 			resp = e.getMessage();

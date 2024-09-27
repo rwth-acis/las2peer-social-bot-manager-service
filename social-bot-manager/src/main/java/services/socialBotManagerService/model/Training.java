@@ -14,12 +14,12 @@ public class Training {
     private String name;
 
     @Column(name = "data")
-    private String data;
+    private byte[] data;
 
     public Training() {
     }
 
-    public Training(String name, String data) {
+    public Training(String name, byte[] data) {
         this.name = name;
         this.data = data;
     }
@@ -40,11 +40,11 @@ public class Training {
         this.name = name;
     }
 
-    public String getData() {
+    public byte[] getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(byte[] data) {
         this.data = data;
     }
     
