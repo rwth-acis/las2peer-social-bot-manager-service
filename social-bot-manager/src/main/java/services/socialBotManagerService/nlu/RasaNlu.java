@@ -1,6 +1,7 @@
 package services.socialBotManagerService.nlu;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -8,8 +9,6 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -61,7 +60,7 @@ public class RasaNlu {
 			String url = this.url + "/model/parse";
 			HttpClient client = HttpClient.newHttpClient();
 			HttpRequest httpRequest = HttpRequest.newBuilder()
-				.uri(UriBuilder.fromUri(url).build())
+				.uri(new URI(url))
 				.header("Content-Type", "application/json")
 				.POST(BodyPublishers.ofString(inputJSON.toJSONString()))
 				.build();

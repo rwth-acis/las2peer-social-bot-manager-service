@@ -2,9 +2,9 @@ package services.socialBotManagerService.nlu;
 
 import java.util.HashMap;
 
-import javax.ws.rs.core.UriBuilder;
-
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -45,16 +45,14 @@ public class TrainingHelper implements Runnable {
 		if (markdownTrainingData.contains("examples: |")) {
 		//	json.put("domain", markdownTrainingData.replace("\\t", ""));
 			json.put("nlu", markdownTrainingData);
-			HashMap<String, String> headers = new HashMap<String, String>();
 			
 			// Send the request
 			try {
 				HttpClient httpClient = HttpClient.newHttpClient();
 				HttpRequest httpRequest = HttpRequest.newBuilder()
-						.uri(UriBuilder.fromUri(url + "/model/train").build())
-						.headers(headers.toString())
+						.uri(new URI(url + "/model/train"))
 						.header("Content-Type", "application/json")
-						.POST(HttpRequest.BodyPublishers.ofString(markdownTrainingData))
+						.POST(HttpRequest.BodyPublishers.ofString(json.toString()))
 						.build();
 
 				HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -69,7 +67,7 @@ public class TrainingHelper implements Runnable {
 				json.put("model_file", "models/" + filename);
 
 				httpRequest = HttpRequest.newBuilder()
-						.uri(UriBuilder.fromUri(url + "/model").build()).headers(headers.toString())
+						.uri(new URI(url + "/model"))
 						.header("Content-Type", "application/json")
 						.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
 						.build();
@@ -77,18 +75,16 @@ public class TrainingHelper implements Runnable {
 				serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 				this.success = serviceResponse.statusCode() == 204;
 
-			} catch (IOException | InterruptedException e) {
+			} catch (IOException | InterruptedException | URISyntaxException e) {
 				e.printStackTrace();
 			}
 
 		} else {
 			json.put("nlu", markdownTrainingData);
-			HashMap<String, String> headers = new HashMap<String, String>();
             try {
 				HttpClient httpClient = HttpClient.newHttpClient();
 				HttpRequest httpRequest = HttpRequest.newBuilder()
-						.uri(UriBuilder.fromUri(url+ "/model/train").build())
-						.headers(headers.toString())
+						.uri(new URI(url+ "/model/train"))
 						.header("Content-Type", "application/json")
 						.POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
 						.build();
@@ -103,13 +99,13 @@ public class TrainingHelper implements Runnable {
 				json.put("model_file", "models/" + filename);
 		
 				httpRequest = HttpRequest.newBuilder()
-				.uri(UriBuilder.fromUri(url + "/model").build()).headers(headers.toString())
+				.uri(new URI(url + "/model"))
 				.header("Content-Type", "application/json")
 				.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
 				.build();
 				serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 				this.success = serviceResponse.statusCode() == 204;
-			} catch (IOException | InterruptedException e) {
+			} catch (IOException | InterruptedException | URISyntaxException e ) {
 				e.printStackTrace();
 			}
 		}

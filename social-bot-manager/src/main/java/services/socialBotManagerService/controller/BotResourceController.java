@@ -22,6 +22,7 @@ import services.socialBotManagerService.chat.ChatMediator;
 import services.socialBotManagerService.chat.ChatMessage;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -30,8 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-
-import javax.ws.rs.core.UriBuilder;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -126,7 +125,7 @@ public class BotResourceController {
             }
 
             try {
-                bp.parseNodesAndEdges(service.getConfig(), nodes, edges, service.webconnectorUrlStatic);
+                bp.parseNodesAndEdges(service, service.getConfig(), nodes, edges, service.webconnectorUrlStatic);
             } catch (Exception e) {
                 // e.printStackTrace();
                 if (e.toString().toLowerCase().contains("login name longer")) {
@@ -181,7 +180,7 @@ public class BotResourceController {
                 // joinPath.replace("$botId", botAgent.getIdentifier());
                 HttpClient httpClient = HttpClient.newHttpClient();
                 HttpRequest httpRequest = HttpRequest.newBuilder()
-                        .uri(UriBuilder.fromUri(joinPath).build())
+                        .uri(new URI(basePath + joinPath))
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(j.toJSONString()))
                         .build();
