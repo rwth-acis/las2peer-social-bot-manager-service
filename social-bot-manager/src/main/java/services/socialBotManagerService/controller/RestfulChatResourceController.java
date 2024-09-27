@@ -94,7 +94,7 @@ public class RestfulChatResourceController {
 	@PostMapping(value = "/{bot}/{organization}/{channel}", consumes = "application/json", produces = "application/json")
 	public ResponseEntity<String> handleRESTfulChat(@PathVariable("bot") String bot, @PathVariable("organization") String organization,
 				@PathVariable("channel") String channel,
-				String input, HttpServletRequest request) {
+				HttpEntity<String> input, HttpServletRequest request) {
 		String token = request.getHeader("Authorization");
 		RESTfulChatResponse answerMsg = null;
 		String email = "";
@@ -116,7 +116,7 @@ public class RestfulChatResourceController {
 
 						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
 						JSONParser p = new JSONParser();
-						JSONObject bodyInput = (JSONObject) p.parse(input);
+						JSONObject bodyInput = (JSONObject) p.parse(input.getBody());
 						String orgChannel = organization + "-" + channel;
 						channelToMessenger.put(orgChannel, m);
 						String msgtext = bodyInput.get("message").toString();
@@ -543,9 +543,11 @@ public class RestfulChatResourceController {
 			if (r.containsKey("error")) {
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(r);
 			}
-			JSONObject input = new JSONObject();
-			input.put("message", "!files");
-			ResponseEntity<String> response = handleRESTfulChat(bot, organization, channel, input.toString(), request);
+			JSONObject inputObj = new JSONObject();
+			inputObj.put("message", "!files");
+			HttpEntity<String> input = new HttpEntity<>(inputObj.toString(), new HttpHeaders());
+			
+			ResponseEntity<String> response = handleRESTfulChat(bot, organization, channel, input, request);
 			JSONParser p = new JSONParser(0);
 			try {
 				JSONObject answer = (JSONObject) p.parse(response.getBody());
@@ -642,9 +644,11 @@ public class RestfulChatResourceController {
 
 			String key = userKey.get(orgaChannel);
 			if (ch.containsKey(key) && !ch.get(key).toString().startsWith("Bitte warte")) {
-				JSONObject input = new JSONObject();
-				input.put("message", "!default");
-				ResponseEntity<String> responseService = handleRESTfulChat(bot, organization, channel, input.toString(), request);
+				JSONObject inputObj = new JSONObject();
+				inputObj.put("message", "!default");
+				HttpEntity<String> input = new HttpEntity<>(inputObj.toString(), new HttpHeaders());
+			
+				ResponseEntity<String> responseService = handleRESTfulChat(bot, organization, channel, input, request);
 				JSONParser p = new JSONParser();
 				try {
 					JSONObject answer = (JSONObject) p.parse(responseService.getBody());
@@ -677,8 +681,8 @@ public class RestfulChatResourceController {
 		Messenger messenger = channelToMessenger.get(orgaChannel);
 		System.out.println("orgaChannel: " + orgaChannel);
 		JSONObject o = (JSONObject) (new JSONParser(JSONParser.MODE_PERMISSIVE)).parse(response);
-		JSONObject input = new JSONObject();
-		input.put("channel", orgaChannel);
+		JSONObject inputObj = new JSONObject();
+		inputObj.put("channel", orgaChannel);
 		String key = o.keySet().toArray()[0].toString();
 
 		if (o.get(key).toString().isEmpty()) {
@@ -686,9 +690,11 @@ public class RestfulChatResourceController {
 		}
 		
 		if (o.get(key).equals("!exit")) {
-			input.put("message", "!exit");
+			inputObj.put("message", "!exit");
+			HttpEntity<String> input = new HttpEntity<>(inputObj.toString(), new HttpHeaders());
+			
 			messenger.addVariable(orgaChannel, "closeContext", "true");
-			handleRESTfulChat(bot, organization, channel, input.toString(), request);
+			handleRESTfulChat(bot, organization, channel, input, request);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ack");
 		}
 
