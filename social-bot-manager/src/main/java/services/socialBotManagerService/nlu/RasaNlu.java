@@ -1,7 +1,6 @@
 package services.socialBotManagerService.nlu;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -11,16 +10,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-// import i5.las2peer.connectors.webConnector.client.ClientResponse;
-// import i5.las2peer.connectors.webConnector.client.MiniClient;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
