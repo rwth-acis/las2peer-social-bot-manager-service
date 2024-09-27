@@ -101,7 +101,7 @@ public class BotResourceController {
     }
 
     @Operation(tags = "initBot", summary = "Initialize a bot", description = "Initialize a bot.")
-    @PostMapping(value = "/init", consumes = "application/json", produces = "application/json")
+    @PostMapping(value = "", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> init(HttpEntity<BotModel> request) {
         try {
 
