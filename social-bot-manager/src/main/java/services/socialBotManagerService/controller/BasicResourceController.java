@@ -37,7 +37,7 @@ public class BasicResourceController {
 	}
 	
     @Operation(tags = {"trainAndLoad"}, description = "Trains and loads an NLU model on the given Rasa NLU server instance.")
-    @PostMapping(value = "/trainAndLoad", consumes = "application/json", produces = "text/plain")
+    @PostMapping(value = "/trainAndLoad/", consumes = "application/json", produces = "text/plain")
 	// TODO: Just an adapter, since the Rasa server doesn't support
 	// "Access-Control-Expose-Headers"
 	// and the model file name is returned as a response header... Remove and just
@@ -51,19 +51,15 @@ public class BasicResourceController {
 		}
 		try {
 			JSONObject bodyJson = request.getBody();
-			System.out.println(bodyJson);
 			String url = (String) bodyJson.get("url");
 			String config = (String) bodyJson.get("config");
 			String markdownTrainingData = (String) bodyJson.get("markdownTrainingData");
 			String intents = (String) bodyJson.get("intents");
 			// added to have a way to access the intents of the rasa server
-			SocialBotManagerService.rasaIntents.put(url.split("://")[1], intents);
+			service.rasaIntents.put(url.split("://")[1], intents);
 			service.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
 			service.nluTrainThread = new Thread(service.nluTrain);
 			service.nluTrainThread.start();
-			// TODO: Create a member for this thread, make another REST method to check
-			// whether
-			// training was successful.
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -74,7 +70,7 @@ public class BasicResourceController {
 	}
 
 	@Operation(description = "Returns information about the training process started by the last invocation of `/trainAndLoad`.", tags = "")
-	@GetMapping(value = "/trainAndLoadStatus", produces = "text/plain")
+	@GetMapping(value = "/trainAndLoadStatus/", produces = "text/plain")
 	// TODO: Just an adapter, since the Rasa server doesn't support
 	// "Access-Control-Expose-Headers"
 	// and the model file name is returned as a response header... Remove and just
