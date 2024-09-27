@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+
 
 import com.google.gson.Gson;
 
@@ -44,7 +44,6 @@ import services.socialBotManagerService.model.ServiceFunctionAttribute;
 import services.socialBotManagerService.model.Trigger;
 import services.socialBotManagerService.service.SocialBotManagerService;
 
-@Component
 public class BotParser {
 	private static BotParser instance = null;
 
@@ -61,7 +60,7 @@ public class BotParser {
 		return instance;
 	}
  
-	public void parseNodesAndEdges(BotConfiguration config,
+	public void parseNodesAndEdges(SocialBotManagerService service, BotConfiguration config,
 			LinkedHashMap<String, BotModelNode> nodes, LinkedHashMap<String, BotModelEdge> edges, String address)
 			throws ParseBotException, IOException, DeploymentException, AuthTokenException {
 
@@ -81,7 +80,8 @@ public class BotParser {
 		HashMap<String, BotRoutine> rlist = new HashMap<String, BotRoutine>();
 
 		HashMap<String, ServiceFunction> onBotStartList = new HashMap<String, ServiceFunction>();
-
+		
+		this.sbfService = service;
 		Bot bot = null;
 		Gson g = new Gson();
 		// NODES
@@ -575,7 +575,6 @@ public class BotParser {
 	}
 
 	private Bot addBot(BotModelNode elem) {
-		System.out.println(sbfService);
 		Bot b = new Bot();
 		for (Entry<String, BotModelNodeAttribute> subEntry : elem.getAttributes().entrySet()) {
 			BotModelNodeAttribute subElem = subEntry.getValue();
