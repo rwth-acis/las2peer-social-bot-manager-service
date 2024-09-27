@@ -3,6 +3,7 @@ package services.socialBotManagerService.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,12 +38,18 @@ public class TrainingResourceController {
 	 */
 	@Operation(summary = "Store Training Data", description = "Stores the current training data.")
 	@PostMapping(value = "/{dataName}", consumes = "text/plain", produces = "text/plain")
-	public ResponseEntity<String> storeData(String body, String name) {
+	public ResponseEntity<String> storeData(HttpEntity<String> body, @PathVariable("dataName") String name) {
 		String resp = null;
-		Training t = new Training(name, body);
 		
 		try {
-			service.createTraining(t);
+			if (service.getTrainingByName(name) != null) {
+				Training t = service.getTrainingByName(name);
+				t.setData(body.getBody());
+				service.createTraining(t);
+			} else {
+				Training t = new Training(name, body.getBody());
+				service.createTraining(t);
+			}
 
 			resp = "Training data stored.";
 		} catch (Exception e) {
@@ -83,7 +90,7 @@ public class TrainingResourceController {
 	 * @return Returns an HTTP response with plain text string content.
 	 */
 	@Operation(tags = "getDatasets", summary = "Retrieve datasets", description = "Get all stored datasets.")
-	@GetMapping(value = "/getDatasets", produces = "text/plain")
+	@GetMapping(value = "/training/", produces = "text/plain")
 	public ResponseEntity<String> getDatasets() {
 		String resp = null;
 		JSONObject obj = new JSONObject();
