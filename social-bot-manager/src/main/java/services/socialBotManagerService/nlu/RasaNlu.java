@@ -6,11 +6,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import java.util.HashSet;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -50,13 +47,8 @@ public class RasaNlu {
 
 	private JSONObject getIntentJSON(String input) throws IOException, ParseException {
 		try {
-			// MiniClient client = new MiniClient();
-			// client.setConnectorEndpoint(this.url);
-			JSONObject inputJSON = new JSONObject(
-					Collections.singletonMap("text", StringEscapeUtils.escapeJson(input)));
-			HashMap<String, String> headers = new HashMap<String, String>();
-			// ClientResponse response = client.sendRequest("POST", "model/parse", inputJSON.toString(),
-			// 		MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON, headers);
+			JSONObject inputJSON = new JSONObject();
+			inputJSON.put("text", input);
 			String url = this.url + "/model/parse";
 			HttpClient client = HttpClient.newHttpClient();
 			HttpRequest httpRequest = HttpRequest.newBuilder()

@@ -52,9 +52,8 @@ public class TrainingHelper implements Runnable {
 				HttpRequest httpRequest = HttpRequest.newBuilder()
 						.uri(new URI(url + "/model/train"))
 						.header("Content-Type", "application/json")
-						.POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+						.POST(HttpRequest.BodyPublishers.ofString(markdownTrainingData))
 						.build();
-
 				HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 				String filename = serviceResponse.headers().firstValue("filename").get();
 

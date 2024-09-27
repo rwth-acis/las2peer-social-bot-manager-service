@@ -31,7 +31,7 @@ public class Intent {
 	// Constructor for intent extraction through Rasa NLU.
 	public Intent(JSONObject json) {
 		JSONObject intentInner = (JSONObject) json.get("intent");
-		float confidence = (float) intentInner.get("confidence");
+		float confidence = ((Number) intentInner.get("confidence")).floatValue();
 		this.intentKeyword = replaceUmlaute(intentInner.get("name").toString());
 		this.confidence = confidence;
 
