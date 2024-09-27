@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 import services.socialBotManagerService.model.BotModel;
@@ -74,18 +75,14 @@ public class ModelResourceController {
 	@GetMapping(value = "/", produces = "application/json")
 	public ResponseEntity<String> getModels() {
 		String resp = null;
-		JSONObject json = new JSONObject();
+		JSONArray modelsArray = new JSONArray();
 
 		try {
 			List<Model> models = service.getAllModels();
 			for (Model model : models) {
-				json.put("Name", model.getName());
-				byte[] m = model.getModel();
-				BotModel botModel = (BotModel) service.convertFromBytes(m);
-				json.put("Model", botModel.toJSON());
-				System.out.println(model.getName());
+				modelsArray.add(model.getName());
 			}
-			resp = json.toJSONString();
+			resp = modelsArray.toJSONString();
 		} catch (Exception e) {
 			e.printStackTrace();
 			resp = e.getMessage();
@@ -111,6 +108,23 @@ public class ModelResourceController {
 			resp = new JSONObject();
 			resp.put("error", e.getMessage());
 		} 
+
+		return ResponseEntity.ok().body(resp);
+	}
+
+	@Operation(summary = "Delete BotModel by name", description = "Deletes the BotModel for the given name.")
+	@GetMapping(value = "/delete/{name}", produces = "text/plain")
+	public ResponseEntity<String> deleteModelByName(@PathVariable("name") String name) {
+		String resp = null;
+
+		try {
+			Model m = service.getModelByName(name);
+			service.deleteModel(m.getId());
+			resp = "Model " + name + " deleted.";
+		} catch (Exception e) {
+			e.printStackTrace();
+			resp = e.getMessage();
+		}
 
 		return ResponseEntity.ok().body(resp);
 	}
