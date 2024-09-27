@@ -199,6 +199,10 @@ public class SocialBotManagerService {
 		return modelRepository.findModelByName(name).getId();
 	}
 
+	public void deleteModel(UUID modelId) {
+		modelRepository.deleteById(modelId);
+	}
+
 	@Autowired
 	private TrainingRepository trainingRepository;
 
