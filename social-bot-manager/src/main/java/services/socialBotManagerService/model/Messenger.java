@@ -358,7 +358,8 @@ public class Messenger {
 
 	// Handles simple responses ("Chat Response") directly, logs all messages and
 	// extracted intents into `messageInfos` for further processing later on.
-	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot) {
+	public void handleMessages(ArrayList<MessageInfo> messageInfos, Bot bot, SocialBotManagerService sbfService) {
+		this.sbfService = sbfService;
 		Vector<ChatMessage> newMessages = this.chatMediator.getMessages();
 		for (ChatMessage message : newMessages) {
 			try {
@@ -930,12 +931,7 @@ public class Messenger {
 				}
 				remarks.put("stateLabel", state != null ? state.getIntentLabel() : "null");
 				remarks.put("intent", intent != null ? intent.getKeyword() : "null");
-				String activityName = state == null ? intent.getKeyword() : state.getIntentLabel();
-				// this.l2pContext.monitorXESEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1,
-				// 		remarks.toJSONString(),
-				// 		conversationId.toString(),
-				// 		activityName,
-				// 		bot.getId(), "bot", "complete", System.currentTimeMillis());
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1037,12 +1033,14 @@ public class Messenger {
 			String k = entity.getEntityName();
 			String v = entity.getValue();
 			try {
-				Attributes attribute = sbfService.findIdByBot(bot.getName(), channel, user, k);
+				Attributes attribute = sbfService.findAttributeByUser(user, bot.getName());
+				Long botId = attribute.getId();
 
-				if (attribute != null) {
+				if (botId != null) {
+					Attributes a = sbfService.getAttributeById(botId);
 					// Update
 					attribute.setValue(v);
-					sbfService.createAttribute(attribute);
+					sbfService.createAttribute(a);
 				} else {
 					// Insert
 					Attributes newAttribute = new Attributes();
