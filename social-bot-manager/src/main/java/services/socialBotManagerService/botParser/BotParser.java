@@ -397,12 +397,8 @@ public class BotParser {
 		j.put("triggerFunctions", jaf);
 		System.out.println(jaf.toJSONString());
 		JSONArray jarr = new JSONArray();
-		// for (BotAgent b : botAgents.values()) {
-		// 	jarr.add(b.getIdentifier());
-		// }
 		j.put("botIds", jarr);
 
-		// Context.get().monitorEvent(MonitoringEvent.BOT_ADD_TO_MONITORING, j.toJSONString());
 	}
 
 	private Messenger addMessenger(String key, BotModelNode elem, BotConfiguration config)
@@ -583,10 +579,8 @@ public class BotParser {
 				System.out.println("Bot Name: " + subVal.getValue());
 				String botName = subVal.getValue();
 				String botId = sbfService.getModelIdByName(botName).toString();
-				System.out.println(botId);
 				b.setId(botId);
 				b.setName(botName);
-				sbfService.createBot(b);
 				System.out.println("Bot " + botName + " registered with Id:" + botId + ".");
 			}
 		}
