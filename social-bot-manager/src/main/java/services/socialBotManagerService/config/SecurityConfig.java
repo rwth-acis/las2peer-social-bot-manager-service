@@ -33,7 +33,6 @@ public class SecurityConfig {
         "/v3/api-docs",
         "/swagger.json",
         "/SBFManager/swagger.json",
-        "/SBFManager/models/**",
     };
 
     @Bean
