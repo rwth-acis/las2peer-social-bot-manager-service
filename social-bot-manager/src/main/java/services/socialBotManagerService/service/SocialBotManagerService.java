@@ -55,7 +55,6 @@ import services.socialBotManagerService.model.TriggerFunction;
 import services.socialBotManagerService.nlu.Entity;
 import services.socialBotManagerService.nlu.TrainingHelper;
 import services.socialBotManagerService.repository.jpa.AttributeRepository;
-import services.socialBotManagerService.repository.jpa.BotRepository;
 import services.socialBotManagerService.repository.jpa.ModelRepository;
 import services.socialBotManagerService.repository.jpa.TrainingRepository;
 
@@ -101,7 +100,7 @@ public class SocialBotManagerService {
 	}
 
 	// private static HashMap<String, Boolean> botIsActive = new HashMap<String, Boolean>();
-	public static HashMap<String, String> rasaIntents = new HashMap<String, String>();
+	public HashMap<String, String> rasaIntents = new HashMap<String, String>();
 	private static HashMap<String, String> courseMap = null;
 
 	public static BotConfiguration config;
@@ -113,9 +112,8 @@ public class SocialBotManagerService {
 	public TrainingHelper nluTrain = null;
 	public Thread nluTrainThread = null;
 
-	public SocialBotManagerService(AttributeRepository attributeRepository, BotRepository botRepository, ModelRepository modelRepository, TrainingRepository trainingRepository) throws Exception {
+	public SocialBotManagerService(AttributeRepository attributeRepository, ModelRepository modelRepository, TrainingRepository trainingRepository) throws Exception {
 		this.attributeRepository = attributeRepository;
-		this.botRepository = botRepository;
 		this.modelRepository = modelRepository;
 		this.trainingRepository = trainingRepository;
 		// setFieldValues(); // This sets the values of the configuration file
@@ -147,33 +145,6 @@ public class SocialBotManagerService {
 			setConfig(new BotConfiguration());
 			getConfig().setBotConfiguration(new HashMap<String, Bot>());
 		}
-	}
-
-	@Autowired
-	private BotRepository botRepository;
-
-	public Bot createBot(Bot bot) {
-		return botRepository.save(bot);
-	}
-
-	public List<Bot> getAllBots() {
-		return botRepository.findAll();
-	}
-
-	public Bot getBotById(String botId) {
-		return botRepository.findBotById(botId);
-	}
-
-	public String getBotIdByName(String name) {
-		return botRepository.findBotByName(name).getId();
-	}
-
-	public Bot updateBot(Bot bot) {
-		return botRepository.save(bot);
-	}
-
-	public void deleteBot(String botId) {
-		botRepository.deleteBotById(botId);
 	}
 
 	@Autowired
@@ -237,8 +208,12 @@ public class SocialBotManagerService {
 		return attributeRepository.findById(attributeId).orElse(null);
 	}
 
-	public Attributes findIdByBot(String bot, String channel, String user, String key) {
+	public Long findIdByBot(String bot, String channel, String user, String key) {
 		return attributeRepository.findIdByBot(bot, channel, user, key);
+	}
+
+	public Attributes findAttributeByUser(String user, String bot) {
+		return attributeRepository.findAttributeByUser(user, bot);
 	}
 
 	public String findValueByBot(String channel, String key) {
@@ -397,7 +372,7 @@ public class SocialBotManagerService {
 		
 		String token = request.getHeader("Authorization");
 
-		String botId = getBotIdByName(botName).toString();
+		String botId = getModelByName(botName).getId().toString();
 		Bot bot = botConfig.getBots().get(botId);
 
 		if (bot != null) {
@@ -484,7 +459,7 @@ public class SocialBotManagerService {
 	public void prepareRequestParameters(BotConfiguration botConfig, String botName, MessageInfo messageInfo,
 			String functionPath, JSONObject body, ServiceFunction botFunction)
 			throws ParseBotException{
-		String botId = getBotIdByName(botName).toString();
+		String botId = getModelByName(botName).getId().toString();
 		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null) {
 			botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
@@ -562,7 +537,7 @@ public class SocialBotManagerService {
 
 	public void checkTriggerBot(BotConfiguration botConfig, JSONObject body, String botName, String triggerUID,
 			String triggerFunctionName, String token) throws ParseBotException {
-		String botId = getBotIdByName(botName).toString();
+		String botId = getModelByName(botName).getId().toString();
 		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null 
 		// && !(triggerUID.toLowerCase().equals(botAgent.getIdentifier().toLowerCase()))
@@ -870,7 +845,7 @@ public class SocialBotManagerService {
 
 			remarks.put("serviceEndpoint", serviceEndpoint);
 			String userId = triggeredBody.get("user").toString();
-			Bot bot = botConfig.getBots().get(getBotIdByName(botName).toString());
+			Bot bot = botConfig.getBots().get(getModelByName(botName).getId().toString());
 			String messengerID = sf.getMessengerName();
 			String channel = triggeredBody.get("channel").toString();
 			// HashMap<String, String> headers = new HashMap<String, String>();
@@ -1175,7 +1150,7 @@ public class SocialBotManagerService {
 					// botAgent.getIdentifier().toString(), "bot", "complete", System.currentTimeMillis());
 		} else if (sf.getActionType().equals(ActionType.SENDMESSAGE)) {
 			// deprecated
-			Bot bot = botConfig.getBots().get(getBotIdByName(botName).toString());
+			Bot bot = botConfig.getBots().get(getModelByName(botName).getId().toString());
 			if (triggeredBody.get("channel") == null && triggeredBody.get("email") == null) {
 				// TODO Anonymous agent error
 				HttpHeaders headers = new HttpHeaders();

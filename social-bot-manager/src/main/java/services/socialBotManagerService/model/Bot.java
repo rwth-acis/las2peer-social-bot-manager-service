@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.websocket.DeploymentException;
+
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import jakarta.persistence.Entity;
@@ -17,20 +18,17 @@ import services.socialBotManagerService.botParser.ParseBotException;
 import services.socialBotManagerService.chat.AuthTokenException;
 import services.socialBotManagerService.chat.ChatService;
 import services.socialBotManagerService.nlu.RasaNlu;
+import services.socialBotManagerService.service.SocialBotManagerService;
 
-@Entity
-@Table(name = "bot")
 public class Bot {
+
 	private String name;
 	// create uuid for bot id
-	@Id
 	private String id;
 	private String version = "1.0.0";
 	private String service;
 	private Date created_at;
 	private Date updated_at;
-
-	@Field("active")
 	private HashMap<String, Boolean> active;
 
 	private HashMap<String, ServiceFunction> botServiceFunctions;
@@ -205,9 +203,9 @@ public class Bot {
 		return trueCount;
 	}
 
-	public void handleMessages(ArrayList<MessageInfo> messageInfos) {
+	public void handleMessages(ArrayList<MessageInfo> messageInfos, SocialBotManagerService sbfService) {
 		for (Messenger m : this.messengers.values()) {
-			m.handleMessages(messageInfos, this);
+			m.handleMessages(messageInfos, this, sbfService);
 		}
 	}
 
