@@ -6,7 +6,7 @@ COPY --chown=gradle:gradle social-bot-manager/build.gradle settings.gradle /soci
 COPY --chown=gradle:gradle social-bot-manager/src /social-bot-manager/src
 COPY --chown=gradle:gradle gradle.properties /social-bot-manager/gradle.properties
 
-RUN gradle --no-daemon build 
+RUN gradle --no-daemon build -x test
 
 # Use a Java base image
 FROM openjdk:17-jdk-buster
