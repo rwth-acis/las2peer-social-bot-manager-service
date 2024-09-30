@@ -9,10 +9,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
+import java.net.URI;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
@@ -26,6 +23,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import java.io.InputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.origin.SystemEnvironmentOrigin;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -136,7 +134,7 @@ public class RestfulChatResourceController {
 						System.out.println(msg);
 						
 						//hadnle messages checks the message collector for new user messages, handles them by determinig the intent and corresponding incoming message, setting the state
-						m.handleMessages(messageInfos, b);
+						m.handleMessages(messageInfos, b, sbfService);
 						answerMsg = chatMediator.getMessageForChannel(orgChannel);
 						for (MessageInfo messageInfo : messageInfos) {
 							try {
@@ -151,7 +149,6 @@ public class RestfulChatResourceController {
 								JSONObject body = new JSONObject();
 								Boolean async = m.getAsync(orgChannel);
 								System.out.println("Async value:"+async);
-								// BotAgent botAgent = getBotAgents().get(b.getName());
 								ServiceFunction sf = new ServiceFunction();
 								sbfService.prepareRequestParameters(SocialBotManagerService.config, bot, messageInfo, functionPath, body,
 										sf);
@@ -189,8 +186,6 @@ public class RestfulChatResourceController {
 
 							}
 						}
-						// chatMediator.sendMessageToChannel(orgChannel, "msgtext", new
-						// HashMap<String,IncomingMessage>(), "text", null);
 
 						found = true;
 					}
@@ -213,20 +208,20 @@ public class RestfulChatResourceController {
 
 	private void performTrigger(BotConfiguration botConfig, String botname, ServiceFunction sf, String functionPath, String triggerUID, JSONObject triggeredBody, String token) {
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
+			System.out.println("Perform Trigger.");
 
-			HttpHeaders headers = new HttpHeaders();
-			headers.set("Authorization", token);
-			HttpEntity<String> entity = new HttpEntity<>(headers);
-
-			String userId = triggeredBody.get("user").toString();
-			Bot bot = botConfig.getBots().get(botname);
-			String messengerID = sf.getMessengerName();
-			String email = triggeredBody.get("email").toString();
-			String msg = triggeredBody.get("msg").toString();
-			ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
-			Messenger m = bot.getMessenger(messengerID);
 			JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
 			try {
+				String userId = triggeredBody.get("user").toString();
+				String email = triggeredBody.get("email").toString();
+				String msg = triggeredBody.get("msg").toString();
+				String botId = sbfService.getModelByName(botname).getId().toString();
+				System.out.println("BotID: " + botId);				
+				Bot bot = botConfig.getBots().get(botId);
+				String messengerID = sf.getMessengerName();
+				// ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
+				Messenger m = bot.getMessenger(messengerID);
+				System.out.println("haglo?");
 				File f = null;
 				if (triggeredBody.containsKey("fileBody")) {
 					byte[] decodedBytes = java.util.Base64.getDecoder()
@@ -245,9 +240,8 @@ public class RestfulChatResourceController {
 						e.printStackTrace();
 					}
 				}
-
 				String channel = triggeredBody.get("channel").toString();
-				Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+				// Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 				functionPath = functionPath.replace("[channel]", channel);
 				functionPath = functionPath.replace("[email]", email);
 				functionPath = functionPath.replace("[organization]", triggeredBody.get("organization").toString());
@@ -308,19 +302,23 @@ public class RestfulChatResourceController {
 				}
 
 				System.out.println("Calling following URL: " + sf.getServiceName() + functionPath + queryParams);
-				WebTarget target = textClient
-						.target(sf.getServiceName() + functionPath + queryParams);
+				// WebTarget target = textClient
+				// 		.target(sf.getServiceName() + functionPath + queryParams);
 				if (f != null && f.exists()) {
 					FileDataBodyPart filePart = new FileDataBodyPart("file", f);
 					mp.bodyPart(filePart);
 				}
-
+				URI target = new URI(sf.getServiceName() + functionPath + queryParams);
+				System.out.println(target);
+				HttpHeaders headers = new HttpHeaders();
+				headers.set("Authorization", token);
+				HttpEntity<String> entity = new HttpEntity<>(headers);
 				ResponseEntity<String> response = null;
 				if (sf.getHttpMethod().equals("get")) {
-					response = sbfService.restTemplate.exchange(target.getUri(), HttpMethod.GET, entity, String.class);
+					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, String.class);
 				} else {
 					HttpEntity<FormDataMultiPart> entityMp = new HttpEntity<FormDataMultiPart>(mp, headers);
-					response = sbfService.restTemplate.exchange(target.getUri(), HttpMethod.POST, entityMp, String.class);
+					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, String.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
 				}
@@ -408,7 +406,7 @@ public class RestfulChatResourceController {
 								.getMessageCollector();
 						String orgChannel = organization + "-" + channel;
 						msgcollector.handle(encoded, fname, ftype, orgChannel);
-						m.handleMessages(messageInfos, b);
+						m.handleMessages(messageInfos, b, sbfService);
 						answerMsg = chatMediator.getMessageForChannel(orgChannel);
 						String email = "";
 						for (MessageInfo messageInfo : messageInfos) {
