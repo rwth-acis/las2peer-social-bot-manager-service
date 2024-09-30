@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "services.socialBotManagerService")
 @EnableJpaRepositories(basePackages = "services.socialBotManagerService.repository.jpa")
 @EnableMongoRepositories(basePackages = "services.socialBotManagerService.repository.mongo")
 public class SocialBotManagerServiceApplication {
