@@ -1,48 +1,43 @@
-# first stage: build using gradle 
-FROM --platform=${BUILDPLATFORM:-amd64} gradle:7.5.0-jdk17 AS build
+FROM gradle:jdk17-alpine AS builder
 
-ENV GRADLE_OPTS="-Xmx2048m -Xms512m -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true"
+WORKDIR /social-bot-manager
 
-COPY --chown=gradle:gradle . /src
+COPY --chown=gradle:gradle social-bot-manager/build.gradle settings.gradle /social-bot-manager/
+COPY --chown=gradle:gradle social-bot-manager/src /social-bot-manager/src
+COPY --chown=gradle:gradle gradle.properties /social-bot-manager/gradle.properties
+
+RUN gradle --no-daemon build 
+
+# Use a Java base image
+FROM openjdk:17-jdk-buster
+
+RUN apt-get update && apt-get install -y bash tzdata curl && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory 
+COPY . /src
 WORKDIR /src
-RUN chmod -R a+rwx /src
-RUN chmod +x /src/docker-entrypoint.sh
 
-RUN gradle clean
-RUN gradle build --exclude-task test 
+# Copy the Spring Boot application JAR file into the Docker image
+COPY --from=builder /social-bot-manager/build/libs/*.jar /src/social-bot-manager-4.0.0.jar
 
-# second stage: create the docker image
-FROM --platform=amd64 openjdk:17-jdk-alpine
+# Set environment variables
+ENV WEBCONNECTOR_URL=http://localhost:8080
+ENV SERVER_PORT=8080
+ENV ISSUER_URI=https://auth.las2peer.org/auth/realms/main 
+ENV SET_URI=https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/certs
+ENV SPRING_DATASOURCE_URL=
+ENV SPRING_DATASOURCE_USERNAME=postgres
+ENV SPRING_DATASOURCE_PASSWORD=
+ENV SPRING_JPA_HIBERNATE_DDL_AUTO=update
+ENV SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/
+ENV SPRING_DATA_MONGODB_DATABASE=
+ENV XAPI_URL=
+ENV XAPI_HOMEPAGE=
+ENV TZ=Europe/Berlin 
 
-ENV LAS2PEER_PORT=9011
-ENV DATABASE_NAME=SBF
-ENV DATABASE_HOST=mobsos-mysql.mobsos
-ENV DATABASE_PORT=3306
-ENV DATABASE_USER=root
-ENV DATABASE_PASSWORD=root
-ENV TZ=Europe/Berlin
+# Expose the port that the Spring Boot application is listening on
+EXPOSE 8080
 
-RUN apk add --update bash mysql-client tzdata curl && rm -f /var/cache/apk/*
+# Set the entry point to run the docker-entrypoint.sh script
+ENTRYPOINT ["java","-jar","/src/social-bot-manager-4.0.0.jar", "--spring.security.oauth2.resourceserver.jwt.issuer-uri=${ISSUER_URI}", "--spring.security.oauth2.resourceserver.jwt.jwk-set-uri=${SET_URI}"]
 
-RUN addgroup -g 1000 -S las2peer && \
-    adduser -u 1000 -S las2peer -G las2peer
-
-COPY --chown=las2peer:las2peer . /app
-WORKDIR /app
-RUN chmod -R a+rwx /app
-RUN chmod +x /app/docker-entrypoint.sh
-# run the rest as unprivileged user
-USER las2peer
-
-COPY --from=build --chown=las2peer:las2peer /src/social-bot-manager/export /app/social-bot-manager/export/
-COPY --from=build --chown=las2peer:las2peer /src/service /app/service/
-COPY --from=build --chown=las2peer:las2peer /src/lib /app/lib/
-
-RUN dos2unix /app/gradle.properties
-RUN dos2unix /app/docker-entrypoint.sh
-
-RUN dos2unix /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample
-RUN mv /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties.sample /app/etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
-
-EXPOSE $LAS2PEER_PORT
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
