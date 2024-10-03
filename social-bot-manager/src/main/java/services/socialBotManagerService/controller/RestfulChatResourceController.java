@@ -221,7 +221,6 @@ public class RestfulChatResourceController {
 				String messengerID = sf.getMessengerName();
 				// ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
-				System.out.println("haglo?");
 				File f = null;
 				if (triggeredBody.containsKey("fileBody")) {
 					byte[] decodedBytes = java.util.Base64.getDecoder()
@@ -309,7 +308,6 @@ public class RestfulChatResourceController {
 					mp.bodyPart(filePart);
 				}
 				URI target = new URI(sf.getServiceName() + functionPath + queryParams);
-				System.out.println(target);
 				HttpHeaders headers = new HttpHeaders();
 				headers.set("Authorization", token);
 				HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -317,7 +315,7 @@ public class RestfulChatResourceController {
 				if (sf.getHttpMethod().equals("get")) {
 					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, String.class);
 				} else {
-					HttpEntity<FormDataMultiPart> entityMp = new HttpEntity<FormDataMultiPart>(mp, headers);
+					HttpEntity<String> entityMp = new HttpEntity<String>(mp.toString(), headers);
 					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, String.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
