@@ -42,3 +42,4 @@ mysql
 etc/i5.las2peer.services.socialBotManagerService.SocialBotManagerService.properties
 .env
 *.propertiesLocal
+kubernetes/
