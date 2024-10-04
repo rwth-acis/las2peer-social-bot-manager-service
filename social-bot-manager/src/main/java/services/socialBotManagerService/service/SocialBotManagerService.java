@@ -1463,12 +1463,19 @@ public class SocialBotManagerService {
 		JSONObject swagger = new JSONObject();
 		String uri = webconnectorUrl + "/SBFManager/v3/api-docs";
 		RestTemplate restTemplate = new RestTemplate();
-		JSONObject result = restTemplate.getForObject(uri, JSONObject.class);
-		
+		String result = restTemplate.getForObject(uri, String.class);
+		JSONParser parser = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject resultJson = new JSONObject();
+		try {
+			resultJson = (JSONObject) parser.parse(result);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
 		swagger.put("swagger", "2.0");
-		swagger.put("info", result.get("info"));
+		swagger.put("info", resultJson.get("info"));
 		swagger.put("basePath", "/SBFManager");
-		swagger.put("paths", result.get("paths"));
+		swagger.put("paths", resultJson.get("paths"));
 		return swagger;
 	}
 
