@@ -94,6 +94,9 @@ public class RestfulChatResourceController {
 				@PathVariable("channel") String channel,
 				HttpEntity<String> input, HttpServletRequest request) {
 		String token = request.getHeader("Authorization");
+		if (token.startsWith("Basic")) {
+			token = "Bearer " + request.getHeader("Access-Token");
+		}
 		RESTfulChatResponse answerMsg = null;
 		String email = "";
 
@@ -377,6 +380,10 @@ public class RestfulChatResourceController {
 				@FormDataParam("file") InputStream uploadedInputStream,
 				@FormDataParam("file") FormDataContentDisposition fileDetail, HttpServletRequest request) {
 		String token = request.getHeader("Authorization");
+		if (token.startsWith("Basic")) {
+			token = "Bearer " + request.getHeader("Access-Token");
+		}
+
 		RESTfulChatResponse answerMsg = new RESTfulChatResponse("");
 		try {
 			Bot b = null;

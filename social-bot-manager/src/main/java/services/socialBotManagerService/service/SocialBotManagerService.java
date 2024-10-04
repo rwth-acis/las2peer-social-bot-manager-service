@@ -371,7 +371,10 @@ public class SocialBotManagerService {
 			throws ParseBotException {
 		
 		String token = request.getHeader("Authorization");
-
+		if (token.startsWith("Basic")) {
+			token = "Bearer " + request.getHeader("Access-Token");
+		}
+		
 		String botId = getModelByName(botName).getId().toString();
 		Bot bot = botConfig.getBots().get(botId);
 
