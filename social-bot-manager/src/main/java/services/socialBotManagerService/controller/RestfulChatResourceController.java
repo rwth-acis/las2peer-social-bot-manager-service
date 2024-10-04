@@ -267,8 +267,9 @@ public class RestfulChatResourceController {
 					userMessage.put(channel, triggeredBody);
 				}
 
-				FormDataMultiPart mp = new FormDataMultiPart();
-				mp.field("msg", msg.toString());
+				JSONObject mp = new JSONObject();
+				// FormDataMultiPart mp = new FormDataMultiPart();
+				mp.put("msg", msg.toString());
 				String queryParams = "?";
 				if (form != null) {
 					for (String key : form.keySet()) {
@@ -284,20 +285,19 @@ public class RestfulChatResourceController {
 							}
 						} else {
 							if (form.get(key).equals("[channel]")) {
-								mp = mp.field(key, channel);
+								mp.put(key, channel);
 							} else if (form.get(key).equals("[email]")) {
-								mp = mp.field(key, email);
+								mp.put(key, email);
 							} else if (form.get(key).equals("[organization]")) {
-								mp = mp.field(key, triggeredBody.get("organization").toString());
+								mp.put(key, triggeredBody.get("organization").toString());
 							} else if (form.get(key).toString().contains("[")) {
 								for (String eName : entities.keySet()) {
 									if (form.get(key).toString().toLowerCase().contains(eName)) {
-										mp = mp.field(key,
-												((JSONObject) entities.get(eName)).get("value").toString());
+										mp.put(key, ((JSONObject) entities.get(eName)).get("value").toString());
 									}
 								}
 							} else {
-								mp = mp.field(key, form.get(key).toString());
+								mp.put(key, form.get(key).toString());
 							}
 						}
 					}
@@ -308,25 +308,25 @@ public class RestfulChatResourceController {
 				// 		.target(sf.getServiceName() + functionPath + queryParams);
 				if (f != null && f.exists()) {
 					FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-					mp.bodyPart(filePart);
+					mp.put("file",filePart);
 				}
+
 				URI target = new URI(sf.getServiceName() + functionPath + queryParams);
 				HttpHeaders headers = new HttpHeaders();
 				headers.set("Authorization", token);
-				HttpEntity<String> entity = new HttpEntity<>(headers);
-				ResponseEntity<String> response = null;
+				HttpEntity<JSONObject> entity = new HttpEntity<>(headers);
+				ResponseEntity<JSONObject> response = null;
 				if (sf.getHttpMethod().equals("get")) {
-					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, String.class);
+					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, JSONObject.class);
 				} else {
-					HttpEntity<String> entityMp = new HttpEntity<String>(mp.toString(), headers);
-					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, String.class);
+					HttpEntity<JSONObject> entityMp = new HttpEntity<JSONObject>(mp, headers);
+					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
 				}
 
 				String test = response.getBody().toString();
 				System.out.println("Response Text:" + test);
-				mp.close();
 				try {
 					java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.get("fileName") + "."
 							+ triggeredBody.get("fileType")));
