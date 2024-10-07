@@ -465,7 +465,6 @@ public class SocialBotManagerService {
 		String botId = getModelByName(botName).getId().toString();
 		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null) {
-			System.out.println("Botfunctions" + bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId()));
 			botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 			functionPath = "";
 			if (botFunction.getActionType().equals(ActionType.SERVICE)) {
@@ -533,6 +532,7 @@ public class SocialBotManagerService {
 			body.put("msg", messageInfo.getMessage().getText());
 			body.put("contextOn", messageInfo.contextActive());
 			body.put("functionPath", functionPath);
+			System.out.println("Body is: " + body);
 			// return body;
 			// performTrigger(botConfig, botFunction, botAgent, functionPath, "", body);
 		}
@@ -613,8 +613,7 @@ public class SocialBotManagerService {
 		System.out.println(triggeredFunctionAttribute.getName());
 		if (triggeredFunctionAttribute.isSameAsTrigger()) {
 			mapAttributes(triggeredBody, triggeredFunctionAttribute, functionPath, attlist, triggerAttributes);
-		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { // triggeredFunctionAttribute.getName()
-																					// == "body", doesn't make sense?
+		} else if (triggeredFunctionAttribute.getParameterType().equals("body")) { 
 			JSONObject triggerBody = (JSONObject) triggerAttributes.get("body");
 			// sfa has child attributes
 			if (!triggeredFunctionAttribute.getChildAttributes().isEmpty()) {
