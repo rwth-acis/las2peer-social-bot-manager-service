@@ -386,7 +386,7 @@ public class RestfulChatResourceController {
 				@PathVariable("organization") String organization, @PathVariable("channel") String channel, 
 				@RequestPart("file") MultipartFile uploadedInputStream, HttpServletRequest request) {
 		String token = request.getHeader("Authorization");
-		if (token.startsWith("Basic")) {
+		if (token != null && token.startsWith("Basic")) {
 			token = "Bearer " + request.getHeader("Access-Token");
 		}
 

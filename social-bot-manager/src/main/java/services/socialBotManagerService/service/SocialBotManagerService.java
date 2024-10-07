@@ -465,6 +465,7 @@ public class SocialBotManagerService {
 		String botId = getModelByName(botName).getId().toString();
 		Bot bot = botConfig.getBots().get(botId);
 		if (bot != null) {
+			System.out.println("Botfunctions" + bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId()));
 			botFunction = bot.getBotServiceFunctions().get(messageInfo.getTriggeredFunctionId());
 			functionPath = "";
 			if (botFunction.getActionType().equals(ActionType.SERVICE)) {
