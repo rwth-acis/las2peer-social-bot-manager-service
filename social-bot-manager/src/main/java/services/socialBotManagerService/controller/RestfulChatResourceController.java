@@ -17,23 +17,24 @@ import org.bson.BsonObjectId;
 import org.bson.types.ObjectId;
 
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+
 import java.io.InputStream;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.origin.SystemEnvironmentOrigin;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
@@ -382,9 +383,8 @@ public class RestfulChatResourceController {
 	@Operation(summary = "Uploads a file to the RESTful chat bot and channel", description = "Provides a service to upload a file to the specified bot and channel through a RESTful API endpoint")
 	@PostMapping(value = "/{bot}/{organization}/{channel}/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/json")
 	public ResponseEntity<String> handleRESTfulChatFile(@PathVariable("bot") String bot,
-				@PathVariable("organization") String organization, @PathVariable("channel") String channel,
-				@FormDataParam("file") InputStream uploadedInputStream,
-				@FormDataParam("file") FormDataContentDisposition fileDetail, HttpServletRequest request) {
+				@PathVariable("organization") String organization, @PathVariable("channel") String channel, 
+				@RequestPart("file") MultipartFile uploadedInputStream, HttpServletRequest request) {
 		String token = request.getHeader("Authorization");
 		if (token.startsWith("Basic")) {
 			token = "Bearer " + request.getHeader("Access-Token");
@@ -407,11 +407,11 @@ public class RestfulChatResourceController {
 				boolean err = false;
 				for (Messenger m : b.getMessengers().values()) {
 					if (m.getChatMediator() != null && m.getChatMediator() instanceof RESTfulChatMediator) {
-						byte[] bytes = toBytes(uploadedInputStream);
+						byte[] bytes = uploadedInputStream.getBytes();
 						String encoded = Base64.getEncoder().encodeToString(bytes);
 						RESTfulChatMediator chatMediator = (RESTfulChatMediator) m.getChatMediator();
-						String fname = fileDetail.getFileName();
-						String ftype = getFileType(uploadedInputStream);
+						String fname = uploadedInputStream.getOriginalFilename();
+						String ftype = uploadedInputStream.getContentType();
 
 						RESTfulChatMessageCollector msgcollector = (RESTfulChatMessageCollector) chatMediator
 								.getMessageCollector();
