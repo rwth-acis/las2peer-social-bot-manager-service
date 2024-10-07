@@ -29,6 +29,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -242,6 +244,7 @@ public class RestfulChatResourceController {
 						e.printStackTrace();
 					}
 				}
+				System.out.println("Triggered Body: " + triggeredBody);
 				String channel = triggeredBody.get("channel").toString();
 				// Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 				functionPath = functionPath.replace("[channel]", channel);
@@ -266,9 +269,9 @@ public class RestfulChatResourceController {
 					userMessage.put(channel, triggeredBody);
 				}
 
-				JSONObject mp = new JSONObject();
-				// FormDataMultiPart mp = new FormDataMultiPart();
-				mp.put("msg", msg.toString());
+				MultiValueMap<String, Object> mp = new LinkedMultiValueMap<String, Object>();
+				// JSONObject mp = new JSONObject();
+				mp.add("msg", msg.toString());
 				String queryParams = "?";
 				if (form != null) {
 					for (String key : form.keySet()) {
@@ -283,20 +286,21 @@ public class RestfulChatResourceController {
 								queryParams += key + "=" + form.get(key) + "&";
 							}
 						} else {
+
 							if (form.get(key).equals("[channel]")) {
-								mp.put(key, channel);
+								mp.add(key, channel);
 							} else if (form.get(key).equals("[email]")) {
-								mp.put(key, email);
+								mp.add(key, email);
 							} else if (form.get(key).equals("[organization]")) {
-								mp.put(key, triggeredBody.get("organization").toString());
+								mp.add(key, triggeredBody.get("organization").toString());
 							} else if (form.get(key).toString().contains("[")) {
 								for (String eName : entities.keySet()) {
 									if (form.get(key).toString().toLowerCase().contains(eName)) {
-										mp.put(key, ((JSONObject) entities.get(eName)).get("value").toString());
+										mp.add(key, ((JSONObject) entities.get(eName)).get("value").toString());
 									}
 								}
 							} else {
-								mp.put(key, form.get(key).toString());
+								mp.add(key, form.get(key).toString());
 							}
 						}
 					}
@@ -310,11 +314,10 @@ public class RestfulChatResourceController {
 				}
 
 				System.out.println("Calling following URL: " + sf.getServiceName() + functionPath + queryParams);
-				// WebTarget target = textClient
-				// 		.target(sf.getServiceName() + functionPath + queryParams);
+
 				if (f != null && f.exists()) {
 					FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-					mp.put("file",filePart);
+					mp.add("file",filePart);
 				}
 
 				URI target = new URI(sf.getServiceName() + functionPath + queryParams);
@@ -325,7 +328,7 @@ public class RestfulChatResourceController {
 				if (sf.getHttpMethod().equals("get")) {
 					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, JSONObject.class);
 				} else {
-					HttpEntity<JSONObject> entityMp = new HttpEntity<JSONObject>(mp, headers);
+					HttpEntity<MultiValueMap> entityMp = new HttpEntity<>(mp, headers);
 					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
@@ -425,7 +428,6 @@ public class RestfulChatResourceController {
 
 								String functionPath = "";
 								JSONObject body = new JSONObject();
-								// BotAgent botAgent = getBotAgents().get(b.getName());
 								ServiceFunction sf = new ServiceFunction();
 								sbfService.prepareRequestParameters(SocialBotManagerService.config, bot, messageInfo, functionPath,
 										body,
