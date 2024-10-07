@@ -219,7 +219,6 @@ public class RestfulChatResourceController {
 				String email = triggeredBody.get("email").toString();
 				String msg = triggeredBody.get("msg").toString();
 				String botId = sbfService.getModelByName(botname).getId().toString();
-				System.out.println("BotID: " + botId);				
 				Bot bot = botConfig.getBots().get(botId);
 				String messengerID = sf.getMessengerName();
 				// ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
@@ -251,7 +250,6 @@ public class RestfulChatResourceController {
 				functionPath = m.replaceVariables(channel, functionPath);
 				JSONObject entities = (JSONObject) triggeredBody.get("entities");
 				for (String eName : entities.keySet()) {
-					;
 					if (functionPath.toLowerCase().contains("[" + eName + "]")) {
 						functionPath = functionPath.replace("[" + eName + "]",
 								((JSONObject) entities.get(eName)).get("value").toString());
@@ -303,6 +301,13 @@ public class RestfulChatResourceController {
 					}
 				}
 
+				for (String eName : entities.keySet()) {
+					if (queryParams.toLowerCase().contains("[" + eName + "]")) {
+						queryParams = queryParams.replace("[" + eName + "]",
+								((JSONObject) entities.get(eName)).get("value").toString());
+					}
+				}
+
 				System.out.println("Calling following URL: " + sf.getServiceName() + functionPath + queryParams);
 				// WebTarget target = textClient
 				// 		.target(sf.getServiceName() + functionPath + queryParams);
@@ -327,6 +332,7 @@ public class RestfulChatResourceController {
 
 				String test = response.getBody().toString();
 				System.out.println("Response Text:" + test);
+				
 				try {
 					java.nio.file.Files.deleteIfExists(Paths.get(triggeredBody.get("fileName") + "."
 							+ triggeredBody.get("fileType")));
