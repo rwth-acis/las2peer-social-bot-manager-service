@@ -29,6 +29,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
@@ -269,9 +270,9 @@ public class RestfulChatResourceController {
 					userMessage.put(channel, triggeredBody);
 				}
 
-				MultiValueMap<String, Object> mp = new LinkedMultiValueMap<String, Object>();
+				MultipartBodyBuilder mp = new MultipartBodyBuilder();
 				// JSONObject mp = new JSONObject();
-				mp.add("msg", msg.toString());
+				mp.part("msg", msg.toString());
 				String queryParams = "?";
 				if (form != null) {
 					for (String key : form.keySet()) {
@@ -288,19 +289,19 @@ public class RestfulChatResourceController {
 						} else {
 
 							if (form.get(key).equals("[channel]")) {
-								mp.add(key, channel);
+								mp.part(key, channel);
 							} else if (form.get(key).equals("[email]")) {
-								mp.add(key, email);
+								mp.part(key, email);
 							} else if (form.get(key).equals("[organization]")) {
-								mp.add(key, triggeredBody.get("organization").toString());
+								mp.part(key, triggeredBody.get("organization").toString());
 							} else if (form.get(key).toString().contains("[")) {
 								for (String eName : entities.keySet()) {
 									if (form.get(key).toString().toLowerCase().contains(eName)) {
-										mp.add(key, ((JSONObject) entities.get(eName)).get("value").toString());
+										mp.part(key, ((JSONObject) entities.get(eName)).get("value").toString());
 									}
 								}
 							} else {
-								mp.add(key, form.get(key).toString());
+								mp.part(key, form.get(key).toString());
 							}
 						}
 					}
@@ -317,7 +318,7 @@ public class RestfulChatResourceController {
 
 				if (f != null && f.exists()) {
 					FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-					mp.add("file",filePart);
+					mp.part("file",filePart);
 				}
 
 				URI target = new URI(sf.getServiceName() + functionPath + queryParams);
@@ -328,7 +329,8 @@ public class RestfulChatResourceController {
 				if (sf.getHttpMethod().equals("get")) {
 					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, JSONObject.class);
 				} else {
-					HttpEntity<MultiValueMap> entityMp = new HttpEntity<>(mp, headers);
+					System.out.println(mp.build().toString());
+					HttpEntity<MultiValueMap> entityMp = new HttpEntity<>(mp.build(), headers);
 					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
