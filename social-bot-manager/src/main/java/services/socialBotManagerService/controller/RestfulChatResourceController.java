@@ -166,7 +166,7 @@ public class RestfulChatResourceController {
 									body.put("organization", organization);
 									sf.setMessengerName(messageInfo.getMessengerName());
 
-									performTrigger(SocialBotManagerService.config, bot, sf, functionPath, functionPath, body, token);
+									performTrigger(SocialBotManagerService.config, bot, sf, functionPath, body, token);
 
 									RESTfulChatResponse oldAnswerMsg = answerMsg;
 
@@ -213,7 +213,7 @@ public class RestfulChatResourceController {
 
 	}
 
-	private void performTrigger(BotConfiguration botConfig, String botname, ServiceFunction sf, String functionPath, String triggerUID, JSONObject triggeredBody, String token) {
+	private void performTrigger(BotConfiguration botConfig, String botname, ServiceFunction sf, String functionPath, JSONObject triggeredBody, String token) {
 		if (sf.getActionType().equals(ActionType.SERVICE) || sf.getActionType().equals(ActionType.OPENAPI)) {
 			System.out.println("Perform Trigger.");
 
@@ -268,8 +268,9 @@ public class RestfulChatResourceController {
 					userMessage.put(channel, triggeredBody);
 				}
 
+				MultiValueMap<String, Object> fileMp = new LinkedMultiValueMap<>();
 				JSONObject mp = new JSONObject();
-				mp.put("msg", msg.toString());
+				mp.put("msg", msg);
 				String queryParams = "?";
 				if (form != null) {
 					for (String key : form.keySet()) {
@@ -284,8 +285,25 @@ public class RestfulChatResourceController {
 								queryParams += key + "=" + form.get(key) + "&";
 							}
 							System.out.println("Query Params:" + queryParams);
-						} else {
+						}  else if (f != null && f.exists()) {
+							fileMp.add("file", f);
 
+							if (form.get(key).equals("[channel]")) {
+								fileMp.add(key, channel);
+							} else if (form.get(key).equals("[email]")) {
+								fileMp.add(key, email);
+							} else if (form.get(key).equals("[organization]")) {
+								fileMp.add(key, triggeredBody.get("organization").toString());
+							} else if (form.get(key).toString().contains("[")) {
+								for (String eName : entities.keySet()) {
+									if (form.get(key).toString().toLowerCase().contains(eName)) {
+										fileMp.add(key, ((JSONObject) entities.get(eName)).get("value").toString());
+									}
+								}
+							} else {
+								fileMp.add(key, form.get(key).toString());
+							}
+						} else {
 							if (form.get(key).equals("[channel]")) {
 								mp.put(key, channel);
 							} else if (form.get(key).equals("[email]")) {
@@ -321,10 +339,12 @@ public class RestfulChatResourceController {
 				ResponseEntity<JSONObject> response = null;
 
 				if (f != null && f.exists()) {
-					MultiValueMap<String, Object> fileMp = new LinkedMultiValueMap<>();
-					fileMp.add("file", f);
+					System.out.println(fileMp);
+					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 					HttpEntity<MultiValueMap<String, Object>> fileEntity = new HttpEntity<>(fileMp, headers);
 					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, fileEntity, JSONObject.class);
+					System.out.println("Response Code:" + response.getStatusCode());
+					System.out.println("Response Entitiy:" + response.getBody().toString());
 				} else if (sf.getHttpMethod().equals("get")) {
 					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, JSONObject.class);
 				} else {
@@ -438,7 +458,7 @@ public class RestfulChatResourceController {
 									body.put("email", email);
 									body.put("organization", organization);
 									sf.setMessengerName(messageInfo.getMessengerName());
-									performTrigger(SocialBotManagerService.config, bot, sf, functionPath, functionPath, body, token);
+									performTrigger(SocialBotManagerService.config, bot, sf, functionPath, body, token);
 									RESTfulChatResponse oldAnswerMsg = answerMsg;
 									answerMsg = chatMediator.getMessageForChannel(orgChannel);
 									body.remove("fileBody");
