@@ -245,9 +245,7 @@ public class RestfulChatResourceController {
 						e.printStackTrace();
 					}
 				}
-				System.out.println("Triggered Body: " + triggeredBody);
 				String channel = triggeredBody.get("channel").toString();
-				// Client textClient = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
 				functionPath = functionPath.replace("[channel]", channel);
 				functionPath = functionPath.replace("[email]", email);
 				functionPath = functionPath.replace("[organization]", triggeredBody.get("organization").toString());
@@ -270,9 +268,8 @@ public class RestfulChatResourceController {
 					userMessage.put(channel, triggeredBody);
 				}
 
-				MultipartBodyBuilder mp = new MultipartBodyBuilder();
-				// JSONObject mp = new JSONObject();
-				mp.part("msg", msg.toString());
+				JSONObject mp = new JSONObject();
+				mp.put("msg", msg.toString());
 				String queryParams = "?";
 				if (form != null) {
 					for (String key : form.keySet()) {
@@ -286,22 +283,23 @@ public class RestfulChatResourceController {
 							} else {
 								queryParams += key + "=" + form.get(key) + "&";
 							}
+							System.out.println("Query Params:" + queryParams);
 						} else {
 
 							if (form.get(key).equals("[channel]")) {
-								mp.part(key, channel);
+								mp.put(key, channel);
 							} else if (form.get(key).equals("[email]")) {
-								mp.part(key, email);
+								mp.put(key, email);
 							} else if (form.get(key).equals("[organization]")) {
-								mp.part(key, triggeredBody.get("organization").toString());
+								mp.put(key, triggeredBody.get("organization").toString());
 							} else if (form.get(key).toString().contains("[")) {
 								for (String eName : entities.keySet()) {
 									if (form.get(key).toString().toLowerCase().contains(eName)) {
-										mp.part(key, ((JSONObject) entities.get(eName)).get("value").toString());
+										mp.put(key, ((JSONObject) entities.get(eName)).get("value").toString());
 									}
 								}
 							} else {
-								mp.part(key, form.get(key).toString());
+								mp.put(key, form.get(key).toString());
 							}
 						}
 					}
@@ -316,21 +314,21 @@ public class RestfulChatResourceController {
 
 				System.out.println("Calling following URL: " + sf.getServiceName() + functionPath + queryParams);
 
-				if (f != null && f.exists()) {
-					FileDataBodyPart filePart = new FileDataBodyPart("file", f);
-					mp.part("file",filePart);
-				}
-
 				URI target = new URI(sf.getServiceName() + functionPath + queryParams);
 				HttpHeaders headers = new HttpHeaders();
 				headers.set("Authorization", token);
 				HttpEntity<JSONObject> entity = new HttpEntity<>(headers);
 				ResponseEntity<JSONObject> response = null;
-				if (sf.getHttpMethod().equals("get")) {
+
+				if (f != null && f.exists()) {
+					MultiValueMap<String, Object> fileMp = new LinkedMultiValueMap<>();
+					fileMp.add("file", f);
+					HttpEntity<MultiValueMap<String, Object>> fileEntity = new HttpEntity<>(fileMp, headers);
+					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, fileEntity, JSONObject.class);
+				} else if (sf.getHttpMethod().equals("get")) {
 					response = sbfService.restTemplate.exchange(target, HttpMethod.GET, entity, JSONObject.class);
 				} else {
-					System.out.println(mp.build().toString());
-					HttpEntity<MultiValueMap> entityMp = new HttpEntity<>(mp.build(), headers);
+					HttpEntity<JSONObject> entityMp = new HttpEntity<>(mp, headers);
 					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, entityMp, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
@@ -386,7 +384,7 @@ public class RestfulChatResourceController {
 	 * @return the response
 	 */
 	@Operation(summary = "Uploads a file to the RESTful chat bot and channel", description = "Provides a service to upload a file to the specified bot and channel through a RESTful API endpoint")
-	@PostMapping(value = "/{bot}/{organization}/{channel}/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/json")
+	@PostMapping(value = "/{bot}/{organization}/{channel}/file", produces = "application/json")
 	public ResponseEntity<String> handleRESTfulChatFile(@PathVariable("bot") String bot,
 				@PathVariable("organization") String organization, @PathVariable("channel") String channel, 
 				@RequestPart("file") MultipartFile uploadedInputStream, HttpServletRequest request) {
