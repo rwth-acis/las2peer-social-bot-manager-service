@@ -23,6 +23,7 @@ import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -341,8 +342,9 @@ public class RestfulChatResourceController {
 				if (f != null && f.exists()) {
 					System.out.println(fileMp);
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+					headers.setContentDisposition(ContentDisposition.builder("form-data").name("file").filename(f.getName()).build());
 					HttpEntity<MultiValueMap<String, Object>> fileEntity = new HttpEntity<>(fileMp, headers);
-					response = sbfService.restTemplate.exchange(target, HttpMethod.POST, fileEntity, JSONObject.class);
+					response = sbfService.restTemplate.postForEntity(target, fileEntity, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
 				} else if (sf.getHttpMethod().equals("get")) {
