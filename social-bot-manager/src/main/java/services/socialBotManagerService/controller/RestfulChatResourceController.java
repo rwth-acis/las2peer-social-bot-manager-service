@@ -227,11 +227,12 @@ public class RestfulChatResourceController {
 				String botId = sbfService.getModelByName(botname).getId().toString();
 				Bot bot = botConfig.getBots().get(botId);
 				String messengerID = sf.getMessengerName();
+				byte[] decodedBytes = null;
 				// ChatMediator chat = bot.getMessenger(messengerID).getChatMediator();
 				Messenger m = bot.getMessenger(messengerID);
 				File f = null;
 				if (triggeredBody.containsKey("fileBody")) {
-					byte[] decodedBytes = java.util.Base64.getDecoder()
+					decodedBytes = java.util.Base64.getDecoder()
 							.decode(triggeredBody.get("fileBody").toString());
 					f = new File(triggeredBody.get("fileName") + "."
 							+ triggeredBody.get("fileType"));
@@ -247,6 +248,7 @@ public class RestfulChatResourceController {
 						e.printStackTrace();
 					}
 				}
+
 				String channel = triggeredBody.get("channel").toString();
 				functionPath = functionPath.replace("[channel]", channel);
 				functionPath = functionPath.replace("[email]", email);
@@ -340,7 +342,13 @@ public class RestfulChatResourceController {
 
 				if (f != null && f.exists()) {
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-					HttpEntity<ByteArrayResource> fileEntity = new HttpEntity<>(new ByteArrayResource(FileUtils.readFileToByteArray(f)));
+					ByteArrayResource fileData = new ByteArrayResource(decodedBytes) {
+						@Override
+						public String getFilename() {
+							return triggeredBody.get("fileName").toString();
+						}
+					};
+					HttpEntity<ByteArrayResource> fileEntity = new HttpEntity<>(fileData, headers);
 					fileMp.add("file", fileEntity);
 					System.out.println("FileMp:" + fileMp);
 					HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(fileMp, headers);
