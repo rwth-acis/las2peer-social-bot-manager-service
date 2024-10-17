@@ -23,6 +23,7 @@ import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -287,8 +288,6 @@ public class RestfulChatResourceController {
 							}
 							System.out.println("Query Params:" + queryParams);
 						}  else if (f != null && f.exists()) {
-							fileMp.add("file", f);
-
 							if (form.get(key).equals("[channel]")) {
 								fileMp.add(key, channel);
 							} else if (form.get(key).equals("[email]")) {
@@ -340,11 +339,12 @@ public class RestfulChatResourceController {
 				ResponseEntity<JSONObject> response = null;
 
 				if (f != null && f.exists()) {
-					System.out.println(fileMp);
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-					headers.setContentDisposition(ContentDisposition.builder("form-data").name("file").filename(f.getName()).build());
-					HttpEntity<MultiValueMap<String, Object>> fileEntity = new HttpEntity<>(fileMp, headers);
-					response = sbfService.restTemplate.postForEntity(target, fileEntity, JSONObject.class);
+					HttpEntity<ByteArrayResource> fileEntity = new HttpEntity<>(new ByteArrayResource(FileUtils.readFileToByteArray(f)));
+					fileMp.add("file", fileEntity);
+					System.out.println("FileMp:" + fileMp);
+					HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(fileMp, headers);
+					response = sbfService.restTemplate.postForEntity(target, requestEntity, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
 					System.out.println("Response Entitiy:" + response.getBody().toString());
 				} else if (sf.getHttpMethod().equals("get")) {
