@@ -12,13 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import net.minidev.json.JSONObject;
-
-
-import services.socialBotManagerService.chat.ChatMediator;
-// import services.socialBotManagerService.chat.RocketChatMediator;
-// import services.socialBotManagerService.chat.SlackChatMediator;
 import services.socialBotManagerService.nlu.TrainingHelper;
 import services.socialBotManagerService.service.SocialBotManagerService;
 
@@ -45,7 +39,7 @@ public class BasicResourceController {
 	// API directly once that's fixed. The whole `TrainingHelper` class can be
 	// deleted then as well.
 	public ResponseEntity<String> trainAndLoad(HttpEntity<JSONObject> request) {
-		// JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		System.out.println("Training started...");
 		if (service.nluTrainThread != null && service.nluTrainThread.isAlive()) {
 			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Training still in progress.");
 		}
@@ -57,7 +51,7 @@ public class BasicResourceController {
 			String intents = (String) bodyJson.get("intents");
 			// added to have a way to access the intents of the rasa server
 			service.rasaIntents.put(url.split("://")[1], intents);
-			service.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
+			service.nluTrain = new TrainingHelper(url, config, markdownTrainingData, service);
 			service.nluTrainThread = new Thread(service.nluTrain);
 			service.nluTrainThread.start();
 		} catch (Exception e) {

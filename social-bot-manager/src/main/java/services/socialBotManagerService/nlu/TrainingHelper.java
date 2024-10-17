@@ -31,10 +31,11 @@ public class TrainingHelper implements Runnable {
 		return result;
 	}
 
-	public TrainingHelper(String url, String config, String markdownTrainingData) {
+	public TrainingHelper(String url, String config, String markdownTrainingData, SocialBotManagerService sbfService) {
 		this.url = url;
 		this.config = config;
 		this.markdownTrainingData = replaceUmlaute(markdownTrainingData);
+		this.sbfService = sbfService;
 	}
 
 	@Override
