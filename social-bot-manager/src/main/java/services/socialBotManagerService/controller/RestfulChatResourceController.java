@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -333,12 +334,9 @@ public class RestfulChatResourceController {
 				ResponseEntity<JSONObject> response = null;
 
 				if (f != null && f.exists()) {
-					try (FileOutputStream fos = new FileOutputStream(f)) {
-						fos.write(decodedBytes);
-					}
-					
-					FileSystemResource fileData = new FileSystemResource(f);
-					fileMp.add("file", fileData);
+					Files.write(f.toPath(), decodedBytes);
+					System.out.println("File:" + f);
+					fileMp.add("file", f);
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 					System.out.println("FileMp:" + fileMp);
 
