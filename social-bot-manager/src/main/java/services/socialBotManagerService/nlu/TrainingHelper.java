@@ -1,17 +1,15 @@
 package services.socialBotManagerService.nlu;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 import net.minidev.json.JSONObject;
-import services.socialBotManagerService.service.SocialBotManagerService;
 
 public class TrainingHelper implements Runnable {
-	@Autowired
-	private SocialBotManagerService sbfService;
-
 	String url;
 	String config;
 	String markdownTrainingData;
@@ -31,11 +29,10 @@ public class TrainingHelper implements Runnable {
 		return result;
 	}
 
-	public TrainingHelper(String url, String config, String markdownTrainingData, SocialBotManagerService sbfService) {
+	public TrainingHelper(String url, String config, String markdownTrainingData) {
 		this.url = url;
 		this.config = config;
 		this.markdownTrainingData = replaceUmlaute(markdownTrainingData);
-		this.sbfService = sbfService;
 	}
 
 	@Override
@@ -50,18 +47,14 @@ public class TrainingHelper implements Runnable {
 			
 			// Send the request
 			try {
-				
-				// HttpClient httpClient = HttpClient.newHttpClient();
-				// HttpRequest httpRequest = HttpRequest.newBuilder()
-				// 		.uri(new URI(url + "/model/train"))
-				// 		.header("Content-Type", "application/json")
-				// 		.POST(HttpRequest.BodyPublishers.ofString(markdownTrainingData))
-				// 		.build();
-				// HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-				// Send request with restTemplate
-				ResponseEntity<JSONObject> serviceResponse = sbfService.restTemplate.postForEntity(url + "/model/train", json, JSONObject.class);
-				String filename = serviceResponse.getHeaders().getFirst("filename");
-				// String filename = serviceResponse.headers().firstValue("filename").get();
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(new URI(url + "/model/train"))
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(markdownTrainingData))
+						.build();
+				HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				String filename = serviceResponse.headers().firstValue("filename").get();
 
 				if (filename == null) {
 					this.success = false;
@@ -71,32 +64,30 @@ public class TrainingHelper implements Runnable {
 				json = new JSONObject();
 				json.put("model_file", "models/" + filename);
 
-				ResponseEntity<JSONObject> serviceResponse2 = sbfService.restTemplate.postForEntity(url + "/model", json, JSONObject.class);
-				// httpRequest = HttpRequest.newBuilder()
-				// 		.uri(new URI(url + "/model"))
-				// 		.header("Content-Type", "application/json")
-				// 		.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
-				// 		.build();
+				httpRequest = HttpRequest.newBuilder()
+						.uri(new URI(url + "/model"))
+						.header("Content-Type", "application/json")
+						.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
+						.build();
 
-				// serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-				this.success = serviceResponse.getStatusCode() == HttpStatusCode.valueOf(204);
+				serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				this.success = serviceResponse.statusCode() == 204;
 
-			} catch (RestClientException e) {
+			} catch (IOException | InterruptedException | URISyntaxException e) {
 				e.printStackTrace();
 			}
 
 		} else {
 			json.put("nlu", markdownTrainingData);
             try {
-				ResponseEntity<JSONObject> serviceResponse = sbfService.restTemplate.postForEntity(url + "/model/train", json, JSONObject.class);
-				// HttpClient httpClient = HttpClient.newHttpClient();
-				// HttpRequest httpRequest = HttpRequest.newBuilder()
-				// 		.uri(new URI(url+ "/model/train"))
-				// 		.header("Content-Type", "application/json")
-				// 		.POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
-				// 		.build();
-				// HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-				String filename = serviceResponse.getHeaders().getFirst("filename");
+				HttpClient httpClient = HttpClient.newHttpClient();
+				HttpRequest httpRequest = HttpRequest.newBuilder()
+						.uri(new URI(url+ "/model/train"))
+						.header("Content-Type", "application/json")
+						.POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
+						.build();
+				HttpResponse<String> serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				String filename = serviceResponse.headers().firstValue("filename").get();
 				if (filename == null) {
 					this.success = false;
 					return;
@@ -104,18 +95,15 @@ public class TrainingHelper implements Runnable {
 		
 				json = new JSONObject();
 				json.put("model_file", "models/" + filename);
-
-				ResponseEntity<JSONObject> serviceResponse2 = sbfService.restTemplate.postForEntity(url + "/model", json, JSONObject.class);
-				this.success = serviceResponse.getStatusCode() == HttpStatusCode.valueOf(204);
-
-				// httpRequest = HttpRequest.newBuilder()
-				// .uri(new URI(url + "/model"))
-				// .header("Content-Type", "application/json")
-				// .PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
-				// .build();
-				// serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-				// this.success = serviceResponse.statusCode() == 204;
-			} catch (RestClientException e) {
+		
+				httpRequest = HttpRequest.newBuilder()
+				.uri(new URI(url + "/model"))
+				.header("Content-Type", "application/json")
+				.PUT(HttpRequest.BodyPublishers.ofString(json.toString()))
+				.build();
+				serviceResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+				this.success = serviceResponse.statusCode() == 204;
+			} catch (IOException | InterruptedException | URISyntaxException e ) {
 				e.printStackTrace();
 			}
 		}

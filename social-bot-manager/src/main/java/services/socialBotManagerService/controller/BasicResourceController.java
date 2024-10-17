@@ -51,7 +51,7 @@ public class BasicResourceController {
 			String intents = (String) bodyJson.get("intents");
 			// added to have a way to access the intents of the rasa server
 			service.rasaIntents.put(url.split("://")[1], intents);
-			service.nluTrain = new TrainingHelper(url, config, markdownTrainingData, service);
+			service.nluTrain = new TrainingHelper(url, config, markdownTrainingData);
 			service.nluTrainThread = new Thread(service.nluTrain);
 			service.nluTrainThread.start();
 		} catch (Exception e) {
