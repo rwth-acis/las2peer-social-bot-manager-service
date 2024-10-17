@@ -2,6 +2,7 @@ package services.socialBotManagerService.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -332,6 +333,10 @@ public class RestfulChatResourceController {
 				ResponseEntity<JSONObject> response = null;
 
 				if (f != null && f.exists()) {
+					try (FileOutputStream fos = new FileOutputStream(f)) {
+						fos.write(decodedBytes);
+					}
+					
 					FileSystemResource fileData = new FileSystemResource(f);
 					fileMp.add("file", fileData);
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
