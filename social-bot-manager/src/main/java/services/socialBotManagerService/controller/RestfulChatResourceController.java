@@ -3,44 +3,37 @@ package services.socialBotManagerService.controller;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.net.URI;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
 import org.bson.BsonObjectId;
 import org.bson.types.ObjectId;
-
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
-
-import java.io.InputStream;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.ContentDisposition;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.google.gson.Gson;
 import com.mongodb.MongoException;
@@ -55,8 +48,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-
-import services.socialBotManagerService.chat.ChatMediator;
 import services.socialBotManagerService.chat.ChatMessage;
 import services.socialBotManagerService.chat.RESTfulChatMediator;
 import services.socialBotManagerService.chat.RESTfulChatMessageCollector;
@@ -341,16 +332,11 @@ public class RestfulChatResourceController {
 				ResponseEntity<JSONObject> response = null;
 
 				if (f != null && f.exists()) {
+					FileSystemResource fileData = new FileSystemResource(f);
+					fileMp.add("file", fileData);
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-					ByteArrayResource fileData = new ByteArrayResource(decodedBytes) {
-						@Override
-						public String getFilename() {
-							return triggeredBody.get("fileName").toString();
-						}
-					};
-					HttpEntity<ByteArrayResource> fileEntity = new HttpEntity<>(fileData, headers);
-					fileMp.add("file", fileEntity);
 					System.out.println("FileMp:" + fileMp);
+
 					HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(fileMp, headers);
 					response = sbfService.restTemplate.postForEntity(target, requestEntity, JSONObject.class);
 					System.out.println("Response Code:" + response.getStatusCode());
